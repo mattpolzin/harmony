@@ -34,14 +34,14 @@ pullRequestStateFilter (Just s) = show s
 %foreign "node:support:list_reviewers,okit"
 prim__listPullReviewers : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
-listPullReviewers : (octokit : Octokit) => (owner : String) -> (repo : String) -> (stateFilter : Maybe PullRequestState) -> Promise (List String)
+listPullReviewers : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PullRequestState) -> Promise (List String)
 listPullReviewers @{(Kit ptr)} owner repo stateFilter = 
   lines <$> (promiseIO $ prim__listPullReviewers ptr owner repo (pullRequestStateFilter stateFilter))
 
 %foreign "node:support:list_team_members,okit"
 prim__listTeamMembers : Ptr OctokitRef -> (org : String) -> (teamSlug : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
-listTeamMembers : (octokit : Octokit) => (org : String) -> (teamSlug : String) -> Promise (List String)
+listTeamMembers : Octokit => (org : String) -> (teamSlug : String) -> Promise (List String)
 listTeamMembers @{(Kit ptr)} org teamSlug = 
   lines <$> (promiseIO $ prim__listTeamMembers ptr org teamSlug)
 
