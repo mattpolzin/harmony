@@ -2,7 +2,9 @@
 .DS_STORE
 build/
 node_modules/
+
 harmony.js
+config.json
 
 .*.swp
 *.idr~

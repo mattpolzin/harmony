@@ -4,8 +4,12 @@ import Data.Either
 import Data.List
 import Data.Promise
 import Data.String
+import Data.Vect
 import Language.JSON
 import System
+import System.File
+
+%default total
 
 data OctokitRef : Type
 
@@ -45,7 +49,7 @@ listTeamMembers : Octokit => (org : String) -> (teamSlug : String) -> Promise (L
 listTeamMembers @{(Kit ptr)} org teamSlug = 
   lines <$> (promiseIO $ prim__listTeamMembers ptr org teamSlug)
 
-exitError : HasIO io => String -> io ()
+exitError : HasIO io => String -> io a
 exitError err =
   do putStrLn err
      exitFailure
@@ -59,13 +63,60 @@ Timestamp : Type
 Timestamp = Bits32
 
 record Config where
+  constructor MkConfig
   updatedAt : Timestamp
   org : String
   repo : String
   teamSlugs : List String
 
-loadConfig : HasIO io => io Config
+lookupAll : Vect n String -> List (String, JSON) -> Either String (Vect n JSON)
+lookupAll [] dict            = Right []
+lookupAll (key :: keys) dict = [| lookup' key dict :: lookupAll keys dict |]
+  where
+    lookup' : String -> List (String, a) -> Either String a
+    lookup' key = maybeToEither "Missing required key: \{key}." . lookup key
 
+string : JSON -> Either String String
+string (JString x) = Right x
+string json = Left "Expected a string but found \{show json}."
+
+integer : JSON -> Either String Integer
+integer (JNumber x) = Right $ cast x
+integer json = Left "Expected an integer but found \{show json}."
+
+array : JSON -> (JSON -> Either String a) -> Either String (List a)
+array (JArray xs) f = traverse f xs
+array json f = Left "Expected an array but found \{show json}."
+
+parseConfig : String -> Either String Config
+parseConfig = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parseConfigJson
+  where
+    parseConfigJson : JSON -> Either String Config
+    parseConfigJson (JObject config) = do [updatedAt, org, repo, teamSlugs] <-
+                                            lookupAll ["updatedAt", "org", "repo", "teamSlugs"] config
+                                          ua <- cast <$> integer updatedAt
+                                          o <- string org
+                                          r <- string repo
+                                          ts <- array teamSlugs string
+                                          pure $ MkConfig {
+                                              updatedAt = ua
+                                            , org       = o
+                                            , repo      = r
+                                            , teamSlugs = ts
+                                            }
+    parseConfigJson (JArray _) = Left "Expected config JSON to be an Object, not an array."
+    parseConfigJson _          = Left "Expected config JSON to be an Object."
+
+covering
+loadConfig : HasIO io => io Config
+loadConfig = 
+  do Right configFile <- readFile "config.json"
+       | Left err => exitError "Error loading config.json: \{show err}."
+     case parseConfig configFile of
+          Right config => pure config
+          Left err => exitError err
+
+covering
 main : IO ()
 main =
   do Just pat <- getEnv "GITHUB_PAT"
