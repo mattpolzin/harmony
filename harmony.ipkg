@@ -1,0 +1,43 @@
+package harmony
+-- version =
+authors = "Mathew Polzin"
+-- maintainers =
+-- license =
+-- brief =
+-- readme =
+-- homepage =
+-- sourceloc =
+-- bugtracker =
+
+depends = contrib
+
+-- modules to install
+modules = Main
+
+-- main file (i.e. file to load at REPL)
+main = Main
+
+executable = "harmony"
+opts = "--codegen node"
+sourcedir = "src"
+
+-- builddir =
+-- outputdir =
+
+-- script to run before building
+-- prebuild =
+
+-- script to run after building
+-- postbuild =
+
+-- script to run after building, before installing
+-- preinstall =
+
+-- script to run after installing
+-- postinstall =
+
+-- script to run before cleaning
+-- preclean =
+
+-- script to run after cleaning
+-- postclean =

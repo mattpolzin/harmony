@@ -1,0 +1,14 @@
+{
+  "name": "harmony",
+  "version": "0.0.1",
+  "description": "Instill harmony between GitHub collaborators.",
+  "main": "harmony.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mathew Polzin",
+  "license": "MIT",
+  "dependencies": {
+    "octokit": "^1.4.0"
+  }
+}
