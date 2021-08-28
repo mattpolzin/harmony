@@ -69,6 +69,14 @@ record Config where
   repo : String
   teamSlugs : List String
 
+Show Config where
+  show config = unlines [
+      "updatedAt: \{show config.updatedAt}"
+    , "org: \{show config.org}"
+    , "repo: \{show config.repo}"
+    , "teamSlugs: \{show config.teamSlugs}"
+    ]
+
 lookupAll : Vect n String -> List (String, JSON) -> Either String (Vect n JSON)
 lookupAll [] dict            = Right []
 lookupAll (key :: keys) dict = [| lookup' key dict :: lookupAll keys dict |]
@@ -122,6 +130,7 @@ main =
   do Just pat <- getEnv "GITHUB_PAT"
        | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
      config <- loadConfig
+     print config
      (Kit kit) <- octokit pat
      resolve' tmp exitError $
        do pullReviewers <- listPullReviewers config.org config.repo Nothing
