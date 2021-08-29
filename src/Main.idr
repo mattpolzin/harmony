@@ -11,11 +11,14 @@ import System.File
 
 %default total
 
+okit_ffi : (fnName : String) -> String
+okit_ffi fnName = "node:support:\{fnName},okit"
+
 data OctokitRef : Type
 
 data Octokit = Kit (Ptr OctokitRef)
 
-%foreign "node:support:octokit,okit"
+%foreign okit_ffi "octokit"
 prim__octokit : (authToken : String) -> PrimIO (Ptr OctokitRef)
 
 octokit : (authToken : String) -> IO Octokit
@@ -25,14 +28,14 @@ promiseIO : (primFn : (String -> PrimIO ()) -> (String -> PrimIO ()) -> PrimIO (
 promiseIO primFn = 
   promisify $ \ok,notOk => primFn (\res => toPrim $ ok res) (\err => toPrim $ notOk err)
 
-%foreign "node:support:list_teams,okit"
+%foreign okit_ffi "list_teams"
 prim__listTeams : Ptr OctokitRef -> (org : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
 listTeams : Octokit => (org : String) -> Promise (List String)
 listTeams @{(Kit ptr)} org = 
   lines <$> (promiseIO $ prim__listTeams ptr org)
 
-%foreign "node:support:list_pr_numbers,okit"
+%foreign okit_ffi "list_pr_numbers"
 prim__listPullNumbersForBranch : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (branch : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
 listPullNumbersForBranch : Octokit => (owner : String) -> (repo : String) -> (branch : String) -> Promise (List String)
@@ -49,14 +52,14 @@ pullRequestStateFilter : Maybe PullRequestState -> String
 pullRequestStateFilter Nothing = "all"
 pullRequestStateFilter (Just s) = show s
 
-%foreign "node:support:list_reviewers,okit"
+%foreign okit_ffi "list_reviewers"
 prim__listPullReviewers : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
 listPullReviewers : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PullRequestState) -> Promise (List String)
 listPullReviewers @{(Kit ptr)} owner repo stateFilter = 
   lines <$> (promiseIO $ prim__listPullReviewers ptr owner repo (pullRequestStateFilter stateFilter))
 
-%foreign "node:support:list_team_members,okit"
+%foreign okit_ffi "list_team_members"
 prim__listTeamMembers : Ptr OctokitRef -> (org : String) -> (teamSlug : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
 listTeamMembers : Octokit => (org : String) -> (teamSlug : String) -> Promise (List String)

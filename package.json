@@ -9,6 +9,7 @@
   "author": "Mathew Polzin",
   "license": "MIT",
   "dependencies": {
-    "octokit": "^1.4.0"
+    "octokit": "^1.4.0",
+    "simple-git": "^2.45.0"
   }
 }
