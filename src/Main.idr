@@ -11,8 +11,14 @@ import System.File
 
 %default total
 
+node_ffi : (libName : String) -> (fnName : String) -> String
+node_ffi libName fnName = "node:support:\{fnName},\{libName}"
+
 okit_ffi : (fnName : String) -> String
-okit_ffi fnName = "node:support:\{fnName},okit"
+okit_ffi = node_ffi "okit"
+
+git_ffi : (fnName : String) -> String
+git_ffi = node_ffi "git"
 
 data OctokitRef : Type
 
@@ -38,9 +44,16 @@ listTeams @{(Kit ptr)} org =
 %foreign okit_ffi "list_pr_numbers"
 prim__listPullNumbersForBranch : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (branch : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
-listPullNumbersForBranch : Octokit => (owner : String) -> (repo : String) -> (branch : String) -> Promise (List String)
+listPullNumbersForBranch : Octokit => (owner : String) -> (repo : String) -> (branch : String) -> Promise (List Integer)
 listPullNumbersForBranch @{(Kit ptr)} owner repo branch = 
-  lines <$> (promiseIO $ prim__listPullNumbersForBranch ptr owner repo branch)
+  do strs <- lines <$> (promiseIO $ prim__listPullNumbersForBranch ptr owner repo branch)
+     traverse parseInteger' strs
+       where
+         errStr : String
+         errStr = "Unexpected non-integer response from PR number list."
+
+         parseInteger' : String -> Promise Integer
+         parseInteger' = either . maybeToEither errStr . parseInteger
 
 data PullRequestState = Open | Closed
 
@@ -66,12 +79,28 @@ listTeamMembers : Octokit => (org : String) -> (teamSlug : String) -> Promise (L
 listTeamMembers @{(Kit ptr)} org teamSlug = 
   lines <$> (promiseIO $ prim__listTeamMembers ptr org teamSlug)
 
+data GitRef : Type
+
+data Git = G (Ptr GitRef)
+
+%foreign git_ffi "git"
+prim__git : PrimIO (Ptr GitRef)
+
+git : HasIO io => io Git
+git = G <$> (primIO $ prim__git)
+
+%foreign git_ffi "current_branch"
+prim__currentBranch : Ptr GitRef -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+currentBranch : Git => Promise String
+currentBranch @{(G ptr)} = promiseIO $ prim__currentBranch ptr
+
 exitError : HasIO io => String -> io a
 exitError err =
   do putStrLn err
      exitFailure
 
-tmp : HasIO io => (List String, List String, List String, List String) -> io ()
+tmp : HasIO io => (List String, List String, List String, List Integer) -> io ()
 tmp (w, x, y, z) =
   do printLn w
      printLn x
@@ -150,11 +179,14 @@ main =
        | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
      config <- loadConfig
      print config
-     (Kit kit) <- octokit pat
+     _ <- octokit pat
+     _ <- git
      resolve' tmp exitError $
        do pullReviewers <- listPullReviewers config.org config.repo Nothing
-          teams <- listTeams config.org
-          teamMembers   <- maybe (pure []) (listTeamMembers config.org) $ head' config.teamSlugs
-          openPrs <- listPullNumbersForBranch config.org config.repo "current-branch-name-here"
+          teams         <- listTeams config.org
+          teamMembers   <- maybe (pure []) (listTeamMembers config.org) $ head' teams -- config.teamSlugs
+          branch        <- currentBranch
+          liftIO $ putStrLn "current branch: \{branch}"
+          openPrs       <- listPullNumbersForBranch config.org config.repo branch
           pure (pullReviewers, teams, teamMembers, openPrs)
 

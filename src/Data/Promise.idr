@@ -1,5 +1,7 @@
 module Data.Promise
 
+%default total
+
 -- Promise abstraction from NodeJS
 
 -- Borrowed from https://raw.githubusercontent.com/andorp/order-taking/main/src/Service/NodeJS/Promise.idr
@@ -19,28 +21,29 @@ export
 Functor Promise where
   map f (MkPromise cmd) = MkPromise (\succ => \err => cmd (\x => succ (f x)) err)
 
-mutual
+bind : Promise a -> (a -> Promise b) -> Promise b
+bind (MkPromise cmd) f = MkPromise (\succ =>
+                                      \err =>
+                                              cmd (\x =>
+                                                        let (MkPromise cmd_) = (f x)
+                                                        in cmd_ succ err
+                                                  ) err
+                                    )
 
-  -- The Applicative instance of the Promise uses the succ
-  -- continuation with the value injected by the 'pure' function.
-  -- For the '<*>' operator it piggybacks on the monad's (>>=) operator.
-  export
-  Applicative Promise where
-    pure x = MkPromise (\succ => \err => succ x)
-    x <*> y = x >>= (\f => f <$> y)
+-- The Applicative instance of the Promise uses the succ
+-- continuation with the value injected by the 'pure' function.
+-- The '<*>' operator is based on the Monad's bind implementation.
+export
+Applicative Promise where
+  pure x = MkPromise (\succ => \err => succ x)
+  x <*> y = x `bind` (\f => f <$> y)
 
-  -- Promise is like the continuation monad, we can create a new command
-  -- function applying the result of the success computation in the
-  -- 'f' continuation which computes another Promise that can be unwrapped.
-  export
-  Monad Promise where
-    (MkPromise cmd) >>= f = MkPromise (\succ =>
-                                        \err =>
-                                                cmd (\x =>
-                                                          let (MkPromise cmd_) = (f x)
-                                                          in cmd_ succ err
-                                                    ) err
-                                      )
+-- Promise is like the continuation monad, we can create a new command
+-- function applying the result of the success computation in the
+-- 'f' continuation which computes another Promise that can be unwrapped.
+export
+Monad Promise where
+  (>>=) = bind
 
 ||| The Promise monad under the hood relies on the IO monad, for that
 ||| reason we can use the IO monad, execute the IO computation and
