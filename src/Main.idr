@@ -126,6 +126,15 @@ Show Config where
     , "teamSlugs: \{show config.teamSlugs}"
     ]
 
+json : Config -> JSON
+json (MkConfig updatedAt org repo teamSlugs) = 
+  JObject [
+      ("org"      , JString org)
+    , ("repo"     , JString repo)
+    , ("teamSlugs", JArray $ JString <$> sort teamSlugs)
+    , ("updatedAt", JNumber $ cast updatedAt)
+    ]
+
 lookupAll : Vect n String -> List (String, JSON) -> Either String (Vect n JSON)
 lookupAll [] dict            = Right []
 lookupAll (key :: keys) dict = [| lookup' key dict :: lookupAll keys dict |]
@@ -179,8 +188,11 @@ createConfig =
           , repo
           , teamSlugs
           }
-        liftIO $ putStrLn "Your new configuration is:"
-        liftIO $ printLn config
+        liftIO $
+          do Right () <- writeFile "config.json" (format 2 $ json config)
+               | Left err => exitError "Failed to write new config file to config.json: \{show err}."
+             putStrLn "Your new configuration is:"
+             printLn config
         pure config
 
 covering
