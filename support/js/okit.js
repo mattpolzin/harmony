@@ -10,6 +10,17 @@ const idris__unpromisify = (promise, onSuccess, onFailure) =>
 const newline_delimited = array =>
   array.join("\n")
 
+// list teams
+const teams = teamsJson =>
+  teamsJson.map(t => t.slug)
+
+const okit_list_teams = (octokit, org, onSuccess, onFailure) =>
+  idris__unpromisify(
+    octokit.rest.teams.list({ org, per_page: 100 }),
+    r => onSuccess(newline_delimited(teams(r.data))),
+    onFailure
+  )
+
 // list PR reviewers
 const reviewers = prJson =>
   prJson.flatMap(pr => pr.requested_reviewers.map(u => u.login))

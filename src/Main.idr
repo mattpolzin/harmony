@@ -25,6 +25,13 @@ promiseIO : (primFn : (String -> PrimIO ()) -> (String -> PrimIO ()) -> PrimIO (
 promiseIO primFn = 
   promisify $ \ok,notOk => primFn (\res => toPrim $ ok res) (\err => toPrim $ notOk err)
 
+%foreign "node:support:list_teams,okit"
+prim__listTeams : Ptr OctokitRef -> (org : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+listTeams : Octokit => (org : String) -> Promise (List String)
+listTeams @{(Kit ptr)} org = 
+  lines <$> (promiseIO $ prim__listTeams ptr org)
+
 data PullRequestState = Open | Closed
 
 Show PullRequestState where
@@ -54,10 +61,11 @@ exitError err =
   do putStrLn err
      exitFailure
 
-tmp : HasIO io => (List String, List String) -> io ()
-tmp (x, y) =
-  do print x
-     print y
+tmp : HasIO io => (List String, List String, List String) -> io ()
+tmp (x, y, z) =
+  do printLn x
+     printLn y
+     printLn z
 
 Timestamp : Type
 Timestamp = Bits32
@@ -134,6 +142,7 @@ main =
      (Kit kit) <- octokit pat
      resolve' tmp exitError $
        do pullReviewers <- listPullReviewers config.org config.repo Nothing
+          teams <- listTeams config.org
           teamMembers   <- maybe (pure []) (listTeamMembers config.org) $ head' config.teamSlugs
-          pure (pullReviewers, teamMembers)
+          pure (pullReviewers, teams, teamMembers)
 
