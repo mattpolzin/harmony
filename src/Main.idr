@@ -32,6 +32,13 @@ listTeams : Octokit => (org : String) -> Promise (List String)
 listTeams @{(Kit ptr)} org = 
   lines <$> (promiseIO $ prim__listTeams ptr org)
 
+%foreign "node:support:list_pr_numbers,okit"
+prim__listPullNumbersForBranch : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (branch : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+listPullNumbersForBranch : Octokit => (owner : String) -> (repo : String) -> (branch : String) -> Promise (List String)
+listPullNumbersForBranch @{(Kit ptr)} owner repo branch = 
+  lines <$> (promiseIO $ prim__listPullNumbersForBranch ptr owner repo branch)
+
 data PullRequestState = Open | Closed
 
 Show PullRequestState where
@@ -61,9 +68,10 @@ exitError err =
   do putStrLn err
      exitFailure
 
-tmp : HasIO io => (List String, List String, List String) -> io ()
-tmp (x, y, z) =
-  do printLn x
+tmp : HasIO io => (List String, List String, List String, List String) -> io ()
+tmp (w, x, y, z) =
+  do printLn w
+     printLn x
      printLn y
      printLn z
 
@@ -144,5 +152,6 @@ main =
        do pullReviewers <- listPullReviewers config.org config.repo Nothing
           teams <- listTeams config.org
           teamMembers   <- maybe (pure []) (listTeamMembers config.org) $ head' config.teamSlugs
-          pure (pullReviewers, teams, teamMembers)
+          openPrs <- listPullNumbersForBranch config.org config.repo "current-branch-name-here"
+          pure (pullReviewers, teams, teamMembers, openPrs)
 

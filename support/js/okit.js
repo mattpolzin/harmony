@@ -14,10 +14,23 @@ const newline_delimited = array =>
 const teams = teamsJson =>
   teamsJson.map(t => t.slug)
 
+// @Returns [String]
 const okit_list_teams = (octokit, org, onSuccess, onFailure) =>
   idris__unpromisify(
     octokit.rest.teams.list({ org, per_page: 100 }),
     r => onSuccess(newline_delimited(teams(r.data))),
+    onFailure
+  )
+
+// list PRs for branch
+const prs = prJson =>
+  prJson.map(pr => pr.number)
+
+// @Returns [Int]
+const okit_list_pr_numbers = (octokit, owner, repo, branch, onSuccess, onFailure) =>
+  idris__unpromisify(
+    octokit.rest.pulls.list({ owner, repo, head: `${owner}:${branch}`, state: 'open', per_page: 10 }),
+    r => onSuccess(newline_delimited(prs(r.data))),
     onFailure
   )
 
