@@ -15,5 +15,5 @@ build: node_modules
 clean:
 	rm -rf ./build/
 	rm -rf ./node_modules
-	rm harmony.js
+	rm ./harmony.js
 

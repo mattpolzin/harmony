@@ -1,5 +1,6 @@
 module Main
 
+import Data.Bits
 import Data.Either
 import Data.List
 import Data.Promise
@@ -163,28 +164,53 @@ parseConfig = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parseConfi
     parseConfigJson (JArray _) = Left "Expected config JSON to be an Object, not an array."
     parseConfigJson _          = Left "Expected config JSON to be an Object."
 
+createConfig : Octokit => Promise Config
+createConfig = 
+  do putStrLn "Creating a new configuration (storing in config.json)..."
+     putStrLn "What GitHub org would you like to use harmony for?"
+     org <- trim <$> getLine
+     putStrLn "What repository would you like to use harmony for?"
+     repo <- trim <$> getLine
+     updatedAt <- cast <$> time
+     do teamSlugs <- listTeams org
+        let config = MkConfig {
+            updatedAt
+          , org
+          , repo
+          , teamSlugs
+          }
+        liftIO $ putStrLn "Your new configuration is:"
+        liftIO $ printLn config
+        pure config
+
 covering
-loadConfig : HasIO io => io Config
-loadConfig = 
-  do Right configFile <- readFile "config.json"
-       | Left err => exitError "Error loading config.json: \{show err}."
-     case parseConfig configFile of
-          Right config => pure config
-          Left err => exitError err
+loadConfig : Octokit => Promise Config
+loadConfig =
+  do Right configFile <- liftIO $ readFile "config.json"
+       | Left FileNotFound => createConfig
+       | Left err => liftIO $ exitError "Error loading config.json: \{show err}."
+     liftIO $
+       case parseConfig configFile of
+            Right config => pure config
+            Left err => exitError err
 
 covering
 main : IO ()
 main =
   do Just pat <- getEnv "GITHUB_PAT"
        | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
-     config <- loadConfig
-     print config
+     [teamName] <- drop 2 <$> getArgs -- drop node & harmony.js arguments
+       | []   => exitError "You must specify a team name as the first argument to harmony."
+       | args => exitError "Unexpected command line arguments: \{show args}."
+     putStrLn "Team Name: \{teamName}."
      _ <- octokit pat
      _ <- git
      resolve' tmp exitError $
-       do pullReviewers <- listPullReviewers config.org config.repo Nothing
+       do config <- loadConfig
+          -- liftIO $ print config
+          pullReviewers <- listPullReviewers config.org config.repo Nothing
           teams         <- listTeams config.org
-          teamMembers   <- maybe (pure []) (listTeamMembers config.org) $ head' teams -- config.teamSlugs
+          teamMembers   <- listTeamMembers config.org teamName
           branch        <- currentBranch
           liftIO $ putStrLn "current branch: \{branch}"
           openPrs       <- listPullNumbersForBranch config.org config.repo branch
