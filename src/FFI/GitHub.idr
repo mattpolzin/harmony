@@ -9,6 +9,8 @@ import FFI
 import Language.JSON
 import Language.JSON.Accessors
 
+%default total
+
 okit_ffi : (fnName : String) -> String
 okit_ffi = node_ffi "okit"
 

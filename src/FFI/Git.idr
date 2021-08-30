@@ -3,6 +3,8 @@ module FFI.Git
 import Data.Promise
 import FFI
 
+%default total
+
 git_ffi : (fnName : String) -> String
 git_ffi = node_ffi "git"
 

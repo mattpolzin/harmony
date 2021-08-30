@@ -1,5 +1,7 @@
 module Data.PullRequest
 
+%default total
+
 public export
 record PullRequest where
   constructor MkPullRequest

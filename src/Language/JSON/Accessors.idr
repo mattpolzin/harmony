@@ -5,6 +5,8 @@ import Data.List
 import Data.Vect
 import Language.JSON
 
+%default total
+
 export
 lookupAll : Vect n String -> List (String, JSON) -> Either String (Vect n JSON)
 lookupAll [] dict            = Right []
