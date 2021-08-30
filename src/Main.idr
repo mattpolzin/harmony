@@ -18,12 +18,6 @@ exitError err =
   do putStrLn err
      exitFailure
 
-tmp : HasIO io => (List String, List String, List String) -> io ()
-tmp (w, x, y) =
-  do printLn w
-     printLn x
-     printLn y
-
 createConfig : Octokit => Promise Config
 createConfig = 
   do putStrLn "Creating a new configuration (storing in config.json)..."
@@ -67,19 +61,22 @@ main =
        | args => exitError "Unexpected command line arguments: \{show args}."
      _ <- octokit pat
      _ <- git
-     resolve' tmp exitError $
+     resolve' pure exitError $
        do config <- loadConfig
           -- liftIO $ printLn config
           pullReviewers <- listPullReviewers config.org config.repo Nothing
           teams         <- listTeams config.org
           teamMembers   <- listTeamMembers config.org teamName
-          liftIO $ printLn teamMembers
+          -- liftIO $ printLn teamMembers
           branch        <- currentBranch
-          liftIO $ putStrLn "current branch: \{branch}"
+          -- liftIO $ putStrLn "current branch: \{branch}"
           [openPr]      <- listPRsForBranch config.org config.repo branch
             | [] => liftIO $ exitError "No PR for current branch yet."
             | _  => liftIO $ exitError "Multiple PRs for the current brach. We only handle 1 PR per branch currently."
-          liftIO $ printLn openPr
-          _             <- addPullReviewers config.org config.repo openPr.number [] []
-          pure (pullReviewers, teams, teamMembers)
+          -- liftIO $ printLn openPr
+          let user = ""
+          _             <- addPullReviewers config.org config.repo openPr.number [user] []
+          when (user /= "") $
+            liftIO $ putStrLn "Assigned \{user} to the open PR for the current branch (\{branch})."
+          pure ()
 
