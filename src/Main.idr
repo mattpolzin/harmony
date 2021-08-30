@@ -5,6 +5,7 @@ import Data.Either
 import Data.List
 import Data.Promise
 import Data.String
+import Data.String.Extra
 import Data.Vect
 import Language.JSON
 import System
@@ -73,6 +74,18 @@ listPullReviewers : Octokit => (owner : String) -> (repo : String) -> (stateFilt
 listPullReviewers @{(Kit ptr)} owner repo stateFilter = 
   lines <$> (promiseIO $ prim__listPullReviewers ptr owner repo (pullRequestStateFilter stateFilter))
 
+-- reviewers and teamReviewers should be comma separated values encoded in a string.
+%foreign okit_ffi "add_reviewers"
+prim__addPullReviewers : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (pullNumber : Integer) -> (reviewers : String) -> (teamReviewers : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+||| Add reviewers to a Pull Request.
+|||
+||| onSuccess will receive a newline delimited list of
+||| all reviewers of the modified PR.
+addPullReviewers : Octokit => (owner : String) -> (repo : String) -> (pullNumber : Integer) -> (reviewers : List String) -> (teamReviewers : List String) -> Promise (List String)
+addPullReviewers @{(Kit ptr)} owner repo pullNumber reviewers teamReviewers = 
+  lines <$> (promiseIO $ prim__addPullReviewers ptr owner repo pullNumber (join "," reviewers) (join "," teamReviewers))
+
 %foreign okit_ffi "list_team_members"
 prim__listTeamMembers : Ptr OctokitRef -> (org : String) -> (teamSlug : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
@@ -101,12 +114,11 @@ exitError err =
   do putStrLn err
      exitFailure
 
-tmp : HasIO io => (List String, List String, List String, List Integer) -> io ()
-tmp (w, x, y, z) =
+tmp : HasIO io => (List String, List String, List String) -> io ()
+tmp (w, x, y) =
   do printLn w
      printLn x
      printLn y
-     printLn z
 
 Timestamp : Type
 Timestamp = Bits32
@@ -214,17 +226,20 @@ main =
      [teamName] <- drop 2 <$> getArgs -- drop node & harmony.js arguments
        | []   => exitError "You must specify a team name as the first argument to harmony."
        | args => exitError "Unexpected command line arguments: \{show args}."
-     putStrLn "Team Name: \{teamName}."
      _ <- octokit pat
      _ <- git
      resolve' tmp exitError $
        do config <- loadConfig
-          -- liftIO $ print config
+          -- liftIO $ printLn config
           pullReviewers <- listPullReviewers config.org config.repo Nothing
           teams         <- listTeams config.org
           teamMembers   <- listTeamMembers config.org teamName
+          liftIO $ printLn teamMembers
           branch        <- currentBranch
           liftIO $ putStrLn "current branch: \{branch}"
-          openPrs       <- listPullNumbersForBranch config.org config.repo branch
-          pure (pullReviewers, teams, teamMembers, openPrs)
+          [openPr]      <- listPullNumbersForBranch config.org config.repo branch
+            | [] => liftIO $ exitError "No PR for current branch yet."
+            | _  => liftIO $ exitError "Multiple PRs for the current brach. We only handle 1 PR per branch currently."
+          _             <- addPullReviewers config.org config.repo openPr [] []
+          pure (pullReviewers, teams, teamMembers)
 

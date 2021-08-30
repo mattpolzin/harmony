@@ -10,51 +10,67 @@ const idris__okit_unpromisify = (promise, onSuccess, onFailure) =>
 const newline_delimited = array =>
   array.join("\n")
 
+const from_comma_delimited = str => {
+  if (str === '') { return [] }
+  return str.split(',')
+}
+
 // list teams
-const teams = teamsJson =>
+const digTeams = teamsJson =>
   teamsJson.map(t => t.slug)
 
-// @Returns [String]
+// Executes callback with [String]
 const okit_list_teams = (octokit, org, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.teams.list({ org, per_page: 100 }),
-    r => onSuccess(newline_delimited(teams(r.data))),
+    r => onSuccess(newline_delimited(digTeams(r.data))),
     onFailure
   )
 
 // list PRs for branch
-const prs = prJson =>
+const digPrs = prJson =>
   prJson.map(pr => pr.number)
 
-// @Returns [Int]
+// Executes callback with [Int]
 const okit_list_pr_numbers = (octokit, owner, repo, branch, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.pulls.list({ owner, repo, head: `${owner}:${branch}`, state: 'open', per_page: 10 }),
-    r => onSuccess(newline_delimited(prs(r.data))),
+    r => onSuccess(newline_delimited(digPrs(r.data))),
     onFailure
   )
 
 // list PR reviewers
-const reviewers = prJson =>
+const digReviewers = prJson =>
   prJson.flatMap(pr => pr.requested_reviewers.map(u => u.login))
 
-// @Returns [String]
+// Executes callback with [String]
 const okit_list_reviewers = (octokit, owner, repo, state, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.pulls.list({ owner, repo, state, per_page: 100 }),
-    r => onSuccess(newline_delimited(reviewers(r.data))),
+    r => onSuccess(newline_delimited(digReviewers(r.data))),
+    onFailure
+  )
+
+// add PR reviewers
+// @param reviewers String A comma separated list of reviewer logins.
+// @param teamReviewers String A comma separated list of team slugs.
+// Executes callback with [String] (logins for all reviewers).
+const okit_add_reviewers = (octokit, owner, repo, pull_number, reviewers, team_reviewers, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.pulls.requestReviewers({ owner, repo, pull_number: Number(pull_number), reviewers: from_comma_delimited(reviewers), team_reviewers: from_comma_delimited(team_reviewers) }),
+    r => onSuccess(newline_delimited(digReviewers([r.data]))),
     onFailure
   )
 
 // list team members
-const team_members = teamJson =>
+const digTeamMembers = teamJson =>
   teamJson.map(u => u.login)
 
-// @Returns [String]
+// Executes callback with [String]
 const okit_list_team_members = (octokit, org, team_slug, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.teams.listMembersInOrg({ org, team_slug }),
-    r => onSuccess(newline_delimited(team_members(r.data))),
+    r => onSuccess(newline_delimited(digTeamMembers(r.data))),
     onFailure
   )
 
