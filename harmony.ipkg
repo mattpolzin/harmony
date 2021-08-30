@@ -11,7 +11,6 @@ authors = "Mathew Polzin"
 
 depends = contrib
 
--- modules to install
 modules = Main
 
 -- main file (i.e. file to load at REPL)
