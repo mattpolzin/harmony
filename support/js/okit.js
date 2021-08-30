@@ -29,13 +29,13 @@ const okit_list_teams = (octokit, org, onSuccess, onFailure) =>
 
 // list PRs for branch
 const digPrs = prJson =>
-  prJson.map(pr => pr.number)
+  prJson.map(pr => { return { pull_number: pr.number, author: pr.user.login } })
 
-// Executes callback with [Int]
+// Executes callback with stringified JSON {"pull_number": Int, "author": String}
 const okit_list_pr_numbers = (octokit, owner, repo, branch, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.pulls.list({ owner, repo, head: `${owner}:${branch}`, state: 'open', per_page: 10 }),
-    r => onSuccess(newline_delimited(digPrs(r.data))),
+    r => onSuccess(JSON.stringify(digPrs(r.data))),
     onFailure
   )
 
