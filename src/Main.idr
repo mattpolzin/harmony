@@ -2,14 +2,19 @@ module Main
 
 import Data.Config
 import Data.List
+import Data.List1
 import Data.Promise
-import Data.String
-import Language.JSON
-import System
-import System.File
 import Data.PullRequest
+import Data.String
 import FFI.Git
 import FFI.GitHub
+import Language.JSON
+import Reviewer
+import System
+import System.File
+import System.Random.Node
+
+import Debug.Trace
 
 %default total
 
@@ -64,19 +69,20 @@ main =
      resolve' pure exitError $
        do config <- loadConfig
           -- liftIO $ printLn config
-          pullReviewers <- listPullReviewers config.org config.repo Nothing
-          teams         <- listTeams config.org
-          teamMembers   <- listTeamMembers config.org teamName
-          -- liftIO $ printLn teamMembers
-          branch        <- currentBranch
+          branch          <- currentBranch
           -- liftIO $ putStrLn "current branch: \{branch}"
-          [openPr]      <- listPRsForBranch config.org config.repo branch
+          [openPr]        <- listPRsForBranch config.org config.repo branch
             | [] => liftIO $ exitError "No PR for current branch yet."
             | _  => liftIO $ exitError "Multiple PRs for the current brach. We only handle 1 PR per branch currently."
           -- liftIO $ printLn openPr
-          let user = ""
-          _             <- addPullReviewers config.org config.repo openPr.number [user] []
-          when (user /= "") $
-            liftIO $ putStrLn "Assigned \{user} to the open PR for the current branch (\{branch})."
+          closedReviewers <- listPullReviewers config.org config.repo (Just Closed) 30
+          openReviewers   <- listPullReviewers config.org config.repo (Just Open) 40
+          teams           <- listTeams config.org
+          teamMembers     <- listTeamMembers config.org teamName
+          -- liftIO $ printLn teamMembers
+          user <- liftIO . randomReviewer $ chooseReviewers closedReviewers openReviewers teamMembers [] openPr.author
+          whenJust user $ \chosen =>
+            do -- _ <- addPullReviewers config.org config.repo openPr.number [chosen] []
+               liftIO $ putStrLn "Assigned \{chosen} to the open PR for the current branch (\{branch})."
           pure ()
 

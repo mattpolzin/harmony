@@ -9,6 +9,8 @@ import FFI
 import Language.JSON
 import Language.JSON.Accessors
 
+import public Data.Fin
+
 %default total
 
 okit_ffi : (fnName : String) -> String
@@ -69,12 +71,12 @@ pullRequestStateFilter Nothing = "all"
 pullRequestStateFilter (Just s) = show s
 
 %foreign okit_ffi "list_reviewers"
-prim__listPullReviewers : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+prim__listPullReviewers : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (pageLimit : Int16) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
 export
-listPullReviewers : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PullRequestState) -> Promise (List String)
-listPullReviewers @{(Kit ptr)} owner repo stateFilter = 
-  lines <$> (promiseIO $ prim__listPullReviewers ptr owner repo (pullRequestStateFilter stateFilter))
+listPullReviewers : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PullRequestState) -> (pageLimit : Fin 100) -> Promise (List String)
+listPullReviewers @{(Kit ptr)} owner repo stateFilter pageLimit = 
+  lines <$> (promiseIO $ prim__listPullReviewers ptr owner repo (pullRequestStateFilter stateFilter) (cast $ finToNat pageLimit))
 
 -- reviewers and teamReviewers should be comma separated values encoded in a string.
 %foreign okit_ffi "add_reviewers"

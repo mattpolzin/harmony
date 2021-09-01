@@ -44,9 +44,9 @@ const digReviewers = prJson =>
   prJson.flatMap(pr => pr.requested_reviewers.map(u => u.login))
 
 // Executes callback with [String]
-const okit_list_reviewers = (octokit, owner, repo, state, onSuccess, onFailure) =>
+const okit_list_reviewers = (octokit, owner, repo, state, per_page, onSuccess, onFailure) =>
   idris__okit_unpromisify(
-    octokit.rest.pulls.list({ owner, repo, state, per_page: 100 }),
+    octokit.rest.pulls.list({ owner, repo, state, per_page }),
     r => onSuccess(newline_delimited(digReviewers(r.data))),
     onFailure
   )
