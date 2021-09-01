@@ -10,10 +10,12 @@ node_modules:
 
 build: node_modules
 	IDRIS2_DATA=./support $(idris2) --build harmony.ipkg
-	cp ./build/exec/harmony ./harmony.js
+	@echo "#!/usr/bin/env node\n" > ./harmony
+	@cat ./build/exec/harmony >> ./harmony
+	@chmod +x ./harmony
 
 clean:
 	rm -rf ./build/
 	rm -rf ./node_modules
-	rm ./harmony.js
+	rm ./harmony
 

@@ -3,8 +3,8 @@
 build/
 node_modules/
 
-harmony.js
 config.json
+harmony
 
 .*.swp
 *.idr~
