@@ -2,7 +2,6 @@ module Main
 
 import Data.Config
 import Data.List
-import Data.List1
 import Data.Promise
 import Data.PullRequest
 import Data.String
@@ -12,7 +11,6 @@ import Language.JSON
 import Reviewer
 import System
 import System.File
-import System.Random.Node
 
 import Debug.Trace
 
