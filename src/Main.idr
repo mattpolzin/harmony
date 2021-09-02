@@ -1,5 +1,6 @@
 module Main
 
+import BashCompletion
 import Data.Config
 import Data.List
 import Data.Promise
@@ -43,29 +44,52 @@ createConfig =
              printLn config
         pure config
 
+data ConfigError = File FileError
+                 | Parse String
+
+Show ConfigError where
+  show (File e)  = show e
+  show (Parse e) = show e
+
 covering
-loadConfig : Octokit => Promise Config
-loadConfig =
-  do Right configFile <- liftIO $ readFile "config.json"
-       | Left FileNotFound => createConfig
-       | Left err => liftIO $ exitError "Error loading config.json: \{show err}."
-     liftIO $
-       case parseConfig configFile of
-            Right config => pure config
-            Left err => exitError err
+loadConfig : HasIO io => io (Either ConfigError Config)
+loadConfig = let (>>=) = (>>=) @{Monad.Compose} in
+  do configFile <- mapFst File <$> readFile "config.json"
+     pure . mapFst Parse $ parseConfig configFile
+
+covering
+loadOrCreateConfig : Octokit => Promise Config
+loadOrCreateConfig = 
+  do Right config <- loadConfig
+       | Left (File FileNotFound) => createConfig
+       | Left err => exitError "Error loading config.json: \{show err}."
+     pure config
+
+covering
+bashCompletion : HasIO io => (curWord : String) -> (prevWord : String) -> io ()
+bashCompletion curWord prevWord = 
+  do Right config <- loadConfig
+       | Left _ => pure ()
+     let completions = BashCompletion.opts curWord prevWord
+     putStr $ unlines completions
 
 covering
 main : IO ()
 main =
-  do Just pat <- getEnv "GITHUB_PAT"
-       | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
-     [teamName] <- drop 2 <$> getArgs -- drop node & harmony.js arguments
-       | []   => exitError "You must specify a team name as the first argument to harmony."
+  do [arg1] <- drop 2 <$> getArgs -- drop node & harmony.js arguments
+       | [] => exitError "You must specify a team name as the first argument to harmony."
+       | ["--bash-completion", curWord, prevWord] => bashCompletion curWord prevWord
        | args => exitError "Unexpected command line arguments: \{show args}."
+     when (arg1 == "--bash-completion-script") $
+       do putStrLn BashCompletion.script
+          exitSuccess
+     let teamName = arg1
+     Just pat <- getEnv "GITHUB_PAT"
+       | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
      _ <- octokit pat
      _ <- git
      resolve' pure exitError $
-       do config <- loadConfig
+       do config <- loadOrCreateConfig
           -- liftIO $ printLn config
           branch          <- currentBranch
           -- liftIO $ putStrLn "current branch: \{branch}"

@@ -1,7 +1,7 @@
 
 idris2 = idris2
 
-.PHONY: all build clean
+.PHONY: all build install clean
 
 all: build
 
@@ -13,6 +13,11 @@ build: node_modules
 	@echo "#!/usr/bin/env node\n" > ./harmony
 	@cat ./build/exec/harmony >> ./harmony
 	@chmod +x ./harmony
+
+harmony: build
+
+install: harmony
+	npm install --global
 
 clean:
 	rm -rf ./build/
