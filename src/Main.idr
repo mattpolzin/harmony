@@ -37,11 +37,10 @@ createConfig =
           , repo
           , teamSlugs
           }
-        liftIO $
-          do Right () <- writeFile "config.json" (format 2 $ json config)
-               | Left err => exitError "Failed to write new config file to config.json: \{show err}."
-             putStrLn "Your new configuration is:"
-             printLn config
+        do Right () <- writeFile "config.json" (format 2 $ json config)
+             | Left err => exitError "Failed to write new config file to config.json: \{show err}."
+           putStrLn "Your new configuration is:"
+           printLn config
         pure config
 
 data ConfigError = File FileError
@@ -90,21 +89,21 @@ main =
      _ <- git
      resolve' pure exitError $
        do config <- loadOrCreateConfig
-          -- liftIO $ printLn config
+          -- printLn config
           branch          <- currentBranch
-          -- liftIO $ putStrLn "current branch: \{branch}"
+          -- putStrLn "current branch: \{branch}"
           [openPr]        <- listPRsForBranch config.org config.repo branch
             | [] => liftIO $ exitError "No PR for current branch yet."
             | _  => liftIO $ exitError "Multiple PRs for the current brach. We only handle 1 PR per branch currently."
-          -- liftIO $ printLn openPr
+          -- printLn openPr
           closedReviewers <- listPullReviewers config.org config.repo (Just Closed) 30
           openReviewers   <- listPullReviewers config.org config.repo (Just Open) 40
           teams           <- listTeams config.org
           teamMembers     <- listTeamMembers config.org teamName
-          -- liftIO $ printLn teamMembers
-          user <- liftIO . randomReviewer $ chooseReviewers closedReviewers openReviewers teamMembers [] openPr.author
+          -- printLn teamMembers
+          user <- randomReviewer $ chooseReviewers closedReviewers openReviewers teamMembers [] openPr.author
           whenJust user $ \chosen =>
-            do -- _ <- addPullReviewers config.org config.repo openPr.number [chosen] []
-               liftIO $ putStrLn "Assigned \{chosen} to the open PR for the current branch (\{branch})."
+            do -- _ <- addPullReviewers config.org config.repo openPr.number [chosen] [teamName]
+               putStrLn "Assigned \{chosen} and team \{teamName} to the open PR for the current branch (\{branch})."
           pure ()
 

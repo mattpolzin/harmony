@@ -59,7 +59,7 @@ chooseReviewers closedReviews openReviews candidates forcedReviewers author =
              ((Just (_, s2'), ys'), _    ) => (l1, s1 + s2') :: zipReviews xs ys' filter
 
 export
-randomReviewer : List (login, Nat) -> IO (Maybe login)
+randomReviewer : HasIO io => List (login, Nat) -> io (Maybe login)
 randomReviewer [] = pure Nothing
 randomReviewer (x :: xs) = (Just . fst) <$> rndSelect (x :: xs)
 
