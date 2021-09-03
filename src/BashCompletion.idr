@@ -8,6 +8,13 @@ import Debug.Trace
 
 %default total
 
+allRootCmds : List String
+allRootCmds = [
+    "assign"
+  , "pr"
+  ]
+
+
 -- given a pair of strings, the first representing the word
 -- actually being edited, the second representing the word
 -- before the one being edited, return a list of possible
@@ -15,8 +22,12 @@ import Debug.Trace
 -- will perform directory completion.
 export
 opts : Config => String -> String -> List String
-opts @{config} partialTeamName _ =
+opts @{config} "--" "assign" = config.teamSlugs
+opts @{config} partialTeamName "assign" =
   filter (isPrefixOf partialTeamName) config.teamSlugs
+
+opts @{_} "--" _ = allRootCmds
+opts @{_} partialCmd _ = filter (isPrefixOf partialCmd) allRootCmds
 
 export
 script : String
@@ -27,6 +38,6 @@ _harmony()
   COMPREPLY=($(harmony --bash-completion $ED $3))
 }
 
-complete -F _harmony -o default harmony
+complete -F _harmony harmony
 """
 

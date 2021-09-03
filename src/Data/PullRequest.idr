@@ -1,5 +1,7 @@
 module Data.PullRequest
 
+import Data.Config
+
 %default total
 
 public export
@@ -15,4 +17,8 @@ record PullRequest where
 export
 Show PullRequest where
   show (MkPullRequest number author) = "(\{show number}, \{show author})"
+
+export
+(.webURI) : Config => PullRequest -> String
+pr.webURI @{config} = "https://github.com/\{config.org}/\{config.repo}/pull/\{show pr.number}"
 

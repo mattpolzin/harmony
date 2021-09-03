@@ -133,12 +133,14 @@ parseJiraPrefix = map (pack . reverse) . guardSuccess . foldl go startOver . unp
       -- once we are done, we just ignore the remaining characters.
     go (End  , cs) c   = (End, cs)
 
-identifyOrCreatePR : Config => Octokit => (branch : String) -> Promise PullRequest
+data IdentifiedOrCreated = Identified | Created
+
+identifyOrCreatePR : Config => Octokit => (branch : String) -> Promise (IdentifiedOrCreated, PullRequest)
 identifyOrCreatePR @{config} branch =
   do [openPr] <- listPRsForBranch config.org config.repo branch
-       | [] => createPR
+       | [] => (Created,) <$> createPR
        | _  => reject "Multiple PRs for the current brach. We only handle 1 PR per branch currently."
-     pure openPr
+     pure (Identified, openPr)
   where
     createPR : Promise PullRequest
     createPR =
@@ -160,28 +162,39 @@ identifyOrCreatePR @{config} branch =
 resolve'' : Promise () -> IO ()
 resolve'' = resolve' pure exitError
 
+handleArgs : Config => Git => Octokit => List String -> Promise ()
+handleArgs [] =
+  exitError "You must specify a subcommand as the first argument to harmony." 
+handleArgs ["--bash-completion-script"] =
+  putStrLn BashCompletion.script
+handleArgs ["pr"] =
+  do (Identified, pr) <- identifyOrCreatePR !currentBranch
+       | _ => pure ()
+     putStrLn pr.webURI
+handleArgs ["assign", teamName] =
+  do (_, openPr) <- identifyOrCreatePR !currentBranch
+     requestBestReviewer openPr teamName
+handleArgs ["assign"] =
+  exitError "The assign commaand expects the name of a GitHub Team as an argument."
+handleArgs args =
+  exitError "Unexpected command line arguments: \{show args}."
+
 covering
 main : IO ()
 main =
   do Just pat <- getEnv "GITHUB_PAT"
        | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
      _ <- octokit pat
-     True <- exists Config.filename
-       | False => resolve'' $ () <$ createConfig
-     [arg1] <- drop 2 <$> getArgs -- drop node & harmony.js arguments
-       | [] => exitError "You must specify a team name as the first argument to harmony."
-       | ["--bash-completion", curWord, prevWord] => bashCompletion curWord prevWord
-       | args => exitError "Unexpected command line arguments: \{show args}."
-     when (arg1 == "--bash-completion-script") $
-       do putStrLn BashCompletion.script
-          exitSuccess
-     let teamName = arg1
      _ <- git
-     resolve'' $
-       do config <- loadOrCreateConfig
-          -- printLn config
-          branch          <- currentBranch
-          -- putStrLn "current branch: \{branch}"
-          openPr <- identifyOrCreatePR branch
-          requestBestReviewer openPr teamName
+     -- drop 2 for `node` and `harmony.js`
+     args <- drop 2 <$> getArgs
+     -- bash completion is a special case where we don't want to create the config
+     -- if it doesn't exist yet so we handle it up front.
+     case args of
+          ["--bash-completion", curWord, prevWord] => bashCompletion curWord prevWord
+          _ => resolve'' $
+                 do -- create the config file before continuing if it does not exist yet
+                    _ <- loadOrCreateConfig
+                    -- then handle any arguments given
+                    handleArgs args
 
