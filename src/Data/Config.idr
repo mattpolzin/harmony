@@ -21,6 +21,7 @@ record Config where
   repo       : String
   mainBranch : String
   teamSlugs  : List String
+  filepath   : String -- not written out to file
 
 %name Config config
 
@@ -36,7 +37,7 @@ Show Config where
 
 export
 json : Config -> JSON
-json (MkConfig updatedAt org repo mainBranch teamSlugs) = 
+json (MkConfig updatedAt org repo mainBranch teamSlugs _) = 
   JObject [
       ("mainBranch", JString mainBranch)
     , ("org"       , JString org)
@@ -46,8 +47,8 @@ json (MkConfig updatedAt org repo mainBranch teamSlugs) =
     ]
 
 export
-parseConfig : String -> Either String Config
-parseConfig = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parseConfigJson
+parseConfig : (filepath : String) -> (filecontents : String) -> Either String Config
+parseConfig filepath = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parseConfigJson
   where
     parseConfigJson : JSON -> Either String Config
     parseConfigJson (JObject config) = do [updatedAt, org, repo, mainBranch, teamSlugs] <-
@@ -63,6 +64,7 @@ parseConfig = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parseConfi
                                             , repo       = r
                                             , mainBranch = mb
                                             , teamSlugs  = ts
+                                            , filepath   = filepath
                                             }
     parseConfigJson (JArray _) = Left "Expected config JSON to be an Object, not an array."
     parseConfigJson _          = Left "Expected config JSON to be an Object."

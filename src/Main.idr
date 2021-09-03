@@ -2,6 +2,7 @@ module Main
 
 import BashCompletion
 import Data.Config
+import Data.Either
 import Data.List
 import Data.Promise
 import Data.PullRequest
@@ -39,6 +40,7 @@ createConfig =
           , repo
           , mainBranch
           , teamSlugs
+          , filepath = "."
           }
         do Right () <- writeFile Config.filename (format 2 $ json config)
              | Left err => exitError "Failed to write new config file to \{Config.filename}: \{show err}."
@@ -53,11 +55,22 @@ Show ConfigError where
   show (File e)  = show e
   show (Parse e) = show e
 
+findConfig : HasIO io => (startDir : String) -> Fuel -> io (Maybe String)
+findConfig startDir Dry = pure Nothing
+findConfig startDir (More fuel) = 
+  let location = "\{startDir}/\{Config.filename}"
+  in if !(exists location)
+       then pure (Just location)
+       else findConfig "\{startDir}/.." fuel
+
 covering
 loadConfig : HasIO io => io (Either ConfigError Config)
 loadConfig = let (>>=) = (>>=) @{Monad.Compose} in
-  do configFile <- mapFst File <$> readFile Config.filename
-     pure . mapFst Parse $ parseConfig configFile
+  do location   <- mapFst File . maybeToEither FileNotFound <$>
+                     findConfig "." (limit 10)
+     configFile <- mapFst File <$> 
+                     readFile location
+     pure . mapFst Parse $ parseConfig location configFile
 
 covering
 loadOrCreateConfig : Octokit => Promise Config
