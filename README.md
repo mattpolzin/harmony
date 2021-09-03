@@ -5,10 +5,31 @@ Harmony is a small tool that helps teams keep GitHub reviews running smoothly. I
 ## Dependencies
 Building Harmony requires a HEAD build of the Idris 2 compiler but running it only requires NodeJS 12+ (and a local installation of `git`).
 
+Alternatively, you can build Harmony with Docker (see [Docker Build](#docker-build)).
+
 ## Installation
+The normal installation assumes a HEAD build of Idris 2 is installed. For an alternative, see the [Docker Build](#docker-build) instructions below.
 Build Harmony from source with a call to `make`. Then install it globally with `make install`.
 
 You need to add a GitHub [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) to your environment as the `GITHUB_PAT` variable. It's easiest to `export` that variable from your shell resource file or profile.
+
+### Docker Build
+If you want to use Harmony without installing Idris 2 on your system, you can build Harmony within a Docker container and then install the resulting Javascript onto your system.
+
+First, download the latest nightly Docker image:
+```shell
+docker pull mattpolzin2/idris-docker:nightly
+```
+
+Then, from a directory containing this Harmony git repository, build Harmony:
+```shell
+docker run --rm -v "$(pwd):/build" mattpolzin2/idris-docker:nightly bash -c "cd /build && make"
+```
+
+At this point you are done with Docker. From the same directory, install Harmony globally:
+```shell
+npm install --global
+```
 
 ### Bash completion
 Set up back completion by adding the following to your Bash resource file or profile:
