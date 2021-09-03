@@ -171,6 +171,11 @@ handleArgs ["pr"] =
   do (Identified, pr) <- identifyOrCreatePR !currentBranch
        | _ => pure ()
      putStrLn pr.webURI
+handleArgs ["list"] =
+  exitError "The list command expects the name of a GitHub Team as an argument."
+handleArgs @{config} ["list", teamName] =
+  do teamMembers <- listTeamMembers config.org teamName
+     traverse_ putStrLn teamMembers
 handleArgs ["assign", teamName] =
   do (_, openPr) <- identifyOrCreatePR !currentBranch
      requestBestReviewer openPr teamName

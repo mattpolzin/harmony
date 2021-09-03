@@ -31,9 +31,11 @@ What is the base/main branch (e.g. 'main')?
 main
 ```
 
-Once configured, Harmony supports two commands: `pr` and `assign`.
+Once configured, Harmony supports three commands: `pr`, `list`, and `assign`.
 
 Running `harmony pr` with a branch checked out will reach out to GitHub to determine if there is an open PR for that branch. If there is a PR, Harmony will print a URI that can be used to view the PR. IF there is not a PR, Harmony will help you create one.
+
+Running `harmony list <team>` will list the members of the given GitHub Team.
 
 Running `harmony assign <team>` will help you create a PR if one does not exist yet and then it will pick someone to review the PR and assign both that user and the team they belong to as reviewers of the PR.
 
