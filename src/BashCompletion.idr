@@ -23,7 +23,10 @@ allRootCmds = [
 export
 opts : Config => String -> String -> List String
 opts @{config} "--" "assign" = config.teamSlugs
+opts @{config} "--" "--dry"  = config.teamSlugs
 opts @{config} partialTeamName "assign" =
+  filter (isPrefixOf partialTeamName) config.teamSlugs
+opts @{config} partialTeamName "--dry" =
   filter (isPrefixOf partialTeamName) config.teamSlugs
 
 opts @{_} "--" _ = allRootCmds

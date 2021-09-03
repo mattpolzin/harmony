@@ -75,17 +75,19 @@ bashCompletion curWord prevWord =
      let completions = BashCompletion.opts curWord prevWord
      putStr $ unlines completions
 
-requestBestReviewer : Config => Octokit => PullRequest -> (teamName : String) -> Promise ()
-requestBestReviewer @{config} pr teamName =
+requestBestReviewer : Config => Octokit => PullRequest -> (teamName : String) -> {default False dry: Bool} -> Promise ()
+requestBestReviewer @{config} pr teamName {dry} =
   do closedReviewers <- listPullReviewers config.org config.repo (Just Closed) 30
      openReviewers   <- listPullReviewers config.org config.repo (Just Open) 40
      teams           <- listTeams config.org
      teamMembers     <- listTeamMembers config.org teamName
      -- printLn teamMembers
      user <- randomReviewer $ chooseReviewers closedReviewers openReviewers teamMembers [] pr.author
-     whenJust user $ \chosen =>
-       do -- _ <- addPullReviewers config.org config.repo openPr.number [chosen] [teamName]
-          putStrLn "Assigned \{chosen} and team \{teamName} to the open PR for the current branch."
+     case user of
+          Nothing       => putStrLn "Could not pick a user from the given Team (perhaps the only option was the author of the pull request?)."
+          (Just chosen) => do when (not dry) $
+                                ignore $ addPullReviewers config.org config.repo pr.number [chosen] [teamName]
+                              putStrLn "Assigned \{chosen} and team \{teamName} to the open PR for the current branch (\{pr.webURI})."
      pure ()
 
 getManyLines : HasIO io => Fuel -> io (List String)
@@ -165,8 +167,6 @@ resolve'' = resolve' pure exitError
 handleArgs : Config => Git => Octokit => List String -> Promise ()
 handleArgs [] =
   exitError "You must specify a subcommand as the first argument to harmony." 
-handleArgs ["--bash-completion-script"] =
-  putStrLn BashCompletion.script
 handleArgs ["pr"] =
   do (Identified, pr) <- identifyOrCreatePR !currentBranch
        | _ => pure ()
@@ -174,6 +174,9 @@ handleArgs ["pr"] =
 handleArgs ["assign", teamName] =
   do (_, openPr) <- identifyOrCreatePR !currentBranch
      requestBestReviewer openPr teamName
+handleArgs ["assign", "--dry", teamName] =
+  do (_, openPr) <- identifyOrCreatePR !currentBranch
+     requestBestReviewer openPr teamName {dry=True}
 handleArgs ["assign"] =
   exitError "The assign commaand expects the name of a GitHub Team as an argument."
 handleArgs args =
@@ -192,6 +195,7 @@ main =
      -- if it doesn't exist yet so we handle it up front.
      case args of
           ["--bash-completion", curWord, prevWord] => bashCompletion curWord prevWord
+          ["--bash-completion-script"] => putStrLn BashCompletion.script
           _ => resolve'' $
                  do -- create the config file before continuing if it does not exist yet
                     _ <- loadOrCreateConfig
