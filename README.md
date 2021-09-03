@@ -33,8 +33,15 @@ npm install --global
 ```
 
 ### Bash completion
-Set up back completion by adding the following to your Bash resource file or profile:
+Set up Bash completion by adding the following to your Bash resource file or profile:
 ```shell
+eval "$(harmony --bash-completion-script)"
+```
+
+You can set up tab completion in Zsh, too:
+```shell
+autoload -U +X compinit && compinit
+autoload -U +X bashcompinit && bashcompinit
 eval "$(harmony --bash-completion-script)"
 ```
 
