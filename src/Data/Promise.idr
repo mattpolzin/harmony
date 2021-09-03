@@ -15,6 +15,8 @@ export
 data Promise : Type -> Type where
   MkPromise : ((a -> IO ()) -> (String -> IO ()) -> IO ()) -> Promise a
 
+%name Promise p, p1, p2
+
 -- Promise is a functor, as we can pre-apply the 'f : a -> b' to the 'a' in the first computation.
 -- Hint: This is possible as because the 'a' is in a positive position, because it got twice negated.
 export

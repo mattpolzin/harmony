@@ -36,8 +36,19 @@ listTeams : Octokit => (org : String) -> Promise (List String)
 listTeams @{(Kit ptr)} org = 
   lines <$> (promiseIO $ prim__listTeams ptr org)
 
-%foreign okit_ffi "list_pr_numbers"
+%foreign okit_ffi "list_prs"
 prim__listPRsForBranch : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (branch : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+parsePR : JSON -> Promise PullRequest
+parsePR json = either $ 
+ do pr <- object json
+    [pullNumber, authorLogin] <- lookupAll ["pull_number", "author"] pr
+    number <- integer pullNumber
+    author <- string authorLogin
+    pure $ MkPullRequest {
+        number
+      , author
+      }
 
 export
 listPRsForBranch : Octokit => (owner : String) -> (repo : String) -> (branch : String) -> Promise (List PullRequest)
@@ -45,18 +56,17 @@ listPRsForBranch @{(Kit ptr)} owner repo branch =
   do Just json <- JSON.parse <$> (promiseIO $ prim__listPRsForBranch ptr owner repo branch)
        | Nothing => reject "Could not parse Pull Request JSON."
      prs <- either $ array json Right
-     traverse parse' prs
-       where
-         parse' : JSON -> Promise PullRequest
-         parse' json = either $ 
-           do pr <- object json
-              [pullNumber, authorLogin] <- lookupAll ["pull_number", "author"] pr
-              number <- integer pullNumber
-              author <- string authorLogin
-              pure $ MkPullRequest {
-                  number
-                , author
-                }
+     traverse parsePR prs
+
+%foreign okit_ffi "create_pr"
+prim__createPR : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (head : String) -> (base : String) -> (title : String) -> (body : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+export
+createPR : Octokit => (owner : String) -> (repo : String) -> (head : String) -> (base : String) -> (title : String) -> (description : String) -> Promise PullRequest
+createPR @{(Kit ptr)} owner repo head base title description =
+  do Just json <- JSON.parse <$> (promiseIO $ prim__createPR ptr owner repo head base title description)
+       | Nothing => reject "Could not parse Pull Request JSON."
+     parsePR json
 
 public export
 data PullRequestState = Open | Closed
