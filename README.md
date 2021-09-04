@@ -9,6 +9,7 @@ Alternatively, you can build Harmony with Docker (see [Docker Build](#docker-bui
 
 ## Installation
 The normal installation assumes a HEAD build of Idris 2 is installed. For an alternative, see the [Docker Build](#docker-build) instructions below.
+
 Build Harmony from source with a call to `make`. Then install it globally with `make install`.
 
 You need to add a GitHub [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) to your environment as the `GITHUB_PAT` variable. It's easiest to `export` that variable from your shell resource file or profile.
@@ -32,8 +33,15 @@ npm install --global
 ```
 
 ### Bash completion
-Set up back completion by adding the following to your Bash resource file or profile:
+Set up Bash completion by adding the following to your Bash resource file or profile:
 ```shell
+eval "$(harmony --bash-completion-script)"
+```
+
+You can set up tab completion in Zsh, too:
+```shell
+autoload -U +X compinit && compinit
+autoload -U +X bashcompinit && bashcompinit
 eval "$(harmony --bash-completion-script)"
 ```
 
