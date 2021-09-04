@@ -23,6 +23,38 @@ exitError err =
   do putStrLn err
      exitFailure
 
+writeConfig : Config -> Promise ()
+writeConfig config =
+  do res <- writeFile config.filepath (format 2 $ json config)
+     case res of
+          Right () => pure ()
+          Left err => reject "Failed to write updated config file to \{config.filepath}: \{show err}."
+
+syncConfig : Config => Octokit => (echo : Bool) -> Promise Config
+syncConfig @{config} echo =
+ do teamSlugs  <- listTeams config.org
+    orgMembers <- listOrgMembers config.org
+    updatedAt  <- cast {to=Timestamp} <$> time
+    let config' = { updatedAt := updatedAt, teamSlugs := teamSlugs, orgMembers := orgMembers } config
+    writeConfig config'
+    when echo $
+      do putStrLn "Your updated configuration is:"
+         printLn config
+    pure config'
+
+syncIfOld : Octokit => Config -> Promise Config
+syncIfOld config =
+  if config.updatedAt < !oneDayAgo
+     then do putStrLn "Syncing config file..."
+             syncConfig False
+     else pure config
+  where
+    oneDayAgo : HasIO io => io Timestamp
+    oneDayAgo =
+      do let oneDay = 86_400
+         now <- time
+         pure $ cast (now - oneDay)
+
 createConfig : Octokit => Promise Config
 createConfig = 
   do putStrLn "Creating a new configuration (storing in \{Config.filename})..."
@@ -33,19 +65,20 @@ createConfig =
      putStrLn "What is the base/main branch (e.g. 'main')?"
      mainBranch <- trim <$> getLine
      updatedAt  <- cast <$> time
-     do teamSlugs <- listTeams org
+     do teamSlugs  <- listTeams org
+        orgMembers <- listOrgMembers org
         let config = MkConfig {
             updatedAt
           , org
           , repo
           , mainBranch
           , teamSlugs
+          , orgMembers
           , filepath = "."
           }
-        do Right () <- writeFile Config.filename (format 2 $ json config)
-             | Left err => exitError "Failed to write new config file to \{Config.filename}: \{show err}."
-           putStrLn "Your new configuration is:"
-           printLn config
+        writeConfig config
+        putStrLn "Your new configuration is:"
+        printLn config
         pure config
 
 data ConfigError = File FileError
@@ -180,6 +213,8 @@ resolve'' = resolve' pure exitError
 handleArgs : Config => Git => Octokit => List String -> Promise ()
 handleArgs [] =
   exitError "You must specify a subcommand as the first argument to harmony." 
+handleArgs ["sync"] =
+  ignore $ syncConfig True
 handleArgs ["pr"] =
   do (Identified, pr) <- identifyOrCreatePR !currentBranch
        | _ => pure ()
@@ -216,7 +251,7 @@ main =
           ["--bash-completion-script"] => putStrLn BashCompletion.script
           _ => resolve'' $
                  do -- create the config file before continuing if it does not exist yet
-                    _ <- loadOrCreateConfig
+                    _ <- syncIfOld =<< loadOrCreateConfig
                     -- then handle any arguments given
                     handleArgs args
 

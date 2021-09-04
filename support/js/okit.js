@@ -74,14 +74,23 @@ const okit_add_reviewers = (octokit, owner, repo, pull_number, reviewers, team_r
   )
 
 // list team members
-const digTeamMembers = teamJson =>
+const digUsers = teamJson =>
   teamJson.map(u => u.login)
 
 // Executes callback with [String]
 const okit_list_team_members = (octokit, org, team_slug, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.teams.listMembersInOrg({ org, team_slug }),
-    r => onSuccess(newline_delimited(digTeamMembers(r.data))),
+    r => onSuccess(newline_delimited(digUsers(r.data))),
+    onFailure
+  )
+
+// list org members
+// Executes callback with [String]
+const okit_list_org_members = (octokit, org, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.orgs.listMembers({ org, per_page: 100 }),
+    r => onSuccess(newline_delimited(digUsers(r.data))),
     onFailure
   )
 

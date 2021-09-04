@@ -13,8 +13,8 @@ allRootCmds = [
     "assign"
   , "list"
   , "pr"
+  , "sync"
   ]
-
 
 -- given a pair of strings, the first representing the word
 -- actually being edited, the second representing the word

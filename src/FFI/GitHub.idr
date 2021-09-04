@@ -109,3 +109,12 @@ listTeamMembers : Octokit => (org : String) -> (teamSlug : String) -> Promise (L
 listTeamMembers @{(Kit ptr)} org teamSlug = 
   lines <$> (promiseIO $ prim__listTeamMembers ptr org teamSlug)
 
+%foreign okit_ffi "list_org_members"
+prim__listOrgMembers : Ptr OctokitRef -> (org : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+export
+listOrgMembers : Octokit => (org : String) -> Promise (List String)
+listOrgMembers @{(Kit ptr)} org =
+  lines <$> (promiseIO $ prim__listOrgMembers ptr org)
+
+
