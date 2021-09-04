@@ -207,12 +207,34 @@ identifyOrCreatePR @{config} branch =
          putStrLn "Creating PR..."
          GitHub.createPR config.org config.repo branch baseBranch title description
 
+help : String
+help = """
+harmony <subcommand>
+
+subcommands:
+  help
+   - Print help
+  sync
+   - Synchronize local config with information from GitHub.
+  pr
+   - Identify an existing PR or create a new one for the current branch.
+  list <team-name>
+   - List the members of the given GitHub Team.
+  assign <team-name>
+   - Assign the given team and one lucky member to review the PR for the current branch.
+
+"""
+
 resolve'' : Promise () -> IO ()
 resolve'' = resolve' pure exitError
 
 handleArgs : Config => Git => Octokit => List String -> Promise ()
 handleArgs [] =
   exitError "You must specify a subcommand as the first argument to harmony." 
+handleArgs ["help"] =
+  putStrLn help
+handleArgs ["--help"] =
+  putStrLn help
 handleArgs ["sync"] =
   ignore $ syncConfig True
 handleArgs ["pr"] =
