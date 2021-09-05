@@ -22,5 +22,17 @@ subcommands:
      Also assign any users with logins specified. You specify these
      additional users by prefixing their logins with '+'.
 
+bash completion:
+  You can set up bash completion by adding the following to your resource
+  or bash profile:
+
+    eval "$(harmony --bash-completion-script)"
+
+  Zsh users will also need to have the following in their resource or
+  zsh profile before the above eval:
+
+    autoload -U +X compinit && compinit
+    autoload -U +X bashcompinit && bashcompinit
+
 """
 
