@@ -60,11 +60,35 @@ What is the base/main branch (e.g. 'main')?
 main
 ```
 
-Once configured, Harmony supports three commands: `pr`, `list`, and `assign`.
+Once configured, Harmony supports the following commands: `sync`, `pr`, `list`, and `assign`.
 
+### Sync
+Running `harmony sync` will sync the locally configured team slugs and user logins that are used by auto-completion for Harmony. This sync is also performed automatically the first time you run Harmony after more than a day without the configuration being synced.
+
+### PR
 Running `harmony pr` with a branch checked out will reach out to GitHub to determine if there is an open PR for that branch. If there is a PR, Harmony will print a URI that can be used to view the PR. IF there is not a PR, Harmony will help you create one.
 
+### List
 Running `harmony list <team>` will list the members of the given GitHub Team.
 
-Running `harmony assign <team>` will help you create a PR if one does not exist yet and then it will pick someone to review the PR and assign both that user and the team they belong to as reviewers of the PR.
+### Assign
+Running `harmony assign {<team> | +<user>} [...]` will help you create a PR if one does not exist yet and then it will pick someone to review the PR (from one of the listed teams) and assign both that user and the teams you listed as reviewers of the PR.
+
+You can also require that specific additional users (on top of the one Harmony will pick for you) are assigned to the PR. You do this by specifying those users' logins prefixed with '+' as arguments to Harmony.
+
+#### Examples
+Assign the most available reviewer from the "developers" GitHub Team:
+```shell
+harmony assign developers
+```
+
+Assign the most available reviewer from either the "frontend" or "backend" GitHub Team:
+```shell
+harmony assign frontend backend
+```
+
+Assign the most available reviewer from the "web" team and additionally assign the users with logins "carl001" and "emmaham":
+```shell
+harmony assign web +carl001 +emmaham
+```
 
