@@ -16,3 +16,11 @@ const git_current_branch = (git, onSuccess, onFailure) =>
     onFailure
   )
 
+// remote URI
+const git_remote_uri = (git, remoteName, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('remote', 'get-url', remoteName),
+    r => onSuccess(r.trim()),
+    onFailure
+  )
+

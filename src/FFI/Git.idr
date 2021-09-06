@@ -27,3 +27,14 @@ export
 currentBranch : Git => Promise String
 currentBranch @{(G ptr)} = promiseIO $ prim__currentBranch ptr
 
+%foreign git_ffi "remote_uri"
+prim__remoteURI : Ptr GitRef -> (remoteName : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+||| Get the Git remote URI for the remote with the given name.
+||| For example,
+|||   "git@github.com:org/reponame.git"
+|||   "https://github.com/org/reponame.git"
+export
+remoteURI : Git => (remoteName : String) -> Promise String
+remoteURI @{(G ptr)} remoteName = promiseIO $ prim__remoteURI ptr remoteName
+
