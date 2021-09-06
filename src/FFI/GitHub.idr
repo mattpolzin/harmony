@@ -28,6 +28,13 @@ export
 octokit : (authToken : String) -> IO Octokit
 octokit authToken = Kit <$> (primIO $ prim__octokit authToken)
 
+%foreign okit_ffi "get_repo_default_branch"
+prim__getRepoDefaultBranch : Ptr OctokitRef -> (org : String) -> (repo : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+export
+getRepoDefaultBranch : Octokit => (org : String) -> (repo : String) -> Promise String
+getRepoDefaultBranch @{(Kit ptr)} org repo = promiseIO $ prim__getRepoDefaultBranch ptr org repo
+
 %foreign okit_ffi "list_teams"
 prim__listTeams : Ptr OctokitRef -> (org : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 

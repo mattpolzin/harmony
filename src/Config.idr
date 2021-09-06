@@ -78,16 +78,19 @@ parseGitHubURI str = parseHTTPS str <|> parseSSH str
     parseSSH : String -> Maybe GitRemote
     parseSSH = dropPrefix' "git@github.com:" >=> parseSuffix
 
-createConfig : Octokit => Promise Config
+createConfig : Git => Octokit => Promise Config
 createConfig = 
   do putStrLn "Creating a new configuration (storing in \{Config.filename})..."
-     -- TODO: get remoteURI, parse, and present as defaults.
-     putStrLn "What GitHub org would you like to use harmony for?"
-     org  <- trim <$> getLine
-     putStrLn "What repository would you like to use harmony for?"
-     repo <- trim <$> getLine
-     putStrLn "What is the base/main branch (e.g. 'main')?"
-     mainBranch <- trim <$> getLine
+     -- TODO: don't assume remote name ("origin"), get it from git or ask for it.
+     defaultOrgAndRepo <- (parseGitHubURI <$> remoteURI "origin") <|> pure Nothing
+     let orgDefaultStr = defaultStr (.org) defaultOrgAndRepo
+     putStrLn "What GitHub org would you like to use harmony for\{orgDefaultStr}?"
+     org  <- orIfEmpty (org defaultOrgAndRepo)  . trim <$> getLine
+     let repoDefaultStr = defaultStr (.repo) defaultOrgAndRepo
+     putStrLn "What repository would you like to use harmony for\{repoDefaultStr}?"
+     repo <- orIfEmpty (repo defaultOrgAndRepo) . trim <$> getLine
+     putStrLn "Creating config..."
+     mainBranch <- getRepoDefaultBranch org repo
      updatedAt  <- cast <$> time
      do teamSlugs  <- listTeams org
         orgMembers <- listOrgMembers org
@@ -98,12 +101,29 @@ createConfig =
           , mainBranch
           , teamSlugs
           , orgMembers
-          , filepath = "."
+          , filepath = "./\{Config.filename}"
           }
         writeConfig config
         putStrLn "Your new configuration is:"
         printLn config
         pure config
+  where
+    orIfEmpty : Maybe String -> String -> String
+    orIfEmpty Nothing  x  = x
+    orIfEmpty (Just y) "" = y
+    orIfEmpty (Just _) x  = x
+
+    org : Maybe GitRemote -> Maybe String
+    org = map (.org)
+
+    repo : Maybe GitRemote -> Maybe String
+    repo = map (.repo)
+
+    enterForDefaultStr : String -> String
+    enterForDefaultStr str = " (ENTER for default: \{str})"
+
+    defaultStr : (GitRemote -> String) -> Maybe GitRemote -> String
+    defaultStr f = fromMaybe "" . map (enterForDefaultStr . f)
 
 data ConfigError = File FileError
                  | Parse String
@@ -132,7 +152,7 @@ loadConfig = let (>>=) = (>>=) @{Monad.Compose} in
 
 export
 covering
-loadOrCreateConfig : Octokit => Promise Config
+loadOrCreateConfig : Git => Octokit => Promise Config
 loadOrCreateConfig = 
   do Right config <- loadConfig
        | Left (File FileNotFound) => createConfig

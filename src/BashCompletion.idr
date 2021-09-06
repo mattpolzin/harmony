@@ -12,7 +12,6 @@ allRootCmds : List String
 allRootCmds = [
     "assign"
   , "help"
-  , "--help"
   , "list"
   , "pr"
   , "sync"

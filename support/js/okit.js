@@ -15,6 +15,17 @@ const from_comma_delimited = str => {
   return str.split(',')
 }
 
+// get repo default branch
+const digDefaultBranch = repoJson =>
+  repoJson.default_branch
+
+const okit_get_repo_default_branch = (octokit, org, repo, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.repos.get({ owner: org, repo }),
+    r => onSuccess(digDefaultBranch(r.data)),
+    onFailure
+  )
+
 // list teams
 const digTeams = teamsJson =>
   teamsJson.map(t => t.slug)

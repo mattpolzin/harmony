@@ -12,10 +12,16 @@ module Data.Promise
 ||| for successful computation and a continuation for errorneous computation. The promise
 ||| abstraction bounds these two continuations.
 export
-data Promise : Type -> Type where
-  MkPromise : ((a -> IO ()) -> (String -> IO ()) -> IO ()) -> Promise a
+record Promise a where
+  constructor MkPromise
+  cmd : (a -> IO ()) -> (String -> IO ()) -> IO ()
 
 %name Promise p, p1, p2
+
+||| Activate the reject branch of the Promise with the given message.
+export
+reject : String -> Promise a
+reject msg = MkPromise (\ok, err => err msg)
 
 -- Promise is a functor, as we can pre-apply the 'f : a -> b' to the 'a' in the first computation.
 -- Hint: This is possible as because the 'a' is in a positive position, because it got twice negated.
@@ -47,17 +53,19 @@ export
 Monad Promise where
   (>>=) = bind
 
+export
+Alternative Promise where
+  empty = reject "empty"
+
+  p1 <|> p2 =
+    MkPromise (\ok, err => p1.cmd ok (\_ => p2.cmd ok err))
+
 ||| The Promise monad under the hood relies on the IO monad, for that
 ||| reason we can use the IO monad, execute the IO computation and
 ||| evaluate the success computation with the result.
 export
 HasIO Promise where
   liftIO x = MkPromise (\ok => \err => x >>= ok)
-
-||| Activate the reject branch of the Promise with the given message.
-export
-reject : String -> Promise a
-reject msg = MkPromise (\ok, err => err msg)
 
 ||| Resolve a promise compuation.
 |||
