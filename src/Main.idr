@@ -17,10 +17,12 @@ import System
 
 %default total
 
-exitError : HasIO io => String -> io a
-exitError err =
-  -- TODO: use TTY check instead of assuming color support.
-  do printLn $ colored Red err
+exitError : HasIO io => 
+            (terminalColors : Bool)
+         -> String 
+         -> io a
+exitError terminalColors err =
+  do if terminalColors then printLn $ colored Red err else putStrLn err
      exitFailure
 
 covering
@@ -29,13 +31,13 @@ bashCompletion : HasIO io =>
               -> (prevWord : String) 
               -> io ()
 bashCompletion curWord prevWord = 
-  do Right config <- loadConfig
+  do Right config <- loadConfig False
        | Left _ => pure ()
      let completions = BashCompletion.opts curWord prevWord
      putStr $ unlines completions
 
-resolve'' : Promise () -> IO ()
-resolve'' = resolve' pure exitError
+resolve'' : (terminalColors : Bool) -> Promise () -> IO ()
+resolve'' terminalColors = resolve' pure (exitError terminalColors)
 
 assign : Config => Git => Octokit => 
          (assignArgs : List String) 
@@ -88,24 +90,26 @@ handleConfiguredArgs args =
 -- handling any other input.
 covering
 handleArgs : Git => Octokit => 
-             List String 
+             (terminalColors : Bool)
+          -> List String 
           -> IO ()
-handleArgs ["--bash-completion", curWord, prevWord] = bashCompletion curWord prevWord
-handleArgs ["--bash-completion-script"] = putStrLn BashCompletion.script
-handleArgs args = resolve'' $
-  do -- create the config file before continuing if it does not exist yet
-     _ <- syncIfOld =<< loadOrCreateConfig
-     -- then handle any arguments given
-     handleConfiguredArgs args
+handleArgs _ ["--bash-completion", curWord, prevWord] = bashCompletion curWord prevWord
+handleArgs _ ["--bash-completion-script"] = putStrLn BashCompletion.script
+handleArgs terminalColors args = 
+  resolve'' terminalColors $
+    do -- create the config file before continuing if it does not exist yet
+       _ <- syncIfOld =<< loadOrCreateConfig terminalColors
+       -- then handle any arguments given
+       handleConfiguredArgs args
 
 covering
 main : IO ()
 main =
-  do Just pat <- getEnv "GITHUB_PAT"
-       | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
-     -- TODO: check for TTY instead of assuming color support
+  do let terminalColors = True -- TODO: check for TTY support in stdout instead of hard coding.
+     Just pat <- getEnv "GITHUB_PAT"
+       | Nothing => exitError terminalColors "GITHUB_PAT environment variable must be set to a personal access token."
      _ <- octokit pat
      _ <- git
      -- drop 2 for `node` and `harmony.js`
-     handleArgs $ drop 2 !getArgs
+     handleArgs terminalColors $ drop 2 !getArgs
 

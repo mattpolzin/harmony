@@ -87,15 +87,16 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
      let users = (toList chosenUser) ++ forcedReviewers
      when (not dry) $
        ignore $ addPullReviewers config.org config.repo pr.number users teamNames
-     liftIO $ if null users
-        then putDoc $ vsep [
-                        annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
-                      , pretty "(perhaps the only option was the author of the pull request?)."
-                      ]
-        else putDoc $ vsep [
-                        pretty "Assigned \{userNotice chosenUser}\{teamNotice} to the open PR "
-                      , pretty "for the current branch (\{pr.webURI})."
-                      ]
+     liftIO $ 
+       if null users
+         then putDoc $ vsep [
+                         annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
+                       , pretty "(perhaps the only option was the author of the pull request?)."
+                       ]
+         else putDoc $ vsep [
+                         pretty "Assigned \{userNotice chosenUser}\{teamNotice} to the open PR "
+                       , pretty "for the current branch (\{pr.webURI})."
+                       ]
   where
     csv : List String -> String
     csv = renderString . layoutPretty defaultLayoutOptions . encloseSep emptyDoc emptyDoc (pretty ", ") . map (annotate (color Green) . pretty)
