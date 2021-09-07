@@ -10,6 +10,8 @@ import Data.String
 import Data.String.Extra
 import FFI.GitHub
 import Reviewer
+import Text.PrettyPrint.PrettyPrinter
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 getManyLines : HasIO io => Fuel -> io (List String)
 getManyLines = getMoreLines []
@@ -59,6 +61,8 @@ parseJiraPrefix = map (pack . reverse) . guardSuccess . foldl go startOver . unp
 public export
 data IdentifiedOrCreated = Identified | Created
 
+-- TODO: check for TTY before choosing to render with Terminal annotations below.
+
 ||| Request reviews.
 ||| @ teamNames       The slugs of teams from which to draw potential review candidates.
 ||| @ forcedReviewers The logins of users to force review from (in addition to the reviewer
@@ -83,18 +87,18 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
      let users = (toList chosenUser) ++ forcedReviewers
      when (not dry) $
        ignore $ addPullReviewers config.org config.repo pr.number users teamNames
-     if null users
-        then putStrLn """
-                      Could not pick a user from the given Team 
-                      (perhaps the only option was the author of the pull request?).
-                      """
-        else putStrLn """
-                      Assigned \{userNotice chosenUser}\{teamNotice} to the open PR 
-                      for the current branch (\{pr.webURI}).
-                      """
+     liftIO $ if null users
+        then putDoc $ vsep [
+                        annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
+                      , pretty "(perhaps the only option was the author of the pull request?)."
+                      ]
+        else putDoc $ vsep [
+                        pretty "Assigned \{userNotice chosenUser}\{teamNotice} to the open PR "
+                      , pretty "for the current branch (\{pr.webURI})."
+                      ]
   where
     csv : List String -> String
-    csv = join ", "
+    csv = renderString . layoutPretty defaultLayoutOptions . encloseSep emptyDoc emptyDoc (pretty ", ") . map (annotate (color Green) . pretty)
 
     userNotice : (chosenReviewer : Maybe String) -> String
     userNotice Nothing       = case forcedReviewers of
@@ -105,7 +109,7 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
     teamNotice : String
     teamNotice = case teamNames of 
                       []     => ""
-                      [name] => " and team \{name}"
+                      [name] => " and team \{csv [name]}"
                       names  => " and teams \{csv names}" 
 
 export

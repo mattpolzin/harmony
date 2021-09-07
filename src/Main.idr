@@ -2,6 +2,7 @@ module Main
 
 import BashCompletion
 import Config as Cfg
+import Control.ANSI
 import Data.Config
 import Data.List
 import Data.Promise
@@ -18,11 +19,15 @@ import System
 
 exitError : HasIO io => String -> io a
 exitError err =
-  do putStrLn err
+  -- TODO: use TTY check instead of assuming color support.
+  do printLn $ colored Red err
      exitFailure
 
 covering
-bashCompletion : HasIO io => (curWord : String) -> (prevWord : String) -> io ()
+bashCompletion : HasIO io => 
+                 (curWord : String) 
+              -> (prevWord : String) 
+              -> io ()
 bashCompletion curWord prevWord = 
   do Right config <- loadConfig
        | Left _ => pure ()
@@ -47,13 +52,15 @@ assign args {dry} =
       let part = partition (isPrefixOf "+") args
       in  mapFst (map $ drop 1) part
 
-handleConfiguredArgs : Config => Git => Octokit => List String -> Promise ()
+handleConfiguredArgs : Config => Git => Octokit => 
+                       List String 
+                    -> Promise ()
 handleConfiguredArgs [] =
   reject "You must specify a subcommand as the first argument to harmony." 
 handleConfiguredArgs ["help"] =
-  putStrLn help
+  putStrLn $ help True 
 handleConfiguredArgs ["--help"] =
-  putStrLn help
+  putStrLn $ help True
 handleConfiguredArgs ["sync"] =
   ignore $ syncConfig True
 handleConfiguredArgs ["pr"] =
@@ -80,7 +87,9 @@ handleConfiguredArgs args =
 -- if it doesn't exist yet so we handle it up front before loading config and then
 -- handling any other input.
 covering
-handleArgs : Git => Octokit => List String -> IO ()
+handleArgs : Git => Octokit => 
+             List String 
+          -> IO ()
 handleArgs ["--bash-completion", curWord, prevWord] = bashCompletion curWord prevWord
 handleArgs ["--bash-completion-script"] = putStrLn BashCompletion.script
 handleArgs args = resolve'' $
@@ -94,6 +103,7 @@ main : IO ()
 main =
   do Just pat <- getEnv "GITHUB_PAT"
        | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
+     -- TODO: check for TTY instead of assuming color support
      _ <- octokit pat
      _ <- git
      -- drop 2 for `node` and `harmony.js`
