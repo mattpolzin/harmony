@@ -1,10 +1,11 @@
 module FFI.GitHub
 
-import Data.Vect
 import Data.Promise
 import Data.PullRequest
 import Data.String
 import Data.String.Extra
+import Data.User
+import Data.Vect
 import FFI
 import Language.JSON
 import Language.JSON.Accessors
@@ -124,4 +125,10 @@ listOrgMembers : Octokit => (org : String) -> Promise (List String)
 listOrgMembers @{(Kit ptr)} org =
   lines <$> (promiseIO $ prim__listOrgMembers ptr org)
 
+%foreign okit_ffi "get_user"
+prim__getUser : Ptr OctokitRef -> (username : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+export
+getUser : Octokit => (username : String) -> Promise User
+getUser @{(Kit ptr)} = either . parseUserString <=< promiseIO . prim__getUser ptr
 
