@@ -14,6 +14,8 @@ import FFI.GitHub
 import Help
 import PullRequest as PR
 import System
+import System.File.Meta
+import System.File.Virtual
 
 %default total
 
@@ -59,10 +61,10 @@ handleConfiguredArgs : Config => Git => Octokit =>
                     -> Promise ()
 handleConfiguredArgs [] =
   reject "You must specify a subcommand as the first argument to harmony." 
-handleConfiguredArgs ["help"] =
-  putStrLn $ help True 
-handleConfiguredArgs ["--help"] =
-  putStrLn $ help True
+handleConfiguredArgs @{config} ["help"] =
+  putStrLn $ help config.colors
+handleConfiguredArgs @{config} ["--help"] =
+  putStrLn $ help config.colors
 handleConfiguredArgs ["sync"] =
   ignore $ syncConfig True
 handleConfiguredArgs ["pr"] =
@@ -105,7 +107,7 @@ handleArgs terminalColors args =
 covering
 main : IO ()
 main =
-  do let terminalColors = True -- TODO: check for TTY support in stdout instead of hard coding.
+  do terminalColors <- isTTY stdout
      Just pat <- getEnv "GITHUB_PAT"
        | Nothing => exitError terminalColors "GITHUB_PAT environment variable must be set to a personal access token."
      _ <- octokit pat

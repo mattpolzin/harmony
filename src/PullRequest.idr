@@ -61,8 +61,6 @@ parseJiraPrefix = map (pack . reverse) . guardSuccess . foldl go startOver . unp
 public export
 data IdentifiedOrCreated = Identified | Created
 
--- TODO: check for TTY before choosing to render with Terminal annotations below.
-
 ||| Request reviews.
 ||| @ teamNames       The slugs of teams from which to draw potential review candidates.
 ||| @ forcedReviewers The logins of users to force review from (in addition to the reviewer
@@ -89,17 +87,22 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
        ignore $ addPullReviewers config.org config.repo pr.number users teamNames
      liftIO $ 
        if null users
-         then putDoc $ vsep [
+         then putStrLn . maybeDecorate $ vsep [
                          annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
                        , pretty "(perhaps the only option was the author of the pull request?)."
                        ]
-         else putDoc $ vsep [
+         else putStrLn . maybeDecorate $ vsep [
                          pretty "Assigned \{userNotice chosenUser}\{teamNotice} to the open PR "
                        , pretty "for the current branch (\{pr.webURI})."
                        ]
   where
+    maybeDecorate : Doc AnsiStyle -> String
+    maybeDecorate doc =
+      let render = if config.colors then id else unAnnotate
+      in  renderString . layoutPretty defaultLayoutOptions $ render doc
+
     csv : List String -> String
-    csv = renderString . layoutPretty defaultLayoutOptions . encloseSep emptyDoc emptyDoc (pretty ", ") . map (annotate (color Green) . pretty)
+    csv = maybeDecorate . encloseSep emptyDoc emptyDoc (pretty ", ") . map (annotate (color Green) . pretty)
 
     userNotice : (chosenReviewer : Maybe String) -> String
     userNotice Nothing       = case forcedReviewers of

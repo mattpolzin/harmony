@@ -3,9 +3,6 @@ module Help
 import Text.PrettyPrint.PrettyPrinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
--- TODO: don't assume color support, check for TTY.
-
-
 ||| The Help string for Harmony.
 export
 help : (decorated : Bool) -> String
