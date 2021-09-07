@@ -67,8 +67,8 @@ parseConfig filepath = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> p
                                           o <- string org
                                           r <- string repo
                                           mb <- string mainBranch
-                                          ts <- array teamSlugs string
-                                          om <- array orgMembers string
+                                          ts <- array string teamSlugs 
+                                          om <- array string orgMembers
                                           pure $ MkConfig {
                                               updatedAt  = ua
                                             , org        = o

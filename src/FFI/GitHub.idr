@@ -62,7 +62,7 @@ listPRsForBranch : Octokit => (owner : String) -> (repo : String) -> (branch : S
 listPRsForBranch @{(Kit ptr)} owner repo branch = 
   do Just json <- JSON.parse <$> (promiseIO $ prim__listPRsForBranch ptr owner repo branch)
        | Nothing => reject "Could not parse Pull Request JSON."
-     prs <- either $ array json Right
+     prs <- either $ array Right json 
      traverse parsePR prs
 
 %foreign okit_ffi "create_pr"

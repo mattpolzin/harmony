@@ -26,9 +26,9 @@ integer (JNumber x) = Right $ cast x
 integer json = Left "Expected an integer but found \{show json}."
 
 export
-array : JSON -> (JSON -> Either String a) -> Either String (List a)
-array (JArray xs) f = traverse f xs
-array json f = Left "Expected an array but found \{show json}."
+array : (JSON -> Either String a) -> JSON -> Either String (List a)
+array f (JArray xs) = traverse f xs
+array f json = Left "Expected an array but found \{show json}."
 
 export
 object : JSON -> Either String (List (String, JSON))
