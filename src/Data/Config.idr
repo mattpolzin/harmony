@@ -23,13 +23,14 @@ record Ephemeral where
 public export
 record Config where
   constructor MkConfig
-  updatedAt  : Timestamp
-  org        : String
-  repo       : String
-  mainBranch : String
-  teamSlugs  : List String
-  orgMembers : List String
-  ephemeral  : Ephemeral -- not written out to file
+  updatedAt   : Timestamp
+  org         : String
+  repo        : String
+  mainBranch  : String
+  assignTeams : Bool
+  teamSlugs   : List String
+  orgMembers  : List String
+  ephemeral   : Ephemeral -- not written out to file
 
 %name Config config
 
@@ -48,20 +49,22 @@ Show Config where
     , "org: \{show config.org}"
     , "repo: \{show config.repo}"
     , "mainBranch: \{show config.mainBranch}"
+    , "assignTeams: \{show config.assignTeams}"
     , "teamSlugs: \{show config.teamSlugs}"
     , "orgMembers: \{show config.orgMembers}"
     ]
 
 export
 json : Config -> JSON
-json (MkConfig updatedAt org repo mainBranch teamSlugs orgMembers _) = 
+json (MkConfig updatedAt org repo mainBranch assignTeams teamSlugs orgMembers _) = 
   JObject [
-      ("mainBranch", JString mainBranch)
-    , ("org"       , JString org)
-    , ("orgMembers", JArray $ JString <$> sort orgMembers)
-    , ("repo"      , JString repo)
-    , ("teamSlugs" , JArray $ JString <$> sort teamSlugs)
-    , ("updatedAt" , JNumber $ cast updatedAt)
+      ("mainBranch" , JString mainBranch)
+    , ("assignTeams", JBoolean assignTeams)
+    , ("org"        , JString org)
+    , ("orgMembers" , JArray $ JString <$> sort orgMembers)
+    , ("repo"       , JString repo)
+    , ("teamSlugs"  , JArray $ JString <$> sort teamSlugs)
+    , ("updatedAt"  , JNumber $ cast updatedAt)
     ]
 
 export
@@ -69,11 +72,12 @@ parseConfig : (ephemeral : Ephemeral) -> (filecontents : String) -> Either Strin
 parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parseConfigJson
   where
     parseConfigJson : JSON -> Either String Config
-    parseConfigJson (JObject config) = do [updatedAt, org, repo, mainBranch, teamSlugs, orgMembers] <-
+    parseConfigJson (JObject config) = do [updatedAt, org, repo, mainBranch, assignTeams, teamSlugs, orgMembers] <-
                                             lookupAll ["updatedAt"
                                                       , "org"
                                                       , "repo"
                                                       , "mainBranch"
+                                                      , "assignTeams"
                                                       , "teamSlugs"
                                                       , "orgMembers"
                                                       ] config
@@ -81,16 +85,18 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                           o <- string org
                                           r <- string repo
                                           mb <- string mainBranch
+                                          at <- bool assignTeams
                                           ts <- array string teamSlugs 
                                           om <- array string orgMembers
                                           pure $ MkConfig {
-                                              updatedAt  = ua
-                                            , org        = o
-                                            , repo       = r
-                                            , mainBranch = mb
-                                            , teamSlugs  = ts
-                                            , orgMembers = om
-                                            , ephemeral  = ephemeral
+                                              updatedAt   = ua
+                                            , org         = o
+                                            , repo        = r
+                                            , mainBranch  = mb
+                                            , assignTeams = at
+                                            , teamSlugs   = ts
+                                            , orgMembers  = om
+                                            , ephemeral   = ephemeral
                                             }
     parseConfigJson (JArray _) = Left "Expected config JSON to be an Object, not an array."
     parseConfigJson _          = Left "Expected config JSON to be an Object."
