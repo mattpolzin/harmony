@@ -16,6 +16,11 @@ lookupAll (key :: keys) dict = [| lookup' key dict :: lookupAll keys dict |]
     lookup' key = maybeToEither "Missing required key: \{key}." . lookup key
 
 export
+bool : JSON -> Either String Bool
+bool (JBoolean x) = Right x
+bool json = Left "Expected a bool but found \{show json}."
+
+export
 string : JSON -> Either String String
 string (JString x) = Right x
 string json = Left "Expected a string but found \{show json}."
