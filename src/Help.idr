@@ -1,21 +1,24 @@
 module Help
 
+import Text.PrettyPrint.PrettyPrinter
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
+
 ||| The Help string for Harmony.
 export
-help : String
-help = """
-harmony <subcommand>
+help : (decorated : Bool) -> String
+help decorated = """
+harmony \{subcommand "<subcommand>"}
 
 subcommands:
-  help
+  \{subcommand "help"}
    - Print help
-  sync
+  \{subcommand "sync"}
    - Synchronize local config with information from GitHub.
-  pr
+  \{subcommand "pr"}
    - Identify an existing PR or create a new one for the current branch.
-  list <team-slug>
+  \{subcommand "list"} \{argument "<team-slug>"}
    - List the members of the given GitHub Team.
-  assign {<team-slug> | +<user-login>} [...]
+  \{subcommand "assign"} {\{argument "<team-slug>"} | \{argument "+<user-login>"}} [...]
    - Assign the given team(s) and one lucky member from one of those teams
      to review the PR for the current branch.
      
@@ -35,4 +38,13 @@ bash completion:
     autoload -U +X bashcompinit && bashcompinit
 
 """
+  where
+    maybeDecorate : (String -> Doc AnsiStyle) -> String -> String
+    maybeDecorate f s = if decorated then renderString . layoutPretty defaultLayoutOptions $ f s else s
+    
+    subcommand : String -> String
+    subcommand = maybeDecorate (annotate (color Magenta) . pretty) 
+
+    argument : String -> String
+    argument = maybeDecorate (annotate (color Blue) . pretty)
 

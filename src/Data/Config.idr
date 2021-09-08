@@ -15,6 +15,12 @@ Timestamp : Type
 Timestamp = Bits32
 
 public export
+record Ephemeral where
+  constructor MkEphem
+  filepath : String
+  colors   : Bool
+
+public export
 record Config where
   constructor MkConfig
   updatedAt  : Timestamp
@@ -23,9 +29,17 @@ record Config where
   mainBranch : String
   teamSlugs  : List String
   orgMembers : List String
-  filepath   : String -- not written out to file
+  ephemeral  : Ephemeral -- not written out to file
 
 %name Config config
+
+export
+(.filepath) : Config -> String
+config.filepath = config.ephemeral.filepath
+
+export
+(.colors) : Config -> Bool
+config.colors = config.ephemeral.colors
 
 export
 Show Config where
@@ -51,8 +65,8 @@ json (MkConfig updatedAt org repo mainBranch teamSlugs orgMembers _) =
     ]
 
 export
-parseConfig : (filepath : String) -> (filecontents : String) -> Either String Config
-parseConfig filepath = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parseConfigJson
+parseConfig : (ephemeral : Ephemeral) -> (filecontents : String) -> Either String Config
+parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parseConfigJson
   where
     parseConfigJson : JSON -> Either String Config
     parseConfigJson (JObject config) = do [updatedAt, org, repo, mainBranch, teamSlugs, orgMembers] <-
@@ -76,7 +90,7 @@ parseConfig filepath = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> p
                                             , mainBranch = mb
                                             , teamSlugs  = ts
                                             , orgMembers = om
-                                            , filepath   = filepath
+                                            , ephemeral  = ephemeral
                                             }
     parseConfigJson (JArray _) = Left "Expected config JSON to be an Object, not an array."
     parseConfigJson _          = Left "Expected config JSON to be an Object."
