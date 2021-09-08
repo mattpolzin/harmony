@@ -113,7 +113,7 @@ const digUser = userJson => {
 // Executes callback with { login: String, name: String }
 const okit_get_user = (octokit, username, onSuccess, onFailure) =>
   idris__okit_unpromisify(
-    octokit.rest.users.get({ username }),
+    octokit.rest.users.getByUsername({ username }),
     r => onSuccess(JSON.stringify(digUser(r.data))),
     onFailure
   )

@@ -29,7 +29,7 @@ export
 parseUser : JSON -> Either String User
 parseUser (JObject user) = do [login, name] <- lookupAll ["login", "name"] user
                               l <- string login
-                              n <- string name
+                              n <- either (const $ Right "unnamed") (Right . id) $ string name
                               pure $ MkUser {
                                   login = l
                                 , name  = n
