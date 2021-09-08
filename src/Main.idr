@@ -14,7 +14,7 @@ import FFI.GitHub
 import Help
 import PullRequest as PR
 import System
-import System.File.Meta
+-- import System.File.Meta
 import System.File.Virtual
 
 %default total
@@ -103,6 +103,12 @@ handleArgs terminalColors args =
        _ <- syncIfOld =<< loadOrCreateConfig terminalColors
        -- then handle any arguments given
        handleConfiguredArgs args
+
+%foreign "node:lambda:(fp) => Number(require('tty').isatty(fp.fd))"
+prim__isTTY : FilePtr -> PrimIO Int
+
+isTTY : HasIO io => File -> io Bool
+isTTY (FHandle f) = (/= 0) <$> (primIO $ prim__isTTY f)
 
 covering
 main : IO ()
