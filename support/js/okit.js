@@ -85,14 +85,14 @@ const okit_add_reviewers = (octokit, owner, repo, pull_number, reviewers, team_r
   )
 
 // list team members
-const digUsers = teamJson =>
-  teamJson.map(u => u.login)
+const digUserLogins = usersJson =>
+  usersJson.map(u => u.login)
 
 // Executes callback with [String]
 const okit_list_team_members = (octokit, org, team_slug, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.teams.listMembersInOrg({ org, team_slug }),
-    r => onSuccess(newline_delimited(digUsers(r.data))),
+    r => onSuccess(newline_delimited(digUserLogins(r.data))),
     onFailure
   )
 
@@ -101,7 +101,20 @@ const okit_list_team_members = (octokit, org, team_slug, onSuccess, onFailure) =
 const okit_list_org_members = (octokit, org, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.orgs.listMembers({ org, per_page: 100 }),
-    r => onSuccess(newline_delimited(digUsers(r.data))),
+    r => onSuccess(newline_delimited(digUserLogins(r.data))),
+    onFailure
+  )
+
+// get user details
+const digUser = userJson => {
+  return { login: userJson.login, name: userJson.name }
+}
+
+// Executes callback with { login: String, name: String }
+const okit_get_user = (octokit, username, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.users.getByUsername({ username }),
+    r => onSuccess(JSON.stringify(digUser(r.data))),
     onFailure
   )
 

@@ -1,10 +1,11 @@
 module FFI.GitHub
 
-import Data.Vect
 import Data.Promise
 import Data.PullRequest
 import Data.String
 import Data.String.Extra
+import Data.User
+import Data.Vect
 import FFI
 import Language.JSON
 import Language.JSON.Accessors
@@ -62,7 +63,7 @@ listPRsForBranch : Octokit => (owner : String) -> (repo : String) -> (branch : S
 listPRsForBranch @{(Kit ptr)} owner repo branch = 
   do Just json <- JSON.parse <$> (promiseIO $ prim__listPRsForBranch ptr owner repo branch)
        | Nothing => reject "Could not parse Pull Request JSON."
-     prs <- either $ array json Right
+     prs <- either $ array Right json 
      traverse parsePR prs
 
 %foreign okit_ffi "create_pr"
@@ -124,4 +125,10 @@ listOrgMembers : Octokit => (org : String) -> Promise (List String)
 listOrgMembers @{(Kit ptr)} org =
   lines <$> (promiseIO $ prim__listOrgMembers ptr org)
 
+%foreign okit_ffi "get_user"
+prim__getUser : Ptr OctokitRef -> (username : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+export
+getUser : Octokit => (username : String) -> Promise User
+getUser @{(Kit ptr)} = either . parseUserString <=< promiseIO . prim__getUser ptr
 

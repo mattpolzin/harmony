@@ -1,5 +1,6 @@
 module Main
 
+-- import System.File.Meta
 import BashCompletion
 import Config as Cfg
 import Control.ANSI
@@ -9,13 +10,15 @@ import Data.Promise
 import Data.PullRequest
 import Data.String
 import Data.String.Extra
+import Data.User
 import FFI.Git
 import FFI.GitHub
 import Help
 import PullRequest as PR
 import System
--- import System.File.Meta
 import System.File.Virtual
+import Text.PrettyPrint.PrettyPrinter
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
@@ -56,6 +59,18 @@ assign args {dry} =
       let part = partition (isPrefixOf "+") args
       in  mapFst (map $ drop 1) part
 
+listTeam : Config => Octokit =>
+                  (team : String) 
+               -> Promise ()
+listTeam @{config} team =
+  do teamMemberLogins <- sort <$> listTeamMembers config.org team
+     teamMembers <- traverse getUser teamMemberLogins
+     liftIO . putDoc . vsep $ putNameLn <$> teamMembers
+  where
+    putNameLn : User -> Doc AnsiStyle
+    putNameLn user =
+      hsep [(fillBreak 15 $ pretty user.login), "-", (pretty user.name)]
+
 handleConfiguredArgs : Config => Git => Octokit => 
                        List String 
                     -> Promise ()
@@ -74,8 +89,7 @@ handleConfiguredArgs ["pr"] =
 handleConfiguredArgs ["list"] =
   reject "The list command expects the name of a GitHub Team as an argument."
 handleConfiguredArgs @{config} ["list", teamName] =
-  do teamMembers <- listTeamMembers config.org teamName
-     traverse_ putStrLn teamMembers
+  listTeam teamName
 handleConfiguredArgs ["assign"] =
   reject "The assign commaand expects one or more names of GitHub Teams or Users as arguments."
 handleConfiguredArgs ["assign", "--dry"] =
