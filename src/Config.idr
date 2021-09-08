@@ -78,8 +78,10 @@ parseGitHubURI str = parseHTTPS str <|> parseSSH str
     parseSSH : String -> Maybe GitRemote
     parseSSH = dropPrefix' "git@github.com:" >=> parseSuffix
 
-createConfig : Git => Octokit => Promise Config
-createConfig = 
+createConfig : Git => Octokit => 
+               (terminalColors : Bool)
+            -> Promise Config
+createConfig terminalColors = 
   do putStrLn "Creating a new configuration (storing in \{Config.filename})..."
      -- TODO: don't assume remote name ("origin"), get it from git or ask for it.
      defaultOrgAndRepo <- (parseGitHubURI <$> remoteURI "origin") <|> pure Nothing
@@ -92,6 +94,10 @@ createConfig =
      putStrLn "Creating config..."
      mainBranch <- getRepoDefaultBranch org repo
      updatedAt  <- cast <$> time
+     let ephemeral = MkEphem {
+         filepath = "./\{Config.filename}"
+       , colors   = terminalColors
+       }
      do teamSlugs  <- listTeams org
         orgMembers <- listOrgMembers org
         let config = MkConfig {
@@ -101,7 +107,7 @@ createConfig =
           , mainBranch
           , teamSlugs
           , orgMembers
-          , filepath = "./\{Config.filename}"
+          , ephemeral
           }
         writeConfig config
         putStrLn "Your new configuration is:"
@@ -142,20 +148,24 @@ findConfig startDir (More fuel) =
 
 export
 covering
-loadConfig : HasIO io => io (Either ConfigError Config)
-loadConfig = let (>>=) = (>>=) @{Monad.Compose} in
+loadConfig : HasIO io => 
+             (terminalColors : Bool)
+          -> io (Either ConfigError Config)
+loadConfig terminalColors = let (>>=) = (>>=) @{Monad.Compose} in
   do location   <- mapFst File . maybeToEither FileNotFound <$>
                      findConfig "." (limit 10)
      configFile <- mapFst File <$> 
                      readFile location
-     pure . mapFst Parse $ parseConfig location configFile
+     pure . mapFst Parse $ parseConfig (MkEphem location terminalColors) configFile
 
 export
 covering
-loadOrCreateConfig : Git => Octokit => Promise Config
-loadOrCreateConfig = 
-  do Right config <- loadConfig
-       | Left (File FileNotFound) => createConfig
+loadOrCreateConfig : Git => Octokit => 
+                     (terminalColors : Bool)
+                  -> Promise Config
+loadOrCreateConfig terminalColors = 
+  do Right config <- loadConfig terminalColors
+       | Left (File FileNotFound) => createConfig terminalColors
        | Left err => reject "Error loading \{Config.filename}: \{show err}."
      pure config
 

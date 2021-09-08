@@ -10,6 +10,8 @@ import Data.String
 import Data.String.Extra
 import FFI.GitHub
 import Reviewer
+import Text.PrettyPrint.PrettyPrinter
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 getManyLines : HasIO io => Fuel -> io (List String)
 getManyLines = getMoreLines []
@@ -83,18 +85,24 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
      let users = (toList chosenUser) ++ forcedReviewers
      when (not dry) $
        ignore $ addPullReviewers config.org config.repo pr.number users teamNames
-     if null users
-        then putStrLn """
-                      Could not pick a user from the given Team 
-                      (perhaps the only option was the author of the pull request?).
-                      """
-        else putStrLn """
-                      Assigned \{userNotice chosenUser}\{teamNotice} to the open PR 
-                      for the current branch (\{pr.webURI}).
-                      """
+     liftIO $ 
+       if null users
+         then putStrLn . maybeDecorate $ vsep [
+                         annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
+                       , pretty "(perhaps the only option was the author of the pull request?)."
+                       ]
+         else putStrLn . maybeDecorate $ vsep [
+                         pretty "Assigned \{userNotice chosenUser}\{teamNotice} to the open PR "
+                       , pretty "for the current branch (\{pr.webURI})."
+                       ]
   where
+    maybeDecorate : Doc AnsiStyle -> String
+    maybeDecorate doc =
+      let render = if config.colors then id else unAnnotate
+      in  renderString . layoutPretty defaultLayoutOptions $ render doc
+
     csv : List String -> String
-    csv = join ", "
+    csv = maybeDecorate . encloseSep emptyDoc emptyDoc (pretty ", ") . map (annotate (color Green) . pretty)
 
     userNotice : (chosenReviewer : Maybe String) -> String
     userNotice Nothing       = case forcedReviewers of
@@ -105,7 +113,7 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
     teamNotice : String
     teamNotice = case teamNames of 
                       []     => ""
-                      [name] => " and team \{name}"
+                      [name] => " and team \{csv [name]}"
                       names  => " and teams \{csv names}" 
 
 export
