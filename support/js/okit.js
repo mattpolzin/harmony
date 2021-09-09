@@ -61,6 +61,16 @@ const okit_create_pr = (octokit, owner, repo, head, base, title, body, onSuccess
     onFailure
   )
 
+
+// Create PR -OR- Issue Comment
+// Executes callback with "" (empty string)
+const okit_create_comment = (octokit, owner, repo, issue_number, body, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.issues.createComment({ owner, repo, issue_number: Number(issue_number), body }),
+    r => onSuccess(""),
+    onFailure
+  )
+
 // list PR reviewers
 const digReviewers = prJson =>
   prJson.flatMap(pr => pr.requested_reviewers.map(u => u.login))
