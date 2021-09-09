@@ -105,7 +105,8 @@ createConfig terminalColors =
           , org
           , repo
           , mainBranch
-          , assignTeams = True
+          , assignTeams     = True
+          , commentOnAssign = True
           , teamSlugs
           , orgMembers
           , ephemeral

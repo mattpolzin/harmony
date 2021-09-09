@@ -76,6 +76,14 @@ createPR @{(Kit ptr)} owner repo head base title description =
        | Nothing => reject "Could not parse Pull Request JSON."
      parsePR json
 
+%foreign okit_ffi "create_comment"
+prim__createComment : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (issueOrPrNumber : Integer) -> (message : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+export
+createComment : Octokit => (owner : String) -> (repo : String) -> (issueOrPrNumber : Integer) -> (message : String) -> Promise ()
+createComment @{(Kit ptr)} owner repo issueOrPrNumber message =
+  ignore . promiseIO $ prim__createComment ptr owner repo issueOrPrNumber message
+
 public export
 data PullRequestState = Open | Closed
 

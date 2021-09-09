@@ -50,7 +50,9 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
      let users = (toList chosenUser) ++ forcedReviewers
      let teams = if config.assignTeams then teamNames else []
      when (not dry) $
-       ignore $ addPullReviewers config.org config.repo pr.number users teams
+       do ignore $ addPullReviewers config.org config.repo pr.number users teams
+          whenJust chosenUser $ \cu =>
+            createComment config.org config.repo pr.number (prComment cu)
      liftIO $ 
        if null users
          then putStrLn . maybeDecorate $ vsep [
@@ -80,6 +82,11 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
     teamNotice []     = ""
     teamNotice [name] = " and team \{csv [name]}"
     teamNotice names  = " and teams \{csv names}"
+
+    prComment : String -> String
+    prComment chosenUser = """
+    :musical_note: Harmoniously assigned @\{chosenUser} to review this PR.
+    """
 
 export
 identifyOrCreatePR : Config => Octokit => 
