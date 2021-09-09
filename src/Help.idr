@@ -9,7 +9,7 @@ help : (decorated : Bool) -> String
 help decorated = """
 harmony \{subcommand "<subcommand>"}
 
-subcommands:
+\{heading "Subcommands"}:
   \{subcommand "help"}
    - Print help
   \{subcommand "sync"}
@@ -18,6 +18,8 @@ subcommands:
    - Identify an existing PR or create a new one for the current branch.
   \{subcommand "list"} \{argument "<team-slug>"}
    - List the members of the given GitHub Team.
+  \{subcommand "graph"} \{argument "<team-slug>"}
+   - Graph the relative review workload of the members of the given GitHub Team.
   \{subcommand "assign"} {\{argument "<team-slug>"} | \{argument "+<user-login>"}} [...]
    - Assign the given team(s) and one lucky member from one of those teams
      to review the PR for the current branch.
@@ -25,7 +27,7 @@ subcommands:
      Also assign any users with logins specified. You specify these
      additional users by prefixing their logins with '+'.
 
-bash completion:
+\{heading "Bash Completion"}:
   You can set up bash completion by adding the following to your resource
   or bash profile:
 
@@ -47,4 +49,7 @@ bash completion:
 
     argument : String -> String
     argument = maybeDecorate (annotate (color Blue) . pretty)
+
+    heading : String -> String
+    heading = maybeDecorate (annotate underline . pretty)
 

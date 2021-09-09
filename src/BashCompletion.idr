@@ -11,6 +11,7 @@ import Debug.Trace
 allRootCmds : List String
 allRootCmds = [
     "assign"
+  , "graph"
   , "help"
   , "list"
   , "pr"

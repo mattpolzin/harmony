@@ -17,6 +17,18 @@ import Util
 public export
 data IdentifiedOrCreated = Identified | Created
 
+export
+listReviewers : Config => Octokit =>
+                (openCount : Fin 100)
+             -> (closedCount : Fin 100)
+             -> Promise (List String, List String)
+listReviewers @{config} openCount closedCount =
+  do openReviewers   <- listPullReviewers config.org config.repo (Just Open) openCount
+     -- printLn openReviewers
+     closedReviewers <- listPullReviewers config.org config.repo (Just Closed) closedCount
+     -- printLn closedReviewers
+     pure (openReviewers, closedReviewers)
+
 ||| Request reviews.
 ||| @ teamNames       The slugs of teams from which to draw potential review candidates.
 ||| @ forcedReviewers The logins of users to force review from (in addition to the reviewer
@@ -29,10 +41,7 @@ requestReviewers : Config => Octokit =>
                 -> {default False dry: Bool} 
                 -> Promise ()
 requestReviewers @{config} pr teamNames forcedReviewers {dry} =
-  do closedReviewers <- listPullReviewers config.org config.repo (Just Closed) 30
-     -- printLn closedReviewers
-     openReviewers   <- listPullReviewers config.org config.repo (Just Open) 40
-     -- printLn openReviewers
+  do (openReviewers, closedReviewers) <- listReviewers 40 30
      teamMembers     <- join <$> traverse (listTeamMembers config.org) teamNames
      -- printLn teamMembers
      let chosenCandidates = chooseReviewers closedReviewers openReviewers teamMembers [] pr.author
