@@ -15,6 +15,7 @@ import FFI.Git
 import FFI.GitHub
 import Help
 import PullRequest as PR
+import Reviewer
 import System
 import System.File.Virtual
 import Text.PrettyPrint.PrettyPrinter
@@ -60,8 +61,8 @@ assign args {dry} =
       in  mapFst (map $ drop 1) part
 
 listTeam : Config => Octokit =>
-                  (team : String) 
-               -> Promise ()
+           (team : String) 
+        -> Promise ()
 listTeam @{config} team =
   do teamMemberLogins <- sort <$> listTeamMembers config.org team
      teamMembers <- traverse getUser teamMemberLogins
@@ -69,7 +70,18 @@ listTeam @{config} team =
   where
     putNameLn : User -> Doc AnsiStyle
     putNameLn user =
-      hsep [(fillBreak 15 $ pretty user.login), "-", (pretty user.name)]
+      hsep [(fillBreak 15 . annotate italic $ pretty user.login), "-", (pretty user.name)]
+
+graphTeam : Config => Octokit =>
+            (team : String) 
+         -> Promise ()
+graphTeam @{config} team =
+  do teamMemberLogins <- listTeamMembers config.org team
+     (openReviewers, closedReviewers) <- listReviewers 40 30
+     liftIO . putDoc . maybeDecorated $ reviewsGraph closedReviewers openReviewers teamMemberLogins
+  where
+    maybeDecorated : Doc AnsiStyle -> Doc AnsiStyle
+    maybeDecorated = if config.colors then id else unAnnotate
 
 handleConfiguredArgs : Config => Git => Octokit => 
                        List String 
@@ -90,6 +102,10 @@ handleConfiguredArgs ["list"] =
   reject "The list command expects the name of a GitHub Team as an argument."
 handleConfiguredArgs @{config} ["list", teamName] =
   listTeam teamName
+handleConfiguredArgs ["graph"] =
+  reject "The graph command expects the name of a GitHub Team as an argument."
+handleConfiguredArgs @{config} ["graph", teamName] =
+  graphTeam teamName
 handleConfiguredArgs ["assign"] =
   reject "The assign commaand expects one or more names of GitHub Teams or Users as arguments."
 handleConfiguredArgs ["assign", "--dry"] =
