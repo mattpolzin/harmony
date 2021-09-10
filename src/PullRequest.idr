@@ -8,6 +8,7 @@ import Data.Promise
 import Data.PullRequest
 import Data.String
 import Data.String.Extra
+import FFI.Git
 import FFI.GitHub
 import Reviewer
 import Text.PrettyPrint.PrettyPrinter
@@ -89,7 +90,7 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
     """
 
 export
-identifyOrCreatePR : Config => Octokit => 
+identifyOrCreatePR : Config => Git => Octokit => 
                      (branch : String) 
                   -> Promise (IdentifiedOrCreated, PullRequest)
 identifyOrCreatePR @{config} branch =
@@ -100,7 +101,11 @@ identifyOrCreatePR @{config} branch =
   where
     createPR : Promise PullRequest
     createPR =
-      do putStrLn "Creating a new PR for the current branch (\{branch})."
+      do when (!remoteTrackingBranch == Nothing) $
+           do -- TODO: Don't assume origin. we can get that from git. store in config?
+              putStrLn "Creating a new remote branch..."
+              pushNewBranch "origin" branch
+         putStrLn "Creating a new PR for the current branch (\{branch})."
          putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
          baseBranchInput <- trim <$> getLine
          let baseBranch = case strM baseBranchInput of
@@ -113,5 +118,6 @@ identifyOrCreatePR @{config} branch =
          putStrLn "What would you like the description to be (two blank lines to finish)?"
          description <- unlines <$> getManyLines (limit 100)
          putStrLn "Creating PR..."
+         putStrLn branch
          GitHub.createPR config.org config.repo branch baseBranch title description
 
