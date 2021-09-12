@@ -1,6 +1,6 @@
 module Help
 
-import Text.PrettyPrint.PrettyPrinter
+import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 ||| The Help string for Harmony.

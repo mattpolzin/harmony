@@ -18,7 +18,7 @@ import PullRequest as PR
 import Reviewer
 import System
 import System.File.Virtual
-import Text.PrettyPrint.PrettyPrinter
+import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total

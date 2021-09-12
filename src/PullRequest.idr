@@ -11,7 +11,7 @@ import Data.String.Extra
 import FFI.Git
 import FFI.GitHub
 import Reviewer
-import Text.PrettyPrint.PrettyPrinter
+import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import Util
 
