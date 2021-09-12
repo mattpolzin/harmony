@@ -1,0 +1,27 @@
+
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: '0 1 * * *'
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: mattpolzin2/idris-docker:nightly
+
+    steps:
+      - name: Install Dependencies
+        run: apt-get -y install git
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        run: make
+#      - name: Test
+#        run: make test
+
