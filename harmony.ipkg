@@ -1,8 +1,7 @@
 package harmony
--- version =
+version = 0.1.0
 authors = "Mathew Polzin"
--- maintainers =
--- license =
+license = "MIT"
 -- brief =
 -- readme =
 -- homepage =
@@ -12,8 +11,6 @@ authors = "Mathew Polzin"
 depends = contrib
 
 modules = Main
-
--- main file (i.e. file to load at REPL)
 main = Main
 
 executable = "harmony"
