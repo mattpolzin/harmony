@@ -5,6 +5,7 @@ node_modules/
 
 config.json
 harmony
+harmony-npm.tar.gz
 
 .*.swp
 *.idr~
