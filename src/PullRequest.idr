@@ -24,12 +24,17 @@ record PRHistory where
   openPRs   : List PullRequest
   closedPRs : List PullRequest
 
+||| Produce a tuple of (open, closed) from the PR History.
+export
+tuple : PRHistory -> (List PullRequest, List PullRequest)
+tuple (MkPRHistory openPRs closedPRs) = (openPRs, closedPRs)
+
 ||| Extract a tuple of open and closed PR reviewer names
 ||| from a PR history. A given reviewer's login appears
 ||| in the result once for each review request.
 export
 (.allReviewers) : PRHistory -> (List String, List String)
-history.allReviewers = mapHom (join . map reviewers) (history.openPRs, history.closedPRs)
+(.allReviewers) = mapHom (join . map reviewers) . tuple
 
 ||| Extract a list of author logins. A given author's login
 ||| appears in the result once for each PR authored.

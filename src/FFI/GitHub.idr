@@ -126,3 +126,10 @@ export
 getUser : Octokit => (username : String) -> Promise User
 getUser @{(Kit ptr)} = either . parseUserString <=< promiseIO . prim__getUser ptr
 
+%foreign okit_ffi "get_self"
+prim__getSelf : Ptr OctokitRef -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+export
+getSelf : Octokit => Promise User
+getSelf @{(Kit ptr)} = either . parseUserString =<< promiseIO (prim__getSelf ptr)
+

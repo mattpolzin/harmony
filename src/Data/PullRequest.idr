@@ -45,13 +45,18 @@ export
 (.webURI) : Config => PullRequest -> String
 pr.webURI @{config} = "https://github.com/\{config.org}/\{config.repo}/pull/\{show pr.number}"
 
+parseState : String -> Either String PRState
+parseState "open"   = Right Open
+parseState "closed" = Right Closed
+parseState str      = Left "Failed to parse a Pull Request State (open/closed). Found \{str}."
+
 parsePR : JSON -> Either String PullRequest
 parsePR json =
  do pr <- object json
     [pullNumber, authorLogin, stateStr, reviewerList] <- lookupAll ["pull_number", "author", "state", "reviewers"] pr
     number <- integer pullNumber
     author <- string authorLogin
-    state  <- ?parseState <$> string stateStr
+    state  <- parseState =<< string stateStr
     reviewers <- array string reviewerList
     pure $ MkPullRequest {
         number

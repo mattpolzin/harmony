@@ -83,6 +83,35 @@ graphTeam @{config} team =
     maybeDecorated : Doc AnsiStyle -> Doc AnsiStyle
     maybeDecorated = if config.colors then id else unAnnotate
 
+reflectOnSelf : Config => Octokit =>
+                Promise ()
+reflectOnSelf =
+  do history <- tuple <$> listPartitionedPRs 70
+     myLogin <- login <$> getSelf
+     let (openAuthored, closedAuthored) = 
+       mapHom (count ((== myLogin) . author)) history
+     let (openRequested, closedRequested) =
+       mapHom (count (== myLogin) . concatMap reviewers) history
+     liftIO $
+       putDoc $ graph openRequested closedRequested closedAuthored openAuthored
+  where
+    replicate' : Color -> Nat -> Char -> Doc AnsiStyle
+    replicate' c n char =
+      annotate (color c) (pretty $ String.replicate n char)
+
+    graph : Nat -> Nat -> Nat -> Nat -> Doc AnsiStyle
+    graph openReq closedReq closedAuth openAuth =
+      let req   = openReq + closedReq
+          auth  = openAuth + closedAuth
+          left  = (max req auth) `minus` req
+          right = (max req auth) `minus` auth
+      in  indent (cast left) $
+                 replicate' Yellow openReq    '-'
+             <+> replicate' Green  closedReq  '='
+            <++> pretty "|"
+            <++> replicate' Green  closedAuth 'o'
+             <+> replicate' Yellow openAuth   '+'
+
 handleConfiguredArgs : Config => Git => Octokit => 
                        List String 
                     -> Promise ()
@@ -98,6 +127,8 @@ handleConfiguredArgs ["pr"] =
   do (Identified, pr) <- identifyOrCreatePR !currentBranch
        | _ => pure ()
      putStrLn pr.webURI
+handleConfiguredArgs ["reflect"] =
+  reflectOnSelf
 handleConfiguredArgs ["list"] =
   reject "The list command expects the name of a GitHub Team as an argument."
 handleConfiguredArgs @{config} ["list", teamName] =

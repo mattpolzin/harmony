@@ -143,3 +143,12 @@ const okit_get_user = (octokit, username, onSuccess, onFailure) =>
     onFailure
   )
 
+// get authed user details (self)
+// Executes callback with { login: String, name: String }
+const okit_get_self = (octokit, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.users.getByUsername(),
+    r => onSuccess(JSON.stringify(digUser(r.data))),
+    onFailure
+  )
+
