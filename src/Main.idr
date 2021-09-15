@@ -106,11 +106,11 @@ reflectOnSelf =
           left  = (max req auth) `minus` req
           right = (max req auth) `minus` auth
       in  indent (cast left) $
-                 replicate' Yellow openReq    '-'
-             <+> replicate' Green  closedReq  '='
+                 replicate' Yellow openReq    '<'
+             <+> replicate' Green  closedReq  '<'
             <++> pretty "|"
-            <++> replicate' Green  closedAuth 'o'
-             <+> replicate' Yellow openAuth   '+'
+            <++> replicate' Green  closedAuth '>'
+             <+> replicate' Yellow openAuth   '>'
 
 handleConfiguredArgs : Config => Git => Octokit => 
                        List String 

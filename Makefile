@@ -28,6 +28,6 @@ install: harmony
 clean:
 	rm -rf ./build
 	rm -rf ./node_modules
-	rm ./harmony
-	rm ./harmony-npm.tar.gz
+	rm -f ./harmony
+	rm -f ./harmony-npm.tar.gz
 
