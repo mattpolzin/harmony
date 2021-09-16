@@ -1,9 +1,7 @@
 module Main
 
--- import System.File.Meta
 import BashCompletion
 import Config as Cfg
-import Control.ANSI
 import Data.Config
 import Data.List
 import Data.Promise
@@ -17,18 +15,22 @@ import Help
 import PullRequest as PR
 import Reviewer
 import System
-import System.File.Virtual
+import System.File
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
+import User
 
 %default total
 
 exitError : HasIO io => 
-            (terminalColors : Bool)
-         -> String 
+            String 
          -> io a
-exitError terminalColors err =
-  do if terminalColors then printLn $ colored Red err else putStrLn err
+exitError err =
+  do stderrColors <- isTTY stderr
+     ignore $
+       ifThenElse stderrColors
+          (fPutStrLn stderr . renderString . layoutPretty defaultLayoutOptions . annotate (color Red) $ pretty err)
+          (fPutStrLn stderr err)
      exitFailure
 
 covering
@@ -43,7 +45,7 @@ bashCompletion curWord prevWord =
      putStr $ unlines completions
 
 resolve'' : (terminalColors : Bool) -> Promise () -> IO ()
-resolve'' terminalColors = resolve' pure (exitError terminalColors)
+resolve'' terminalColors = resolve' pure exitError
 
 assign : Config => Git => Octokit => 
          (assignArgs : List String) 
@@ -83,44 +85,11 @@ graphTeam @{config} team =
     maybeDecorated : Doc AnsiStyle -> Doc AnsiStyle
     maybeDecorated = if config.colors then id else unAnnotate
 
-reflectOnSelf : Config => Octokit =>
-                Promise ()
-reflectOnSelf =
-  do history <- tuple <$> listPartitionedPRs 70
-     myLogin <- login <$> getSelf
-     let (openAuthored, closedAuthored) = 
-       mapHom (count ((== myLogin) . author)) history
-     let (openRequested, closedRequested) =
-       mapHom (count (== myLogin) . concatMap reviewers) history
-     liftIO $
-       putDoc $ graph openRequested closedRequested closedAuthored openAuthored
-  where
-    replicate' : Color -> Nat -> Char -> Doc AnsiStyle
-    replicate' c n char =
-      annotate (color c) (pretty $ String.replicate n char)
-
-    graph : Nat -> Nat -> Nat -> Nat -> Doc AnsiStyle
-    graph openReq closedReq closedAuth openAuth =
-      let req   = openReq + closedReq
-          auth  = openAuth + closedAuth
-          left  = (max req auth) `minus` req
-          right = (max req auth) `minus` auth
-      in  indent (cast left) $
-                 replicate' Yellow openReq    '<'
-             <+> replicate' Green  closedReq  '<'
-            <++> pretty "|"
-            <++> replicate' Green  closedAuth '>'
-             <+> replicate' Yellow openAuth   '>'
-
 handleConfiguredArgs : Config => Git => Octokit => 
                        List String 
                     -> Promise ()
 handleConfiguredArgs [] =
   reject "You must specify a subcommand as the first argument to harmony." 
-handleConfiguredArgs @{config} ["help"] =
-  putStrLn $ help config.colors
-handleConfiguredArgs @{config} ["--help"] =
-  putStrLn $ help config.colors
 handleConfiguredArgs ["sync"] =
   ignore $ syncConfig True
 handleConfiguredArgs ["pr"] =
@@ -165,20 +134,20 @@ handleArgs terminalColors args =
        -- then handle any arguments given
        handleConfiguredArgs args
 
-%foreign "node:lambda:(fp) => Number(require('tty').isatty(fp.fd))"
-prim__isTTY : FilePtr -> PrimIO Int
-
-isTTY : HasIO io => File -> io Bool
-isTTY (FHandle f) = (/= 0) <$> (primIO $ prim__isTTY f)
-
 covering
 main : IO ()
 main =
   do terminalColors <- isTTY stdout
+     args <- drop 2 <$> getArgs
+     -- short circuit for help
+     when (args == ["help"] || args == ["--help"]) $ do
+       putStrLn $ help terminalColors
+       exitSuccess
+     -- otherwise get a GitHub Personal Access Token and continue.
      Just pat <- getEnv "GITHUB_PAT"
-       | Nothing => exitError terminalColors "GITHUB_PAT environment variable must be set to a personal access token."
+       | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
      _ <- octokit pat
      _ <- git
      -- drop 2 for `node` and `harmony.js`
-     handleArgs terminalColors $ drop 2 !getArgs
+     handleArgs terminalColors args
 
