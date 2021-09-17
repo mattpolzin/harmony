@@ -47,24 +47,10 @@ listTeams @{(Kit ptr)} org =
 %foreign okit_ffi "list_prs"
 prim__listPRsForBranch : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (branch : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
-parsePR : JSON -> Promise PullRequest
-parsePR json = either $ 
- do pr <- object json
-    [pullNumber, authorLogin] <- lookupAll ["pull_number", "author"] pr
-    number <- integer pullNumber
-    author <- string authorLogin
-    pure $ MkPullRequest {
-        number
-      , author
-      }
-
 export
 listPRsForBranch : Octokit => (owner : String) -> (repo : String) -> (branch : String) -> Promise (List PullRequest)
 listPRsForBranch @{(Kit ptr)} owner repo branch = 
-  do Just json <- JSON.parse <$> (promiseIO $ prim__listPRsForBranch ptr owner repo branch)
-       | Nothing => reject "Could not parse Pull Request JSON."
-     prs <- either $ array Right json 
-     traverse parsePR prs
+  either . parsePullRequestsString =<< (promiseIO $ prim__listPRsForBranch ptr owner repo branch)
 
 %foreign okit_ffi "create_pr"
 prim__createPR : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (head : String) -> (base : String) -> (title : String) -> (body : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
@@ -72,9 +58,7 @@ prim__createPR : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (head 
 export
 createPR : Octokit => (owner : String) -> (repo : String) -> (head : String) -> (base : String) -> (title : String) -> (description : String) -> Promise PullRequest
 createPR @{(Kit ptr)} owner repo head base title description =
-  do Just json <- JSON.parse <$> (promiseIO $ prim__createPR ptr owner repo head base title description)
-       | Nothing => reject "Could not parse Pull Request JSON."
-     parsePR json
+  either . parsePullRequestString =<< (promiseIO $ prim__createPR ptr owner repo head base title description)
 
 %foreign okit_ffi "create_comment"
 prim__createComment : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (issueOrPrNumber : Integer) -> (message : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
@@ -84,15 +68,7 @@ createComment : Octokit => (owner : String) -> (repo : String) -> (issueOrPrNumb
 createComment @{(Kit ptr)} owner repo issueOrPrNumber message =
   ignore . promiseIO $ prim__createComment ptr owner repo issueOrPrNumber message
 
-public export
-data PullRequestState = Open | Closed
-
-export
-Show PullRequestState where
-  show Open = "open"
-  show Closed = "closed"
-
-pullRequestStateFilter : Maybe PullRequestState -> String
+pullRequestStateFilter : Maybe PRState -> String
 pullRequestStateFilter Nothing = "all"
 pullRequestStateFilter (Just s) = show s
 
@@ -100,9 +76,19 @@ pullRequestStateFilter (Just s) = show s
 prim__listPullReviewers : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (pageLimit : Int16) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
 export
-listPullReviewers : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PullRequestState) -> (pageLimit : Fin 100) -> Promise (List String)
+listPullReviewers : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PRState) -> (pageLimit : Fin 100) -> Promise (List String)
 listPullReviewers @{(Kit ptr)} owner repo stateFilter pageLimit = 
   lines <$> (promiseIO $ prim__listPullReviewers ptr owner repo (pullRequestStateFilter stateFilter) (cast $ finToNat pageLimit))
+
+%foreign okit_ffi "list_pull_requests"
+prim__listPullRequests : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (pageLimit : Int16) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+export
+listPullRequests : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PRState) -> (pageLimit : Fin 100) -> Promise (List PullRequest)
+listPullRequests @{(Kit ptr)} owner repo stateFilter pageLimit = 
+  let filter  = pullRequestStateFilter stateFilter
+      pgLimit = cast $ finToNat pageLimit
+  in  either . parsePullRequestsString =<< (promiseIO $ prim__listPullRequests ptr owner repo filter pgLimit)
 
 -- reviewers and teamReviewers should be comma separated values encoded in a string.
 %foreign okit_ffi "add_reviewers"
@@ -139,4 +125,11 @@ prim__getUser : Ptr OctokitRef -> (username : String) -> (onSuccess : String -> 
 export
 getUser : Octokit => (username : String) -> Promise User
 getUser @{(Kit ptr)} = either . parseUserString <=< promiseIO . prim__getUser ptr
+
+%foreign okit_ffi "get_self"
+prim__getSelf : Ptr OctokitRef -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+export
+getSelf : Octokit => Promise User
+getSelf @{(Kit ptr)} = either . parseUserString =<< promiseIO (prim__getSelf ptr)
 

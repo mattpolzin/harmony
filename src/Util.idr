@@ -1,8 +1,11 @@
 module Util
 
+import Data.Config
 import Data.Fuel
 import Data.List
 import Data.String
+import Text.PrettyPrint.Prettyprinter
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
@@ -16,6 +19,12 @@ deleteBy' p x (y :: xs) =
   if p x y
      then (Just y, xs)
      else mapSnd (y ::) $ deleteBy' p x xs
+
+||| Render with or without color based on configuration
+export
+renderString : Config => Doc AnsiStyle -> String
+renderString @{config} =
+  renderString . layoutPretty defaultLayoutOptions . if config.colors then id else unAnnotate
 
 export
 getManyLines : HasIO io => Fuel -> io (List String)

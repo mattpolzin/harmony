@@ -16,6 +16,8 @@ harmony \{subcommand "<subcommand>"}
    - Synchronize local config with information from GitHub.
   \{subcommand "pr"}
    - Identify an existing PR or create a new one for the current branch.
+  \{subcommand "reflect"}
+   - Reflect on the current state of ones own PRs and review requests.
   \{subcommand "list"} \{argument "<team-slug>"}
    - List the members of the given GitHub Team.
   \{subcommand "graph"} \{argument "<team-slug>"}
@@ -26,19 +28,19 @@ harmony \{subcommand "<subcommand>"}
      
      Also assign any users with logins specified. You specify these
      additional users by prefixing their logins with '+'.
-
+     
 \{heading "Bash Completion"}:
   You can set up bash completion by adding the following to your resource
   or bash profile:
-
+    
     eval "$(harmony --bash-completion-script)"
-
+    
   Zsh users will also need to have the following in their resource or
   zsh profile before the above eval:
-
+    
     autoload -U +X compinit && compinit
     autoload -U +X bashcompinit && bashcompinit
-
+    
 """
   where
     maybeDecorate : (String -> Doc AnsiStyle) -> String -> String

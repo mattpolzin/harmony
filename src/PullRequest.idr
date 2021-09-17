@@ -18,17 +18,45 @@ import Util
 public export
 data IdentifiedOrCreated = Identified | Created
 
+public export
+record PRHistory where
+  constructor MkPRHistory
+  openPRs   : List PullRequest
+  closedPRs : List PullRequest
+
+||| Produce a tuple of (open, closed) from the PR History.
+export
+tuple : PRHistory -> (List PullRequest, List PullRequest)
+tuple (MkPRHistory openPRs closedPRs) = (openPRs, closedPRs)
+
+||| Extract a tuple of open and closed PR reviewer names
+||| from a PR history. A given reviewer's login appears
+||| in the result once for each review request.
+export
+(.allReviewers) : PRHistory -> (List String, List String)
+(.allReviewers) = mapHom (join . map reviewers) . tuple
+
+||| Extract a list of author logins. A given author's login
+||| appears in the result once for each PR authored.
+export
+(.allAuthors) : PRHistory -> List String
+history.allAuthors = author <$> (history.openPRs ++ history.closedPRs)
+
+partition : List PullRequest -> PRHistory
+partition = uncurry MkPRHistory . partition ((== Open) . (.state))
+
+export
+listPartitionedPRs : Config => Octokit =>
+                     (prCount : Fin 100)
+                  -> Promise PRHistory
+listPartitionedPRs @{config} prCount =
+  partition <$> listPullRequests config.org config.repo Nothing prCount
+
 export
 listReviewers : Config => Octokit =>
-                (openCount : Fin 100)
-             -> (closedCount : Fin 100)
+                (prCount : Fin 100)
              -> Promise (List String, List String)
-listReviewers @{config} openCount closedCount =
-  do openReviewers   <- listPullReviewers config.org config.repo (Just Open) openCount
-     -- printLn openReviewers
-     closedReviewers <- listPullReviewers config.org config.repo (Just Closed) closedCount
-     -- printLn closedReviewers
-     pure (openReviewers, closedReviewers)
+listReviewers = map (.allReviewers) . listPartitionedPRs 
 
 ||| Request reviews.
 ||| @ teamNames       The slugs of teams from which to draw potential review candidates.
@@ -42,7 +70,7 @@ requestReviewers : Config => Octokit =>
                 -> {default False dry: Bool} 
                 -> Promise ()
 requestReviewers @{config} pr teamNames forcedReviewers {dry} =
-  do (openReviewers, closedReviewers) <- listReviewers 40 30
+  do (openReviewers, closedReviewers) <- listReviewers 70
      teamMembers     <- join <$> traverse (listTeamMembers config.org) teamNames
      -- printLn teamMembers
      let chosenCandidates = chooseReviewers closedReviewers openReviewers teamMembers [] pr.author
@@ -52,18 +80,18 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
      let teams = if config.assignTeams then teamNames else []
      when (not dry) $
        do ignore $ addPullReviewers config.org config.repo pr.number users teams
-          whenJust chosenUser $ \cu =>
-            createComment config.org config.repo pr.number (prComment cu)
-     liftIO $ 
-       if null users
-         then putStrLn . maybeDecorate $ vsep [
-                         annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
-                       , pretty "(perhaps the only option was the author of the pull request?)."
-                       ]
-         else putStrLn . maybeDecorate $ vsep [
-                         pretty "Assigned \{userNotice chosenUser}\{teamNotice teams} to the open PR "
-                       , pretty "for the current branch (\{pr.webURI})."
-                       ]
+          when config.commentOnAssign $
+            whenJust chosenUser $ \cu =>
+              createComment config.org config.repo pr.number (prComment cu)
+     if null users
+       then putStrLn . maybeDecorate $ vsep [
+                       annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
+                     , pretty "(perhaps the only option was the author of the pull request?)."
+                     ]
+       else putStrLn . maybeDecorate $ vsep [
+                       pretty "Assigned \{userNotice chosenUser}\{teamNotice teams} to the open PR "
+                     , pretty "for the current branch (\{pr.webURI})."
+                     ]
   where
     maybeDecorate : Doc AnsiStyle -> String
     maybeDecorate doc =

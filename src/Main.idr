@@ -1,9 +1,7 @@
 module Main
 
--- import System.File.Meta
 import BashCompletion
 import Config as Cfg
-import Control.ANSI
 import Data.Config
 import Data.List
 import Data.Promise
@@ -17,18 +15,22 @@ import Help
 import PullRequest as PR
 import Reviewer
 import System
-import System.File.Virtual
+import System.File
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
+import User
 
 %default total
 
 exitError : HasIO io => 
-            (terminalColors : Bool)
-         -> String 
+            String 
          -> io a
-exitError terminalColors err =
-  do if terminalColors then printLn $ colored Red err else putStrLn err
+exitError err =
+  do stderrColors <- isTTY stderr
+     ignore $
+       ifThenElse stderrColors
+          (fPutStrLn stderr . renderString . layoutPretty defaultLayoutOptions . annotate (color Red) $ pretty err)
+          (fPutStrLn stderr err)
      exitFailure
 
 covering
@@ -43,7 +45,7 @@ bashCompletion curWord prevWord =
      putStr $ unlines completions
 
 resolve'' : (terminalColors : Bool) -> Promise () -> IO ()
-resolve'' terminalColors = resolve' pure (exitError terminalColors)
+resolve'' terminalColors = resolve' pure exitError
 
 assign : Config => Git => Octokit => 
          (assignArgs : List String) 
@@ -77,7 +79,7 @@ graphTeam : Config => Octokit =>
          -> Promise ()
 graphTeam @{config} team =
   do teamMemberLogins <- listTeamMembers config.org team
-     (openReviewers, closedReviewers) <- listReviewers 40 30
+     (openReviewers, closedReviewers) <- listReviewers 70
      liftIO . putDoc . maybeDecorated $ reviewsGraph closedReviewers openReviewers teamMemberLogins
   where
     maybeDecorated : Doc AnsiStyle -> Doc AnsiStyle
@@ -88,16 +90,14 @@ handleConfiguredArgs : Config => Git => Octokit =>
                     -> Promise ()
 handleConfiguredArgs [] =
   reject "You must specify a subcommand as the first argument to harmony." 
-handleConfiguredArgs @{config} ["help"] =
-  putStrLn $ help config.colors
-handleConfiguredArgs @{config} ["--help"] =
-  putStrLn $ help config.colors
 handleConfiguredArgs ["sync"] =
   ignore $ syncConfig True
 handleConfiguredArgs ["pr"] =
   do (Identified, pr) <- identifyOrCreatePR !currentBranch
        | _ => pure ()
      putStrLn pr.webURI
+handleConfiguredArgs ["reflect"] =
+  reflectOnSelf
 handleConfiguredArgs ["list"] =
   reject "The list command expects the name of a GitHub Team as an argument."
 handleConfiguredArgs @{config} ["list", teamName] =
@@ -134,20 +134,20 @@ handleArgs terminalColors args =
        -- then handle any arguments given
        handleConfiguredArgs args
 
-%foreign "node:lambda:(fp) => Number(require('tty').isatty(fp.fd))"
-prim__isTTY : FilePtr -> PrimIO Int
-
-isTTY : HasIO io => File -> io Bool
-isTTY (FHandle f) = (/= 0) <$> (primIO $ prim__isTTY f)
-
 covering
 main : IO ()
 main =
   do terminalColors <- isTTY stdout
+     args <- drop 2 <$> getArgs
+     -- short circuit for help
+     when (args == ["help"] || args == ["--help"]) $ do
+       putStrLn $ help terminalColors
+       exitSuccess
+     -- otherwise get a GitHub Personal Access Token and continue.
      Just pat <- getEnv "GITHUB_PAT"
-       | Nothing => exitError terminalColors "GITHUB_PAT environment variable must be set to a personal access token."
+       | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
      _ <- octokit pat
      _ <- git
      -- drop 2 for `node` and `harmony.js`
-     handleArgs terminalColors $ drop 2 !getArgs
+     handleArgs terminalColors args
 

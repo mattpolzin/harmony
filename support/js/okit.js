@@ -39,8 +39,14 @@ const okit_list_teams = (octokit, org, onSuccess, onFailure) =>
   )
 
 // list PRs for branch
-const digPr = pr =>
-  { return { pull_number: pr.number, author: pr.user.login } }
+const digPr = pr => {
+    return {
+      pull_number: pr.number,
+      author: pr.user.login,
+      state: pr.state,
+      reviewers: pr.requested_reviewers.map(u => u.login)
+    }
+  }
 const digPrs = prJson =>
   prJson.map(digPr)
 
@@ -80,6 +86,15 @@ const okit_list_reviewers = (octokit, owner, repo, state, per_page, onSuccess, o
   idris__okit_unpromisify(
     octokit.rest.pulls.list({ owner, repo, state, per_page }),
     r => onSuccess(newline_delimited(digReviewers(r.data))),
+    onFailure
+  )
+
+// list PR reviewers
+// Executes callback with [{ "pull_number": Int, "author": String, "state": String, "reviewers": [String] }]
+const okit_list_pull_requests = (octokit, owner, repo, state, per_page, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.pulls.list({ owner, repo, state, per_page }),
+    r => onSuccess(JSON.stringify(digPrs(r.data))),
     onFailure
   )
 
@@ -124,6 +139,15 @@ const digUser = userJson => {
 const okit_get_user = (octokit, username, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.users.getByUsername({ username }),
+    r => onSuccess(JSON.stringify(digUser(r.data))),
+    onFailure
+  )
+
+// get authed user details (self)
+// Executes callback with { login: String, name: String }
+const okit_get_self = (octokit, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.users.getAuthenticated(),
     r => onSuccess(JSON.stringify(digUser(r.data))),
     onFailure
   )
