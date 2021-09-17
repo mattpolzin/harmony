@@ -32,7 +32,7 @@ namespace Reflect
       ital = annotate italic . pretty
 
   intro : String
-  intro = "Your current pull request summary (out of the past 70 PRs)."
+  intro = "Your current pull request summary (out of the past 70 PRs):"
 
   parameters (pageWidth : Nat, openReq : Nat, closedReq : Nat, closedAuth : Nat, openAuth : Nat)
     chart : (leftPadding : Nat)

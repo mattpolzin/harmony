@@ -15,6 +15,7 @@ allRootCmds = [
   , "help"
   , "list"
   , "pr"
+  , "reflect"
   , "sync"
   ]
 
@@ -30,10 +31,11 @@ opts @{_} "--" "harmony" = allRootCmds
 opts @{_} partialCmd "harmony" = filter (isPrefixOf partialCmd) allRootCmds
 
 -- then the subcommands that take no arguments
-opts @{_} _ "pr"     = []
-opts @{_} _ "sync"   = []
-opts @{_} _ "help"   = []
-opts @{_} _ "--help" = []
+opts @{_} _ "pr"      = []
+opts @{_} _ "sync"    = []
+opts @{_} _ "help"    = []
+opts @{_} _ "--help"  = []
+opts @{_} _ "reflect" = []
 
 -- then list, which only accepts a single team slug:
 opts @{config} "--" "list"   = config.teamSlugs
