@@ -55,7 +55,7 @@ eval "$(harmony --bash-completion-script)"
 ## Usage
 The first time you start Harmony in any particular folder, you will be asked to provide some information about the GitHub repository you are working with. This information is stored in a file named `harmony.json` in the current working directory.
 
-Note that the GitHub organization and repository are both slugs, not names. These are the values you find in a GitHub URL pointing to your repository. If you are working with a personal repository, "org" here is synonymous with "username".
+Note that the GitHub organization and repository are both slugs, not names. These are the values you find in a GitHub URL pointing to your repository. Harmony does not work with personal repositories because they do not have teams or members.
 ```shell
 $ harmony
 Creating a new configuration (storing in harmony.json)...
