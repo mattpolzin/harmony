@@ -27,10 +27,9 @@ exitError : HasIO io =>
          -> io a
 exitError err =
   do stderrColors <- isTTY stderr
-     ignore $
-       ifThenElse stderrColors
-          (fPutStrLn stderr . renderString . layoutPretty defaultLayoutOptions . annotate (color Red) $ pretty err)
-          (fPutStrLn stderr err)
+     if stderrColors
+          then ignore $ fPutStrLn stderr . renderString . layoutPretty defaultLayoutOptions . annotate (color Red) . pretty $ trim err
+          else ignore $ fPutStrLn stderr err
      exitFailure
 
 covering
@@ -44,8 +43,8 @@ bashCompletion curWord prevWord =
      let completions = BashCompletion.opts curWord prevWord
      putStr $ unlines completions
 
-resolve'' : (terminalColors : Bool) -> Promise () -> IO ()
-resolve'' terminalColors = resolve' pure exitError
+resolve'' : Promise () -> IO ()
+resolve'' = resolve' pure exitError
 
 assign : Config => Git => Octokit => 
          (assignArgs : List String) 
@@ -128,7 +127,7 @@ handleArgs : Git => Octokit =>
 handleArgs _ ["--bash-completion", curWord, prevWord] = bashCompletion curWord prevWord
 handleArgs _ ["--bash-completion-script"] = putStrLn BashCompletion.script
 handleArgs terminalColors args = 
-  resolve'' terminalColors $
+  resolve'' $
     do -- create the config file before continuing if it does not exist yet
        _ <- syncIfOld =<< loadOrCreateConfig terminalColors
        -- then handle any arguments given

@@ -7,6 +7,12 @@ const okit_octokit = authToken =>
 const idris__okit_unpromisify = (promise, onSuccess, onFailure) =>
   promise.then(r => onSuccess(r)(), e => onFailure(e)())
 
+const idris__okit_stringify_error = (fn) => (err) => {
+  const url = err.response.url
+  const msg = err.response.data.message
+  return fn('Octokit Error: ' + msg + ' (' + url + ')')
+}
+
 const newline_delimited = array =>
   array.join("\n")
 
@@ -23,7 +29,7 @@ const okit_get_repo_default_branch = (octokit, org, repo, onSuccess, onFailure) 
   idris__okit_unpromisify(
     octokit.rest.repos.get({ owner: org, repo }),
     r => onSuccess(digDefaultBranch(r.data)),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
 // list teams
@@ -35,7 +41,7 @@ const okit_list_teams = (octokit, org, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.teams.list({ org, per_page: 100 }),
     r => onSuccess(newline_delimited(digTeams(r.data))),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
 // list PRs for branch
@@ -55,7 +61,7 @@ const okit_list_prs = (octokit, owner, repo, branch, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.pulls.list({ owner, repo, head: `${owner}:${branch}`, state: 'open', per_page: 10 }),
     r => onSuccess(JSON.stringify(digPrs(r.data))),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
 // Create PR
@@ -64,7 +70,7 @@ const okit_create_pr = (octokit, owner, repo, head, base, title, body, onSuccess
   idris__okit_unpromisify(
     octokit.rest.pulls.create({ owner, repo, head, base, title, body }),
     r => onSuccess(JSON.stringify(digPr(r.data))),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
 
@@ -74,7 +80,7 @@ const okit_create_comment = (octokit, owner, repo, issue_number, body, onSuccess
   idris__okit_unpromisify(
     octokit.rest.issues.createComment({ owner, repo, issue_number: Number(issue_number), body }),
     r => onSuccess(""),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
 // list PR reviewers
@@ -86,7 +92,7 @@ const okit_list_reviewers = (octokit, owner, repo, state, per_page, onSuccess, o
   idris__okit_unpromisify(
     octokit.rest.pulls.list({ owner, repo, state, per_page }),
     r => onSuccess(newline_delimited(digReviewers(r.data))),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
 // list PR reviewers
@@ -95,7 +101,7 @@ const okit_list_pull_requests = (octokit, owner, repo, state, per_page, onSucces
   idris__okit_unpromisify(
     octokit.rest.pulls.list({ owner, repo, state, per_page }),
     r => onSuccess(JSON.stringify(digPrs(r.data))),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
 // add PR reviewers
@@ -106,7 +112,7 @@ const okit_add_reviewers = (octokit, owner, repo, pull_number, reviewers, team_r
   idris__okit_unpromisify(
     octokit.rest.pulls.requestReviewers({ owner, repo, pull_number: Number(pull_number), reviewers: from_comma_delimited(reviewers), team_reviewers: from_comma_delimited(team_reviewers) }),
     r => onSuccess(newline_delimited(digReviewers([r.data]))),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
 // list team members
@@ -118,7 +124,7 @@ const okit_list_team_members = (octokit, org, team_slug, onSuccess, onFailure) =
   idris__okit_unpromisify(
     octokit.rest.teams.listMembersInOrg({ org, team_slug }),
     r => onSuccess(newline_delimited(digUserLogins(r.data))),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
 // list org members
@@ -127,7 +133,7 @@ const okit_list_org_members = (octokit, org, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.orgs.listMembers({ org, per_page: 100 }),
     r => onSuccess(newline_delimited(digUserLogins(r.data))),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
 // get user details
@@ -140,7 +146,7 @@ const okit_get_user = (octokit, username, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.users.getByUsername({ username }),
     r => onSuccess(JSON.stringify(digUser(r.data))),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
 // get authed user details (self)
@@ -149,6 +155,6 @@ const okit_get_self = (octokit, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.users.getAuthenticated(),
     r => onSuccess(JSON.stringify(digUser(r.data))),
-    onFailure
+    idris__okit_stringify_error(onFailure)
   )
 
