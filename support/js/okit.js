@@ -50,6 +50,7 @@ const digPr = pr => {
       pull_number: pr.number,
       author: pr.user.login,
       state: pr.state,
+      created_at: pr.created_at,
       reviewers: pr.requested_reviewers.map(u => u.login)
     }
   }
