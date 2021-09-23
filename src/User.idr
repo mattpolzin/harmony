@@ -1,6 +1,8 @@
 module User
 
 import Data.Config
+import Data.Date
+import Data.List
 import Data.Promise
 import Data.PullRequest
 import Data.String
@@ -10,6 +12,8 @@ import PullRequest
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import Util
+
+%default total
 
 replicate' : Color -> Nat -> Char -> Doc AnsiStyle
 replicate' c n char =
@@ -57,29 +61,32 @@ namespace Reflect
           padChart = (cast centerOffset) + (left `minus` req)
       in  vsep [header padTitle, chart padChart]
 
-    details : Doc AnsiStyle
-    details =
-      vsep [
-        pretty intro
-      , pretty "requested: "
-      , indent 2 $ vsep [
-          hsep [pretty "open:", pretty openReq]
-        , hsep [pretty "closed:", pretty closedReq]
+    parameters (earliestOpenAuth : Maybe Date, earliestOpenReq : Maybe Date)
+      details :  Doc AnsiStyle
+      details =
+        vsep [
+          pretty intro
+        , pretty "requested: "
+        , indent 2 . vsep $ catMaybes [
+            Just $ hsep [pretty "open:", pretty openReq]
+          , earliestOpenReq <&> \date => indent 2 $ hsep [pretty "earliest:", pretty $ show date]
+          , Just $ hsep [pretty "closed:", pretty closedReq]
+          ]
+        , pretty "authored: "
+        , indent 2 . vsep $ catMaybes [
+            Just $ hsep [pretty "open:", pretty openAuth]
+          , earliestOpenAuth <&> \date => indent 2 $ hsep [pretty "earliest:", pretty $ show date]
+          , Just $ hsep [pretty "closed:", pretty closedAuth]
+          ]
         ]
-      , pretty "authored: "
-      , indent 2 $ vsep [
-          hsep [pretty "open:", pretty openAuth]
-        , hsep [pretty "closed:", pretty closedAuth]
-        ]
-      ]
 
-    print : Doc AnsiStyle
-    print = vsep [
-              emptyDoc
-            , graph
-            , emptyDoc
-            , details
-            ]
+      print : Doc AnsiStyle
+      print = vsep [
+                emptyDoc
+              , graph
+              , emptyDoc
+              , details
+              ]
 
   export
   reflectOnSelf : Config => Octokit =>
@@ -88,11 +95,19 @@ namespace Reflect
     do history <- tuple <$> listPartitionedPRs 70
        myLogin <- login <$> getSelf
        let (openAuthored, closedAuthored) = 
-         mapHom (count ((== myLogin) . author)) history
+         mapHom (filter ((== myLogin) . author)) history
        let (openRequested, closedRequested) =
-         mapHom (count (== myLogin) . concatMap reviewers) history
+         mapHom (filter (any (== myLogin) . reviewers)) history
+       let (earliestOpenAuth, earliestOpenReq) =
+         mapHom (head' . sort . map createdAt) (openAuthored, openRequested)
        -- TODO: get Terminal width from somewhere to set the page width
        --       to the min of the Terminal width or the intro length.
        putStrLn . renderString $
-         print (length intro) openRequested closedRequested closedAuthored openAuthored
+         print (length intro)
+               (length openRequested)
+               (length closedRequested)
+               (length closedAuthored)
+               (length openAuthored)
+               earliestOpenAuth
+               earliestOpenReq
 

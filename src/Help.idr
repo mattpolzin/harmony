@@ -3,6 +3,8 @@ module Help
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
+%default total
+
 ||| The Help string for Harmony.
 export
 help : (decorated : Bool) -> String

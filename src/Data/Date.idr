@@ -3,10 +3,31 @@ module Data.Date
 import Data.List1
 import Data.String
 
+%default total
+
 public export
 record Date where
   constructor MkDate
   year, month, day : Nat
+
+export
+Show Date where
+  show (MkDate year month day) = "\{show year}-\{pad month}-\{pad day}"
+    where
+      pad : Nat -> String
+      pad k = if k < 10
+                 then "0\{show k}"
+                 else show k
+
+export
+Eq Date where
+  (MkDate year month day) == (MkDate year' month' day') =
+    year == year' && month == month' && day == day'
+
+export
+Ord Date where
+  compare (MkDate year month day) (MkDate year' month' day') =
+    compare [year, month, day] [year', month', day']
 
 parsePositiveReversed : List Char -> Maybe Nat
 parsePositiveReversed [] = Just 0

@@ -15,6 +15,8 @@ import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import Util
 
+%default total
+
 public export
 data IdentifiedOrCreated = Identified | Created
 

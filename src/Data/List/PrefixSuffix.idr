@@ -3,6 +3,8 @@ module Data.List.PrefixSuffix
 import Data.List
 import Decidable.Equality
 
+%default total
+
 ||| Store a list as a suffix appended to a prefix.
 public export
 data PrefixSuffix : (prefixList : List a) -> (suffixList : List a) -> (0 fullList : List a) -> Type where
