@@ -76,7 +76,7 @@ pullRequestStateFilter (Just s) = show s
 prim__listPullReviewers : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (pageLimit : Int16) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
 export
-listPullReviewers : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PRState) -> (pageLimit : Fin 100) -> Promise (List String)
+listPullReviewers : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PRState) -> (pageLimit : Fin 101) -> Promise (List String)
 listPullReviewers @{(Kit ptr)} owner repo stateFilter pageLimit = 
   lines <$> (promiseIO $ prim__listPullReviewers ptr owner repo (pullRequestStateFilter stateFilter) (cast $ finToNat pageLimit))
 
@@ -84,7 +84,7 @@ listPullReviewers @{(Kit ptr)} owner repo stateFilter pageLimit =
 prim__listPullRequests : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (pageLimit : Int16) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
 export
-listPullRequests : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PRState) -> (pageLimit : Fin 100) -> Promise (List PullRequest)
+listPullRequests : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PRState) -> (pageLimit : Fin 101) -> Promise (List PullRequest)
 listPullRequests @{(Kit ptr)} owner repo stateFilter pageLimit = 
   let filter  = pullRequestStateFilter stateFilter
       pgLimit = cast $ finToNat pageLimit

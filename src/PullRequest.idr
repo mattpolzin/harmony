@@ -49,14 +49,14 @@ partition = uncurry MkPRHistory . partition ((== Open) . (.state))
 
 export
 listPartitionedPRs : Config => Octokit =>
-                     (prCount : Fin 100)
+                     (prCount : Fin 101)
                   -> Promise PRHistory
 listPartitionedPRs @{config} prCount =
   partition <$> listPullRequests config.org config.repo Nothing prCount
 
 export
 listReviewers : Config => Octokit =>
-                (prCount : Fin 100)
+                (prCount : Fin 101)
              -> Promise (List String, List String)
 listReviewers = map (.allReviewers) . listPartitionedPRs 
 
@@ -72,7 +72,7 @@ requestReviewers : Config => Octokit =>
                 -> {default False dry: Bool} 
                 -> Promise ()
 requestReviewers @{config} pr teamNames forcedReviewers {dry} =
-  do (openReviewers, closedReviewers) <- listReviewers 70
+  do (openReviewers, closedReviewers) <- listReviewers 100
      teamMembers     <- join <$> traverse (listTeamMembers config.org) teamNames
      -- printLn teamMembers
      let chosenCandidates = chooseReviewers closedReviewers openReviewers teamMembers [] pr.author

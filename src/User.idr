@@ -36,7 +36,7 @@ namespace Reflect
       ital = annotate italic . pretty
 
   intro : String
-  intro = "Your current pull request summary (out of the past 70 PRs):"
+  intro = "Your current pull request summary (out of the past 100 PRs):"
 
   parameters (pageWidth : Nat, openReq : Nat, closedReq : Nat, closedAuth : Nat, openAuth : Nat)
     chart : (leftPadding : Nat)
@@ -66,13 +66,15 @@ namespace Reflect
       details =
         vsep [
           pretty intro
-        , pretty "requested: "
+        , emptyDoc
+        , pretty "requested reviews: "
         , indent 2 . vsep $ catMaybes [
             Just $ hsep [pretty "open:", pretty openReq]
           , earliestOpenReq <&> \date => indent 2 $ hsep [pretty "earliest:", pretty $ show date]
           , Just $ hsep [pretty "closed:", pretty closedReq]
           ]
-        , pretty "authored: "
+        , emptyDoc
+        , pretty "authored pulls: "
         , indent 2 . vsep $ catMaybes [
             Just $ hsep [pretty "open:", pretty openAuth]
           , earliestOpenAuth <&> \date => indent 2 $ hsep [pretty "earliest:", pretty $ show date]
@@ -86,13 +88,14 @@ namespace Reflect
               , graph
               , emptyDoc
               , details
+              , emptyDoc
               ]
 
   export
   reflectOnSelf : Config => Octokit =>
                   Promise ()
   reflectOnSelf =
-    do history <- tuple <$> listPartitionedPRs 70
+    do history <- tuple <$> listPartitionedPRs 100
        myLogin <- login <$> getSelf
        let (openAuthored, closedAuthored) = 
          mapHom (filter ((== myLogin) . author)) history
