@@ -1,11 +1,12 @@
 module Data.PullRequest
 
 import Data.Config
-import Language.JSON
-import Language.JSON.Accessors
-import Data.Vect
+import Data.Date
 import Data.Either
 import Data.List
+import Data.Vect
+import Language.JSON
+import Language.JSON.Accessors
 
 %default total
 
@@ -27,11 +28,13 @@ public export
 record PullRequest where
   constructor MkPullRequest
   ||| The pull request's "number" (as seen in URIs referring to the PR).
-  number : Integer
+  number    : Integer
+  ||| When the PR was created.
+  createdAt : Date
   ||| The `login` of the author of the pull request.
-  author : String
+  author    : String
   ||| Open or Closed status.
-  state  : PRState
+  state     : PRState
   ||| A List of all reviewers requested on the PR.
   reviewers : List String
 
@@ -39,7 +42,7 @@ record PullRequest where
 
 export
 Show PullRequest where
-  show (MkPullRequest number author state _) = "\{show number}: \{show author} (\{show state})"
+  show (MkPullRequest number _ author state _) = "\{show number}: \{show author} (\{show state})"
 
 export
 (.webURI) : Config => PullRequest -> String
@@ -50,16 +53,21 @@ parseState "open"   = Right Open
 parseState "closed" = Right Closed
 parseState str      = Left "Failed to parse a Pull Request State (open/closed). Found \{str}."
 
+parseDateTime : String -> Either String Date
+parseDateTime = maybeToEither "Failed to parse Date" . parseDateTimeString
+
 parsePR : JSON -> Either String PullRequest
 parsePR json =
  do pr <- object json
-    [pullNumber, authorLogin, stateStr, reviewerList] <- lookupAll ["pull_number", "author", "state", "reviewers"] pr
-    number <- integer pullNumber
-    author <- string authorLogin
-    state  <- parseState =<< string stateStr
+    [pullNumber, authorLogin, stateStr, createdAtStr, reviewerList] <- lookupAll ["pull_number", "author", "state", "created_at", "reviewers"] pr
+    number    <- integer pullNumber
+    author    <- string authorLogin
+    state     <- parseState    =<< string stateStr
+    createdAt <- parseDateTime =<< string createdAtStr
     reviewers <- array string reviewerList
     pure $ MkPullRequest {
         number
+      , createdAt
       , author
       , state
       , reviewers

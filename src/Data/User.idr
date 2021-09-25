@@ -5,6 +5,8 @@ import Data.Vect
 import Language.JSON
 import Language.JSON.Accessors
 
+%default total
+
 public export
 record User where
   constructor MkUser
