@@ -69,17 +69,8 @@ main
 
 Once configured, Harmony supports the following commands: `sync`, `pr`, `list`, `graph`, and `assign`.
 
-### Sync
-Running `harmony sync` will sync the locally configured team slugs and user logins that are used by auto-completion for Harmony. This sync is also performed automatically the first time you run Harmony after more than a day without the configuration being synced.
-
 ### PR
 Running `harmony pr` with a branch checked out will reach out to GitHub to determine if there is an open PR for that branch. If there is a PR, Harmony will print a URI that can be used to view the PR. IF there is not a PR, Harmony will help you create one.
-
-### List
-Running `harmony list <team>` will list the members of the given GitHub Team.
-
-### Graph
-Running `harmony graph <team>` will graph the relative review workload of each of the members of the given GitHub Team.
 
 ### Assign
 Running `harmony assign {<team> | +<user>} [...]` will help you create a PR if one does not exist yet and then it will pick someone to review the PR (from one of the listed teams) and assign both that user and the teams you listed as reviewers of the PR.
@@ -101,4 +92,16 @@ Assign the most available reviewer from the "web" team and additionally assign t
 ```shell
 harmony assign web +carl001 +emmaham
 ```
+
+### Reflect
+Running `harmony reflect` will show a summary of your review requests and authored pull requests.
+
+### List
+Running `harmony list <team>` will list the members of the given GitHub Team.
+
+### Graph
+Running `harmony graph <team>` will graph the relative review workload of each of the members of the given GitHub Team.
+
+### Sync
+Running `harmony sync` will sync the locally configured team slugs and user logins that are used by auto-completion for Harmony. This sync is also performed automatically the first time you run Harmony after more than a day without the configuration being synced.
 
