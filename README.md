@@ -11,7 +11,10 @@ Building the latest commits of Harmony requires a HEAD build of the Idris 2 comp
 Alternatively, you can build Harmony with Docker (see [Docker Build](#docker-build)).
 
 ## Installation
-### Release
+### NPM
+You can install Harmony via npm directly by running `npm install -g @mattpolzin/harmony`.
+
+### GitHub Release
 You can install any Harmony release by downloading the `harmony-npm.tar.gz` file from the GitHub Release page, unzipping it, and running `npm install --global`.
 
 ### From Source

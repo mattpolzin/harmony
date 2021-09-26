@@ -1,12 +1,24 @@
 {
-  "name": "harmony",
+  "name": "@mattpolzin/harmony",
   "version": "0.2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Instill harmony between GitHub collaborators.",
+  "keywords": [
+    "git",
+    "github",
+    "pr",
+    "review"
+  ],
+  "homepage": "https://github.com/mattpolzin/harmony#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mattpolzin/harmony.git"
+  },
   "main": "harmony",
   "bin": "./harmony",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "scripts": {},
   "author": "Mathew Polzin",
   "license": "MIT",
   "dependencies": {

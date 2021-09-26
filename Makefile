@@ -1,7 +1,7 @@
 
 idris2 = idris2
 
-.PHONY: all build install package clean
+.PHONY: all build install package publish clean
 
 all: build
 
@@ -17,10 +17,18 @@ build: node_modules
 harmony: build
 
 package: build
+	./version-check.sh
 	rm -rf ./build
 	rm -rf ./node_modules
 	# leave ./harmony in place
-	tar -czvf harmony-npm.tar.gz ./package.json ./harmony
+	mkdir harmony-npm
+	cp harmony ./harmony-npm
+	cp package.json ./harmony-npm
+	tar -czvf harmony-npm.tar.gz harmony-npm
+	rm -rf ./harmony-npm
+
+publish : package
+	npm publish harmony-npm.tar.gz
 
 install: harmony
 	npm install --global
