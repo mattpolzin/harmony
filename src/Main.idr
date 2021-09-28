@@ -104,8 +104,8 @@ contribute @{config} skip =
 handleConfiguredArgs : Config => Git => Octokit => 
                        List String 
                     -> Promise ()
-handleConfiguredArgs [] =
-  reject "You must specify a subcommand as the first argument to harmony." 
+handleConfiguredArgs @{config} [] =
+  putStrLn $ help config.colors
 handleConfiguredArgs ["sync"] =
   ignore $ syncConfig True
 handleConfiguredArgs ["pr"] =

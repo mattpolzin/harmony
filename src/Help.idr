@@ -19,7 +19,8 @@ harmony \{subcommand "<subcommand>"}
   \{subcommand "pr"}
    - Identify an existing PR or create a new one for the current branch.
   \{subcommand "contribute"}
-   - Contribute to an open PR. Prints a URL.
+   - Contribute to an open PR. Prints a URL. Prioritizes PRs you are
+     requested to review but will also return other PRs.
   \{subcommand "reflect"}
    - Reflect on the current state of ones own PRs and review requests.
   \{subcommand "list"} \{argument "<team-slug>"}
