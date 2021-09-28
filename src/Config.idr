@@ -40,7 +40,7 @@ export
 syncIfOld : Octokit => Config -> Promise Config
 syncIfOld config =
   if config.updatedAt < !oneDayAgo
-     then do putStrLn "Syncing config file..."
+     then do -- putStrLn "Syncing config file..."
              syncConfig False
      else pure config
   where

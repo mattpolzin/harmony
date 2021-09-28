@@ -3,6 +3,7 @@ module Main
 import BashCompletion
 import Config as Cfg
 import Data.Config
+import Data.Date
 import Data.List
 import Data.Promise
 import Data.PullRequest
@@ -84,6 +85,22 @@ graphTeam @{config} team =
     maybeDecorated : Doc AnsiStyle -> Doc AnsiStyle
     maybeDecorated = if config.colors then id else unAnnotate
 
+contribute : Config => Octokit =>
+             Nat
+          -> Promise ()
+contribute @{config} skip =
+  do openPrs <- listPullRequests config.org config.repo (Just Open) 100
+     myLogin <- login <$> getSelf
+     let filtered = filter ((/= myLogin) . author) openPrs
+     let parted = partition (any (== myLogin) . reviewers) filtered
+     let (mine, theirs) = (mapHom $ sortBy (compare `on` .createdAt)) parted
+     let url = map (.webURI) . head' . drop skip $ mine ++ theirs
+     printResult url
+  where
+    printResult : Maybe String -> Promise ()
+    printResult Nothing    = reject "No open PRs to review!"
+    printResult (Just url) = putStrLn url
+
 handleConfiguredArgs : Config => Git => Octokit => 
                        List String 
                     -> Promise ()
@@ -97,6 +114,15 @@ handleConfiguredArgs ["pr"] =
      putStrLn pr.webURI
 handleConfiguredArgs ["reflect"] =
   reflectOnSelf
+handleConfiguredArgs ["contribute"] =
+  contribute 0
+handleConfiguredArgs ["contribute", skipArg] =
+  case unpack skipArg of
+       ('-' :: skip) => do 
+         let (Just num) : Maybe Nat = map cast . parsePositive $ pack skip
+           | Nothing => exitError "contribute's argument must be -<num> where <num> is an integer."
+         contribute num
+       _             => exitError "contribute's argument must be -<num> where <num> is an integer."
 handleConfiguredArgs ["list"] =
   reject "The list command expects the name of a GitHub Team as an argument."
 handleConfiguredArgs @{config} ["list", teamName] =
