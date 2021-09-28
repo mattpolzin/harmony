@@ -58,7 +58,7 @@ export
 listReviewers : Config => Octokit =>
                 (prCount : Fin 101)
              -> Promise (List String, List String)
-listReviewers = map (.allReviewers) . listPartitionedPRs 
+listReviewers = map (.allReviewers) . listPartitionedPRs
 
 ||| Request reviews.
 ||| @ teamNames       The slugs of teams from which to draw potential review candidates.
@@ -73,7 +73,7 @@ requestReviewers : Config => Octokit =>
                 -> Promise ()
 requestReviewers @{config} pr teamNames forcedReviewers {dry} =
   do (openReviewers, closedReviewers) <- listReviewers 100
-     teamMembers     <- join <$> traverse (listTeamMembers config.org) teamNames
+     teamMembers <- join <$> traverse (listTeamMembers config.org) teamNames
      -- printLn teamMembers
      let chosenCandidates = chooseReviewers closedReviewers openReviewers teamMembers [] pr.author
      -- printLn chosenCandidates

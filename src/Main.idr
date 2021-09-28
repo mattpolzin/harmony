@@ -91,8 +91,8 @@ contribute : Config => Octokit =>
 contribute @{config} skip =
   do openPrs <- listPullRequests config.org config.repo (Just Open) 100
      myLogin <- login <$> getSelf
-     let filtered = filter ((/= myLogin) . author) openPrs
-     let parted = partition (any (== myLogin) . reviewers) filtered
+     let filtered = filter (not . isAuthor myLogin) openPrs
+     let parted = partition (isRequestedReviewer myLogin) filtered
      let (mine, theirs) = (mapHom $ sortBy (compare `on` .createdAt)) parted
      let url = map (.webURI) . head' . drop skip $ mine ++ theirs
      printResult url
@@ -163,6 +163,7 @@ covering
 main : IO ()
 main =
   do terminalColors <- isTTY stdout
+     -- drop 2 for `node` and `harmony.js`
      args <- drop 2 <$> getArgs
      -- short circuit for help
      when (args == ["help"] || args == ["--help"]) $ do
@@ -173,6 +174,5 @@ main =
        | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
      _ <- octokit pat
      _ <- git
-     -- drop 2 for `node` and `harmony.js`
      handleArgs terminalColors args
 

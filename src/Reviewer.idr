@@ -21,9 +21,9 @@ scoredReviewers : Ord login =>
                -> List (login, Nat)
 scoredReviewers closedReviews openReviews candidates =
   let closedReviewsWeighted = weightReviews 1 closedReviews
-      openReviewsWeighted   = weightReviews 2 openReviews
-      allReviews            = zipReviews closedReviewsWeighted openReviewsWeighted False
-  in sort' $ zipReviews allReviews (weightReviews 0 candidates) True
+      openReviewsWeighted   = weightReviews 3 openReviews
+      allReviews            = zipReviews openReviewsWeighted closedReviewsWeighted Subtract False
+  in sort' $ zipReviews allReviews (weightReviews 0 candidates) Add True
   where
       -- The number of appearances is multiplied by the supplied weight which 
       -- allows us to weight some lists more heavily than others.
@@ -36,19 +36,27 @@ scoredReviewers closedReviews openReviews candidates =
       sort' : List (login, Nat) -> List (login, Nat)
       sort' = sortBy $ compare `on` snd
 
-      -- Add the scores together for any equal logins.
+      data Op = Add | Subtract
+
+      -- Add or subtract the scores for any equal logins.
       -- If `filterToSecondList` then no elements in the first list 
       -- but not the second list will be kept.
-      zipReviews : List (login, Nat) -> List (login, Nat) -> (filterToSecondList : Bool) -> List (login, Nat)
-      zipReviews [] [] _     = []
-      zipReviews [] ys _     = ys
-      zipReviews xs [] True  = []
-      zipReviews xs [] False = xs
-      zipReviews (x@(l1, s1) :: xs) ys filter =
+      zipReviews : List (login, Nat) -> List (login, Nat) -> Op -> (filterToSecondList : Bool) -> List (login, Nat)
+      zipReviews [] [] _ _     = []
+      zipReviews [] ys Add _   = ys
+      zipReviews [] ys Subtract _ = mapSnd (const 0) <$> ys
+      zipReviews xs [] _ True  = []
+      zipReviews xs [] _ False = xs
+      zipReviews (x@(l1, s1) :: xs) ys op filter =
         case (deleteBy' ((==) `on` fst) x ys, filter) of
-             ((Nothing      , ys'), False) => (l1, s1      ) :: zipReviews xs ys' filter
-             ((Nothing      , ys'), True ) =>                   zipReviews xs ys' filter
-             ((Just (_, s2'), ys'), _    ) => (l1, s1 + s2') :: zipReviews xs ys' filter
+             ((Nothing      , ys'), False) => (l1, s1           ) :: zipReviews xs ys' op filter
+             ((Nothing      , ys'), True ) =>                        zipReviews xs ys' op filter
+             ((Just (_, s2'), ys'), _    ) => (l1, s1 `calc` s2') :: zipReviews xs ys' op filter
+        where
+          calc : Nat -> Nat -> Nat
+          calc k j with (op)
+            _ | Add      = k + j
+            _ | Subtract = k `minus` j
 
 ||| Choose reviewers that maintain harmony in the review world.
 ||| Returns the logins of all reviewers that would work equally well.
