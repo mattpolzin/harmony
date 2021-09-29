@@ -70,7 +70,7 @@ namespace Reflect
       reviewSummary : Doc AnsiStyle
       reviewSummary =
         vsep $ catMaybes [
-          Just $ hsep [pretty "Reviewed", annotate (color Green) $ pretty reviews, pretty "of the most recent 25 PRs."]
+          Just $ hsep [pretty "Reviewed", annotate (color Green) $ pretty reviews, pretty "of the most recent 15 PRs."]
           , mostRecentReview <&> \date => hsep [pretty "Most recent review left", pretty $ "\{show date}."]
         ]
 
@@ -111,7 +111,7 @@ namespace Reflect
   reflectOnSelf =
     do prs     <- listPartitionedPRs prCount
        myLogin <- login <$> getSelf
-       reviews <- reviewsForUser myLogin (take 25 . reverse . sortBy (compare `on` createdAt) $ combined prs)
+       reviews <- reviewsForUser myLogin (take 15 . reverse . sortBy (compare `on` createdAt) $ combined prs)
        let mostRecentReview = map submittedAt . head' $ sortBy (compare `on` submittedAt) reviews
        let history = tuple prs
        let (openAuthored, closedAuthored) = 
