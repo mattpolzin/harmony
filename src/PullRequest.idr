@@ -6,6 +6,7 @@ import Data.List
 import Data.List1
 import Data.Promise
 import Data.PullRequest
+import Data.Review
 import Data.String
 import Data.String.Extra
 import FFI.Git
@@ -30,6 +31,10 @@ record PRHistory where
 export
 tuple : PRHistory -> (List PullRequest, List PullRequest)
 tuple (MkPRHistory openPRs closedPRs) = (openPRs, closedPRs)
+
+export
+combined : PRHistory -> List PullRequest
+combined history = history.openPRs ++ history.closedPRs
 
 ||| Extract a tuple of open and closed PR reviewer names
 ||| from a PR history. A given reviewer's login appears
@@ -59,6 +64,18 @@ listReviewers : Config => Octokit =>
                 (prCount : Fin 101)
              -> Promise (List String, List String)
 listReviewers = map (.allReviewers) . listPartitionedPRs
+
+||| Get the reviews on the given PRs by the given user.
+export
+reviewsForUser : Config => Octokit =>
+                 (author : String)
+              -> List PullRequest
+              -> Promise (List Review)
+reviewsForUser @{config} author prs =
+  do let filteredPrs = filter (\pr => not $ isAuthor author pr || isRequestedReviewer author pr) prs
+     -- ^ we know we aren't looking for reviews on the author's PRs.
+     reviews <- join <$> traverse (listPullReviews config.org config.repo . number) filteredPrs
+     pure $ filter (isAuthor author) reviews
 
 ||| Request reviews.
 ||| @ teamNames       The slugs of teams from which to draw potential review candidates.

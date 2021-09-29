@@ -5,6 +5,7 @@ import Data.Date
 import Data.List
 import Data.Promise
 import Data.PullRequest
+import Data.Review
 import Data.String
 import Data.User
 import FFI.GitHub
@@ -20,6 +21,9 @@ replicate' c n char =
   annotate (color c) (pretty $ String.replicate n char)
 
 namespace Reflect
+  prCount : Fin 101
+  prCount = 100
+
   leftTitle : String
   leftTitle = "requested"
 
@@ -36,14 +40,15 @@ namespace Reflect
       ital = annotate italic . pretty
 
   intro : String
-  intro = "Your current pull request summary (out of the past 100 PRs):"
+  intro = "Your current pull request summary (out of the past \{show prCount} PRs):"
 
-  parameters (pageWidth : Nat, openReq : Nat, closedReq : Nat, closedAuth : Nat, openAuth : Nat)
+  parameters (pageWidth : Nat, reviews : Nat, openReq : Nat, closedReq : Nat, closedAuth : Nat, openAuth : Nat)
     chart : (leftPadding : Nat)
          -> Doc AnsiStyle
     chart leftPadding =
       indent (cast leftPadding) $
-             replicate' Green  closedReq  '·'
+             replicate' Green reviews '·'
+         <+> replicate' Red  closedReq  '·'
          <+> replicate' Yellow openReq    '<'
         <++> pretty "|"
         <++> replicate' Yellow openAuth   '>'
@@ -53,28 +58,37 @@ namespace Reflect
     graph =
       let req      = openReq  + closedReq
           auth     = openAuth + closedAuth
-          left     = (foldr max (length leftTitle ) [req, auth])
+          left     = (foldr max (length leftTitle ) [req + reviews, auth])
           right    = (foldr max (length rightTitle) [req, auth])
           full     = left + right + 3 -- center divider is 3 characters
           centerOffset : Double = ((cast pageWidth) / 2) - ((cast full) / 2)
           padTitle = (cast centerOffset) + (left `minus` (length leftTitle))
-          padChart = (cast centerOffset) + (left `minus` req)
+          padChart = (cast centerOffset) + (left `minus` (req + reviews))
       in  vsep [header padTitle, chart padChart]
 
-    parameters (earliestOpenAuth : Maybe Date, earliestOpenReq : Maybe Date)
-      details :  Doc AnsiStyle
+    parameters (mostRecentReview : Maybe Date, earliestOpenAuth : Maybe Date, earliestOpenReq : Maybe Date)
+      reviewSummary : Doc AnsiStyle
+      reviewSummary =
+        vsep $ catMaybes [
+          Just $ hsep [pretty "Reviewed", annotate (color Green) $ pretty reviews, pretty "of the most recent 25 PRs."]
+          , mostRecentReview <&> \date => hsep [pretty "Most recent review left", pretty $ "\{show date}."]
+        ]
+
+      details : Doc AnsiStyle
       details =
         vsep [
-          pretty intro
+          reviewSummary
         , emptyDoc
-        , pretty "requested reviews: "
+        , pretty intro
+        , emptyDoc
+        , annotate underline $ pretty "Requested Reviews:"
         , indent 2 . vsep $ catMaybes [
             Just $ hsep [pretty "open:", pretty openReq]
           , earliestOpenReq <&> \date => indent 2 $ hsep [pretty "earliest:", pretty $ show date]
           , Just $ hsep [pretty "closed:", pretty closedReq]
           ]
         , emptyDoc
-        , pretty "authored pulls: "
+        , annotate underline $ pretty "Authored Pulls:"
         , indent 2 . vsep $ catMaybes [
             Just $ hsep [pretty "open:", pretty openAuth]
           , earliestOpenAuth <&> \date => indent 2 $ hsep [pretty "earliest:", pretty $ show date]
@@ -95,8 +109,11 @@ namespace Reflect
   reflectOnSelf : Config => Octokit =>
                   Promise ()
   reflectOnSelf =
-    do history <- tuple <$> listPartitionedPRs 100
+    do prs     <- listPartitionedPRs prCount
        myLogin <- login <$> getSelf
+       reviews <- reviewsForUser myLogin (take 25 . reverse . sortBy (compare `on` createdAt) $ combined prs)
+       let mostRecentReview = map submittedAt . head' $ sortBy (compare `on` submittedAt) reviews
+       let history = tuple prs
        let (openAuthored, closedAuthored) = 
          mapHom (filter ((== myLogin) . author)) history
        let (openRequested, closedRequested) =
@@ -107,10 +124,12 @@ namespace Reflect
        --       to the min of the Terminal width or the intro length.
        putStrLn . renderString $
          print (length intro)
+               (length reviews)
                (length openRequested)
                (length closedRequested)
                (length closedAuthored)
                (length openAuthored)
+               mostRecentReview
                earliestOpenAuth
                earliestOpenReq
 
