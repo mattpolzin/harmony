@@ -18,6 +18,9 @@ harmony \{subcommand "<subcommand>"}
    - Synchronize local config with information from GitHub.
   \{subcommand "pr"}
    - Identify an existing PR or create a new one for the current branch.
+  \{subcommand "contribute"}
+   - Contribute to an open PR. Prints a URL. Prioritizes PRs you are
+     requested to review but will also return other PRs.
   \{subcommand "reflect"}
    - Reflect on the current state of ones own PRs and review requests.
   \{subcommand "list"} \{argument "<team-slug>"}
@@ -35,13 +38,13 @@ harmony \{subcommand "<subcommand>"}
   You can set up bash completion by adding the following to your resource
   or bash profile:
     
-    eval "$(harmony --bash-completion-script)"
+    \{shell "eval \"$(harmony --bash-completion-script)\""}
     
   Zsh users will also need to have the following in their resource or
   zsh profile before the above eval:
     
-    autoload -U +X compinit && compinit
-    autoload -U +X bashcompinit && bashcompinit
+    \{shell "autoload -U +X compinit && compinit"}
+    \{shell "autoload -U +X bashcompinit && bashcompinit"}
     
 """
   where
@@ -56,4 +59,7 @@ harmony \{subcommand "<subcommand>"}
 
     heading : String -> String
     heading = maybeDecorate (annotate underline . pretty)
+
+    shell : String -> String
+    shell = maybeDecorate (annotate italic . pretty)
 

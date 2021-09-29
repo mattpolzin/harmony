@@ -48,6 +48,14 @@ export
 (.webURI) : Config => PullRequest -> String
 pr.webURI @{config} = "https://github.com/\{config.org}/\{config.repo}/pull/\{show pr.number}"
 
+export
+isAuthor : String -> PullRequest -> Bool
+isAuthor login = (== login) . author
+
+export
+isRequestedReviewer : String -> PullRequest -> Bool
+isRequestedReviewer login = any (== login) . reviewers
+
 parseState : String -> Either String PRState
 parseState "open"   = Right Open
 parseState "closed" = Right Closed
