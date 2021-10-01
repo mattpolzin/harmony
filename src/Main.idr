@@ -10,9 +10,12 @@ import Data.PullRequest
 import Data.String
 import Data.String.Extra
 import Data.User
+import FFI.Concurrency
 import FFI.Git
 import FFI.GitHub
 import Help
+import Language.JSON
+import Language.JSON.Accessors
 import PullRequest as PR
 import Reviewer
 import System
@@ -67,9 +70,13 @@ listTeam : Config => Octokit =>
         -> Promise ()
 listTeam @{config} team =
   do teamMemberLogins <- sort <$> listTeamMembers config.org team
-     teamMembers <- traverse getUser teamMemberLogins
+     teamMembersJson <- promiseAll =<< traverse forkedUser teamMemberLogins
+     teamMembers <- traverse (either . parseUser) teamMembersJson
      liftIO . putDoc . vsep $ putNameLn <$> teamMembers
   where
+    forkedUser : (login : String) -> Promise Future
+    forkedUser = fork . ("user --json " ++)
+
     putNameLn : User -> Doc AnsiStyle
     putNameLn user =
       hsep [(fillBreak 15 . annotate italic $ pretty user.login), "-", (pretty user.name)]
@@ -106,10 +113,16 @@ handleConfiguredArgs : Config => Git => Octokit =>
                     -> Promise ()
 handleConfiguredArgs @{config} [] =
   putStrLn $ help config.colors
+
+-- internal-use commands for forking process:
 handleConfiguredArgs @{config} ["reviews", "--json", prNumber] =
   whenJust (parsePositive prNumber) $ \pr => do
     reviewsJsonStr <- listPullReviewsJsonStr config.org config.repo pr
     putStr reviewsJsonStr
+handleConfiguredArgs @{config} ["user", "--json", username] =
+  print $ json !(getUser username)
+
+-- user-facing commands:
 handleConfiguredArgs ["sync"] =
   ignore $ syncConfig True
 handleConfiguredArgs ["pr"] =
@@ -143,6 +156,8 @@ handleConfiguredArgs ("assign" :: "--dry" :: assign1 :: assignRest) =
   assign (assign1 :: assignRest) {dry=True}
 handleConfiguredArgs ("assign" :: assign1 :: assignRest) =
   assign (assign1 :: assignRest)
+
+-- error case:
 handleConfiguredArgs args =
   reject "Unexpected command line arguments: \{show args}."
 

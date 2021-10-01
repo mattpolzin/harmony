@@ -77,8 +77,8 @@ reviewsForUser : Config => Octokit =>
 reviewsForUser @{config} author prs =
   do let filteredPrs = filter (\pr => not $ isAuthor author pr || isRequestedReviewer author pr) prs
      -- ^ we know we aren't looking for reviews on the author's PRs.
-     reviewsJson <- promise !(traverse forkedReviews filteredPrs)
-     -- ^ list of JSON lists
+     reviewsJson <- promiseAll =<< traverse forkedReviews filteredPrs
+     -- ^ list of JSON Arrays
      reviews <- either $ traverse (array parseReview) reviewsJson
      pure $ filter (isAuthor author) (join reviews)
   where
