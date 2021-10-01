@@ -51,7 +51,7 @@ namespace Reflect
     chart leftPadding =
       indent (cast leftPadding) $
              replicate' Green reviews '·'
-         <+> replicate' Red  closedReq  '·'
+         <+> replicate' Red  closedReq  '◦'
          <+> replicate' Yellow openReq    '<'
         <++> pretty "|"
         <++> replicate' Yellow openAuth   '>'
@@ -70,33 +70,31 @@ namespace Reflect
       in  vsep [header padTitle, chart padChart]
 
     parameters (mostRecentReview : Maybe Date, earliestOpenAuth : Maybe Date, earliestOpenReq : Maybe Date)
-      reviewSummary : Doc AnsiStyle
-      reviewSummary =
-        vsep $ catMaybes [
-          Just $ hsep [pretty "Reviewed", annotate (color Green) $ pretty reviews, pretty "of the most recent \{show reviewDetailsCount} PRs."]
-          , mostRecentReview <&> \date => hsep [pretty "Most recent review left", pretty $ "\{show date}."]
-        ]
-
       details : Doc AnsiStyle
       details =
         vsep [
-          reviewSummary
-        , emptyDoc
-        , pretty intro
+          pretty intro
         , emptyDoc
         , annotate underline $ pretty "Requested Reviews:"
         , indent 2 . vsep $ catMaybes [
-            Just $ hsep [pretty "open:", pretty openReq]
-          , earliestOpenReq <&> \date => indent 2 $ hsep [pretty "earliest:", pretty $ show date]
-          , Just $ hsep [pretty "closed:", pretty closedReq]
+            Just $ pretty "unreviewed:"
+          , Just $ indent 2 . vsep $ catMaybes [
+              Just $ hsep [pretty "open:", annotate (color Yellow) $ pretty openReq]
+            , earliestOpenReq <&> \date => indent 2 $ hsep [pretty "earliest:", pretty $ show date]
+            , Just $ hsep [pretty "closed:", annotate (color Red) $ pretty closedReq]
+            ]
+          , Just $ hsep [pretty "reviews*:", annotate (color Green) $ pretty reviews]
+          , mostRecentReview <&> \date => indent 2 $ hsep [pretty "most recent:", pretty $ show date]
           ]
         , emptyDoc
         , annotate underline $ pretty "Authored Pulls:"
         , indent 2 . vsep $ catMaybes [
-            Just $ hsep [pretty "open:", pretty openAuth]
+            Just $ hsep [pretty "open:", annotate (color Yellow) $ pretty openAuth]
           , earliestOpenAuth <&> \date => indent 2 $ hsep [pretty "earliest:", pretty $ show date]
-          , Just $ hsep [pretty "closed:", pretty closedAuth]
+          , Just $ hsep [pretty "closed:", annotate (color Green) $ pretty closedAuth]
           ]
+        , emptyDoc
+        , annotate italic $ pretty "*review count (not PR count) of most recent \{show reviewDetailsCount} PRs."
         ]
 
       print : Doc AnsiStyle
