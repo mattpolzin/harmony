@@ -6,6 +6,8 @@ import Language.JSON
 import Language.JSON.Accessors
 import Data.Vect
 
+%default total
+
 public export
 data State = Approved | Commented | ChangesRequested | Dismissed
 
