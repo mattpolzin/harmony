@@ -9,8 +9,11 @@ import Data.PullRequest
 import Data.Review
 import Data.String
 import Data.String.Extra
+import FFI.Concurrency
 import FFI.Git
 import FFI.GitHub
+import Language.JSON
+import Language.JSON.Accessors
 import Reviewer
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -74,8 +77,13 @@ reviewsForUser : Config => Octokit =>
 reviewsForUser @{config} author prs =
   do let filteredPrs = filter (\pr => not $ isAuthor author pr || isRequestedReviewer author pr) prs
      -- ^ we know we aren't looking for reviews on the author's PRs.
-     reviews <- join <$> traverse (listPullReviews config.org config.repo . number) filteredPrs
-     pure $ filter (isAuthor author) reviews
+     reviewsJson <- promise !(traverse forkedReviews filteredPrs)
+     -- ^ list of JSON lists
+     reviews <- either $ traverse (array parseReview) reviewsJson
+     pure $ filter (isAuthor author) (join reviews)
+  where
+    forkedReviews : PullRequest -> Promise Future
+    forkedReviews = fork . ("reviews --json " ++) . show . number
 
 ||| Request reviews.
 ||| @ teamNames       The slugs of teams from which to draw potential review candidates.

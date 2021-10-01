@@ -106,6 +106,10 @@ handleConfiguredArgs : Config => Git => Octokit =>
                     -> Promise ()
 handleConfiguredArgs @{config} [] =
   putStrLn $ help config.colors
+handleConfiguredArgs @{config} ["reviews", "--json", prNumber] =
+  whenJust (parsePositive prNumber) $ \pr => do
+    reviewsJsonStr <- listPullReviewsJsonStr config.org config.repo pr
+    putStr reviewsJsonStr
 handleConfiguredArgs ["sync"] =
   ignore $ syncConfig True
 handleConfiguredArgs ["pr"] =

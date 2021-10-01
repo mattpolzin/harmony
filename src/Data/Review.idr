@@ -30,6 +30,7 @@ parseState _ = Left "Failed to parse Review State."
 parseDateTime : String -> Either String Date
 parseDateTime = maybeToEither "Failed to parse Date" . parseDateTimeString
 
+export
 parseReview : JSON -> Either String Review
 parseReview json =
  do review <- object json
