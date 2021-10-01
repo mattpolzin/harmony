@@ -11,6 +11,8 @@ Building the latest commits of Harmony requires a HEAD build of the Idris 2 comp
 Alternatively, you can build Harmony with Docker (see [Docker Build](#docker-build)).
 
 ## Installation
+For any installation, you need to add a GitHub [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) to your environment as the `GITHUB_PAT` variable. It's easiest to `export` that variable from your shell resource file or profile.
+
 ### NPM
 You can install Harmony via npm directly by running `npm install -g @mattpolzin/harmony`.
 
@@ -21,8 +23,6 @@ You can install any Harmony release by downloading the `harmony-npm.tar.gz` file
 The normal installation assumes a HEAD build of Idris 2 is installed. For an alternative, see the [Docker Build](#docker-build) instructions below.
 
 Build Harmony from source with a call to `make`. Then install it globally with `make install`.
-
-You need to add a GitHub [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) to your environment as the `GITHUB_PAT` variable. It's easiest to `export` that variable from your shell resource file or profile.
 
 #### Docker Build
 If you want to use Harmony without installing Idris 2 on your system, you can build Harmony within a Docker container and then install the resulting Javascript onto your system.
@@ -70,7 +70,7 @@ What is the base/main branch (e.g. 'main')?
 main
 ```
 
-Once configured, Harmony supports the following commands: `sync`, `pr`, `list`, `graph`, and `assign`.
+Once configured, Harmony supports the following commands: `pr`, `assign`, `reflect`, `list`, `graph`, and `sync`.
 
 ### PR
 Running `harmony pr` with a branch checked out will reach out to GitHub to determine if there is an open PR for that branch. If there is a PR, Harmony will print a URI that can be used to view the PR. IF there is not a PR, Harmony will help you create one.

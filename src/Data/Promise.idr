@@ -4,7 +4,8 @@ module Data.Promise
 
 -- Promise abstraction from NodeJS
 
--- Borrowed from https://raw.githubusercontent.com/andorp/order-taking/main/src/Service/NodeJS/Promise.idr
+-- Heavily inspired by
+-- https://raw.githubusercontent.com/andorp/order-taking/main/src/Service/NodeJS/Promise.idr
 
 ||| Promise monad
 |||

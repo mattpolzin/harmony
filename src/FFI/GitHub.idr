@@ -2,6 +2,7 @@ module FFI.GitHub
 
 import Data.Promise
 import Data.PullRequest
+import Data.Review
 import Data.String
 import Data.String.Extra
 import Data.User
@@ -102,6 +103,19 @@ export
 addPullReviewers : Octokit => (owner : String) -> (repo : String) -> (pullNumber : Integer) -> (reviewers : List String) -> (teamReviewers : List String) -> Promise (List String)
 addPullReviewers @{(Kit ptr)} owner repo pullNumber reviewers teamReviewers = 
   lines <$> (promiseIO $ prim__addPullReviewers ptr owner repo pullNumber (join "," reviewers) (join "," teamReviewers))
+
+%foreign okit_ffi "list_pr_reviews"
+prim__listPullReviews : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (pullNumber : Integer) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+
+export
+listPullReviewsJsonStr : Octokit => (owner : String) -> (repo : String) -> (pullNumber : Integer) -> Promise String
+listPullReviewsJsonStr @{(Kit ptr)} owner repo pullNumber =
+  promiseIO $ prim__listPullReviews ptr owner repo pullNumber
+
+export
+listPullReviews : Octokit => (owner : String) -> (repo : String) -> (pullNumber : Integer) -> Promise (List Review)
+listPullReviews owner repo pullNumber =
+  either . parseReviewsString =<< listPullReviewsJsonStr owner repo pullNumber
 
 %foreign okit_ffi "list_team_members"
 prim__listTeamMembers : Ptr OctokitRef -> (org : String) -> (teamSlug : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()

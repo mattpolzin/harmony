@@ -96,7 +96,7 @@ const okit_list_reviewers = (octokit, owner, repo, state, per_page, onSuccess, o
     idris__okit_stringify_error(onFailure)
   )
 
-// list PR reviewers
+// list PRs
 // Executes callback with [{ "pull_number": Int, "author": String, "state": String, "reviewers": [String] }]
 const okit_list_pull_requests = (octokit, owner, repo, state, per_page, onSuccess, onFailure) =>
   idris__okit_unpromisify(
@@ -113,6 +113,24 @@ const okit_add_reviewers = (octokit, owner, repo, pull_number, reviewers, team_r
   idris__okit_unpromisify(
     octokit.rest.pulls.requestReviewers({ owner, repo, pull_number: Number(pull_number), reviewers: from_comma_delimited(reviewers), team_reviewers: from_comma_delimited(team_reviewers) }),
     r => onSuccess(newline_delimited(digReviewers([r.data]))),
+    idris__okit_stringify_error(onFailure)
+  )
+
+// list PR reviews
+const digReviews = reviewsJson =>
+  reviewsJson.map(review => {
+    return {
+      author: review.user.login,
+      state: review.state,
+      submitted_at: review.submitted_at
+    }
+  })
+
+// Executes callback with [{author: String, state: String, submitted_at: String}]
+const okit_list_pr_reviews = (octokit, owner, repo, pull_number, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.pulls.listReviews({ owner, repo, pull_number: Number(pull_number) }),
+    r => onSuccess(JSON.stringify(digReviews(r.data))),
     idris__okit_stringify_error(onFailure)
   )
 
