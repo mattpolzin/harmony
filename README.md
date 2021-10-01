@@ -60,20 +60,21 @@ The first time you start Harmony in any particular folder, you will be asked to 
 
 Note that the GitHub organization and repository are both slugs, not names. These are the values you find in a GitHub URL pointing to your repository. Harmony does not work with personal repositories because they do not have teams or members.
 ```shell
-$ harmony
+$ harmony 
 Creating a new configuration (storing in harmony.json)...
-What GitHub org would you like to use harmony for?
-some-org
-What repository would you like to use harmony for?
-some-repo
-What is the base/main branch (e.g. 'main')?
-main
+What GitHub org would you like to use harmony for (ENTER for default: myorg)?
+
+What repository would you like to use harmony for (ENTER for default: myrepo)?
+diff-repo
+Creating config...
 ```
 
-Once configured, Harmony supports the following commands: `pr`, `assign`, `reflect`, `list`, `graph`, and `sync`.
+Once configured, Harmony supports the following commands: `pr`, `assign`, `contribute`, `reflect`, `list`, `graph`, and `sync`.
 
 ### PR
 Running `harmony pr` with a branch checked out will reach out to GitHub to determine if there is an open PR for that branch. If there is a PR, Harmony will print a URI that can be used to view the PR. IF there is not a PR, Harmony will help you create one.
+
+Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony pr)` to open a web browser to an existing PR for the current branch.
 
 ### Assign
 Running `harmony assign {<team> | +<user>} [...]` will help you create a PR if one does not exist yet and then it will pick someone to review the PR (from one of the listed teams) and assign both that user and the teams you listed as reviewers of the PR.
@@ -94,6 +95,22 @@ harmony assign frontend backend
 Assign the most available reviewer from the "web" team and additionally assign the users with logins "carl001" and "emmaham":
 ```shell
 harmony assign web +carl001 +emmaham
+```
+
+### Contribute
+Running `harmony contribute` will print the URI of the oldest PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that you are not assigned to. You can skip PRs and retrieve the next-oldest one by passing a dash followed by the number to skip (e.g. `-2` to skip the two oldest waiting PRs).
+
+Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony contribute)` to open a web browser to the PR that Harmony is suggesting.
+
+#### Examples
+Retrieve a URI for the oldest unreviewed and open PR (prioritizing PRs for which you are an assigned reviewer):
+```shell
+harmony contribute
+```
+
+Retrieve a URI for a PR to contribute a review, skipping over the first 3 suggestions:
+```shell
+harmony contribute -3
 ```
 
 ### Reflect
