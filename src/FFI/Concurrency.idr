@@ -40,7 +40,7 @@ all [x] = primIO $ prim__singleton x
 all (x :: [y]) = primIO $ prim__both x y
 all (x :: (y :: (z :: xs))) =
   do rest <- all (z :: xs)
-     head <- (primIO $ prim__both x y)
+     head <- primIO $ prim__both x y
      nested <- primIO $ prim__both head rest
      primIO $ prim__flatten nested
 
