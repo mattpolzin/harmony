@@ -18,8 +18,6 @@ harmony: build
 
 package: build
 	./version-check.sh
-	rm -rf ./build
-	rm -rf ./node_modules
 	# leave ./harmony in place
 	mkdir harmony-npm
 	cp harmony ./harmony-npm
