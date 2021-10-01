@@ -9,10 +9,13 @@ import Language.JSON
 
 %default total
 
+concurrency_ffi : String -> String
+concurrency_ffi = node_ffi "concurrency"
+
 export
 data Future : Type where [external]
 
-%foreign "node:lambda:(args)=>{return new Promise((onSuccess, onFailure) => { require('child_process').exec(`harmony ${args}`,(error, stdout, stderr) => { if (error) { onFailure(stderr); } else { onSuccess(stdout); }})})}"
+%foreign concurrency_ffi "future"
 prim__future : (args : String) -> PrimIO Future
 
 export
@@ -41,7 +44,7 @@ all (x :: (y :: (z :: xs))) =
      nested <- primIO $ prim__both head rest
      primIO $ prim__flatten nested
 
-%foreign "node:lambda:(p,s,e)=>p.then(r => { s(JSON.stringify(Array.isArray(r) ? r.map(JSON.parse) : r))(); },err => { e(err)(); })"
+%foreign concurrency_ffi "await_stringify"
 prim__awaitStringify : Future -> (onSuccess : String -> PrimIO ()) -> (onError : String -> PrimIO ()) -> PrimIO ()
 
 ||| Create a Promise that waits for all the given futures to finish
