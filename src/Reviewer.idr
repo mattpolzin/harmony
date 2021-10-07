@@ -6,6 +6,7 @@ import Data.List
 import Data.List1
 import System.Random.Node
 import Text.PrettyPrint.Prettyprinter
+import Text.PrettyPrint.Prettyprinter.Symbols
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import Util
 
@@ -122,15 +123,31 @@ reviewsGraph closedReviews openReviews candidates =
            [] => emptyDoc
            ((MkScore _ s c) :: _) =>
              let highScore = c + (s `minus` c)
-             in  graph (if highScore > 0 then highScore else 1) scoredOptions
+             in  header <+> graph (if highScore > 0 then highScore else 1) scoredOptions <+> line
   where
+    yellowDot : Doc AnsiStyle
+    yellowDot = annotate (color Yellow) "·"
+
+    redDot : Doc AnsiStyle
+    redDot = annotate (color Red) "◦"
+
+    header : Doc AnsiStyle
+    header = vsep [ emptyDoc
+                  , pretty "Weighted review workload."
+                  , pretty "4x the numbewr of open review requests" <++> parens yellowDot
+                  , pretty "1x the number of closed PRs with unanswered review requests" <++> parens redDot
+                  , parens $ redDot <++> pretty "overlayed on" <++> yellowDot
+                  , emptyDoc
+                  , emptyDoc
+                  ]
+
     -- The "detractor" is an indication of the amount of the score that was taken
     -- away by the heuristic in `scoredReviewers` that weights closed reviews with
     -- unanswered review requests negatively.
     bar : (indentation : Nat) -> (score : Nat) -> (detractor : Nat) -> Doc AnsiStyle
     bar idt score detractor = indent (cast idt) . hcat $
-                                [ annotate (color Yellow) . pretty $ replicate score '·'
-                                , annotate (color Red) . pretty $ replicate detractor '◦'
+                                [ annotate (color Red) . pretty $ replicate detractor '◦'
+                                , annotate (color Yellow) . pretty $ replicate score '·'
                                 ]
 
     graphOne : (highScore : Nat) -> (Score login) -> Doc AnsiStyle
