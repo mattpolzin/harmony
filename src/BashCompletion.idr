@@ -11,6 +11,7 @@ import Debug.Trace
 allRootCmds : List String
 allRootCmds = [
     "assign"
+  , "config"
   , "contribute"
   , "graph"
   , "help"
@@ -30,6 +31,10 @@ opts : Config => String -> String -> List String
 -- first the subcommands available:
 opts @{_} "--" "harmony" = allRootCmds
 opts @{_} partialCmd "harmony" = filter (isPrefixOf partialCmd) allRootCmds
+
+-- then the config command
+opts @{_} "--" "config" = settableProps
+opts @{_} partialConfigProp "config" = filter (isPrefixOf partialConfigProp) settableProps
 
 -- then the subcommands that take no arguments
 opts @{_} _ "pr"         = []

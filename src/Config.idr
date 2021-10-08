@@ -3,8 +3,8 @@ module Config
 import Data.Config
 import Data.Either
 import Data.List
-import Data.List1
 import Data.List.PrefixSuffix
+import Data.List1
 import Data.Promise
 import Data.String
 import Decidable.Equality
@@ -16,11 +16,11 @@ import System.File
 
 %default total
 
-writeConfig : Config -> Promise ()
+writeConfig : Config -> Promise Config
 writeConfig config =
   do res <- writeFile config.filepath (format 2 $ json config)
      case res of
-          Right () => pure ()
+          Right () => pure config
           Left err => reject "Failed to write updated config file to \{config.filepath}: \{show err}."
 
 export
@@ -30,7 +30,7 @@ syncConfig @{config} echo =
     orgMembers <- listOrgMembers config.org
     updatedAt  <- cast {to=Timestamp} <$> time
     let config' = { updatedAt := updatedAt, teamSlugs := teamSlugs, orgMembers := orgMembers } config
-    writeConfig config'
+    ignore $ writeConfig config'
     when echo $
       do putStrLn "Your updated configuration is:"
          printLn config
@@ -78,10 +78,62 @@ parseGitHubURI str = parseHTTPS str <|> parseSSH str
     parseSSH : String -> Maybe GitRemote
     parseSSH = dropPrefix' "git@github.com:" >=> parseSuffix
 
-createConfig : Git => Octokit => 
+propSetters : List (String, (Config -> String -> Maybe Config))
+propSetters = [
+    ("assignTeams"    , update parseBool (\b => { assignTeams := b }))
+  , ("commentOnAssign", update parseBool (\b => { commentOnAssign := b }))
+  ]
+  where
+    parseBool : String -> Maybe Bool
+    parseBool x with (toLower x)
+      _ | "yes"   = Just True
+      _ | "true"  = Just True
+      _ | "no"    = Just False
+      _ | "false" = Just False
+      _ | _ = Nothing
+
+    update : Functor f => (String -> f a) -> (a -> b -> b) -> b -> String -> f b
+    update f g c = map (flip g c) . f
+
+namespace PropSettersProperties
+  propSettersCoveragePrf : Data.Config.settableProps = Builtin.fst <$> Config.propSetters
+  propSettersCoveragePrf = Refl
+
+||| Attempt to set a property and value given String representations.
+||| After setting, write the config and return the updated result.
+export
+setConfig : Config =>
+            (prop : String)
+         -> (value : String)
+         -> Promise Config
+setConfig @{config} prop value with (lookup prop propSetters)
+  _ | Nothing  = reject "\{prop} cannot be set via `config` command."
+  _ | (Just set) with (set config value)
+    _ | Nothing  = reject "\{value} is not a valid value for \{prop}."
+    _ | (Just config') = writeConfig config'
+
+propGetters : List (String, (Config -> String))
+propGetters = [
+    ("assignTeams"    , show . assignTeams)
+  , ("commentOnAssign", show . commentOnAssign)
+  ]
+
+namespace PropGettersProperties
+  propGetterCoveragePrf : Data.Config.settableProps = Builtin.fst <$> Config.propGetters
+  propGetterCoveragePrf = Refl
+
+export
+getConfig : Config =>
+            (prop : String)
+         -> Promise String
+getConfig @{config} prop with (lookup prop propGetters)
+  getConfig prop | Nothing    = reject "\{prop} cannot get read via `config` command."
+  getConfig prop | (Just get) = pure $ get config
+
+createConfig : Git => Octokit =>
                (terminalColors : Bool)
             -> Promise Config
-createConfig terminalColors = 
+createConfig terminalColors =
   do putStrLn "Creating a new configuration (storing in \{Config.filename})..."
      -- TODO: don't assume remote name ("origin"), get it from git or ask for it.
      defaultOrgAndRepo <- (parseGitHubURI <$> remoteURI "origin") <|> pure Nothing
@@ -91,6 +143,10 @@ createConfig terminalColors =
      let repoDefaultStr = defaultStr (.repo) defaultOrgAndRepo
      putStrLn "What repository would you like to use harmony for\{repoDefaultStr}?"
      repo <- orIfEmpty (repo defaultOrgAndRepo) . trim <$> getLine
+     putStr "Would you like harmony to comment when it assigns reviewers? [Y/n] "
+     commentOnAssign <- yesUnlessNo . trim <$> getLine
+     putStr "Would you like harmony to assign teams in addition to individuals when it assigns reviewers? [Y/n] "
+     assignTeams <- yesUnlessNo . trim <$> getLine
      putStrLn "Creating config..."
      mainBranch <- getRepoDefaultBranch org repo
      updatedAt  <- cast <$> time
@@ -105,13 +161,13 @@ createConfig terminalColors =
           , org
           , repo
           , mainBranch
-          , assignTeams     = True
-          , commentOnAssign = True
+          , assignTeams
+          , commentOnAssign
           , teamSlugs
           , orgMembers
           , ephemeral
           }
-        writeConfig config
+        ignore $ writeConfig config
         putStrLn "Your new configuration is:"
         printLn config
         pure config
@@ -120,6 +176,11 @@ createConfig terminalColors =
     orIfEmpty Nothing  x  = x
     orIfEmpty (Just y) "" = y
     orIfEmpty (Just _) x  = x
+
+    yesUnlessNo : String -> Bool
+    yesUnlessNo "n" = False
+    yesUnlessNo "N" = False
+    yesUnlessNo _   = True
 
     org : Maybe GitRemote -> Maybe String
     org = map (.org)

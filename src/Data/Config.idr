@@ -45,6 +45,13 @@ record Config where
 
 %name Config config
 
+public export
+settableProps : List String
+settableProps = [
+    "assignTeams"
+  , "commentOnAssign"
+  ]
+
 export
 (.filepath) : Config -> String
 config.filepath = config.ephemeral.filepath

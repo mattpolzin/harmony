@@ -69,7 +69,7 @@ diff-repo
 Creating config...
 ```
 
-Once configured, Harmony supports the following commands: `pr`, `assign`, `contribute`, `reflect`, `list`, `graph`, and `sync`.
+Once configured, Harmony supports the following commands: `pr`, `assign`, `contribute`, `reflect`, `list`, `graph`, `config`, and `sync`.
 
 ### PR
 Running `harmony pr` with a branch checked out will reach out to GitHub to determine if there is an open PR for that branch. If there is a PR, Harmony will print a URI that can be used to view the PR. IF there is not a PR, Harmony will help you create one.
@@ -121,6 +121,14 @@ Running `harmony list <team>` will list the members of the given GitHub Team.
 
 ### Graph
 Running `harmony graph <team>` will graph the relative review workload of each of the members of the given GitHub Team.
+
+### Config
+Running `harmony config <property>` read the given configuration property. `harmony config <property> <value>` will set the configuration property.
+
+Not all configuration properties can be read/set with this command.
+#### Properties
+- `assignTeams` -- When picking a reviewer from a team, assign the team as a reviewer as well.
+- `commentOnAssign` -- When assigning a reviewer chosen by Harmony, comment on the pull request.
 
 ### Sync
 Running `harmony sync` will sync the locally configured team slugs and user logins that are used by auto-completion for Harmony. This sync is also performed automatically the first time you run Harmony after more than a day without the configuration being synced.

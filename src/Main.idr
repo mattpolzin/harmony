@@ -131,6 +131,11 @@ handleConfiguredArgs ["pr"] =
      putStrLn pr.webURI
 handleConfiguredArgs ["reflect"] =
   reflectOnSelf
+handleConfiguredArgs ["config", prop] =
+  do value <- getConfig prop
+     putStrLn value
+handleConfiguredArgs ["config", prop, value] =
+  ignore $ setConfig prop value
 handleConfiguredArgs ["contribute"] =
   contribute 0
 handleConfiguredArgs ["contribute", skipArg] =
