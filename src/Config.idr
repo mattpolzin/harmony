@@ -3,9 +3,7 @@ module Config
 import Data.Config
 import Data.Either
 import Data.List
-import Data.List.Elem
 import Data.List.PrefixSuffix
-import Data.List.Quantifiers
 import Data.List1
 import Data.Promise
 import Data.String
