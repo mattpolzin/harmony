@@ -1,5 +1,7 @@
 module Help
 
+import Data.Config
+import Data.String
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
@@ -17,7 +19,7 @@ harmony \{subcommand "<subcommand>"}
   \{subcommand "config"} {\{argument "<property>"}} [\{argument "value"}]
    - Get or set the value of a configuration property. Not all properties
      can be set and read via this subcommand.
-     \{argument "properties"}: assignTeams, commentOnAssign.
+     \{argument "properties"}: \{join ", " settableProps}.
   \{subcommand "sync"}
    - Synchronize local config with information from GitHub.
   \{subcommand "pr"}
