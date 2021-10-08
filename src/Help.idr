@@ -14,6 +14,10 @@ harmony \{subcommand "<subcommand>"}
 \{heading "Subcommands"}:
   \{subcommand "help"}
    - Print help
+  \{subcommand "config"} {\{argument "<property>"}} [\{argument "value"}]
+   - Get or set the value of a configuration property. Not all properties
+     can be set and read via this subcommand.
+     \{argument "properties"}: assignTeams, commentOnAssign.
   \{subcommand "sync"}
    - Synchronize local config with information from GitHub.
   \{subcommand "pr"}
@@ -23,9 +27,9 @@ harmony \{subcommand "<subcommand>"}
      requested to review but will also return other PRs.
   \{subcommand "reflect"}
    - Reflect on the current state of ones own PRs and review requests.
-  \{subcommand "list"} \{argument "<team-slug>"}
+  \{subcommand "list"} {\{argument "<team-slug>"}}
    - List the members of the given GitHub Team.
-  \{subcommand "graph"} \{argument "<team-slug>"}
+  \{subcommand "graph"} {\{argument "<team-slug>"}}
    - Graph the relative review workload of the members of the given GitHub Team.
   \{subcommand "assign"} {\{argument "<team-slug>"} | \{argument "+<user-login>"}} [...]
    - Assign the given team(s) and one lucky member from one of those teams
