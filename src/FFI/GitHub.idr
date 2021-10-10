@@ -82,14 +82,36 @@ listPullReviewers @{(Kit ptr)} owner repo stateFilter pageLimit =
   lines <$> (promiseIO $ prim__listPullReviewers ptr owner repo (pullRequestStateFilter stateFilter) (cast $ finToNat pageLimit))
 
 %foreign okit_ffi "list_pull_requests"
-prim__listPullRequests : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (pageLimit : Int16) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
+prim__listPullRequests : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (pageLimit : Int16) -> (page : Int16) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()
 
 export
-listPullRequests : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PRState) -> (pageLimit : Fin 101) -> Promise (List PullRequest)
-listPullRequests @{(Kit ptr)} owner repo stateFilter pageLimit = 
+listPullRequestsJsonStr : Octokit =>
+                          (owner : String) 
+                       -> (repo : String) 
+                       -> (stateFilter : Maybe PRState) 
+                       -> (pageLimit : Fin 101) 
+                       -> {default 0 page : Nat}
+                       -> Promise String
+listPullRequestsJsonStr @{(Kit ptr)} owner repo stateFilter pageLimit {page} = 
   let filter  = pullRequestStateFilter stateFilter
       pgLimit = cast $ finToNat pageLimit
-  in  either . parsePullRequestsString =<< (promiseIO $ prim__listPullRequests ptr owner repo filter pgLimit)
+      pg      = cast (S page)
+  in  promiseIO $ prim__listPullRequests ptr owner repo filter pgLimit pg
+
+||| List the most recent pull requests by creation date.
+|||
+||| @pageLimit The number of results per page (max 100).
+||| @page      The zero-indexed page index to retieve.
+export
+listPullRequests : Octokit => 
+                   (owner : String) 
+                -> (repo : String) 
+                -> (stateFilter : Maybe PRState) 
+                -> (pageLimit : Fin 101) 
+                -> {default 0 page : Nat}
+                -> Promise (List PullRequest)
+listPullRequests @{(Kit ptr)} owner repo stateFilter pageLimit {page} = 
+  either . parsePullRequestsString =<< listPullRequestsJsonStr owner repo stateFilter pageLimit {page}
 
 -- reviewers and teamReviewers should be comma separated values encoded in a string.
 %foreign okit_ffi "add_reviewers"

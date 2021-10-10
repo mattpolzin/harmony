@@ -119,6 +119,17 @@ handleConfiguredArgs @{config} ["reviews", "--json", prNumber] =
   whenJust (parsePositive prNumber) $ \pr => do
     reviewsJsonStr <- listPullReviewsJsonStr config.org config.repo pr
     putStr reviewsJsonStr
+handleConfiguredArgs @{config} ["pulls", "--json", pageLimit, page] =
+  let args : Maybe (Fin 101, Nat) = bitraverse parseLim parsePg (pageLimit, page)
+  in  whenJust args $ \(lim, pg) => do
+        pullsJsonStr <- listPullRequestsJsonStr config.org config.repo Nothing lim {page=pg}
+        putStr pullsJsonStr
+  where
+    parseLim : String -> Maybe (Fin 101)
+    parseLim = (\x => natToFin x 101) <=< parsePositive
+
+    parsePg  : String -> Maybe Nat
+    parsePg = parsePositive
 handleConfiguredArgs @{config} ["user", "--json", username] =
   print $ json !(getUser username)
 
