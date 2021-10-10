@@ -86,7 +86,7 @@ graphTeam : Config => Octokit =>
          -> Promise ()
 graphTeam @{config} team =
   do teamMemberLogins <- listTeamMembers config.org team
-     (openReviewers, closedReviewers) <- listReviewers 100
+     (openReviewers, closedReviewers) <- listReviewers 100 {pageBreaks=4}
      liftIO . putDoc . maybeDecorated $ reviewsGraph closedReviewers openReviewers teamMemberLogins
   where
     maybeDecorated : Doc AnsiStyle -> Doc AnsiStyle
