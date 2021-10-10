@@ -1,9 +1,11 @@
 module PullRequest
 
 import Data.Config
+import Data.Fin.Extra
 import Data.Fuel
 import Data.List
 import Data.List1
+import Data.Nat
 import Data.Promise
 import Data.PullRequest
 import Data.Review
@@ -55,18 +57,35 @@ history.allAuthors = author <$> (history.openPRs ++ history.closedPRs)
 partition : List PullRequest -> PRHistory
 partition = uncurry MkPRHistory . partition ((== Open) . (.state))
 
+||| Get the most recent PRs by creation date and partition them
+||| into open and closed PRs.
+|||
+||| @prCount The number of PRs to retrieve.
+||| @pageBreaks The number of pages over which to break the requests up.
 export
 listPartitionedPRs : Config => Octokit =>
-                     (prCount : Fin 101)
+                     {default 0 pageBreaks : Nat}
+                  -> (prCount : Fin 101)
                   -> Promise PRHistory
-listPartitionedPRs @{config} prCount =
-  partition <$> listPullRequests config.org config.repo Nothing prCount
+listPartitionedPRs @{config} {pageBreaks} prCount with (pageBreaks `isGT` 0)
+  _ | (No contra) =
+    partition <$> listPullRequests config.org config.repo Nothing prCount
+  _ | (Yes prf) with ((cast prCount) `divMod` (S pageBreaks))
+    listPartitionedPRs @{config} {pageBreaks} prCount | (Yes prf) | (Fraction (cast prCount) (S pageBreaks) pageLimit r prf') =
+      let pageIndices = [0..pageBreaks]
+      in  do prsJson <- promiseAll =<< traverse (forkedPRs pageLimit) pageIndices
+             pulls   <- either $ traverse (array parsePR) prsJson
+             pure $ partition (join pulls)
+      where
+        forkedPRs : (pageLimit : Nat) -> (page : Nat) -> Promise Future
+        forkedPRs pageLimit page = fork "pulls --json \{show pageLimit} \{show page}"
 
 export
 listReviewers : Config => Octokit =>
-                (prCount : Fin 101)
+                {default 0 pageBreaks : Nat}
+             -> (prCount : Fin 101)
              -> Promise (List String, List String)
-listReviewers = map (.allReviewers) . listPartitionedPRs
+listReviewers = map (.allReviewers) . (listPartitionedPRs {pageBreaks})
 
 ||| Get the reviews on the given PRs by the given user.
 export
@@ -97,7 +116,7 @@ requestReviewers : Config => Octokit =>
                 -> {default False dry: Bool} 
                 -> Promise ()
 requestReviewers @{config} pr teamNames forcedReviewers {dry} =
-  do (openReviewers, closedReviewers) <- listReviewers 100
+  do (openReviewers, closedReviewers) <- listReviewers 100 {pageBreaks=4}
      teamMembers <- join <$> traverse (listTeamMembers config.org) teamNames
      -- printLn teamMembers
      let chosenCandidates = chooseReviewers closedReviewers openReviewers teamMembers [] pr.author

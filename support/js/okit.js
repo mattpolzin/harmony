@@ -98,9 +98,9 @@ const okit_list_reviewers = (octokit, owner, repo, state, per_page, onSuccess, o
 
 // list PRs
 // Executes callback with [{ "pull_number": Int, "author": String, "state": String, "reviewers": [String] }]
-const okit_list_pull_requests = (octokit, owner, repo, state, per_page, onSuccess, onFailure) =>
+const okit_list_pull_requests = (octokit, owner, repo, state, per_page, page, onSuccess, onFailure) =>
   idris__okit_unpromisify(
-    octokit.rest.pulls.list({ owner, repo, state, per_page }),
+    octokit.rest.pulls.list({ owner, repo, state, per_page, page }),
     r => onSuccess(JSON.stringify(digPrs(r.data))),
     idris__okit_stringify_error(onFailure)
   )

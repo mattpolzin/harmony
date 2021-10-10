@@ -41,7 +41,10 @@ prefixDifferentVoid : Not (x = y) -> Not (suffixList ** PrefixSuffix (x :: xs) s
 prefixDifferentVoid contra (_ ** (Split (x :: xs) _)) = contra Refl
 
 export
-dropPrefix : DecEq a => (prefixList : List a) -> (fullList : List a) -> Dec (suffixList ** PrefixSuffix prefixList suffixList fullList)
+dropPrefix : DecEq a => 
+             (prefixList : List a) 
+          -> (fullList : List a) 
+          -> Dec (suffixList ** PrefixSuffix prefixList suffixList fullList)
 dropPrefix [] fullList = Yes (fullList ** Split [] fullList)
 dropPrefix (x :: xs) [] = No (\(l ** r) => absurd r)
 dropPrefix (x :: xs) (y :: ys) with (decEq x y)

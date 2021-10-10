@@ -64,6 +64,7 @@ parseState str      = Left "Failed to parse a Pull Request State (open/closed). 
 parseDateTime : String -> Either String Date
 parseDateTime = maybeToEither "Failed to parse Date" . parseDateTimeString
 
+export
 parsePR : JSON -> Either String PullRequest
 parsePR json =
  do pr <- object json
