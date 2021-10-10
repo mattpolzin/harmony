@@ -1,11 +1,11 @@
 module PullRequest
 
-import Data.Fin.Extra
-import Data.Nat
 import Data.Config
+import Data.Fin.Extra
 import Data.Fuel
 import Data.List
 import Data.List1
+import Data.Nat
 import Data.Promise
 import Data.PullRequest
 import Data.Review
