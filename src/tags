@@ -14,6 +14,7 @@
 (.suffix)	Data/List/PrefixSuffix.idr	/^(.suffix) : {prefixList : List a} -> PrefixSuffix prefixList suffixList fullList -> List a$/;"	d
 (.webURI)	Data/PullRequest.idr	/^(.webURI) : Config => PullRequest -> String$/;"	d
 (Just	Config.idr	/^  _ | (Just set) with (set config value)$/;"	c
+(Yes	PullRequest.idr	/^  _ | (Yes prf) with ((cast prCount) `divMod` (S pageBreaks))$/;"	c
 (assignArgs	Main.idr	/^         (assignArgs : List String) $/;"	d
 (author	PullRequest.idr	/^                 (author : String)$/;"	d
 (branch	PullRequest.idr	/^                     (branch : String) $/;"	d
@@ -21,8 +22,16 @@
 (closedReviews	Reviewer.idr	/^               (closedReviews : List login)$/;"	d
 (curWord	Main.idr	/^                 (curWord : String) $/;"	d
 (org	Config.idr	/^         (org ::: repo :: []) <- pure $ split (== '\/') orgAndRepo$/;"	d
-(prCount	PullRequest.idr	/^                     (prCount : Fin 101)$/;"	d
-(prCount	PullRequest.idr	/^                (prCount : Fin 101)$/;"	d
+(org	FFI/GitHub.idr	/^                       (org : String)$/;"	d
+(org	FFI/GitHub.idr	/^                  (org : String) $/;"	d
+(owner	FFI/GitHub.idr	/^                          (owner : String) $/;"	d
+(owner	FFI/GitHub.idr	/^                         (owner : String) $/;"	d
+(owner	FFI/GitHub.idr	/^                    (owner : String) $/;"	d
+(owner	FFI/GitHub.idr	/^                   (owner : String) $/;"	d
+(owner	FFI/GitHub.idr	/^                  (owner : String) $/;"	d
+(owner	FFI/GitHub.idr	/^                (owner : String) $/;"	d
+(owner	FFI/GitHub.idr	/^           (owner : String) $/;"	d
+(prefixList	Data/List/PrefixSuffix.idr	/^             (prefixList : List a) $/;"	d
 (prop	Config.idr	/^            (prop : String)$/;"	d
 (team	Main.idr	/^            (team : String) $/;"	d
 (team	Main.idr	/^           (team : String) $/;"	d
@@ -70,7 +79,7 @@ Subtract	Reviewer.idr	/^      data Op = Add | Subtract$/;"	c
 Timestamp	Data/Config.idr	/^Timestamp : Type$/;"	d
 Year	Data/Date.idr	/^    data PrimaryPart = Year | Month$/;"	c
 \{argument	Help.idr	/^  \\{subcommand "assign"} {\\{argument "<team-slug>"} | \\{argument "+<user-login>"}} [...]$/;"	c
-addPullReviewers	FFI/GitHub.idr	/^addPullReviewers : Octokit => (owner : String) -> (repo : String) -> (pullNumber : Integer) -> (reviewers : List String) -> (teamReviewers : List String) -> Promise (List String)$/;"	d
+addPullReviewers	FFI/GitHub.idr	/^addPullReviewers : Octokit => $/;"	d
 all	FFI/Concurrency.idr	/^all : HasIO io => List Future -> io Future$/;"	d
 allRootCmds	BashCompletion.idr	/^allRootCmds : List String$/;"	d
 argument	Help.idr	/^    argument : String -> String$/;"	d
@@ -95,9 +104,9 @@ combinedScore	Reviewer.idr	/^  combinedScore : Nat$/;"	d
 commentOnAssign	Data/Config.idr	/^  commentOnAssign : Bool$/;"	d
 concurrency_ffi	FFI/Concurrency.idr	/^concurrency_ffi : String -> String$/;"	d
 contribute	Main.idr	/^contribute : Config => Octokit =>$/;"	d
-createComment	FFI/GitHub.idr	/^createComment : Octokit => (owner : String) -> (repo : String) -> (issueOrPrNumber : Integer) -> (message : String) -> Promise ()$/;"	d
+createComment	FFI/GitHub.idr	/^createComment : Octokit => $/;"	d
 createConfig	Config.idr	/^createConfig : Git => Octokit =>$/;"	d
-createPR	FFI/GitHub.idr	/^createPR : Octokit => (owner : String) -> (repo : String) -> (head : String) -> (base : String) -> (title : String) -> (description : String) -> Promise PullRequest$/;"	d
+createPR	FFI/GitHub.idr	/^createPR : Octokit => $/;"	d
 createPR	PullRequest.idr	/^    createPR : Promise PullRequest$/;"	d
 createdAt	Data/PullRequest.idr	/^  createdAt : Date$/;"	d
 csv	PullRequest.idr	/^    csv : List String -> String$/;"	d
@@ -106,7 +115,7 @@ defaultStr	Config.idr	/^    defaultStr : (GitRemote -> String) -> Maybe GitRemot
 deleteBy'	Util.idr	/^deleteBy' : (a -> a -> Bool) -> a -> List a -> (Maybe a, List a)$/;"	d
 details	User.idr	/^      details : Doc AnsiStyle$/;"	d
 drop'	Config.idr	/^    drop' : List Char -> Maybe (List Char)$/;"	d
-dropPrefix	Data/List/PrefixSuffix.idr	/^dropPrefix : DecEq a => (prefixList : List a) -> (fullList : List a) -> Dec (suffixList ** PrefixSuffix prefixList suffixList fullList)$/;"	d
+dropPrefix	Data/List/PrefixSuffix.idr	/^dropPrefix : DecEq a => $/;"	d
 dropPrefix'	Config.idr	/^dropPrefix' : (prefx : String) -> String -> Maybe String$/;"	d
 either	Data/Promise.idr	/^either : Show e => Either e a -> Promise a$/;"	d
 enterForDefaultStr	Config.idr	/^    enterForDefaultStr : String -> String$/;"	d
@@ -116,12 +125,13 @@ filename	Data/Config.idr	/^filename : String$/;"	d
 filepath	Data/Config.idr	/^  filepath : String$/;"	d
 findConfig	Config.idr	/^findConfig : HasIO io => (startDir : String) -> Fuel -> io (Maybe String)$/;"	d
 fork	FFI/Concurrency.idr	/^fork : HasIO io => (args : String) -> io Future$/;"	d
+forkedPRs	PullRequest.idr	/^        forkedPRs : (pageLimit : Nat) -> (page : Nat) -> Promise Future$/;"	d
 forkedReviews	PullRequest.idr	/^    forkedReviews : PullRequest -> Promise Future$/;"	d
 forkedUser	Main.idr	/^    forkedUser : (login : String) -> Promise Future$/;"	d
 getConfig	Config.idr	/^getConfig : Config =>$/;"	d
 getManyLines	Util.idr	/^getManyLines : HasIO io => Fuel -> io (List String)$/;"	d
 getMoreLines	Util.idr	/^    getMoreLines : (acc : List String) -> Fuel -> io (List String)$/;"	d
-getRepoDefaultBranch	FFI/GitHub.idr	/^getRepoDefaultBranch : Octokit => (org : String) -> (repo : String) -> Promise String$/;"	d
+getRepoDefaultBranch	FFI/GitHub.idr	/^getRepoDefaultBranch : Octokit =>$/;"	d
 getSelf	FFI/GitHub.idr	/^getSelf : Octokit => Promise User$/;"	d
 getUser	FFI/GitHub.idr	/^getUser : Octokit => (username : String) -> Promise User$/;"	d
 git	FFI/Git.idr	/^git : HasIO io => io Git$/;"	d
@@ -151,16 +161,17 @@ json	Data/Config.idr	/^json : Config -> JSON$/;"	d
 json	Data/User.idr	/^json : User -> JSON$/;"	d
 leftTitle	User.idr	/^  leftTitle : String$/;"	d
 listOrgMembers	FFI/GitHub.idr	/^listOrgMembers : Octokit => (org : String) -> Promise (List String)$/;"	d
-listPRsForBranch	FFI/GitHub.idr	/^listPRsForBranch : Octokit => (owner : String) -> (repo : String) -> (branch : String) -> Promise (List PullRequest)$/;"	d
+listPRsForBranch	FFI/GitHub.idr	/^listPRsForBranch : Octokit => $/;"	d
 listPartitionedPRs	PullRequest.idr	/^listPartitionedPRs : Config => Octokit =>$/;"	d
 listPlusNonEmptyListNotEmpty	Data/List/PrefixSuffix.idr	/^listPlusNonEmptyListNotEmpty : {xs : _} -> Not (xs ++ (y :: ys) = [])$/;"	d
-listPullRequests	FFI/GitHub.idr	/^listPullRequests : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PRState) -> (pageLimit : Fin 101) -> Promise (List PullRequest)$/;"	d
-listPullReviewers	FFI/GitHub.idr	/^listPullReviewers : Octokit => (owner : String) -> (repo : String) -> (stateFilter : Maybe PRState) -> (pageLimit : Fin 101) -> Promise (List String)$/;"	d
-listPullReviews	FFI/GitHub.idr	/^listPullReviews : Octokit => (owner : String) -> (repo : String) -> (pullNumber : Integer) -> Promise (List Review)$/;"	d
-listPullReviewsJsonStr	FFI/GitHub.idr	/^listPullReviewsJsonStr : Octokit => (owner : String) -> (repo : String) -> (pullNumber : Integer) -> Promise String$/;"	d
+listPullRequests	FFI/GitHub.idr	/^listPullRequests : Octokit => $/;"	d
+listPullRequestsJsonStr	FFI/GitHub.idr	/^listPullRequestsJsonStr : Octokit =>$/;"	d
+listPullReviewers	FFI/GitHub.idr	/^listPullReviewers : Octokit => $/;"	d
+listPullReviews	FFI/GitHub.idr	/^listPullReviews : Octokit => $/;"	d
+listPullReviewsJsonStr	FFI/GitHub.idr	/^listPullReviewsJsonStr : Octokit => $/;"	d
 listReviewers	PullRequest.idr	/^listReviewers : Config => Octokit =>$/;"	d
 listTeam	Main.idr	/^listTeam : Config => Octokit =>$/;"	d
-listTeamMembers	FFI/GitHub.idr	/^listTeamMembers : Octokit => (org : String) -> (teamSlug : String) -> Promise (List String)$/;"	d
+listTeamMembers	FFI/GitHub.idr	/^listTeamMembers : Octokit => $/;"	d
 listTeams	FFI/GitHub.idr	/^listTeams : Octokit => (org : String) -> Promise (List String)$/;"	d
 loadConfig	Config.idr	/^loadConfig : HasIO io => $/;"	d
 loadOrCreateConfig	Config.idr	/^loadOrCreateConfig : Git => Octokit => $/;"	d
@@ -197,8 +208,10 @@ parseDateTimeString	Data/Date.idr	/^parseDateTimeString : String -> Maybe Date$/
 parseGitHubURI	Config.idr	/^parseGitHubURI : String -> Maybe GitRemote$/;"	d
 parseHTTPS	Config.idr	/^    parseHTTPS : String -> Maybe GitRemote$/;"	d
 parseJiraPrefix	Util.idr	/^parseJiraPrefix : String -> Maybe String$/;"	d
+parseLim	Main.idr	/^    parseLim : String -> Maybe (Fin 101)$/;"	d
 parseNat	Data/Date.idr	/^    parseNat : Char -> Maybe Nat$/;"	d
 parsePR	Data/PullRequest.idr	/^parsePR : JSON -> Either String PullRequest$/;"	d
+parsePg	Main.idr	/^    parsePg  : String -> Maybe Nat$/;"	d
 parsePositiveReversed	Data/Date.idr	/^parsePositiveReversed : List Char -> Maybe Nat$/;"	d
 parsePullRequestString	Data/PullRequest.idr	/^parsePullRequestString : String -> Either String PullRequest$/;"	d
 parsePullRequestsString	Data/PullRequest.idr	/^parsePullRequestsString : String -> Either String (List PullRequest)$/;"	d
@@ -220,30 +233,30 @@ prCount	User.idr	/^  prCount : Fin 101$/;"	d
 prefixDifferentVoid	Data/List/PrefixSuffix.idr	/^prefixDifferentVoid : Not (x = y) -> Not (suffixList ** PrefixSuffix (x :: xs) suffixList (y :: ys))$/;"	d
 prefixSuffixInjective	Data/List/PrefixSuffix.idr	/^prefixSuffixInjective : PrefixSuffix (x :: xs) suffixList (y :: ys) -> (x = y, PrefixSuffix xs suffixList ys)$/;"	d
 prefixSuffixProp	Data/List/PrefixSuffix.idr	/^prefixSuffixProp : PrefixSuffix prefixList suffixList fullList -> prefixList ++ suffixList = fullList$/;"	d
-prim__addPullReviewers	FFI/GitHub.idr	/^prim__addPullReviewers : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (pullNumber : Integer) -> (reviewers : String) -> (teamReviewers : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
+prim__addPullReviewers	FFI/GitHub.idr	/^prim__addPullReviewers : Ptr OctokitRef $/;"	d
 prim__awaitStringify	FFI/Concurrency.idr	/^prim__awaitStringify : Future -> (onSuccess : String -> PrimIO ()) -> (onError : String -> PrimIO ()) -> PrimIO ()$/;"	d
 prim__both	FFI/Concurrency.idr	/^prim__both : Future -> Future -> PrimIO Future$/;"	d
-prim__createComment	FFI/GitHub.idr	/^prim__createComment : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (issueOrPrNumber : Integer) -> (message : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__createPR	FFI/GitHub.idr	/^prim__createPR : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (head : String) -> (base : String) -> (title : String) -> (body : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__currentBranch	FFI/Git.idr	/^prim__currentBranch : Ptr GitRef -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
+prim__createComment	FFI/GitHub.idr	/^prim__createComment : Ptr OctokitRef $/;"	d
+prim__createPR	FFI/GitHub.idr	/^prim__createPR : Ptr OctokitRef $/;"	d
+prim__currentBranch	FFI/Git.idr	/^prim__currentBranch : Ptr GitRef$/;"	d
 prim__flatten	FFI/Concurrency.idr	/^prim__flatten : Future -> PrimIO Future$/;"	d
 prim__future	FFI/Concurrency.idr	/^prim__future : (args : String) -> PrimIO Future$/;"	d
-prim__getRepoDefaultBranch	FFI/GitHub.idr	/^prim__getRepoDefaultBranch : Ptr OctokitRef -> (org : String) -> (repo : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__getSelf	FFI/GitHub.idr	/^prim__getSelf : Ptr OctokitRef -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__getUser	FFI/GitHub.idr	/^prim__getUser : Ptr OctokitRef -> (username : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
+prim__getRepoDefaultBranch	FFI/GitHub.idr	/^prim__getRepoDefaultBranch : Ptr OctokitRef$/;"	d
+prim__getSelf	FFI/GitHub.idr	/^prim__getSelf : Ptr OctokitRef $/;"	d
+prim__getUser	FFI/GitHub.idr	/^prim__getUser : Ptr OctokitRef $/;"	d
 prim__git	FFI/Git.idr	/^prim__git : PrimIO (Ptr GitRef)$/;"	d
-prim__listOrgMembers	FFI/GitHub.idr	/^prim__listOrgMembers : Ptr OctokitRef -> (org : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__listPRsForBranch	FFI/GitHub.idr	/^prim__listPRsForBranch : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (branch : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__listPullRequests	FFI/GitHub.idr	/^prim__listPullRequests : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (pageLimit : Int16) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__listPullReviewers	FFI/GitHub.idr	/^prim__listPullReviewers : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (stateFilter : String) -> (pageLimit : Int16) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__listPullReviews	FFI/GitHub.idr	/^prim__listPullReviews : Ptr OctokitRef -> (owner : String) -> (repo : String) -> (pullNumber : Integer) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__listTeamMembers	FFI/GitHub.idr	/^prim__listTeamMembers : Ptr OctokitRef -> (org : String) -> (teamSlug : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__listTeams	FFI/GitHub.idr	/^prim__listTeams : Ptr OctokitRef -> (org : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
+prim__listOrgMembers	FFI/GitHub.idr	/^prim__listOrgMembers : Ptr OctokitRef $/;"	d
+prim__listPRsForBranch	FFI/GitHub.idr	/^prim__listPRsForBranch : Ptr OctokitRef $/;"	d
+prim__listPullRequests	FFI/GitHub.idr	/^prim__listPullRequests : Ptr OctokitRef $/;"	d
+prim__listPullReviewers	FFI/GitHub.idr	/^prim__listPullReviewers : Ptr OctokitRef $/;"	d
+prim__listPullReviews	FFI/GitHub.idr	/^prim__listPullReviews : Ptr OctokitRef $/;"	d
+prim__listTeamMembers	FFI/GitHub.idr	/^prim__listTeamMembers : Ptr OctokitRef $/;"	d
+prim__listTeams	FFI/GitHub.idr	/^prim__listTeams : Ptr OctokitRef$/;"	d
 prim__neutral	FFI/Concurrency.idr	/^prim__neutral : PrimIO Future$/;"	d
 prim__octokit	FFI/GitHub.idr	/^prim__octokit : (authToken : String) -> PrimIO (Ptr OctokitRef)$/;"	d
-prim__pushNewBranch	FFI/Git.idr	/^prim__pushNewBranch : Ptr GitRef -> (remoteName : String) -> (branch : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__remoteTrackingBranch	FFI/Git.idr	/^prim__remoteTrackingBranch : Ptr GitRef -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
-prim__remoteURI	FFI/Git.idr	/^prim__remoteURI : Ptr GitRef -> (remoteName : String) -> (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ()$/;"	d
+prim__pushNewBranch	FFI/Git.idr	/^prim__pushNewBranch : Ptr GitRef$/;"	d
+prim__remoteTrackingBranch	FFI/Git.idr	/^prim__remoteTrackingBranch : Ptr GitRef$/;"	d
+prim__remoteURI	FFI/Git.idr	/^prim__remoteURI : Ptr GitRef$/;"	d
 prim__rnd	System/Random/Node.idr	/^prim__rnd : PrimIO Double$/;"	d
 prim__singleton	FFI/Concurrency.idr	/^prim__singleton : Future -> PrimIO Future$/;"	d
 print	User.idr	/^      print : Doc AnsiStyle$/;"	d
