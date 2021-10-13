@@ -1,6 +1,7 @@
 
 .DS_STORE
 build/
+depends/
 node_modules/
 
 config.json

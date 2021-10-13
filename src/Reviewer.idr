@@ -3,6 +3,7 @@ module Reviewer
 import Data.Nat
 import Data.String
 import Data.List
+import Data.List.DeleteBy
 import Data.List1
 import System.Random.Node
 import Text.PrettyPrint.Prettyprinter
