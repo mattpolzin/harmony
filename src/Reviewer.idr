@@ -5,7 +5,7 @@ import Data.String
 import Data.List
 import Data.List.DeleteBy
 import Data.List1
-import System.Random.Node
+import System.Random
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Symbols
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
