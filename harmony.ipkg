@@ -9,6 +9,7 @@ license = "MIT"
 -- bugtracker =
 
 depends = contrib
+        , idris-adds == 0.1.0
 
 modules = Main
 main = Main
