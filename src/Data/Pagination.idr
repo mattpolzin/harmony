@@ -212,10 +212,10 @@ divNatNZLemma : (a,b : _) -> (prf : b `LTE` a) -> {0 prf' : NonZero b} -> divNat
 divNatNZLemma 0 0 _ impossible
 divNatNZLemma 0 (S k) prf = absurd prf
 divNatNZLemma (S k) 0 _ impossible
-divNatNZLemma (S k) (S j) prf with (lte (S k) j) proof prf'''
+divNatNZLemma (S k) (S j) prf with (lte (S k) j) proof prf''
   divNatNZLemma (S k) (S j) prf | False = LTESucc LTEZero
   divNatNZLemma (S k) (S j) prf | True with (LTEImpliesNotGT prf)
-    divNatNZLemma (S k) (S j) prf | True | contra = absurd . contra . LTESucc $ lteReflectsLTE (S k) j prf'''
+    divNatNZLemma (S k) (S j) prf | True | contra = absurd . contra . LTESucc $ lteReflectsLTE (S k) j prf''
 
 ||| Create a series of pages with at lest the given number of pages.
 |||
@@ -237,8 +237,8 @@ pages' : (items : Nat)
       => PaginationShape items (divNatNZ items pages (gtIsNonZero pagesOk)) 0
 pages' items pages with (divNatNZ items pages (gtIsNonZero pagesOk)) proof prf
   pages' items pages | perPage =
-    let prf'' = divNatNZLemma items pages %search
-    in  pagesHelper 0 items perPage @{replace {p=LTE 1} prf prf''}
+    let prf' = divNatNZLemma items pages %search
+    in  pagesHelper 0 items perPage @{replace {p=LTE 1} prf prf'}
 
 {-
 Not currently able to prove the following props reflexively.

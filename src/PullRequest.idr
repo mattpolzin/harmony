@@ -84,11 +84,11 @@ listPartitionedPRs : Config => Octokit =>
                   -> (prCount : Fin 101)
                   -> Promise PRHistory
 listPartitionedPRs @{config} {pageBreaks} prCount with ((finToNat prCount) `isGT` 0, pageBreaks `isGT` 0)
-  _ | (No contra, _) = pure empty
-  _ | (_, No contra) = partition <$> listPullRequests config.org config.repo Nothing prCount
+  _ | (No _, _) = pure empty
+  _ | (_, No _) = partition <$> listPullRequests config.org config.repo Nothing prCount
   _ | (Yes prf, Yes prf') with ((S pageBreaks) `isLTE` (finToNat prCount))
-    _ | (No contra)  = partition' (pages (finToNat prCount) 1)
-    _ | (Yes prf''') = do partition' (pages' (finToNat prCount) (S pageBreaks))
+    _ | (No _)       = partition' (pages  (finToNat prCount)  1)
+    _ | (Yes prf'') = partition' (pages' (finToNat prCount) (S pageBreaks))
 
 export
 listReviewers : Config => Octokit =>
