@@ -133,6 +133,7 @@ prim__listPullReviewers : Ptr OctokitRef
                        -> (onFailure : String -> PrimIO ()) 
                        -> PrimIO ()
 
+||| List 1 page of pull reviewers (a list of usernames, one per user per review).
 export
 listPullReviewers : Octokit => 
                     (owner : String) 
@@ -170,8 +171,11 @@ listPullRequestsJsonStr @{(Kit ptr)} owner repo stateFilter pageLimit {page} =
 
 ||| List the most recent pull requests by creation date.
 |||
-||| @pageLimit The number of results per page (max 100).
-||| @page      The zero-indexed page index to retieve.
+||| @owner       The repository owner (a.k.a. org name).
+||| @repo        The repository name.
+||| @stateFilter Retrieve only open or only closed PRs. Pass Nothing to retrieve all PRs.
+||| @pageLimit   The number of results per page (max 100).
+||| @page        The zero-indexed page index to retieve. Defaults to 0.
 export
 listPullRequests : Octokit => 
                    (owner : String) 
