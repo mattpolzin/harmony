@@ -36,6 +36,17 @@ data Pagination : (0 items : Nat) -> (0 perPage : Nat) -> (0 page : Nat) -> (con
 
 %name Pagination pgs
 
+||| A Pagination without any contents is very useful for describing
+||| the shape of some pages (the number of pages, items per page,
+||| offsets, etc.)
+public export
+PaginationShape : Nat -> Nat -> Nat -> Type
+PaginationShape items perPage page = Pagination items perPage page ()
+
+--
+-- Accessors
+--
+
 ||| Get the next page unless the current page is the last one.
 public export
 next : Pagination items perPage page contents -> Maybe (Pagination (items `minus` perPage) perPage (S page) contents)
@@ -99,6 +110,10 @@ indices : Pagination _ _ _ _ -> List Nat
 indices (Last k _ _) = [k]
 indices (NonTerminal k _ next) = k :: indices next
 
+--
+-- Interface implementations
+--
+
 export
 Show (Pagination _ _ _ _) where
   show (NonTerminal pg {perPage} _ next) =
@@ -107,13 +122,6 @@ Show (Pagination _ _ _ _) where
      ++ show next
   show pg =
     "page \{show  pg.idx} : \{show  pg.offset} -> \{show  (pg.offset + (pred pg.size))}"
-
-||| A Pagination without any contents is very useful for describing
-||| the shape of some pages (the number of pages, items per page,
-||| offsets, etc.)
-public export
-PaginationShape : Nat -> Nat -> Nat -> Type
-PaginationShape items perPage page = Pagination items perPage page ()
 
 export
 Functor (Pagination items perPage page) where
@@ -142,15 +150,9 @@ traverse' g (NonTerminal page {perPage} x next) =
   (\x',next' => NonTerminal page x' next') <$> g page perPage x <*> traverse' g next
 traverse' g (Last page items x) = (Last page items) <$> g page perPage x
 
-lastPage : (page : Nat) 
-        -> (remainingItems : Nat) 
-        -> (perPage : Nat) 
-        -> remainingItems `LTE` perPage
-        => perPage `GT` 0 
-        => remainingItems `GT` 0
-        => PaginationShape remainingItems perPage page
-lastPage page remainingItems perPage @{remainingFeasible} =
-  Last page remainingItems () @{remainingFeasible}
+--
+-- Functions that create PaginationShapes (pages & pages')
+--
 
 lemma' : {a,b : _} -> a `LTE` b -> (c ** c + a = b)
 lemma' prf = (b `minus` a ** plusMinusLte a b prf)
@@ -186,7 +188,7 @@ mutual
   pagesHelper page remainingItems perPage with (isLT perPage remainingItems)
     _ | (Yes prf)   = let (remainder ** (remainderOk, remainderGtZ)) = lemma prf
                       in  nonTerminalPage page remainingItems perPage @{remainderOk}
-    _ | (No contra) = lastPage page remainingItems perPage @{notLTImpliesGTE contra}
+    _ | (No contra) = Last page remainingItems () @{notLTImpliesGTE contra}
 
 ||| Create a series of pages with a certain number of items on each
 ||| page such that the given number of total items all fit on one of
