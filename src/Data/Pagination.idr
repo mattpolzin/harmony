@@ -6,10 +6,6 @@ import Data.Nat
 
 %default total
 
--- TODO: can this type be generalized so it is either pages as represented
---       by the indices of items -OR- pages of those items?
---       This should allow the Pagination type to become Traversable.
-
 ||| A representation of all pages needed to cover the given number
 ||| of items with the given number of items per page.
 |||
@@ -17,15 +13,16 @@ import Data.Nat
 ||| represent the remaining items in another pagination with more
 ||| pages and more total items).
 public export
-data Pagination : (0 items : Nat) -> (0 perPage : Nat) -> (0 page : Nat) -> Type where
+data Pagination : (0 items : Nat) -> (0 perPage : Nat) -> (0 page : Nat) -> (contents : Type) -> Type where
   ||| A page and the page following it.
   NonTerminal : (page : Nat)
              -> {perPage : Nat}
              -> {remainder : Nat}
              -> perPage `LTE` ((perPage + (page * perPage)) + remainder)
              => perPage `GT` 0
-             => (next : Pagination remainder perPage (S page))
-             -> Pagination (remainder + perPage) perPage page
+             => (x : contents)
+             -> (next : Pagination remainder perPage (S page) contents)
+             -> Pagination (remainder + perPage) perPage page contents
 
   ||| The last page.
   Last : (page : Nat)
@@ -34,63 +31,116 @@ data Pagination : (0 items : Nat) -> (0 perPage : Nat) -> (0 page : Nat) -> Type
       -> lastPageSize `LTE` perPage
       => perPage `GT` 0
       => lastPageSize `GT` 0
-      => Pagination lastPageSize perPage page
+      => (x : contents)
+      -> Pagination lastPageSize perPage page contents
 
-%name Pagination pg
+%name Pagination pgs
+
+||| Get the next page unless the current page is the last one.
+public export
+next : Pagination items perPage page contents -> Maybe (Pagination (items `minus` perPage) perPage (S page) contents)
+next (Last _ _ _) = Nothing
+next (NonTerminal page {perPage} {remainder} x nextPage) =
+  Just $
+    rewrite plusCommutative remainder perPage in
+      rewrite minusPlus perPage {n=remainder} in nextPage
+
+||| Get the next page unless the current page is the last one.
+public export
+(.next) : Pagination items perPage page contents -> Maybe (Pagination (items `minus` perPage) perPage (S page) contents)
+(.next) = next
 
 ||| Get the offset (zero-indexed) of the given page.
 public export
-offset : Pagination _ _ _ -> Nat
-offset (NonTerminal page {perPage} _) = page * perPage
-offset (Last page {perPage} _) = page * perPage
+offset : Pagination _ _ _ _ -> Nat
+offset (NonTerminal page {perPage} _ _) = page * perPage
+offset (Last page {perPage} _ _) = page * perPage
 
 ||| Get the offset (zero-indexed) of the current page.
 public export
-(.offset) : Pagination _ _ _ -> Nat
+(.offset) : Pagination _ _ _ _ -> Nat
 (.offset) = offset
 
 ||| Get the (zero-indexed) index of the current page.
 public export
-idx : Pagination _ _ _ -> Nat
-idx (NonTerminal k _) = k
-idx (Last k _) = k
+idx : Pagination _ _ _ _ -> Nat
+idx (NonTerminal k _ _) = k
+idx (Last k _ _) = k
 
 ||| Get the (zero-indexed) index of the current page.
 public export
-(.idx) : Pagination _ _ _ -> Nat
+(.idx) : Pagination _ _ _ _ -> Nat
 (.idx) = idx
 
 ||| Get the size of the current page.
 ||| This is `perPage` for all pages except for
 ||| the last page.
 public export
-size : Pagination _ _ _ -> Nat
-size (NonTerminal {perPage} _ _) = perPage
-size (Last _ lastPageSize) = lastPageSize
+size : Pagination _ _ _ _ -> Nat
+size (NonTerminal {perPage} _ _ _) = perPage
+size (Last _ lastPageSize _) = lastPageSize
 
 ||| Get the size of the current page.
 ||| This is `perPage` for all pages except for
 ||| the last page.
 public export
-(.size) : Pagination _ _ _ -> Nat
+(.size) : Pagination _ _ _ _ -> Nat
 (.size) = size
 
 ||| Get the number of pages in the pagination.
 public export
-length : Pagination _ _ _ -> Nat
-length (Last _ _) = 1
-length (NonTerminal _ next) = S (length next)
+length : Pagination _ _ _ _ -> Nat
+length (Last _ _ _) = 1
+length (NonTerminal _ _ next) = S (length next)
 
 ||| Get the page indices represented by the pagination.
 public export
-indices : Pagination _ _ _ -> List Nat
-indices (Last k _) = [k]
-indices (NonTerminal k next) = k :: indices next
+indices : Pagination _ _ _ _ -> List Nat
+indices (Last k _ _) = [k]
+indices (NonTerminal k _ next) = k :: indices next
 
 export
-Show (Pagination _ _ _) where
-  show pg = 
+Show (Pagination _ _ _ _) where
+  show (NonTerminal pg {perPage} _ next) =
+    let offset = perPage * pg
+    in  "page \{show  pg} : \{show  offset} -> \{show  (offset + (pred perPage))}\n"
+     ++ show next
+  show pg =
     "page \{show  pg.idx} : \{show  pg.offset} -> \{show  (pg.offset + (pred pg.size))}"
+
+||| A Pagination without any contents is very useful for describing
+||| the shape of some pages (the number of pages, items per page,
+||| offsets, etc.)
+public export
+PaginationShape : Nat -> Nat -> Nat -> Type
+PaginationShape items perPage page = Pagination items perPage page ()
+
+export
+Functor (Pagination items perPage page) where
+  map f (NonTerminal page x next) = NonTerminal page (f x) (map f next)
+  map f (Last page items x) = Last page items (f x)
+
+export
+Foldable (Pagination items perPage page) where
+  foldr f x (Last page items y) = f y x
+  foldr f x (NonTerminal page y next) = f y (foldr f x next)
+
+export
+Traversable (Pagination items perPage page) where
+  traverse f (NonTerminal page x next) =
+    (\x',next' => NonTerminal page x' next') <$> f x <*> traverse f next
+  traverse f (Last page items x) = (Last page items) <$> f x
+
+||| A special traversal where the page metadata is passed to the function
+||| being traversed with.
+export
+traverse' : Applicative f =>
+            ((page : Nat) -> (perPage : Nat) -> (x : contents) -> f b)
+         -> Pagination items perPage page contents 
+         -> f (Pagination items perPage page b)
+traverse' g (NonTerminal page {perPage} x next) =
+  (\x',next' => NonTerminal page x' next') <$> g page perPage x <*> traverse' g next
+traverse' g (Last page items x) = (Last page items) <$> g page perPage x
 
 lastPage : (page : Nat) 
         -> (remainingItems : Nat) 
@@ -98,9 +148,9 @@ lastPage : (page : Nat)
         -> remainingItems `LTE` perPage
         => perPage `GT` 0 
         => remainingItems `GT` 0
-        => Pagination remainingItems perPage page
+        => PaginationShape remainingItems perPage page
 lastPage page remainingItems perPage @{remainingFeasible} =
-  Last page remainingItems @{remainingFeasible}
+  Last page remainingItems () @{remainingFeasible}
 
 lemma' : {a,b : _} -> a `LTE` b -> (c ** c + a = b)
 lemma' prf = (b `minus` a ** plusMinusLte a b prf)
@@ -118,12 +168,12 @@ mutual
                  -> (0 remainingOk : remainder + perPage = remainingItems)
                  => perPage `GT` 0
                  => remainder `GT` 0
-                 => Pagination remainingItems perPage page
+                 => PaginationShape remainingItems perPage page
   nonTerminalPage page remainingItems perPage with (sym remainingOk)
     nonTerminalPage page (remainder + perPage) perPage | Refl =
       let okPageSize : perPage `LTE` (perPage + (page * perPage)) + remainder = 
             rewrite sym $ plusAssociative perPage (page * perPage) remainder in lteAddRight perPage
-      in NonTerminal page @{okPageSize} $
+      in NonTerminal page () @{okPageSize} $
            -- we know this is total because remainder is strictly less than remainingItems
            assert_total (pagesHelper (S page) remainder perPage)
 
@@ -132,7 +182,7 @@ mutual
         -> (perPage : Nat)
         -> perPage `GT` 0
         => remainingItems `GT` 0
-        => Pagination remainingItems perPage page
+        => PaginationShape remainingItems perPage page
   pagesHelper page remainingItems perPage with (isLT perPage remainingItems)
     _ | (Yes prf)   = let (remainder ** (remainderOk, remainderGtZ)) = lemma prf
                       in  nonTerminalPage page remainingItems perPage @{remainderOk}
@@ -146,11 +196,12 @@ mutual
 ||| @perPage The non-zero number of items to put on each page.
 export
 pages : (items : Nat)
-     -> (perPage : Fin (S items)) 
+     -> (perPage : Nat) 
      -> items `GT` 0 
-     => (finToNat perPage) `GT` 0 
-     => Pagination items (finToNat perPage) 0
-pages items perPage = pagesHelper 0 items (finToNat perPage)
+     => perPage `GT` 0 
+     => perPage `LTE` items
+     => PaginationShape items perPage 0
+pages items perPage = pagesHelper 0 items perPage
 
 gtIsNonZero : a `GT` b -> NonZero a
 gtIsNonZero (LTESucc x) = SIsNonZero
@@ -175,15 +226,16 @@ divNatNZLemma (S k) (S j) prf with (lte (S k) j) proof prf'''
 |||
 ||| @items The non-zero total number of items to page over.
 ||| @pages The minimum number of pages to produce.
+export
 pages' : (items : Nat)
-      -> (pages : Fin items)
+      -> (pages : Nat)
       -> items `GT` 0
-      => (0 pagesOk : (finToNat pages) `GT` 0)
-      => Pagination items (divNatNZ items (finToNat pages) (gtIsNonZero pagesOk)) 0
-pages' items pages with (divNatNZ items (finToNat pages) (gtIsNonZero pagesOk)) proof prf
+      => (0 pagesOk : pages `GT` 0)
+      => pages `LTE` items
+      => PaginationShape items (divNatNZ items pages (gtIsNonZero pagesOk)) 0
+pages' items pages with (divNatNZ items pages (gtIsNonZero pagesOk)) proof prf
   pages' items pages | perPage =
-    let pagesLTEItems = lteSuccLeft $ elemSmallerThanBound pages
-        prf'' = divNatNZLemma items (finToNat pages) pagesLTEItems
+    let prf'' = divNatNZLemma items pages %search
     in  pagesHelper 0 items perPage @{replace {p=LTE 1} prf prf''}
 
 {-
@@ -207,9 +259,9 @@ namespace PagesPrimeProperties
   prop2 = ?prop2_rhs
 -}
 
--- test : Pagination _ _ _ -> IO ()
--- test (NonTerminal page next) = do
---   printLn (NonTerminal page next)
+-- test : Pagination _ _ _ _ -> IO ()
+-- test (NonTerminal page x next) = do
+--   printLn (NonTerminal page x next)
 --   test next
 -- test pg = printLn pg
 
