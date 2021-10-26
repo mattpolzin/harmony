@@ -34,15 +34,14 @@ prim__neutral : PrimIO Future
 %foreign "node:lambda:(p)=>{return new Promise((onSuccess, onFailure) => p.then(r => onSuccess(r.flat()), onFailure))}"
 prim__flatten : Future -> PrimIO Future
 
-all : HasIO io => List Future -> io Future
-all []  = primIO $ prim__neutral
-all [x] = primIO $ prim__singleton x
-all (x :: [y]) = primIO $ prim__both x y
-all (x :: (y :: (z :: xs))) =
-  do rest <- all (z :: xs)
-     head <- primIO $ prim__both x y
-     nested <- primIO $ prim__both head rest
-     primIO $ prim__flatten nested
+all : HasIO io => Foldable t => t Future -> io Future
+all xs = foldr both (primIO prim__neutral) xs
+  where
+    both : Future -> io Future -> io Future
+    both x y = do
+      x'     <- primIO $ prim__singleton x
+      nested <- primIO $ prim__both x' !y
+      primIO $ prim__flatten nested
 
 %foreign concurrency_ffi "await_stringify"
 prim__awaitStringify : Future -> (onSuccess : String -> PrimIO ()) -> (onError : String -> PrimIO ()) -> PrimIO ()
@@ -51,7 +50,7 @@ prim__awaitStringify : Future -> (onSuccess : String -> PrimIO ()) -> (onError :
 ||| and then processes the result (an array of results) as a list
 ||| of JSON objects.
 export
-promiseAll : List Future -> Promise (List JSON)
+promiseAll : Foldable t => t Future -> Promise (List JSON)
 promiseAll xs =
   do f <- all xs
      str <- promisify $ \ok,err => prim__awaitStringify f (\x => toPrim $ ok x) (\y => toPrim $ err y)

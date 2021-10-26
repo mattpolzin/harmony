@@ -6,6 +6,7 @@ import Data.Fuel
 import Data.List
 import Data.List1
 import Data.Nat
+import Data.Pagination
 import Data.Promise
 import Data.PullRequest
 import Data.Review
@@ -32,6 +33,9 @@ record PRHistory where
   openPRs   : List PullRequest
   closedPRs : List PullRequest
 
+empty : PRHistory
+empty = MkPRHistory { openPRs = [], closedPRs = [] }
+
 ||| Produce a tuple of (open, closed) from the PR History.
 export
 tuple : PRHistory -> (List PullRequest, List PullRequest)
@@ -57,6 +61,18 @@ history.allAuthors = author <$> (history.openPRs ++ history.closedPRs)
 partition : List PullRequest -> PRHistory
 partition = uncurry MkPRHistory . partition ((== Open) . (.state))
 
+||| Create a fork of this program that retrieves the given page of PRs
+||| and outputs the result as JSON.
+forkedPRs : (page : Nat) -> (perPage : Nat) -> (x : ()) -> Promise Future
+forkedPRs page perPage _ = fork "pulls --json \{show perPage} \{show page}"
+
+||| Grab all of the given pages of PRs and create a history from them.
+partition' : Pagination _ _ _ () -> Promise PRHistory
+partition' pgs =
+  do prJsons <- promiseAll =<< traverse' forkedPRs pgs
+     pulls   <- either $ traverse (array parsePR) prJsons
+     pure $ partition (join pulls)
+
 ||| Get the most recent PRs by creation date and partition them
 ||| into open and closed PRs.
 |||
@@ -67,18 +83,12 @@ listPartitionedPRs : Config => Octokit =>
                      {default 0 pageBreaks : Nat}
                   -> (prCount : Fin 101)
                   -> Promise PRHistory
-listPartitionedPRs @{config} {pageBreaks} prCount with (pageBreaks `isGT` 0)
-  _ | (No contra) =
-    partition <$> listPullRequests config.org config.repo Nothing prCount
-  _ | (Yes prf) with ((cast prCount) `divMod` (S pageBreaks))
-    listPartitionedPRs @{config} {pageBreaks} prCount | (Yes prf) | (Fraction (cast prCount) (S pageBreaks) pageLimit r prf') =
-      let pageIndices = [0..pageBreaks]
-      in  do prsJson <- promiseAll =<< traverse (forkedPRs pageLimit) pageIndices
-             pulls   <- either $ traverse (array parsePR) prsJson
-             pure $ partition (join pulls)
-      where
-        forkedPRs : (pageLimit : Nat) -> (page : Nat) -> Promise Future
-        forkedPRs pageLimit page = fork "pulls --json \{show pageLimit} \{show page}"
+listPartitionedPRs @{config} {pageBreaks} prCount with ((finToNat prCount) `isGT` 0, pageBreaks `isGT` 0)
+  _ | (No _, _) = pure empty
+  _ | (_, No _) = partition <$> listPullRequests config.org config.repo Nothing prCount
+  _ | (Yes prf, Yes prf') with ((S pageBreaks) `isLTE` (finToNat prCount))
+    _ | (No _)       = partition' (pages  (finToNat prCount)  1)
+    _ | (Yes prf'') = partition' (pages' (finToNat prCount) (S pageBreaks))
 
 export
 listReviewers : Config => Octokit =>
