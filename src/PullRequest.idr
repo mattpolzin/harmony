@@ -87,8 +87,8 @@ listPartitionedPRs @{config} {pageBreaks} prCount with ((finToNat prCount) `isGT
   _ | (No _, _) = pure empty
   _ | (_, No _) = partition <$> listPullRequests config.org config.repo Nothing prCount
   _ | (Yes prf, Yes prf') with ((S pageBreaks) `isLTE` (finToNat prCount))
-    _ | (No _)       = partition' (pages  (finToNat prCount)  1)
-    _ | (Yes prf'') = partition' (pages' (finToNat prCount) (S pageBreaks))
+    _ | (No _)       = partition' (metaPages  (finToNat prCount)  1)
+    _ | (Yes prf'') = partition' (metaPages' (finToNat prCount) (S pageBreaks))
 
 export
 listReviewers : Config => Octokit =>
