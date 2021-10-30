@@ -43,22 +43,37 @@ public export
 PaginationShape : Nat -> Nat -> Nat -> Type
 PaginationShape items perPage page = Pagination items perPage page ()
 
+export
+Uninhabited (Pagination 0 _ _ _) where
+  uninhabited (Last _ _ _) impossible
+  uninhabited (NonTerminal _ {perPage=0}     {remainder=0} @{_} @{perPageGTZ} _ _) = absurd perPageGTZ
+  uninhabited (NonTerminal _ {perPage=(S k)} {remainder=0}                    _ _) impossible
+  uninhabited (NonTerminal _                 {remainder=(S k)}                _ _) impossible
+
 --
 -- Accessors
 --
 
 ||| Get the next page unless the current page is the last one.
 public export
-next : Pagination items perPage page contents -> Maybe (Pagination (items `minus` perPage) perPage (S page) contents)
-next (Last _ _ _) = Nothing
+next : Pagination items perPage page contents -> Dec (Pagination (items `minus` perPage) perPage (S page) contents)
 next (NonTerminal page {perPage} {remainder} x nextPage) =
-  Just $
+  Yes $
     rewrite plusCommutative remainder perPage in
-      rewrite minusPlus perPage {n=remainder} in nextPage
+      rewrite minusPlus perPage {n=remainder} in
+        nextPage
+next (Last page items @{itemsLTEperPage} x) = 
+  let zero = minusPlusZero items (perPage `minus` items)
+      diff = plusMinusLte items perPage itemsLTEperPage
+  in  No $
+        rewrite sym diff in
+          rewrite plusCommutative (perPage `minus` items) items in
+            rewrite zero in
+              absurd
 
 ||| Get the next page unless the current page is the last one.
 public export
-(.next) : Pagination items perPage page contents -> Maybe (Pagination (items `minus` perPage) perPage (S page) contents)
+(.next) : Pagination items perPage page contents -> Dec (Pagination (items `minus` perPage) perPage (S page) contents)
 (.next) = next
 
 ||| Get the offset (zero-indexed) of the given page.
