@@ -50,6 +50,11 @@ Uninhabited (Pagination 0 _ _ _) where
   uninhabited (NonTerminal _ {perPage=(S k)} {remainder=0}                    _ _) impossible
   uninhabited (NonTerminal _                 {remainder=(S k)}                _ _) impossible
 
+export
+Uninhabited (Pagination _ 0 _ _) where
+  uninhabited (Last _ @{_} @{perPageGTZ} _ _) = absurd perPageGTZ
+  uninhabited (NonTerminal _ @{_} @{perPageGTZ} _ _) = absurd perPageGTZ
+
 --
 -- Accessors
 --
@@ -212,13 +217,13 @@ mutual
 ||| @items   The non-zero total number of items to page over.
 ||| @perPage The non-zero number of items to put on each page.
 export
-pages : (items : Nat)
-     -> (perPage : Nat) 
-     -> items `GT` 0 
-     => perPage `GT` 0 
-     => perPage `LTE` items
-     => PaginationShape items perPage 0
-pages items perPage = pagesHelper 0 items perPage
+metaPages : (items : Nat)
+         -> (perPage : Nat) 
+         -> items `GT` 0 
+         => perPage `GT` 0 
+         => perPage `LTE` items
+         => PaginationShape items perPage 0
+metaPages items perPage = pagesHelper 0 items perPage
 
 gtIsNonZero : a `GT` b -> NonZero a
 gtIsNonZero (LTESucc x) = SIsNonZero
@@ -244,14 +249,14 @@ divNatNZLemma (S k) (S j) prf with (lte (S k) j) proof prf''
 ||| @items The non-zero total number of items to page over.
 ||| @pages The minimum number of pages to produce.
 export
-pages' : (items : Nat)
-      -> (pages : Nat)
-      -> items `GT` 0
-      => (0 pagesOk : pages `GT` 0)
-      => pages `LTE` items
-      => PaginationShape items (divNatNZ items pages (gtIsNonZero pagesOk)) 0
-pages' items pages with (divNatNZ items pages (gtIsNonZero pagesOk)) proof prf
-  pages' items pages | perPage =
+metaPages' : (items : Nat)
+          -> (pages : Nat)
+          -> items `GT` 0
+          => (0 pagesOk : pages `GT` 0)
+          => pages `LTE` items
+          => PaginationShape items (divNatNZ items pages (gtIsNonZero pagesOk)) 0
+metaPages' items pages with (divNatNZ items pages (gtIsNonZero pagesOk)) proof prf
+  metaPages' items pages | perPage =
     let prf' = divNatNZLemma items pages %search
     in  pagesHelper 0 items perPage @{replace {p=LTE 1} prf prf'}
 
