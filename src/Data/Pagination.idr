@@ -200,8 +200,8 @@ Traversable (Pagination items perPage page) where
 ||| being traversed with.
 export
 traverse' : Applicative f =>
-            ((page : Nat) -> (perPage : Nat) -> (x : contents) -> f b)
-         -> Pagination items perPage page contents 
+            ((page : Nat) -> (perPage : Nat) -> (x : contentsTy) -> f b)
+         -> Pagination items perPage page contentsTy
          -> f (Pagination items perPage page b)
 traverse' g (NonTerminal page {perPage} x next) =
   (\x',next' => NonTerminal page x' next') <$> g page perPage x <*> traverse' g next
