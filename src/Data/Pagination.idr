@@ -2,23 +2,40 @@ module Data.Pagination
 
 import Data.Fin
 import Data.Fin.Extra
+import Data.List
 import Data.Nat
+import Data.Vect
+import Decidable.Decidable
 
 %default total
 
 ||| A representation of all pages needed to cover the given number
 ||| of items with the given number of items per page.
 |||
-||| The last index is the current page (because a pagination can
-||| represent the remaining items in another pagination with more
-||| pages and more total items).
+||| Note that the `totalItemCount` is the number of items on this and
+||| all remaining pages. The `currentPageIdx` can be non-zero, indicating
+||| this pagination is the tail of a larger pagination containing more pages.
+|||
+||| @totalItemCount      The number of items across all remaining pages.
+||| @itemsPerPage        The number of items on each page (although the last page may have fewer items).
+||| @currentPageIdx      The index of the current page (starting at 0 for the first page).
+||| @currentPageContents The type of the contents of the current page. This can be any
+|||                      type so that pagination can support both explicit lists of items
+|||                      and also data/stringy types resulting from e.g. API requests. You
+|||                      can even omit page contents (see `metaPages` function) to generate
+|||                      a pagination representing the indices of items without the values
+|||                      themselves being present.
 public export
-data Pagination : (0 items : Nat) -> (0 perPage : Nat) -> (0 page : Nat) -> (contents : Type) -> Type where
+data Pagination : (0 totalItemCount      : Nat)
+               -> (0 itemsPerPage        : Nat)
+               -> (0 currentPageIdx      : Nat)
+               -> (  currentPageContents : Type)
+               -> Type where
   ||| A page and the page following it.
   NonTerminal : (page : Nat)
              -> {perPage : Nat}
              -> {remainder : Nat}
-             -> perPage `LTE` ((perPage + (page * perPage)) + remainder)
+             -> remainder `GT` 0
              => perPage `GT` 0
              => (x : contents)
              -> (next : Pagination remainder perPage (S page) contents)
@@ -118,6 +135,17 @@ public export
 (.size) : Pagination _ _ _ _ -> Nat
 (.size) = size
 
+||| Get the contents of just the current page.
+public export
+contents : Pagination _ _ _ a -> a
+contents (NonTerminal _ x _) = x
+contents (Last _ _ x) = x
+
+||| Get the contents of just the current page.
+public export
+(.contents) : Pagination _ _ _ a -> a
+(.contents) = contents
+
 ||| Get the number of pages in the pagination.
 public export
 length : Pagination _ _ _ _ -> Nat
@@ -142,6 +170,15 @@ Show (Pagination _ _ _ _) where
      ++ show next
   show pg =
     "page \{show  pg.idx} : \{show  pg.offset} -> \{show  (pg.offset + (pred pg.size))}"
+
+||| Show all pages' contents.
+||| This differs from the `show` implementation which will show the pagination
+||| information rather than printing the contents of the pages.
+export
+showContents : Show a => Pagination _ _ _ a -> String
+showContents (NonTerminal _ x next) =
+  show x ++ "\n" ++ showContents next
+showContents (Last _ _ x) = show x
 
 export
 Functor (Pagination items perPage page) where
@@ -193,11 +230,9 @@ mutual
                  => PaginationShape remainingItems perPage page
   nonTerminalPage page remainingItems perPage with (sym remainingOk)
     nonTerminalPage page (remainder + perPage) perPage | Refl =
-      let okPageSize : perPage `LTE` (perPage + (page * perPage)) + remainder = 
-            rewrite sym $ plusAssociative perPage (page * perPage) remainder in lteAddRight perPage
-      in NonTerminal page () @{okPageSize} $
-           -- we know this is total because remainder is strictly less than remainingItems
-           assert_total (pagesHelper (S page) remainder perPage)
+      NonTerminal page () $
+        -- we know this is total because remainder is strictly less than remainingItems
+        assert_total (pagesHelper (S page) remainder perPage)
 
   pagesHelper : (page : Nat)
         -> (remainingItems : Nat)
@@ -260,6 +295,48 @@ metaPages' items pages with (divNatNZ items pages (gtIsNonZero pagesOk)) proof p
     let prf' = divNatNZLemma items pages %search
     in  pagesHelper 0 items perPage @{replace {p=LTE 1} prf prf'}
 
+takePages : {l : Nat} -> Pagination l perPage page () -> Vect l a -> Pagination l perPage page (List a)
+takePages (Last page l _) xs = Last page l (toList xs)
+takePages (NonTerminal page {remainder} _ nextPage) xs =
+  let (x', xs') : (Vect perPage a, Vect remainder a) = splitAt _ $ rewrite plusCommutative perPage remainder in xs
+  in  NonTerminal page (toList x') $
+        takePages nextPage xs'
+
+||| Create a series of pages that span the contents of the given items.
+||| 
+||| @items   The items to paginate.
+||| @perPage The number of items to put on each page.
+export
+pages : {n : _}
+     -> (items : Vect n a)
+     -> (perPage : Nat)
+     -> n `GT` 0
+     => perPage `GT` 0
+     => perPage `LTE` n
+     => Pagination n perPage 0 (List a) 
+pages items perPage @{_} @{_} @{perPageLTEn} =
+  let meta = metaPages n perPage
+  in  takePages meta items
+
+namespace FromList
+  takePages : {l : Nat} -> Pagination l perPage page () -> List a -> Pagination l perPage page (List a)
+  takePages (Last page l _) xs = Last page l xs
+  takePages (NonTerminal page {remainder} _ nextPage) xs =
+    let (x', xs') : (List a, List a) = splitAt perPage xs
+    in  NonTerminal page x' $
+          takePages nextPage xs'
+
+  export
+  pages : (items : List a)
+       -> (perPage : Nat)
+       -> (length items) `GT` 0
+       => perPage `GT` 0
+       => perPage `LTE` (length items)
+       => Pagination (length items) perPage 0 (List a)
+  pages items perPage =
+    let meta = metaPages (length items) perPage
+    in  takePages meta items
+
 {-
 Not currently able to prove the following props reflexively.
 
@@ -280,10 +357,4 @@ namespace PagesPrimeProperties
   prop2 : pages' 20 2 = the (Pagination 20 10 0) (NonTerminal 0 (Last 1 10))
   prop2 = ?prop2_rhs
 -}
-
--- test : Pagination _ _ _ _ -> IO ()
--- test (NonTerminal page x next) = do
---   printLn (NonTerminal page x next)
---   test next
--- test pg = printLn pg
 
