@@ -63,8 +63,8 @@ partition = uncurry MkPRHistory . partition ((== Open) . (.state))
 
 ||| Create a fork of this program that retrieves the given page of PRs
 ||| and outputs the result as JSON.
-forkedPRs : (page : Nat) -> (perPage : Nat) -> (x : ()) -> Promise Future
-forkedPRs page perPage _ = fork "pulls --json \{show perPage} \{show page}"
+forkedPRs : (perPage : Nat) -> (currentPageIdx : Nat) -> (currentPageSize : Nat) -> (x : ()) -> Promise Future
+forkedPRs perPage page _ _ = fork "pulls --json \{show perPage} \{show page}"
 
 ||| Grab all of the given pages of PRs and create a history from them.
 partition' : Pagination _ _ _ () -> Promise PRHistory
@@ -87,8 +87,8 @@ listPartitionedPRs @{config} {pageBreaks} prCount with ((finToNat prCount) `isGT
   _ | (No _, _) = pure empty
   _ | (_, No _) = partition <$> listPullRequests config.org config.repo Nothing prCount
   _ | (Yes prf, Yes prf') with ((S pageBreaks) `isLTE` (finToNat prCount))
-    _ | (No _)       = partition' (pages  (finToNat prCount)  1)
-    _ | (Yes prf'') = partition' (pages' (finToNat prCount) (S pageBreaks))
+    _ | (No _)       = partition' (metaPages  (finToNat prCount)  1)
+    _ | (Yes prf'') = partition' (metaPages' (finToNat prCount) (S pageBreaks))
 
 export
 listReviewers : Config => Octokit =>
