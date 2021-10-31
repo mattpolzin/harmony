@@ -63,8 +63,8 @@ partition = uncurry MkPRHistory . partition ((== Open) . (.state))
 
 ||| Create a fork of this program that retrieves the given page of PRs
 ||| and outputs the result as JSON.
-forkedPRs : (perPage : Nat) -> (page : Nat) -> (currentPageSize : Nat) -> (x : ()) -> Promise Future
-forkedPRs page perPage _ _ = fork "pulls --json \{show perPage} \{show page}"
+forkedPRs : (perPage : Nat) -> (currentPageIdx : Nat) -> (currentPageSize : Nat) -> (x : ()) -> Promise Future
+forkedPRs perPage page _ _ = fork "pulls --json \{show perPage} \{show page}"
 
 ||| Grab all of the given pages of PRs and create a history from them.
 partition' : Pagination _ _ _ () -> Promise PRHistory
