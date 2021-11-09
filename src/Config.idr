@@ -29,7 +29,10 @@ syncConfig @{config} echo =
  do teamSlugs  <- listTeams config.org
     orgMembers <- listOrgMembers config.org
     updatedAt  <- cast {to=Timestamp} <$> time
-    let config' = { updatedAt := updatedAt, teamSlugs := teamSlugs, orgMembers := orgMembers } config
+    let config' = { updatedAt  := updatedAt
+                  , teamSlugs  := teamSlugs
+                  , orgMembers := orgMembers
+                  } config
     ignore $ writeConfig config'
     when echo $
       do putStrLn "Your updated configuration is:"
