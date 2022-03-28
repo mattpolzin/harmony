@@ -198,10 +198,16 @@ handleArgs terminalColors args =
        -- then handle any arguments given
        handleConfiguredArgs args
 
+shouldUseColors : HasIO io => io Bool
+shouldUseColors = do
+  tty <- isTTY stdout
+  noColors <- getEnv "NO_COLOR"
+  pure (isNothing noColors && tty)
+
 covering
 main : IO ()
 main =
-  do terminalColors <- isTTY stdout
+  do terminalColors <- shouldUseColors
      -- drop 2 for `node` and `harmony.js`
      args <- drop 2 <$> getArgs
      -- short circuit for help
