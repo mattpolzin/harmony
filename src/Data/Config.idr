@@ -22,6 +22,8 @@ record Ephemeral where
   filepath : String
   ||| True to use ANSI terminal colors.
   colors   : Bool
+  ||| If set, a preferred editor to use for writing PR desriptions.
+  editor   : Maybe String
 
 public export
 record Config where
@@ -59,6 +61,10 @@ config.filepath = config.ephemeral.filepath
 export
 (.colors) : Config -> Bool
 config.colors = config.ephemeral.colors
+
+export
+(.editor) : Config -> Maybe String
+config.editor = config.ephemeral.editor
 
 export
 Show Config where

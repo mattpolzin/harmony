@@ -19,7 +19,31 @@ allRootCmds = [
   , "pr"
   , "reflect"
   , "sync"
+  , "version"
   ]
+
+||| Attempt to handle completions for root commands but
+||| if we ar not currently on the root command (at least
+||| one argument has already been entered), we return
+||| @Nothing@ so that code can call out to the full @opts@
+||| function after loading the config file.
+export
+cmdOpts : String -> String -> Maybe (List String)
+-- first the root commands:
+cmdOpts "--"       "harmony" = Just allRootCmds
+cmdOpts partialCmd "harmony" = Just $ filter (isPrefixOf partialCmd) allRootCmds
+
+-- then the subcommands that take no arguments;
+cmdOpts _ "pr"         = Just []
+cmdOpts _ "contribute" = Just []
+cmdOpts _ "sync"       = Just []
+cmdOpts _ "help"       = Just []
+cmdOpts _ "--help"     = Just []
+cmdOpts _ "reflect"    = Just []
+cmdOpts _ "version"    = Just []
+
+-- anything else requires configuration being loaded
+cmdOpts _ _ = Nothing
 
 -- given a pair of strings, the first representing the word
 -- actually being edited, the second representing the word
@@ -28,21 +52,12 @@ allRootCmds = [
 -- will perform directory completion.
 export
 opts : Config => String -> String -> List String
--- first the subcommands available:
-opts @{_} "--" "harmony" = allRootCmds
-opts @{_} partialCmd "harmony" = filter (isPrefixOf partialCmd) allRootCmds
+-- we assume we are not handling a root command (see @cmdOpts@ which
+-- should have already been called).
 
 -- then the config command
 opts @{_} "--" "config" = settableProps
 opts @{_} partialConfigProp "config" = filter (isPrefixOf partialConfigProp) settableProps
-
--- then the subcommands that take no arguments
-opts @{_} _ "pr"         = []
-opts @{_} _ "contribute" = []
-opts @{_} _ "sync"       = []
-opts @{_} _ "help"       = []
-opts @{_} _ "--help"     = []
-opts @{_} _ "reflect"    = []
 
 -- then list, which only accepts a single team slug:
 opts @{config} "--" "list"   = config.teamSlugs

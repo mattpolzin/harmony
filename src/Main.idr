@@ -1,5 +1,6 @@
 module Main
 
+import AppVersion
 import BashCompletion
 import Config as Cfg
 import Data.Config
@@ -42,10 +43,14 @@ bashCompletion : HasIO io =>
               -> (prevWord : String) 
               -> io ()
 bashCompletion curWord prevWord = 
-  do Right config <- loadConfig False
-       | Left _ => pure ()
-     let completions = BashCompletion.opts curWord prevWord
-     putStr $ unlines completions
+  let completions = maybe configuredOpts pure (cmdOpts curWord prevWord)
+  in  putStr $ unlines !completions
+  where
+    configuredOpts : io (List String)
+    configuredOpts =
+      do Right config <- loadConfig False Nothing
+           | Left _ => pure []
+         pure (BashCompletion.opts curWord prevWord)
 
 resolve'' : Promise () -> IO ()
 resolve'' = resolve' pure exitError
@@ -183,31 +188,42 @@ handleConfiguredArgs args =
 covering
 handleArgs : Git => Octokit => 
              (terminalColors : Bool)
+          -> (editor : Maybe String)
           -> List String 
           -> IO ()
-handleArgs _ ["--bash-completion", curWord, prevWord] = bashCompletion curWord prevWord
-handleArgs _ ["--bash-completion-script"] = putStrLn BashCompletion.script
-handleArgs terminalColors args = 
+handleArgs _ _ ["--bash-completion", curWord, prevWord] = bashCompletion curWord prevWord
+handleArgs _ _ ["--bash-completion-script"] = putStrLn BashCompletion.script
+handleArgs terminalColors editor args = 
   resolve'' $
     do -- create the config file before continuing if it does not exist yet
-       _ <- syncIfOld =<< loadOrCreateConfig terminalColors
+       _ <- syncIfOld =<< loadOrCreateConfig terminalColors editor
        -- then handle any arguments given
        handleConfiguredArgs args
+
+shouldUseColors : HasIO io => io Bool
+shouldUseColors = do
+  tty <- isTTY stdout
+  noColors <- getEnv "NO_COLOR"
+  pure (isNothing noColors && tty)
 
 covering
 main : IO ()
 main =
-  do terminalColors <- isTTY stdout
+  do terminalColors <- shouldUseColors
+     editor <- getEnv "EDITOR"
      -- drop 2 for `node` and `harmony.js`
      args <- drop 2 <$> getArgs
      -- short circuit for help
      when (args == ["help"] || args == ["--help"]) $ do
        putStrLn $ help terminalColors
        exitSuccess
+     when (args == ["version"] || args == ["--version"]) $ do
+       printVersion
+       exitSuccess
      -- otherwise get a GitHub Personal Access Token and continue.
      Just pat <- getEnv "GITHUB_PAT"
        | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
      _ <- octokit pat
      _ <- git
-     handleArgs terminalColors args
+     handleArgs terminalColors editor args
 
