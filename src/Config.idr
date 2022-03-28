@@ -135,8 +135,9 @@ getConfig @{config} prop with (lookup prop propGetters)
 
 createConfig : Git => Octokit =>
                (terminalColors : Bool)
+            -> (editor : Maybe String)
             -> Promise Config
-createConfig terminalColors =
+createConfig terminalColors editor =
   do putStrLn "Creating a new configuration (storing in \{Config.filename})..."
      -- TODO: don't assume remote name ("origin"), get it from git or ask for it.
      defaultOrgAndRepo <- (parseGitHubURI <$> remoteURI "origin") <|> pure Nothing
@@ -156,6 +157,7 @@ createConfig terminalColors =
      let ephemeral = MkEphem {
          filepath = "./\{Config.filename}"
        , colors   = terminalColors
+       , editor
        }
      do teamSlugs  <- listTeams org
         orgMembers <- listOrgMembers org
@@ -216,22 +218,24 @@ export
 covering
 loadConfig : HasIO io => 
              (terminalColors : Bool)
+          -> (editor : Maybe String)
           -> io (Either ConfigError Config)
-loadConfig terminalColors = let (>>=) = (>>=) @{Monad.Compose} in
+loadConfig terminalColors editor = let (>>=) = (>>=) @{Monad.Compose} in
   do location   <- mapFst File . maybeToEither FileNotFound <$>
                      findConfig "." (limit 10)
      configFile <- mapFst File <$> 
                      readFile location
-     pure . mapFst Parse $ parseConfig (MkEphem location terminalColors) configFile
+     pure . mapFst Parse $ parseConfig (MkEphem location terminalColors editor) configFile
 
 export
 covering
 loadOrCreateConfig : Git => Octokit => 
                      (terminalColors : Bool)
+                  -> (editor : Maybe String)
                   -> Promise Config
-loadOrCreateConfig terminalColors = 
-  do Right config <- loadConfig terminalColors
-       | Left (File FileNotFound) => createConfig terminalColors
+loadOrCreateConfig terminalColors editor = 
+  do Right config <- loadConfig terminalColors editor
+       | Left (File FileNotFound) => createConfig terminalColors editor
        | Left err => reject "Error loading \{Config.filename}: \{show err}."
      pure config
 
