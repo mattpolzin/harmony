@@ -19,7 +19,7 @@ import FFI.GitHub
 import Language.JSON
 import Language.JSON.Accessors
 import Reviewer
-import System
+import System.Node
 import System.File
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
