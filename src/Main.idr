@@ -1,5 +1,6 @@
 module Main
 
+import AppVersion
 import BashCompletion
 import Config as Cfg
 import Data.Config
@@ -213,6 +214,9 @@ main =
      -- short circuit for help
      when (args == ["help"] || args == ["--help"]) $ do
        putStrLn $ help terminalColors
+       exitSuccess
+     when (args == ["version"] || args == ["--version"]) $ do
+       printVersion
        exitSuccess
      -- otherwise get a GitHub Personal Access Token and continue.
      Just pat <- getEnv "GITHUB_PAT"

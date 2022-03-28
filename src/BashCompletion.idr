@@ -19,6 +19,7 @@ allRootCmds = [
   , "pr"
   , "reflect"
   , "sync"
+  , "version"
   ]
 
 ||| Attempt to handle completions for root commands but
@@ -39,6 +40,7 @@ cmdOpts _ "sync"       = Just []
 cmdOpts _ "help"       = Just []
 cmdOpts _ "--help"     = Just []
 cmdOpts _ "reflect"    = Just []
+cmdOpts _ "version"    = Just []
 
 -- anything else requires configuration being loaded
 cmdOpts _ _ = Nothing

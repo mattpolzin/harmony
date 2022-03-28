@@ -16,6 +16,8 @@ harmony \{subcommand "<subcommand>"}
 \{heading "Subcommands"}:
   \{subcommand "help"}
    - Print help
+  \{subcommand "version"}
+   - Print version
   \{subcommand "config"} {\{argument "<property>"}} [\{argument "value"}]
    - Get or set the value of a configuration property. Not all properties
      can be set and read via this subcommand.
