@@ -42,10 +42,14 @@ bashCompletion : HasIO io =>
               -> (prevWord : String) 
               -> io ()
 bashCompletion curWord prevWord = 
-  do Right config <- loadConfig False
-       | Left _ => pure ()
-     let completions = BashCompletion.opts curWord prevWord
-     putStr $ unlines completions
+  let completions = maybe configuredOpts pure (cmdOpts curWord prevWord)
+  in  putStr $ unlines !completions
+  where
+    configuredOpts : io (List String)
+    configuredOpts =
+      do Right config <- loadConfig False
+           | Left _ => pure []
+         pure (BashCompletion.opts curWord prevWord)
 
 resolve'' : Promise () -> IO ()
 resolve'' = resolve' pure exitError
