@@ -1,6 +1,6 @@
 
 idris2 = idris2
-idris-adds-version = 0.2.0
+idris-adds-version = 0.3.0
 
 .PHONY: all build install package publish clean
 
