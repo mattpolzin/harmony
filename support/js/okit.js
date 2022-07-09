@@ -51,7 +51,8 @@ const digPr = pr => {
       author: pr.user.login,
       state: pr.state,
       created_at: pr.created_at,
-      reviewers: pr.requested_reviewers.map(u => u.login)
+      reviewers: pr.requested_reviewers.map(u => u.login),
+      head_ref: pr.head.ref
     }
   }
 const digPrs = prJson =>

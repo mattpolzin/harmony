@@ -29,7 +29,19 @@ prim__currentBranch : Ptr GitRef
 
 export
 currentBranch : Git => Promise String
-currentBranch @{(G ptr)} = promiseIO $ prim__currentBranch ptr
+currentBranch @{G ptr} = promiseIO $ prim__currentBranch ptr
+
+%foreign git_ffi "checkout_branch"
+prim__checkoutBranch : Ptr GitRef
+                    -> (branch : String)
+                    -> (onSuccess : String -> PrimIO ())
+                    -> (onFailure : String -> PrimIO ())
+                    -> PrimIO ()
+
+export
+checkoutBranch : Git => (branch : String) -> Promise ()
+checkoutBranch @{G ptr} branch = 
+  ignore . promiseIO $ prim__checkoutBranch ptr branch
 
 %foreign git_ffi "push_new_branch"
 prim__pushNewBranch : Ptr GitRef
@@ -41,7 +53,7 @@ prim__pushNewBranch : Ptr GitRef
 
 export
 pushNewBranch : Git => (remoteName : String) -> (branch : String) -> Promise ()
-pushNewBranch @{(G ptr)} remoteName branch =
+pushNewBranch @{G ptr} remoteName branch =
   ignore . promiseIO $ prim__pushNewBranch ptr remoteName branch
 
 %foreign git_ffi "remote_uri"
@@ -57,7 +69,7 @@ prim__remoteURI : Ptr GitRef
 |||   "https://github.com/org/reponame.git"
 export
 remoteURI : Git => (remoteName : String) -> Promise String
-remoteURI @{(G ptr)} remoteName = promiseIO $ prim__remoteURI ptr remoteName
+remoteURI @{G ptr} remoteName = promiseIO $ prim__remoteURI ptr remoteName
 
 %foreign git_ffi "remote_tracking_branch"
 prim__remoteTrackingBranch : Ptr GitRef
@@ -67,7 +79,7 @@ prim__remoteTrackingBranch : Ptr GitRef
 
 export
 remoteTrackingBranch : Git => Promise (Maybe String)
-remoteTrackingBranch @{(G ptr)} =
+remoteTrackingBranch @{G ptr} =
   do str <- promiseIO $ prim__remoteTrackingBranch ptr
      pure $
        case strM str of
