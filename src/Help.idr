@@ -18,15 +18,15 @@ harmony \{subcommand "<subcommand>"}
    - Print help
   \{subcommand "version"}
    - Print version
-  \{subcommand "config"} {\{argument "<property>"}} [\{argument "value"}]
+  \{subcommand "config"} {\{argument "<property>"}} [\{argument "<value>"}]
    - Get or set the value of a configuration property. Not all properties
      can be set and read via this subcommand.
-     \{argument "properties"}: \{join ", " settableProps}.
+     \{argument "properties"}: \{join ", " $ option <$> settableProps}.
   \{subcommand "sync"}
    - Synchronize local config with information from GitHub.
   \{subcommand "pr"}
    - Identify an existing PR or create a new one for the current branch.
-  \{subcommand "contribute"}
+  \{subcommand "contribute"} [\{argument "-c/--checkout"}] [\{argument "-<num>"}]
    - Contribute to an open PR. Prints a URL. Prioritizes PRs you are
      requested to review but will also return other PRs.
   \{subcommand "reflect"}
@@ -58,12 +58,15 @@ harmony \{subcommand "<subcommand>"}
   where
     maybeDecorate : (String -> Doc AnsiStyle) -> String -> String
     maybeDecorate f s = if decorated then renderString . layoutPretty defaultLayoutOptions $ f s else s
+
+    option : String -> String
+    option = maybeDecorate (annotate bold . pretty)
     
     subcommand : String -> String
     subcommand = maybeDecorate (annotate (color Magenta) . pretty) 
 
     argument : String -> String
-    argument = maybeDecorate (annotate (color Blue) . pretty)
+    argument = maybeDecorate (annotate (color Green) . pretty)
 
     heading : String -> String
     heading = maybeDecorate (annotate underline . pretty)
