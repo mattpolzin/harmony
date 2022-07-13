@@ -135,7 +135,7 @@ reviewsGraph closedReviews openReviews candidates =
     header : Doc AnsiStyle
     header = vsep [ emptyDoc
                   , pretty "Weighted review workload."
-                  , pretty "4x the numbewr of open review requests" <++> parens yellowDot
+                  , pretty "4x the number of open review requests" <++> parens yellowDot
                   , pretty "1x the number of closed PRs with unanswered review requests" <++> parens redDot
                   , parens $ redDot <++> pretty "overlayed on" <++> yellowDot
                   , emptyDoc
