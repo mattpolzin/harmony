@@ -97,21 +97,56 @@ graphTeam @{config} team =
     maybeDecorated : Doc AnsiStyle -> Doc AnsiStyle
     maybeDecorated = if config.colors then id else unAnnotate
 
-contribute : Config => Octokit =>
-             Nat
+data ContributeArg = Checkout | Skip Nat
+
+skipArg : ContributeArg -> Maybe Nat
+skipArg (Skip n) = Just n
+skipArg _ = Nothing
+
+contribute : Config => Git => Octokit =>
+             (args : List ContributeArg)
           -> Promise ()
-contribute @{config} skip =
+contribute @{config} args =
   do openPrs <- listPullRequests config.org config.repo (Just Open) 100
      myLogin <- login <$> getSelf
+     let skip = fromMaybe 0 (head' $ mapMaybe skipArg args)
+     let checkout = find (\case Checkout => True; _ => False) args
      let filtered = filter (not . isAuthor myLogin) openPrs
      let parted = partition (isRequestedReviewer myLogin) filtered
      let (mine, theirs) = (mapHom $ sortBy (compare `on` .createdAt)) parted
-     let url = map (.webURI) . head' . drop skip $ mine ++ theirs
-     printResult url
+     let pr = head' . drop skip $ mine ++ theirs
+     case pr of
+          Nothing => reject "No open PRs to review!"
+          Just pr => do
+            whenJust (checkout $> pr.headRef) $ \branch => do
+              checkoutBranch branch
+            putStrLn  pr.webURI
+
+(<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
+(<||>) f g x = f x <|> g x
+
+infix 2 <||>
+
+parseContributeArgs : List String -> Either String (List ContributeArg)
+parseContributeArgs [] = Right []
+parseContributeArgs (_ :: _ :: _ :: _) =
+  Left "contribute's arguments must be either -<num> to skip num PRs or --checkout (-c) to checkout the branch needing review."
+parseContributeArgs args =
+  case (traverse (parseSkipArg <||> parseCheckoutArg) args) of
+       Just args => Right args
+       Nothing   =>
+         Left "contribute's arguments must be either -<num> to skip num PRs or --checkout (-c) to checkout the branch needing review."
   where
-    printResult : Maybe String -> Promise ()
-    printResult Nothing    = reject "No open PRs to review!"
-    printResult (Just url) = putStrLn url
+    parseCheckoutArg : String -> Maybe ContributeArg
+    parseCheckoutArg "-c" = Just Checkout
+    parseCheckoutArg "--checkout" = Just Checkout
+    parseCheckoutArg _ = Nothing
+
+    parseSkipArg : String -> Maybe ContributeArg
+    parseSkipArg skipArg =
+      case unpack skipArg of
+           ('-' :: skip) => map (Skip . cast) . parsePositive $ pack skip
+           _             => Nothing
 
 handleConfiguredArgs : Config => Git => Octokit => 
                        List String 
@@ -152,15 +187,10 @@ handleConfiguredArgs ["config", prop] =
      putStrLn value
 handleConfiguredArgs ["config", prop, value] =
   ignore $ setConfig prop value
-handleConfiguredArgs ["contribute"] =
-  contribute 0
-handleConfiguredArgs ["contribute", skipArg] =
-  case unpack skipArg of
-       ('-' :: skip) => do 
-         let (Just num) : Maybe Nat = map cast . parsePositive $ pack skip
-           | Nothing => exitError "contribute's argument must be -<num> where <num> is an integer."
-         contribute num
-       _             => exitError "contribute's argument must be -<num> where <num> is an integer."
+handleConfiguredArgs ("contribute" :: args) =
+  case (parseContributeArgs args) of
+       Right args => contribute args
+       Left err   => exitError err
 handleConfiguredArgs ["list"] =
   reject "The list command expects the name of a GitHub Team as an argument."
 handleConfiguredArgs @{config} ["list", teamName] =

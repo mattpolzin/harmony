@@ -35,12 +35,19 @@ cmdOpts partialCmd "harmony" = Just $ filter (isPrefixOf partialCmd) allRootCmds
 
 -- then the subcommands that take no arguments;
 cmdOpts _ "pr"         = Just []
-cmdOpts _ "contribute" = Just []
 cmdOpts _ "sync"       = Just []
 cmdOpts _ "help"       = Just []
 cmdOpts _ "--help"     = Just []
 cmdOpts _ "reflect"    = Just []
 cmdOpts _ "version"    = Just []
+
+-- next subcommands that have options with no configuration requirement:
+cmdOpts "-" "contribute"  = Just ["--checkout", "-c"]
+cmdOpts "--" "contribute" = Just ["--checkout", "-c"]
+cmdOpts partialArg "contribute" =
+  if partialArg `isPrefixOf` "--checkout"
+     then Just ["--checkout"]
+     else Just []
 
 -- anything else requires configuration being loaded
 cmdOpts _ _ = Nothing
@@ -83,8 +90,8 @@ script : String
 script = """
 _harmony()
 {
-  ED=$([ -z $2 ] && echo "--" || echo $2)
-  COMPREPLY=($(harmony --bash-completion $ED $3))
+  ED=$([ -z $2 ] && echo "--" || echo "$2")
+  COMPREPLY=($(harmony --bash-completion "$ED" "$3"))
 }
 
 complete -F _harmony harmony

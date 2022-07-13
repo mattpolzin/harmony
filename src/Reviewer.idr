@@ -60,11 +60,11 @@ scoredReviewers closedReviews openReviews candidates =
       -- If `filterToSecondList` then no elements in the first list 
       -- but not the second list will be kept.
       zipReviews : List (Score login) -> List (Score login) -> Op -> (filterToSecondList : Bool) -> List (Score login)
-      zipReviews [] [] _ _     = []
-      zipReviews [] ys Add _   = ys
+      zipReviews [] [] _ _        = []
+      zipReviews [] ys Add _      = ys
       zipReviews [] ys Subtract _ = { combinedScore := 0 } <$> ys
-      zipReviews xs [] _ True  = []
-      zipReviews xs [] _ False = xs
+      zipReviews xs [] _ True     = []
+      zipReviews xs [] _ False    = xs
       zipReviews (x@(MkScore l1 s1 c1) :: xs) ys op filter =
         case (deleteBy' ((==) `on` user) x ys, filter) of
              ((Nothing      , ys'), False)      => (MkScore l1 s1 c1             ) :: zipReviews xs ys' op filter

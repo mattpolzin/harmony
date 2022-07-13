@@ -203,8 +203,8 @@ identifyOrCreatePR @{config} branch =
       0 <- system "\{editor} pr_description.tmp.md"
         | e => pure (Left $ GenericFileError e)
       description <- assert_total $ readFile "pr_description.tmp.md" 
-      --                ^ ignore the possibility that an infinte file was produced.
-      when !(exists ".github/PULL_REQUEST_TEMPLATE.md") $
+      --              ^ ignore the possibility that an infinte file was produced.
+      when !(exists "pr_description.tmp.md") $
         Node.removeFile "pr_description.tmp.md"
       pure description
 

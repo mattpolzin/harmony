@@ -16,6 +16,13 @@ const git_current_branch = (git, onSuccess, onFailure) =>
     onFailure
   )
 
+const git_checkout_branch = (git, branch, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('checkout', `${branch}`),
+    r => onSuccess(''),
+    onFailure()
+  )
+
 // push the current branch, setting its upstream
 // Executes callback with empty string on success.
 const git_push_new_branch = (git, remoteName, branch, onSuccess, onFailure) =>

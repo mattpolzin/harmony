@@ -100,7 +100,11 @@ harmony assign web +carl001 +emmaham
 ```
 
 ### Contribute
-Running `harmony contribute` will print the URI of the oldest PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that you are not assigned to. You can skip PRs and retrieve the next-oldest one by passing a dash followed by the number to skip (e.g. `-2` to skip the two oldest waiting PRs).
+Running `harmony contribute` will print the URI of the oldest PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that you are not assigned to.
+
+You can skip PRs and retrieve the next-oldest one by passing a dash followed by the number to skip (e.g. `-2` to skip the two oldest waiting PRs).
+
+You can simultaneously get the URI for a PR to review and checkout the branch needing review by passing the `--checkout` or `-c` option to the `contribute` command.
 
 Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony contribute)` to open a web browser to the PR that Harmony is suggesting.
 
@@ -113,6 +117,11 @@ harmony contribute
 Retrieve a URI for a PR to contribute a review, skipping over the first 3 suggestions:
 ```shell
 harmony contribute -3
+```
+
+Retrieve a URI for a PR to contribute a review and check the git branch out as well:
+```shell
+harmony contribute --checkout
 ```
 
 ### Reflect
