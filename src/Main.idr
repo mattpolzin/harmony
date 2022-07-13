@@ -148,6 +148,14 @@ parseContributeArgs args =
            ('-' :: skip) => map (Skip . cast) . parsePositive $ pack skip
            _             => Nothing
 
+printCurrentBranchURI : Config => Git => Promise ()
+printCurrentBranchURI @{config} = do
+  branch <- currentBranch
+  let org = config.org
+  let repo = config.repo
+  let uri = "https://github.com/\{org}/\{repo}/tree/\{branch}"
+  putStrLn uri
+
 handleConfiguredArgs : Config => Git => Octokit => 
                        List String 
                     -> Promise ()
@@ -176,6 +184,8 @@ handleConfiguredArgs @{config} ["user", "--json", username] =
 -- user-facing commands:
 handleConfiguredArgs ["sync"] =
   ignore $ syncConfig True
+handleConfiguredArgs ["branch"] =
+  printCurrentBranchURI
 handleConfiguredArgs ["pr"] =
   do (Identified, pr) <- identifyOrCreatePR !currentBranch
        | _ => pure ()

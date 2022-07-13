@@ -69,7 +69,12 @@ diff-repo
 Creating config...
 ```
 
-Once configured, Harmony supports the following commands: `pr`, `assign`, `contribute`, `reflect`, `list`, `graph`, `config`, and `sync`.
+Once configured, Harmony supports the following commands: `branch`, `pr`, `assign`, `contribute`, `reflect`, `list`, `graph`, `config`, and `sync`.
+
+### Branch
+Running `harmony branch` will print the URI for accessing the currently checked out branch on GitHub.
+
+Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony branch)` to open a web browser to the current branch on GitHub.
 
 ### PR
 Running `harmony pr` with a branch checked out will reach out to GitHub to determine if there is an open PR for that branch. If there is a PR, Harmony will print a URI that can be used to view the PR. IF there is not a PR, Harmony will help you create one.
