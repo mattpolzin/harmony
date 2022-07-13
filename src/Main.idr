@@ -182,6 +182,8 @@ handleConfiguredArgs @{config} ["user", "--json", username] =
   print $ json !(getUser username)
 
 -- user-facing commands:
+handleConfiguredArgs ["whoami"] =
+  printInfoOnSelf
 handleConfiguredArgs ["sync"] =
   ignore $ syncConfig True
 handleConfiguredArgs ["branch"] =

@@ -36,10 +36,18 @@ const okit_get_repo_default_branch = (octokit, org, repo, onSuccess, onFailure) 
 const digTeams = teamsJson =>
   teamsJson.map(t => t.slug)
 
-// Executes callback with [String]
+// Executes callback with [String] (string array)
 const okit_list_teams = (octokit, org, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.teams.list({ org, per_page: 100 }),
+    r => onSuccess(newline_delimited(digTeams(r.data))),
+    idris__okit_stringify_error(onFailure)
+  )
+
+// Executes callback with [String] (string array)
+const okit_list_my_teams = (octokit, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.teams.listForAuthenticatedUser({per_page: 100}),
     r => onSuccess(newline_delimited(digTeams(r.data))),
     idris__okit_stringify_error(onFailure)
   )

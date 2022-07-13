@@ -86,3 +86,13 @@ remoteTrackingBranch @{G ptr} =
             StrNil         => Nothing
             (StrCons x xs) => Just str
 
+%foreign git_ffi "user_email"
+prim__userEmail : Ptr GitRef
+               -> (onSuccess : String -> PrimIO ())
+               -> (onFailure : String -> PrimIO ())
+               -> PrimIO ()
+
+export
+userEmail : Git => Promise String
+userEmail @{G ptr} = promiseIO $ prim__userEmail ptr
+

@@ -53,3 +53,10 @@ const git_remote_tracking_branch = (git, onSuccess, onFailure) =>
     onFailure
   )
 
+const git_user_email = (git, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('config', '--get', 'user.email'),
+    r => onSuccess(r.trim()),
+    onFailure
+  )
+

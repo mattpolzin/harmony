@@ -69,7 +69,7 @@ diff-repo
 Creating config...
 ```
 
-Once configured, Harmony supports the following commands: `branch`, `pr`, `assign`, `contribute`, `reflect`, `list`, `graph`, `config`, and `sync`.
+Once configured, Harmony supports the following commands: `branch`, `pr`, `assign`, `contribute`, `whoami`, `reflect`, `list`, `graph`, `config`, and `sync`.
 
 ### Branch
 Running `harmony branch` will print the URI for accessing the currently checked out branch on GitHub.
@@ -128,6 +128,9 @@ Retrieve a URI for a PR to contribute a review and check the git branch out as w
 ```shell
 harmony contribute --checkout
 ```
+
+### Who Am I
+Running `harmony whoami` will print information about the currently configured and authenticated user.
 
 ### Reflect
 Running `harmony reflect` will show a summary of your review requests and authored pull requests.
