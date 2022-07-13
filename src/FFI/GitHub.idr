@@ -43,7 +43,7 @@ getRepoDefaultBranch : Octokit =>
                        (org : String)
                     -> (repo : String)
                     -> Promise String
-getRepoDefaultBranch @{(Kit ptr)} org repo = promiseIO $ prim__getRepoDefaultBranch ptr org repo
+getRepoDefaultBranch @{Kit ptr} org repo = promiseIO $ prim__getRepoDefaultBranch ptr org repo
 
 %foreign okit_ffi "list_teams"
 prim__listTeams : Ptr OctokitRef
@@ -54,8 +54,19 @@ prim__listTeams : Ptr OctokitRef
 
 export
 listTeams : Octokit => (org : String) -> Promise (List String)
-listTeams @{(Kit ptr)} org = 
+listTeams @{Kit ptr} org = 
   lines <$> (promiseIO $ prim__listTeams ptr org)
+
+%foreign okit_ffi "list_my_teams"
+prim__listMyTeams : Ptr OctokitRef
+                 -> (onSuccess : String -> PrimIO ())
+                 -> (onFailure : String -> PrimIO ())
+                 -> PrimIO ()
+
+export
+listMyTeams : Octokit => Promise (List String)
+listMyTeams @{Kit ptr} =
+  lines <$> (promiseIO $ prim__listMyTeams ptr)
 
 %foreign okit_ffi "list_prs"
 prim__listPRsForBranch : Ptr OctokitRef 
@@ -72,7 +83,7 @@ listPRsForBranch : Octokit =>
                 -> (repo : String) 
                 -> (branch : String) 
                 -> Promise (List PullRequest)
-listPRsForBranch @{(Kit ptr)} owner repo branch = 
+listPRsForBranch @{Kit ptr} owner repo branch = 
   either . parsePullRequestsString =<< (promiseIO $ prim__listPRsForBranch ptr owner repo branch)
 
 %foreign okit_ffi "create_pr"
@@ -96,7 +107,7 @@ createPR : Octokit =>
         -> (title : String) 
         -> (description : String) 
         -> Promise PullRequest
-createPR @{(Kit ptr)} owner repo head base title description =
+createPR @{Kit ptr} owner repo head base title description =
   either . parsePullRequestString =<< (promiseIO $ prim__createPR ptr owner repo head base title description)
 
 %foreign okit_ffi "create_comment"
@@ -116,7 +127,7 @@ createComment : Octokit =>
              -> (issueOrPrNumber : Integer) 
              -> (message : String) 
              -> Promise ()
-createComment @{(Kit ptr)} owner repo issueOrPrNumber message =
+createComment @{Kit ptr} owner repo issueOrPrNumber message =
   ignore . promiseIO $ prim__createComment ptr owner repo issueOrPrNumber message
 
 pullRequestStateFilter : Maybe PRState -> String
@@ -141,7 +152,7 @@ listPullReviewers : Octokit =>
                  -> (stateFilter : Maybe PRState) 
                  -> (pageLimit : Fin 101) 
                  -> Promise (List String)
-listPullReviewers @{(Kit ptr)} owner repo stateFilter pageLimit = 
+listPullReviewers @{Kit ptr} owner repo stateFilter pageLimit = 
   lines <$> (promiseIO $ prim__listPullReviewers ptr owner repo (pullRequestStateFilter stateFilter) (cast $ finToNat pageLimit))
 
 %foreign okit_ffi "list_pull_requests"
@@ -163,7 +174,7 @@ listPullRequestsJsonStr : Octokit =>
                        -> (pageLimit : Fin 101) 
                        -> {default 0 page : Nat}
                        -> Promise String
-listPullRequestsJsonStr @{(Kit ptr)} owner repo stateFilter pageLimit {page} = 
+listPullRequestsJsonStr @{Kit ptr} owner repo stateFilter pageLimit {page} = 
   let filter  = pullRequestStateFilter stateFilter
       pgLimit = cast $ finToNat pageLimit
       pg      = cast (S page)
@@ -184,7 +195,7 @@ listPullRequests : Octokit =>
                 -> (pageLimit : Fin 101) 
                 -> {default 0 page : Nat}
                 -> Promise (List PullRequest)
-listPullRequests @{(Kit ptr)} owner repo stateFilter pageLimit {page} = 
+listPullRequests @{Kit ptr} owner repo stateFilter pageLimit {page} = 
   either . parsePullRequestsString =<< listPullRequestsJsonStr owner repo stateFilter pageLimit {page}
 
 -- reviewers and teamReviewers should be comma separated values encoded in a string.
@@ -211,7 +222,7 @@ addPullReviewers : Octokit =>
                 -> (reviewers : List String) 
                 -> (teamReviewers : List String) 
                 -> Promise (List String)
-addPullReviewers @{(Kit ptr)} owner repo pullNumber reviewers teamReviewers = 
+addPullReviewers @{Kit ptr} owner repo pullNumber reviewers teamReviewers = 
   lines <$> (promiseIO $ prim__addPullReviewers ptr owner repo pullNumber (join "," reviewers) (join "," teamReviewers))
 
 %foreign okit_ffi "list_pr_reviews"
@@ -229,7 +240,7 @@ listPullReviewsJsonStr : Octokit =>
                       -> (repo : String) 
                       -> (pullNumber : Integer) 
                       -> Promise String
-listPullReviewsJsonStr @{(Kit ptr)} owner repo pullNumber =
+listPullReviewsJsonStr @{Kit ptr} owner repo pullNumber =
   promiseIO $ prim__listPullReviews ptr owner repo pullNumber
 
 export
@@ -254,7 +265,7 @@ listTeamMembers : Octokit =>
                   (org : String) 
                -> (teamSlug : String) 
                -> Promise (List String)
-listTeamMembers @{(Kit ptr)} org teamSlug = 
+listTeamMembers @{Kit ptr} org teamSlug = 
   lines <$> (promiseIO $ prim__listTeamMembers ptr org teamSlug)
 
 %foreign okit_ffi "list_org_members"
@@ -266,7 +277,7 @@ prim__listOrgMembers : Ptr OctokitRef
 
 export
 listOrgMembers : Octokit => (org : String) -> Promise (List String)
-listOrgMembers @{(Kit ptr)} org =
+listOrgMembers @{Kit ptr} org =
   lines <$> (promiseIO $ prim__listOrgMembers ptr org)
 
 %foreign okit_ffi "get_user"
@@ -278,7 +289,7 @@ prim__getUser : Ptr OctokitRef
 
 export
 getUser : Octokit => (username : String) -> Promise User
-getUser @{(Kit ptr)} = either . parseUserString <=< promiseIO . prim__getUser ptr
+getUser @{Kit ptr} = either . parseUserString <=< promiseIO . prim__getUser ptr
 
 %foreign okit_ffi "get_self"
 prim__getSelf : Ptr OctokitRef 
@@ -288,5 +299,5 @@ prim__getSelf : Ptr OctokitRef
 
 export
 getSelf : Octokit => Promise User
-getSelf @{(Kit ptr)} = either . parseUserString =<< promiseIO (prim__getSelf ptr)
+getSelf @{Kit ptr} = either . parseUserString =<< promiseIO (prim__getSelf ptr)
 

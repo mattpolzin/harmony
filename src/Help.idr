@@ -31,6 +31,8 @@ harmony \{subcommand "<subcommand>"}
   \{subcommand "contribute"} [\{argument "-c/--checkout"}] [\{argument "-<num>"}]
    - Contribute to an open PR. Prints a URL. Prioritizes PRs you are
      requested to review but will also return other PRs.
+  \{subcommand "whoami"}
+   - Print information about the configured and authenticated user.
   \{subcommand "reflect"}
    - Reflect on the current state of ones own PRs and review requests.
   \{subcommand "list"} {\{argument "<team-slug>"}}

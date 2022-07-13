@@ -21,6 +21,7 @@ allRootCmds = [
   , "reflect"
   , "sync"
   , "version"
+  , "whoami"
   ]
 
 ||| Attempt to handle completions for root commands but

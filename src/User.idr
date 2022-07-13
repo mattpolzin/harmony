@@ -9,6 +9,7 @@ import Data.Review
 import Data.String
 import Data.User
 import FFI.GitHub
+import FFI.Git
 import PullRequest
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -109,28 +110,48 @@ namespace Reflect
   export
   reflectOnSelf : Config => Octokit =>
                   Promise ()
-  reflectOnSelf =
-    do prs     <- listPartitionedPRs prCount {pageBreaks=4}
-       myLogin <- login <$> getSelf
-       reviews <- reviewsForUser myLogin (take (cast reviewDetailsCount) . reverse . sortBy (compare `on` createdAt) $ combined prs)
-       let mostRecentReview = map submittedAt . head' $ sortBy (compare `on` submittedAt) reviews
-       let history = tuple prs
-       let (openAuthored, closedAuthored) = 
-         mapHom (filter ((== myLogin) . author)) history
-       let (openRequested, closedRequested) =
-         mapHom (filter (any (== myLogin) . reviewers)) history
-       let (earliestOpenAuth, earliestOpenReq) =
-         mapHom (head' . sort . map createdAt) (openAuthored, openRequested)
-       -- TODO: get Terminal width from somewhere to set the page width
-       --       to the min of the Terminal width or the intro length.
-       putStrLn . renderString $
-         print (length intro)
-               (length reviews)
-               (length openRequested)
-               (length closedRequested)
-               (length closedAuthored)
-               (length openAuthored)
-               mostRecentReview
-               earliestOpenAuth
-               earliestOpenReq
+  reflectOnSelf = do
+    prs     <- listPartitionedPRs prCount {pageBreaks=4}
+    myLogin <- login <$> getSelf
+    reviews <- reviewsForUser myLogin (take (cast reviewDetailsCount) . reverse . sortBy (compare `on` createdAt) $ combined prs)
+    let mostRecentReview = map submittedAt . head' $ sortBy (compare `on` submittedAt) reviews
+    let history = tuple prs
+    let (openAuthored, closedAuthored) = 
+      mapHom (filter ((== myLogin) . author)) history
+    let (openRequested, closedRequested) =
+      mapHom (filter (any (== myLogin) . reviewers)) history
+    let (earliestOpenAuth, earliestOpenReq) =
+      mapHom (head' . sort . map createdAt) (openAuthored, openRequested)
+    -- TODO: get Terminal width from somewhere to set the page width
+    --       to the min of the Terminal width or the intro length.
+    putStrLn . renderString $
+      print (length intro)
+            (length reviews)
+            (length openRequested)
+            (length closedRequested)
+            (length closedAuthored)
+            (length openAuthored)
+            mostRecentReview
+            earliestOpenAuth
+            earliestOpenReq
+
+namespace Me
+  export
+  printInfoOnSelf : Config => Octokit => Git =>
+                    Promise ()
+  printInfoOnSelf = do
+    gitEmail <- handleUnsetEmail <$> userEmail
+    githubUser <- getSelf
+    githubTeams <- sort <$> listMyTeams
+    putStrLn "Git Email: \{gitEmail}"
+    putStrLn ""
+    putStrLn "GitHub Name: \{githubUser.name}"
+    putStrLn "GitHub Login: \{githubUser.login}"
+    putStrLn ""
+    putStrLn "GitHub Teams:"
+    traverse_ putStrLn githubTeams
+      where
+        handleUnsetEmail : String -> String
+        handleUnsetEmail "" = "Not set"
+        handleUnsetEmail e = e
 
