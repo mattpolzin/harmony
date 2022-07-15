@@ -165,7 +165,9 @@ namespace Me
       green = annotate (color Green) . pretty
 
       email : Doc AnsiStyle
-      email = "Git Email:" <++> case gitEmail of Just e => green e; Nothing => it "Not set"
+      email = "Git Email:" <++> case gitEmail of
+                                     Just e => green e
+                                     Nothing => it "Not set"
 
       fullName : Doc AnsiStyle
       fullName = "GitHub Name:" <++> green githubUser.name
