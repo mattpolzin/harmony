@@ -78,7 +78,7 @@ listTeam @{config} team =
   do teamMemberLogins <- sort <$> listTeamMembers config.org team
      teamMembersJson <- promiseAll =<< traverse forkedUser teamMemberLogins
      teamMembers <- traverse (either . parseUser) teamMembersJson
-     liftIO . putDoc . vsep $ putNameLn <$> teamMembers
+     renderIO . vsep $ putNameLn <$> teamMembers
   where
     forkedUser : (login : String) -> Promise Future
     forkedUser = fork . ("user --json " ++)
@@ -93,7 +93,7 @@ graphTeam : Config => Octokit =>
 graphTeam @{config} team =
   do teamMemberLogins <- listTeamMembers config.org team
      (openReviewers, closedReviewers) <- listReviewers 100 {pageBreaks=4}
-     liftIO . renderIO $ reviewsGraph closedReviewers openReviewers teamMemberLogins
+     renderIO $ reviewsGraph closedReviewers openReviewers teamMemberLogins
 
 data ContributeArg = Checkout | Skip Nat
 

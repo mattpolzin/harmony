@@ -127,7 +127,7 @@ namespace Reflect
       mapHom (head' . sort . map createdAt) (openAuthored, openRequested)
     -- TODO: get Terminal width from somewhere to set the page width
     --       to the min of the Terminal width or the intro length.
-    putStrLn . renderString $
+    renderIO $
       print (length intro)
             (length reviews)
             (length openRequested)
@@ -187,7 +187,7 @@ namespace Me
     gitEmail <- handleUnsetEmail <$> userEmail
     githubUser <- getSelf
     githubTeams <- sort <$> listMyTeams
-    liftIO . renderIO $ print gitEmail githubUser githubTeams
+    renderIO $ print gitEmail githubUser githubTeams
       where
         handleUnsetEmail : String -> Maybe String
         handleUnsetEmail "" = Nothing

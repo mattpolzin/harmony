@@ -17,9 +17,9 @@ renderString @{config} =
 
 ||| Render with or without color based on configuration
 export
-renderIO : Config => Doc AnsiStyle -> IO ()
+renderIO : Config => HasIO io => Doc AnsiStyle -> io ()
 renderIO @{config} =
-  putDoc . if config.colors then id else unAnnotate
+  liftIO . putDoc . if config.colors then id else unAnnotate
 
 ||| Get lines from stdin until either the Fuel runs out or
 ||| two empty lines are encountered.
