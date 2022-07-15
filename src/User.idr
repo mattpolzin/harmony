@@ -107,6 +107,9 @@ namespace Reflect
               , emptyDoc
               ]
 
+  ||| Print information about the currently authenticated user's recent Pull Request
+  ||| history. What review requests they have addressed or not, how many PRs they 
+  ||| have waiting for review, how many have been closed recently, etc.
   export
   reflectOnSelf : Config => Octokit =>
                   Promise ()
@@ -136,6 +139,8 @@ namespace Reflect
             earliestOpenReq
 
 namespace Me
+  ||| Print information about the currently authenticated and configured user.
+  ||| This includes information that can be retrieved from Git as well as GitHub.
   export
   printInfoOnSelf : Config => Octokit => Git =>
                     Promise ()

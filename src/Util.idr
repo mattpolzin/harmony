@@ -21,6 +21,8 @@ renderIO : Config => Doc AnsiStyle -> IO ()
 renderIO @{config} =
   putDoc . if config.colors then id else unAnnotate
 
+||| Get lines from stdin until either the Fuel runs out or
+||| two empty lines are encountered.
 export
 getManyLines : HasIO io => Fuel -> io (List String)
 getManyLines = getMoreLines []
@@ -34,6 +36,10 @@ getManyLines = getMoreLines []
               ("" :: rest, "") => pure (reverse rest)
               _                => getMoreLines (line :: acc) fuel
 
+||| If possible, extract a Jira ticket reference from the given string.
+|||
+||| For example, in "PRJ-123 do a thing" `parseJiraPrefix` will give you
+||| "PRJ-123"
 export
 parseJiraPrefix : String -> Maybe String
 parseJiraPrefix = map (pack . reverse) . guardSuccess . foldl go startOver . unpack
