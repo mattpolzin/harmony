@@ -24,6 +24,7 @@ import System.File
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import User
+import Util
 
 %default total
 
@@ -77,7 +78,7 @@ listTeam @{config} team =
   do teamMemberLogins <- sort <$> listTeamMembers config.org team
      teamMembersJson <- promiseAll =<< traverse forkedUser teamMemberLogins
      teamMembers <- traverse (either . parseUser) teamMembersJson
-     liftIO . putDoc . vsep $ putNameLn <$> teamMembers
+     renderIO . vsep $ putNameLn <$> teamMembers
   where
     forkedUser : (login : String) -> Promise Future
     forkedUser = fork . ("user --json " ++)
@@ -92,10 +93,7 @@ graphTeam : Config => Octokit =>
 graphTeam @{config} team =
   do teamMemberLogins <- listTeamMembers config.org team
      (openReviewers, closedReviewers) <- listReviewers 100 {pageBreaks=4}
-     liftIO . putDoc . maybeDecorated $ reviewsGraph closedReviewers openReviewers teamMemberLogins
-  where
-    maybeDecorated : Doc AnsiStyle -> Doc AnsiStyle
-    maybeDecorated = if config.colors then id else unAnnotate
+     renderIO $ reviewsGraph closedReviewers openReviewers teamMemberLogins
 
 data ContributeArg = Checkout | Skip Nat
 

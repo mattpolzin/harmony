@@ -144,22 +144,17 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
             whenJust chosenUser $ \cu =>
               createComment config.org config.repo pr.number (prComment cu)
      if null users
-       then putStrLn . maybeDecorate $ vsep [
+       then putStrLn . renderString $ vsep [
                        annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
                      , pretty "(perhaps the only option was the author of the pull request?)."
                      ]
-       else putStrLn . maybeDecorate $ vsep [
+       else putStrLn . renderString $ vsep [
                        pretty "Assigned \{userNotice chosenUser}\{teamNotice teams} to the open PR "
                      , pretty "for the current branch (\{pr.webURI})."
                      ]
   where
-    maybeDecorate : Doc AnsiStyle -> String
-    maybeDecorate doc =
-      let render = if config.colors then id else unAnnotate
-      in  renderString . layoutPretty defaultLayoutOptions $ render doc
-
     csv : List String -> String
-    csv = maybeDecorate . encloseSep emptyDoc emptyDoc (pretty ", ") . map (annotate (color Green) . pretty)
+    csv = renderString . encloseSep emptyDoc emptyDoc (pretty ", ") . map (annotate (color Green) . pretty)
 
     userNotice : (chosenReviewer : Maybe String) -> String
     userNotice Nothing       = case forcedReviewers of
