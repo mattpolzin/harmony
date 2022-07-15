@@ -139,6 +139,45 @@ namespace Reflect
             earliestOpenReq
 
 namespace Me
+  print : (gitEmail : Maybe String)
+       -> (githubUser : User)
+       -> (githubTeams : List String)
+       -> Doc AnsiStyle
+  print gitEmail githubUser githubTeams =
+    vsep [
+        emptyDoc
+      , email
+      , emptyDoc
+      , fullName
+      , login
+      , emptyDoc
+      , teams
+      , emptyDoc
+      ]
+    where
+      ul : String -> Doc AnsiStyle
+      ul = annotate underline . pretty
+
+      it : String -> Doc AnsiStyle
+      it = annotate italic . pretty
+
+      green : String -> Doc AnsiStyle
+      green = annotate (color Green) . pretty
+
+      email : Doc AnsiStyle
+      email = "Git Email:" <++> case gitEmail of Just e => green e; Nothing => it "Not set"
+
+      fullName : Doc AnsiStyle
+      fullName = "GitHub Name:" <++> green githubUser.name
+
+      login : Doc AnsiStyle
+      login = "GitHub Login:" <++> green githubUser.login
+
+      teams : Doc AnsiStyle
+      teams = vsep $
+                ul "GitHub Teams:" :: (map it githubTeams)
+
+
   ||| Print information about the currently authenticated and configured user.
   ||| This includes information that can be retrieved from Git as well as GitHub.
   export
@@ -148,15 +187,9 @@ namespace Me
     gitEmail <- handleUnsetEmail <$> userEmail
     githubUser <- getSelf
     githubTeams <- sort <$> listMyTeams
-    putStrLn "Git Email: \{gitEmail}"
-    putStrLn ""
-    putStrLn "GitHub Name: \{githubUser.name}"
-    putStrLn "GitHub Login: \{githubUser.login}"
-    putStrLn ""
-    putStrLn "GitHub Teams:"
-    traverse_ putStrLn githubTeams
+    liftIO . renderIO $ print gitEmail githubUser githubTeams
       where
-        handleUnsetEmail : String -> String
-        handleUnsetEmail "" = "Not set"
-        handleUnsetEmail e = e
+        handleUnsetEmail : String -> Maybe String
+        handleUnsetEmail "" = Nothing
+        handleUnsetEmail e = Just e
 
