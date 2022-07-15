@@ -15,6 +15,12 @@ renderString : Config => Doc AnsiStyle -> String
 renderString @{config} =
   renderString . layoutPretty defaultLayoutOptions . if config.colors then id else unAnnotate
 
+||| Render with or without color based on configuration
+export
+renderIO : Config => Doc AnsiStyle -> IO ()
+renderIO @{config} =
+  putDoc . if config.colors then id else unAnnotate
+
 export
 getManyLines : HasIO io => Fuel -> io (List String)
 getManyLines = getMoreLines []

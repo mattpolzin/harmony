@@ -24,6 +24,7 @@ import System.File
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import User
+import Util
 
 %default total
 
@@ -92,10 +93,7 @@ graphTeam : Config => Octokit =>
 graphTeam @{config} team =
   do teamMemberLogins <- listTeamMembers config.org team
      (openReviewers, closedReviewers) <- listReviewers 100 {pageBreaks=4}
-     liftIO . putDoc . maybeDecorated $ reviewsGraph closedReviewers openReviewers teamMemberLogins
-  where
-    maybeDecorated : Doc AnsiStyle -> Doc AnsiStyle
-    maybeDecorated = if config.colors then id else unAnnotate
+     liftIO . renderIO $ reviewsGraph closedReviewers openReviewers teamMemberLogins
 
 data ContributeArg = Checkout | Skip Nat
 
