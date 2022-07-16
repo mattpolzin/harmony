@@ -96,3 +96,13 @@ export
 userEmail : Git => Promise String
 userEmail @{G ptr} = promiseIO $ prim__userEmail ptr
 
+%foreign git_ffi "root_dir"
+prim__rootDir : Ptr GitRef
+             -> (onSuccess : String -> PrimIO ())
+             -> (onFailure : String -> PrimIO ())
+             -> PrimIO ()
+
+export
+rootDir : Git => Promise String
+rootDir @{G ptr} = promiseIO $ prim__rootDir ptr
+
