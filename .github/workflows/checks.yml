@@ -1,0 +1,22 @@
+
+name: Checks
+
+on:
+  pull_request:
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Check versions
+        run: ./version-check.sh
+
+  check-todos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Check todos
+        run: ./todo-check.sh

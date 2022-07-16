@@ -1,5 +1,5 @@
 package harmony
-version = 0.7.1
+version = 1.0.0
 authors = "Mathew Polzin"
 license = "MIT"
 -- brief =
