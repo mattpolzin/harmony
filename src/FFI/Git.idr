@@ -56,6 +56,16 @@ pushNewBranch : Git => (remoteName : String) -> (branch : String) -> Promise ()
 pushNewBranch @{G ptr} remoteName branch =
   ignore . promiseIO $ prim__pushNewBranch ptr remoteName branch
 
+%foreign git_ffi "list_remotes"
+prim__listRemotes : Ptr GitRef
+                 -> (onSuccess : String -> PrimIO ())
+                 -> (onFailure : String -> PrimIO ())
+                 -> PrimIO ()
+
+export
+listRemotes : Git => Promise (List String)
+listRemotes @{G ptr} = lines <$> (promiseIO $ prim__listRemotes ptr)
+
 %foreign git_ffi "remote_uri"
 prim__remoteURI : Ptr GitRef
                -> (remoteName : String)

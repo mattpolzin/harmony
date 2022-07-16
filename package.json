@@ -23,6 +23,6 @@
   "license": "MIT",
   "dependencies": {
     "octokit": "^1.4.0",
-    "simple-git": "^2.45.0"
+    "simple-git": "^3.10.0"
   }
 }

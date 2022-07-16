@@ -40,6 +40,13 @@ const git_remote_uri = (git, remoteName, onSuccess, onFailure) =>
     onFailure
   )
 
+const git_list_remotes = (git, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('remote'),
+    r => onSuccess(r.trim()),
+    onFailure
+  )
+
 // Get the remote branch that the current local branch is tracking.
 // Executes callback with branch name or empty string when no branch
 // is being tracked.
