@@ -29,6 +29,7 @@ harmony: build
 
 package: build
 	./version-check.sh
+	./todo-check.sh
 	# leave ./harmony in place
 	mkdir harmony-npm
 	cp harmony ./harmony-npm
