@@ -60,3 +60,10 @@ const git_user_email = (git, onSuccess, onFailure) =>
     onFailure
   )
 
+const git_root_dir = (git, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('git', 'rev-parse', '--show-toplevel'),
+    r => onSuccess(r.trim()),
+    onFailure
+  )
+
