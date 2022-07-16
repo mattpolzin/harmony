@@ -5,7 +5,7 @@ Harmony is a small tool that helps teams keep GitHub reviews running smoothly. I
 ## Dependencies
 ### Runtime
 Running Harmony only requires NodeJS 12+ (and a local installation of `git`).
-### Building
+### Build time
 Building the latest commits of Harmony requires a HEAD build of the Idris 2 compiler. Each release page also indicates the version of Idris 2 that particular release will build against.
 
 Alternatively, you can build Harmony with Docker (see [Docker Build](#docker-build)).
@@ -25,7 +25,7 @@ The normal installation assumes a HEAD build of Idris 2 is installed. For an alt
 Build Harmony from source with a call to `make`. Then install it globally with `make install`.
 
 #### Docker Build
-If you want to use Harmony without installing Idris 2 on your system, you can build Harmony within a Docker container and then install the resulting Javascript onto your system.
+If you want to build Harmony without installing Idris 2 on your system, you can build Harmony within a Docker container and then install the resulting Javascript onto your system.
 
 First, download the latest nightly Docker image:
 ```shell
