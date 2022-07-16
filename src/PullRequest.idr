@@ -211,9 +211,8 @@ identifyOrCreatePR @{config} branch = do
       createPR : Promise PullRequest
       createPR = do
         when (!remoteTrackingBranch == Nothing) $
-          do -- TODO: Don't assume origin. we can get that from git. store in config?
-             putStrLn "Creating a new remote branch..."
-             pushNewBranch "origin" branch
+          do putStrLn "Creating a new remote branch..."
+             pushNewBranch (fromMaybe "origin" config.defaultRemote) branch
         putStrLn "Creating a new PR for the current branch (\{branch})."
         putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
         baseBranchInput <- trim <$> getLine

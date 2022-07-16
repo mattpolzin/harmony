@@ -147,56 +147,56 @@ createConfig : Git => Octokit =>
                (terminalColors : Bool)
             -> (editor : Maybe String)
             -> Promise Config
-createConfig terminalColors editor =
-  do putStrLn "Creating a new configuration (storing in \{Config.filename})..."
-     putStrLn ""
-     remoteGuess <- preferOriginRemote <$> listRemotes
-     defaultOrgAndRepo <- (parseGitHubURI <$> remoteURI remoteGuess) <|> pure Nothing
+createConfig terminalColors editor = do
+  putStrLn "Creating a new configuration (storing in \{Config.filename})..."
+  putStrLn ""
+  remoteGuess <- preferOriginRemote <$> listRemotes
+  defaultOrgAndRepo <- (parseGitHubURI <$> remoteURI remoteGuess) <|> pure Nothing
 
-     let orgDefaultStr = defaultStr (.org) defaultOrgAndRepo
-     putStrLn "What GitHub org would you like to use harmony for\{orgDefaultStr}?"
-     org  <- orIfEmpty (org defaultOrgAndRepo) . trim <$> getLine
+  let orgDefaultStr = defaultStr (.org) defaultOrgAndRepo
+  putStrLn "What GitHub org would you like to use harmony for\{orgDefaultStr}?"
+  org  <- orIfEmpty (org defaultOrgAndRepo) . trim <$> getLine
 
-     let repoDefaultStr = defaultStr (.repo) defaultOrgAndRepo
-     putStrLn "What repository would you like to use harmony for\{repoDefaultStr}?"
-     repo <- orIfEmpty (repo defaultOrgAndRepo) . trim <$> getLine
+  let repoDefaultStr = defaultStr (.repo) defaultOrgAndRepo
+  putStrLn "What repository would you like to use harmony for\{repoDefaultStr}?"
+  repo <- orIfEmpty (repo defaultOrgAndRepo) . trim <$> getLine
 
-     let remoteDefaultStr = enterForDefaultStr remoteGuess
-     putStrLn "What GitHub remote repo would you like to use harmony for\{remoteDefaultStr}?"
-     defaultRemote <- Just . orIfEmpty (Just remoteGuess) . trim <$> getLine
-     
-     putStr "Would you like harmony to comment when it assigns reviewers? [Y/n] "
-     commentOnAssign <- yesUnlessNo . trim <$> getLine
+  let remoteDefaultStr = enterForDefaultStr remoteGuess
+  putStrLn "What GitHub remote repo would you like to use harmony for\{remoteDefaultStr}?"
+  defaultRemote <- Just . orIfEmpty (Just remoteGuess) . trim <$> getLine
+  
+  putStr "Would you like harmony to comment when it assigns reviewers? [Y/n] "
+  commentOnAssign <- yesUnlessNo . trim <$> getLine
 
-     putStr "Would you like harmony to assign teams in addition to individuals when it assigns reviewers? [Y/n] "
-     assignTeams <- yesUnlessNo . trim <$> getLine
+  putStr "Would you like harmony to assign teams in addition to individuals when it assigns reviewers? [Y/n] "
+  assignTeams <- yesUnlessNo . trim <$> getLine
 
-     putStrLn "Creating config..."
-     mainBranch <- getRepoDefaultBranch org repo
-     updatedAt  <- cast <$> time
-     let ephemeral = MkEphem {
-         filepath = "./\{Config.filename}"
-       , colors   = terminalColors
-       , editor
+  putStrLn "Creating config..."
+  mainBranch <- getRepoDefaultBranch org repo
+  updatedAt  <- cast <$> time
+  let ephemeral = MkEphem {
+      filepath = "./\{Config.filename}"
+    , colors   = terminalColors
+    , editor
+    }
+  do teamSlugs  <- listTeams org
+     orgMembers <- listOrgMembers org
+     let config = MkConfig {
+         updatedAt
+       , org
+       , repo
+       , defaultRemote
+       , mainBranch
+       , assignTeams
+       , commentOnAssign
+       , teamSlugs
+       , orgMembers
+       , ephemeral
        }
-     do teamSlugs  <- listTeams org
-        orgMembers <- listOrgMembers org
-        let config = MkConfig {
-            updatedAt
-          , org
-          , repo
-          , defaultRemote
-          , mainBranch
-          , assignTeams
-          , commentOnAssign
-          , teamSlugs
-          , orgMembers
-          , ephemeral
-          }
-        ignore $ writeConfig config
-        putStrLn "Your new configuration is:"
-        printLn config
-        pure config
+     ignore $ writeConfig config
+     putStrLn "Your new configuration is:"
+     printLn config
+     pure config
   where
     orIfEmpty : Maybe String -> String -> String
     orIfEmpty Nothing  x  = x
@@ -254,9 +254,9 @@ loadOrCreateConfig : Git => Octokit =>
                      (terminalColors : Bool)
                   -> (editor : Maybe String)
                   -> Promise Config
-loadOrCreateConfig terminalColors editor = 
-  do Right config <- loadConfig terminalColors editor
-       | Left (File FileNotFound) => createConfig terminalColors editor
-       | Left err => reject "Error loading \{Config.filename}: \{show err}."
-     pure config
+loadOrCreateConfig terminalColors editor = do
+  Right config <- loadConfig terminalColors editor
+    | Left (File FileNotFound) => createConfig terminalColors editor
+    | Left err => reject "Error loading \{Config.filename}: \{show err}."
+  pure config
 
