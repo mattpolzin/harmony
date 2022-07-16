@@ -29,21 +29,24 @@ public export
 record Config where
   constructor MkConfig
   ||| Timestamp when the config was last syncronized with GitHub.
-  updatedAt   : Timestamp
-  org         : String
-  repo        : String
+  updatedAt     : Timestamp
+  org           : String
+  repo          : String
+  ||| The remote name (e.g. "origin"). If unspecified, "origin" is assumed.
+  defaultRemote : Maybe String
+  -- TODO 2.0.0:         ^ remove optionality with version 2.0.0; until then, we will support this being absent to be non-breaking
   ||| The main branch. New PRs are based off of this branch.
-  mainBranch  : String
+  mainBranch    : String
   ||| True to assign teams as well as individual users to PRs.
-  assignTeams : Bool
+  assignTeams   : Bool
   ||| True to comment on PRs after assigning users.
   commentOnAssign : Bool
   ||| Local cache of GitHub teams within the configured org.
-  teamSlugs   : List String
+  teamSlugs     : List String
   ||| Local cache of GitHub members within the configured org.
-  orgMembers  : List String
+  orgMembers    : List String
   ||| Configuration properties that are not written to a file.
-  ephemeral   : Ephemeral -- not written out to file
+  ephemeral     : Ephemeral -- not written out to file
 
 %name Config config
 
@@ -52,6 +55,7 @@ settableProps : List String
 settableProps = [
     "assignTeams"
   , "commentOnAssign"
+  , "defaultRemote"
   ]
 
 export
@@ -72,23 +76,28 @@ Show Config where
       "      updatedAt: \{show config.updatedAt}"
     , "            org: \{show config.org}"
     , "           repo: \{show config.repo}"
+    , "  defaultRemote: \{defaultRemote}"
     , "     mainBranch: \{show config.mainBranch}"
     , "    assignTeams: \{show config.assignTeams}"
     , "commentOnAssign: \{show config.commentOnAssign}"
     , "      teamSlugs: \{show config.teamSlugs}"
     , "     orgMembers: \{show config.orgMembers}"
     ]
+      where
+        defaultRemote : String
+        defaultRemote = maybe "Not set (defaults to \"origin\")" show config.defaultRemote
 
 export
 json : Config -> JSON
-json (MkConfig updatedAt org repo mainBranch assignTeams commentOnAssign teamSlugs orgMembers _) = 
+json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams commentOnAssign teamSlugs orgMembers _) = 
   JObject [
-      ("mainBranch"     , JString mainBranch)
-    , ("assignTeams"    , JBoolean assignTeams)
+      ("assignTeams"    , JBoolean assignTeams)
     , ("commentOnAssign", JBoolean commentOnAssign)
     , ("org"            , JString org)
-    , ("orgMembers"     , JArray $ JString <$> sort orgMembers)
     , ("repo"           , JString repo)
+    , ("defaultRemote"  , maybe JNull JString defaultRemote)
+    , ("mainBranch"     , JString mainBranch)
+    , ("orgMembers"     , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"      , JArray $ JString <$> sort teamSlugs)
     , ("updatedAt"      , JNumber $ cast updatedAt)
     ]
@@ -117,9 +126,11 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                               , "teamSlugs"
                                               , "orgMembers"
                                               ] config
+                                          let maybeDefaultRemote = lookup "defaultRemote" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
+                                          dr <- maybe (Right Nothing) (optional string) maybeDefaultRemote
                                           mb <- string mainBranch
                                           at <- bool assignTeams
                                           ca <- bool commentOnAssign
@@ -129,6 +140,7 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                               updatedAt        = ua
                                             , org              = o
                                             , repo             = r
+                                            , defaultRemote    = dr
                                             , mainBranch       = mb
                                             , assignTeams      = at
                                             , teamSlugs        = ts
