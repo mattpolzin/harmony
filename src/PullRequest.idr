@@ -172,57 +172,63 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
     :musical_note: Harmoniously assigned @\{chosenUser} to review this PR.
     """
 
+||| Get a full path for the given directory or file relative to the
+||| root folder for the Git repository.
+relativeToRoot : Git => String -> Promise String
+relativeToRoot path = rootDir <&> (++ "/\{path}")
+
 export
 identifyOrCreatePR : Config => Git => Octokit => 
                      (branch : String) 
                   -> Promise (IdentifiedOrCreated, PullRequest)
-identifyOrCreatePR @{config} branch =
-  do [openPr] <- listPRsForBranch config.org config.repo branch
-       | [] => (Created,) <$> createPR
-       | _  => reject "Multiple PRs for the current brach. We only handle 1 PR per branch currently."
-     pure (Identified, openPr)
-  where
-    inlineDescription : HasIO io => io String
-    inlineDescription = do
-      putStrLn "What would you like the description to be (two blank lines to finish)?"
-      unlines <$> getManyLines (limit 100)
+identifyOrCreatePR @{config} branch = do
+  [openPr] <- listPRsForBranch config.org config.repo branch
+    | [] => (Created,) <$> createPR
+    | _  => reject "Multiple PRs for the current brach. Harmony only handles 1 PR per branch currently."
+  pure (Identified, openPr)
+    where
+      inlineDescription : HasIO io => io String
+      inlineDescription = do
+        putStrLn "What would you like the description to be (two blank lines to finish)?"
+        unlines <$> getManyLines (limit 100)
 
-    prepareDescriptionFile : HasIO io => io ()
-    prepareDescriptionFile = do
-      when !(exists ".github/PULL_REQUEST_TEMPLATE.md") $
-        ignore $ copyFile ".github/PULL_REQUEST_TEMPLATE.md" "pr_description.tmp.md"
+      prepareDescriptionFile : HasIO io => (templateFilePath : String) -> io ()
+      prepareDescriptionFile templateFilePath = do
+        when !(exists templateFilePath) $
+          ignore $ copyFile templateFilePath "pr_description.tmp.md"
 
-    editorDescription : HasIO io => (editor : String) -> io (Either FileError String)
-    editorDescription editor = do
-      prepareDescriptionFile
-      0 <- system "\{editor} pr_description.tmp.md"
-        | e => pure (Left $ GenericFileError e)
-      description <- assert_total $ readFile "pr_description.tmp.md" 
-      --              ^ ignore the possibility that an infinte file was produced.
-      when !(exists "pr_description.tmp.md") $
-        Node.removeFile "pr_description.tmp.md"
-      pure description
+      editorDescription : HasIO io => (editor : String) -> (templateFilePath : String) -> io (Either FileError String)
+      editorDescription editor templateFilePath = do
+        prepareDescriptionFile templateFilePath
+        0 <- system "\{editor} pr_description.tmp.md"
+          | e => pure (Left $ GenericFileError e)
+        description <- assert_total $ readFile "pr_description.tmp.md" 
+        --              ^ ignore the possibility that an infinte file was produced.
+        when !(exists "pr_description.tmp.md") $
+          Node.removeFile "pr_description.tmp.md"
+        pure description
 
-    createPR : Promise PullRequest
-    createPR = do
-      when (!remoteTrackingBranch == Nothing) $
-        do -- TODO: Don't assume origin. we can get that from git. store in config?
-           putStrLn "Creating a new remote branch..."
-           pushNewBranch "origin" branch
-      putStrLn "Creating a new PR for the current branch (\{branch})."
-      putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
-      baseBranchInput <- trim <$> getLine
-      let baseBranch = case strM baseBranchInput of
-                            (StrCons c cs) => c `strCons` cs
-                            StrNil         => config.mainBranch
-      putStrLn "What would you like the title to be?"
-      let titlePrefix = fromMaybe "" $ (++ " - ") <$> parseJiraPrefix branch
-      putStr titlePrefix
-      title <- (titlePrefix ++) . trim <$> getLine
-      description <- case config.editor of
-                          Nothing => inlineDescription
-                          Just ed => either (const "") id <$> editorDescription ed
-      putStrLn "Creating PR..."
-      putStrLn branch
-      GitHub.createPR config.org config.repo branch baseBranch title description
+      createPR : Promise PullRequest
+      createPR = do
+        when (!remoteTrackingBranch == Nothing) $
+          do -- TODO: Don't assume origin. we can get that from git. store in config?
+             putStrLn "Creating a new remote branch..."
+             pushNewBranch "origin" branch
+        putStrLn "Creating a new PR for the current branch (\{branch})."
+        putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
+        baseBranchInput <- trim <$> getLine
+        let baseBranch = case strM baseBranchInput of
+                              (StrCons c cs) => c `strCons` cs
+                              StrNil         => config.mainBranch
+        putStrLn "What would you like the title to be?"
+        let titlePrefix = fromMaybe "" $ (++ " - ") <$> parseJiraPrefix branch
+        putStr titlePrefix
+        title <- (titlePrefix ++) . trim <$> getLine
+        templateFilePath <- relativeToRoot ".github/PULL_REQUEST_TEMPLATE.md"
+        description <- case config.editor of
+                            Nothing => inlineDescription
+                            Just ed => either (const "") id <$> editorDescription ed templateFilePath
+        putStrLn "Creating PR..."
+        putStrLn branch
+        GitHub.createPR config.org config.repo branch baseBranch title description
 
