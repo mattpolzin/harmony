@@ -4,6 +4,8 @@ import Data.List
 
 %default total
 
+-- TODO: Remove this once Idris2 gains a version newer than 0.5.1. This has been added to the base library.
+
 %foreign "node:lambda:() => Math.random()"
 prim__rnd : PrimIO Double
 
