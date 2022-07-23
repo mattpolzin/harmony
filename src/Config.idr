@@ -160,7 +160,7 @@ createConfig envGithubPAT terminalColors editor = do
                    , "If you don't set in your config now, you can set later with `harmony config githubPAT abcdefg`."
                    , "The ENV var will always take precedence over the config property."
                    , ""
-                   , "What PAT would you like to set in the config file \{defaultPATString}?"
+                   , "What PAT would you like to set in the config file\{defaultPATString}?"
                    ]
   configPAT <- (\case "" => Nothing; s => Just s) . trim <$> getLine
 

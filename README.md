@@ -70,7 +70,7 @@ You can set this via the $GITHUB_PAT environment variable or a config property.
 If you don't set in your config now, you can set later with `harmony config githubPAT abcdefg`.
 The ENV var will always take precedence over the config property.
 
-What PAT would you like to set in the config file  (ENTER for default: unset)?
+What PAT would you like to set in the config file (ENTER for default: unset)?
 
 What GitHub org would you like to use harmony for (ENTER for default: myorg)?
 
