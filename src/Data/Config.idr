@@ -25,6 +25,21 @@ record Ephemeral where
   ||| If set, a preferred editor to use for writing PR desriptions.
   editor   : Maybe String
 
+export
+data Hidden a = Hide a
+
+export
+hide : a -> Hidden a
+hide = Hide
+
+export
+expose : Hidden a -> a
+expose (Hide x) = x
+
+export
+Show (Hidden a) where
+  show _ = "xxxxxxxx (hidden)"
+
 public export
 record Config where
   constructor MkConfig
@@ -45,6 +60,11 @@ record Config where
   teamSlugs     : List String
   ||| Local cache of GitHub members within the configured org.
   orgMembers    : List String
+  ||| A GitHub Personal Access Token. This value is only used if
+  ||| there is no $GITHUB_PAT environment variable set. One of
+  ||| either the environment variable or this config property
+  ||| must be set.
+  githubPAT     : Maybe (Hidden String)
   ||| Configuration properties that are not written to a file.
   ephemeral     : Ephemeral -- not written out to file
 
@@ -56,6 +76,7 @@ settableProps = [
     "assignTeams"
   , "commentOnAssign"
   , "defaultRemote"
+  , "githubPAT"
   ]
 
 export
@@ -82,14 +103,18 @@ Show Config where
     , "commentOnAssign: \{show config.commentOnAssign}"
     , "      teamSlugs: \{show config.teamSlugs}"
     , "     orgMembers: \{show config.orgMembers}"
+    , "      githubPAT: \{personalAccessToken}"
     ]
       where
         defaultRemote : String
         defaultRemote = maybe "Not set (defaults to \"origin\")" show config.defaultRemote
 
+        personalAccessToken : String
+        personalAccessToken = maybe "Not set (will use $GITHUB_PAT environment variable)" show config.githubPAT
+
 export
 json : Config -> JSON
-json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams commentOnAssign teamSlugs orgMembers _) = 
+json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams commentOnAssign teamSlugs orgMembers githubPAT _) = 
   JObject [
       ("assignTeams"    , JBoolean assignTeams)
     , ("commentOnAssign", JBoolean commentOnAssign)
@@ -99,6 +124,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams commentOn
     , ("mainBranch"     , JString mainBranch)
     , ("orgMembers"     , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"      , JArray $ JString <$> sort teamSlugs)
+    , ("githubPAT"      , maybe JNull (JString . expose) githubPAT)
     , ("updatedAt"      , JNumber $ cast updatedAt)
     ]
 
@@ -127,6 +153,7 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                               , "orgMembers"
                                               ] config
                                           let maybeDefaultRemote = lookup "defaultRemote" config
+                                          let maybeGithubPAT = lookup "githubPAT" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
@@ -136,6 +163,7 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                           ca <- bool commentOnAssign
                                           ts <- array string teamSlugs 
                                           om <- array string orgMembers
+                                          gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           pure $ MkConfig {
                                               updatedAt        = ua
                                             , org              = o
@@ -146,6 +174,7 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                             , teamSlugs        = ts
                                             , commentOnAssign  = ca
                                             , orgMembers       = om
+                                            , githubPAT        = (map Hide) gp
                                             , ephemeral        = ephemeral
                                             }
     parseConfigJson (JArray _) = Left "Expected config JSON to be an Object, not an array."

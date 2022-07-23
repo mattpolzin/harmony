@@ -11,7 +11,9 @@ Building the latest commits of Harmony requires a HEAD build of the Idris 2 comp
 Alternatively, you can build Harmony with Docker (see [Docker Build](#docker-build)).
 
 ## Installation
-For any installation, you need to add a GitHub [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token) to your environment as the `GITHUB_PAT` variable. It's easiest to `export` that variable from your shell resource file or profile.
+For any installation, you need to have a GitHub [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token).
+
+You can eiher add the PAT to your environment as the `GITHUB_PAT` variable (perhaps exporting it from your shell resource file or profile) or you can store your PAT in Harmony's config file. The first time you start Harmony, it will ask you to configure your PAT if you don't want to use the Environment variable. You only need one of (a) the ENV var and (b) the config property and the environment variable will take precedence if you have both set.
 
 ### NPM
 You can install Harmony via npm directly by running `npm install -g @mattpolzin/harmony`.
@@ -59,13 +61,25 @@ eval "$(harmony --bash-completion-script)"
 The first time you start Harmony in any particular folder, you will be asked to provide some information about the GitHub repository you are working with. This information is stored in a file named `harmony.json` in the current working directory.
 
 Note that the GitHub organization and repository are both slugs, not names. These are the values you find in a GitHub URL pointing to your repository. Harmony does not work with personal repositories because they do not have teams or members.
-```shell
-$ harmony 
+```
+$ harmony sync
 Creating a new configuration (storing in harmony.json)...
+
+Harmony uses a GitHub Personal Access Token (PAT) to communicate with GitHub.
+You can set this via the $GITHUB_PAT environment variable or a config property.
+If you don't set in your config now, you can set later with `harmony config githubPAT abcdefg`.
+The ENV var will always take precedence over the config property.
+
+What PAT would you like to set in the config file (ENTER for default: unset)?
+
 What GitHub org would you like to use harmony for (ENTER for default: myorg)?
 
 What repository would you like to use harmony for (ENTER for default: myrepo)?
-diff-repo
+
+What GitHub remote repo would you like to use harmony for (ENTER for default: origin)?
+
+Would you like harmony to comment when it assigns reviewers? [Y/n] 
+Would you like harmony to assign teams in addition to individuals when it assigns reviewers? [Y/n] 
 Creating config...
 ```
 
@@ -148,6 +162,8 @@ Not all configuration properties can be read/set with this command.
 #### Properties
 - `assignTeams` -- When picking a reviewer from a team, assign the team as a reviewer as well.
 - `commentOnAssign` -- When assigning a reviewer chosen by Harmony, comment on the pull request.
+- `defaultRemote` -- When pushing new branches, what remote destination should be used.
+- `githubPAT` -- If the `$GITHUB_PAT` environment variable is not set, this Personal Access Token is used to authenticate with GitHub.
 
 ### Sync
 Running `harmony sync` will sync the locally configured team slugs and user logins that are used by auto-completion for Harmony. This sync is also performed automatically the first time you run Harmony after more than a day without the configuration being synced.

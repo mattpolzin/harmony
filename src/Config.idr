@@ -86,6 +86,7 @@ propSetters = [
     ("assignTeams"    , update parseBool (\b => { assignTeams := b }))
   , ("commentOnAssign", update parseBool (\b => { commentOnAssign := b }))
   , ("defaultRemote"  , update Just (\s => { defaultRemote := Just s }))
+  , ("githubPAT"      , update Just (\s => { githubPAT := Just $ hide s }))
   ]
   where
     parseBool : String -> Maybe Bool
@@ -121,6 +122,7 @@ propGetters = [
     ("assignTeams"    , show . assignTeams)
   , ("commentOnAssign", show . commentOnAssign)
   , ("defaultRemote"  , maybe "Not set (defaults to \"origin\")" show . defaultRemote)
+  , ("githubPAT"  , maybe "Not set (will use $GITHUB_PAT environment variable)" show . githubPAT)
   ]
 
 namespace PropGettersProperties
@@ -143,13 +145,30 @@ preferOriginRemote names =
        Just n  => n
        Nothing => fromMaybe "origin" (head' names)
 
-createConfig : Git => Octokit =>
-               (terminalColors : Bool)
+createConfig : Git =>
+               (envGithubPAT : Maybe String)
+            -> (terminalColors : Bool)
             -> (editor : Maybe String)
             -> Promise Config
-createConfig terminalColors editor = do
+createConfig envGithubPAT terminalColors editor = do
   putStrLn "Creating a new configuration (storing in \{Config.filename})..."
   putStrLn ""
+
+  let defaultPATString = enterForDefaultStr "unset"
+  putStr $ unlines [ "Harmony uses a GitHub Personal Access Token (PAT) to communicate with GitHub."
+                   , "You can set this via the $GITHUB_PAT environment variable or a config property."
+                   , "If you don't set in your config now, you can set later with `harmony config githubPAT abcdefg`."
+                   , "The ENV var will always take precedence over the config property."
+                   , ""
+                   , "What PAT would you like to set in the config file\{defaultPATString}?"
+                   ]
+  configPAT <- (\case "" => Nothing; s => Just s) . trim <$> getLine
+
+  -- Personal access token either comes from the ENV or the config property
+  Just pat <- pure $ envGithubPAT <|> configPAT
+    | _ => reject $ "Either the GITHUB_PAT environment variable or githubPAT config "
+                 ++ "property must be set to a personal access token."
+
   remoteGuess <- preferOriginRemote <$> listRemotes
   defaultOrgAndRepo <- (parseGitHubURI <$> remoteURI remoteGuess) <|> pure Nothing
 
@@ -171,6 +190,7 @@ createConfig terminalColors editor = do
   putStr "Would you like harmony to assign teams in addition to individuals when it assigns reviewers? [Y/n] "
   assignTeams <- yesUnlessNo . trim <$> getLine
 
+  _ <- liftIO $ octokit pat
   putStrLn "Creating config..."
   mainBranch <- getRepoDefaultBranch org repo
   updatedAt  <- cast <$> time
@@ -191,6 +211,7 @@ createConfig terminalColors editor = do
        , commentOnAssign
        , teamSlugs
        , orgMembers
+       , githubPAT = hide <$> configPAT
        , ephemeral
        }
      ignore $ writeConfig config
@@ -250,13 +271,14 @@ loadConfig terminalColors editor = let (>>=) = (>>=) @{Monad.Compose} in
 
 export
 covering
-loadOrCreateConfig : Git => Octokit => 
-                     (terminalColors : Bool)
+loadOrCreateConfig : Git =>
+                     (envGithubPAT : Maybe String)
+                  -> (terminalColors : Bool)
                   -> (editor : Maybe String)
                   -> Promise Config
-loadOrCreateConfig terminalColors editor = do
+loadOrCreateConfig envGithubPAT terminalColors editor = do
   Right config <- loadConfig terminalColors editor
-    | Left (File FileNotFound) => createConfig terminalColors editor
+    | Left (File FileNotFound) => createConfig envGithubPAT terminalColors editor
     | Left err => reject "Error loading \{Config.filename}: \{show err}."
   pure config
 
