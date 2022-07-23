@@ -32,8 +32,9 @@ package: build
 	./todo-check.sh
 	# leave ./harmony in place
 	mkdir harmony-npm
-	cp harmony ./harmony-npm
-	cp package.json ./harmony-npm
+	cp harmony ./harmony-npm/
+	cp package.json ./harmony-npm/
+	cp README.md ./harmony-npm/
 	tar -czvf harmony-npm.tar.gz harmony-npm
 	rm -rf ./harmony-npm
 
