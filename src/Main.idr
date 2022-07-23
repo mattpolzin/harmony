@@ -154,18 +154,18 @@ printCurrentBranchURI @{config} = do
   let uri = "https://github.com/\{org}/\{repo}/tree/\{branch}"
   putStrLn uri
 
-handleConfiguredArgs : Config => Git => Octokit => 
-                       List String 
-                    -> Promise ()
-handleConfiguredArgs @{config} [] =
-  putStrLn $ help config.colors
+||| Handle commands that require both configuration and
+||| authentication.
+handleAuthenticatedArgs : Config => Git => Octokit => 
+                          List String 
+                       -> Promise ()
 
 -- internal-use commands for forking process:
-handleConfiguredArgs @{config} ["reviews", "--json", prNumber] =
+handleAuthenticatedArgs @{config} ["reviews", "--json", prNumber] =
   whenJust (parsePositive prNumber) $ \pr => do
     reviewsJsonStr <- listPullReviewsJsonStr config.org config.repo pr
     putStr reviewsJsonStr
-handleConfiguredArgs @{config} ["pulls", "--json", pageLimit, page] =
+handleAuthenticatedArgs @{config} ["pulls", "--json", pageLimit, page] =
   let args : Maybe (Fin 101, Nat) = bitraverse parseLim parsePg (pageLimit, page)
   in  whenJust args $ \(lim, pg) => do
         pullsJsonStr <- listPullRequestsJsonStr config.org config.repo Nothing lim {page=pg}
@@ -176,69 +176,94 @@ handleConfiguredArgs @{config} ["pulls", "--json", pageLimit, page] =
 
     parsePg  : String -> Maybe Nat
     parsePg = parsePositive
-handleConfiguredArgs @{config} ["user", "--json", username] =
+handleAuthenticatedArgs @{config} ["user", "--json", username] =
   print $ json !(getUser username)
 
 -- user-facing commands:
-handleConfiguredArgs ["whoami"] =
+handleAuthenticatedArgs ["whoami"] =
   printInfoOnSelf
-handleConfiguredArgs ["sync"] =
+handleAuthenticatedArgs ["sync"] =
   ignore $ syncConfig True
-handleConfiguredArgs ["branch"] =
+handleAuthenticatedArgs ["branch"] =
   printCurrentBranchURI
-handleConfiguredArgs ["pr"] =
+handleAuthenticatedArgs ["pr"] =
   do (Identified, pr) <- identifyOrCreatePR !currentBranch
        | _ => pure ()
      putStrLn pr.webURI
-handleConfiguredArgs ["reflect"] =
+handleAuthenticatedArgs ["reflect"] =
   reflectOnSelf
-handleConfiguredArgs ["config", prop] =
-  do value <- getConfig prop
-     putStrLn value
-handleConfiguredArgs ["config", prop, value] =
-  ignore $ setConfig prop value
-handleConfiguredArgs ("contribute" :: args) =
+handleAuthenticatedArgs ("contribute" :: args) =
   case (parseContributeArgs args) of
        Right args => contribute args
        Left err   => exitError err
-handleConfiguredArgs ["list"] =
+handleAuthenticatedArgs ["list"] =
   reject "The list command expects the name of a GitHub Team as an argument."
-handleConfiguredArgs @{config} ["list", teamName] =
+handleAuthenticatedArgs @{config} ["list", teamName] =
   listTeam teamName
-handleConfiguredArgs ["graph"] =
+handleAuthenticatedArgs ["graph"] =
   reject "The graph command expects the name of a GitHub Team as an argument."
-handleConfiguredArgs @{config} ["graph", teamName] =
+handleAuthenticatedArgs @{config} ["graph", teamName] =
   graphTeam teamName
-handleConfiguredArgs ["assign"] =
+handleAuthenticatedArgs ["assign"] =
   reject "The assign commaand expects one or more names of GitHub Teams or Users as arguments."
-handleConfiguredArgs ["assign", "--dry"] =
+handleAuthenticatedArgs ["assign", "--dry"] =
   reject "The assign commaand expects one or more names of GitHub Teams or Users as arguments."
-handleConfiguredArgs ("assign" :: "--dry" :: assign1 :: assignRest) =
+handleAuthenticatedArgs ("assign" :: "--dry" :: assign1 :: assignRest) =
   assign (assign1 :: assignRest) {dry=True}
-handleConfiguredArgs ("assign" :: assign1 :: assignRest) =
+handleAuthenticatedArgs ("assign" :: assign1 :: assignRest) =
   assign (assign1 :: assignRest)
 
 -- error case:
-handleConfiguredArgs args =
+handleAuthenticatedArgs args =
   reject "Unexpected command line arguments: \{show args}."
+
+
+||| Handle commands that only require configuration, or else
+||| enforce authentication and handle commands that require auth.
+handleConfiguredArgs : Config => Git =>
+                       (envGithubPAT : Maybe String)
+                    -> List String
+                    -> Promise ()
+handleConfiguredArgs _ ["config"] =
+  reject $ "The config command expects one or two arguments. "
+        ++ "Specify a property to read out or a property and a value to set it to."
+handleConfiguredArgs _ ["config", prop] =
+  do value <- getConfig prop
+     putStrLn value
+handleConfiguredArgs _ ["config", prop, value] =
+  ignore $ setConfig prop value
+
+handleConfiguredArgs @{config} envPAT args = do
+   -- Personal access token either comes from ENV or from config.
+   Just pat <- pure $ envPAT <|> expose <$> config.githubPAT
+     | Nothing => reject $ "Either the GITHUB_PAT environment variable or githubPAT config "
+                        ++ "property must be set to a personal access token."
+   _ <- liftIO $ octokit pat
+
+   config' <- syncIfOld config
+
+   -- then handle any arguments given
+   handleAuthenticatedArgs @{config'} args
+
 
 -- bash completion is a special case where we don't want to create the config
 -- if it doesn't exist yet so we handle it up front before loading config and then
 -- handling any other input.
 covering
-handleArgs : Git => Octokit => 
-             (terminalColors : Bool)
+handleArgs : Git =>
+             (envGithubPAT : Maybe String)
+          -> (terminalColors : Bool)
           -> (editor : Maybe String)
           -> List String 
           -> IO ()
-handleArgs _ _ ["--bash-completion", curWord, prevWord] = bashCompletion curWord prevWord
-handleArgs _ _ ["--bash-completion-script"] = putStrLn BashCompletion.script
-handleArgs terminalColors editor args = 
+handleArgs _ _ _ ["--bash-completion", curWord, prevWord] = bashCompletion curWord prevWord
+handleArgs _ _ _ ["--bash-completion-script"] = putStrLn BashCompletion.script
+handleArgs envPAT terminalColors editor args = 
   resolve'' $
     do -- create the config file before continuing if it does not exist yet
-       _ <- syncIfOld =<< loadOrCreateConfig terminalColors editor
-       -- then handle any arguments given
-       handleConfiguredArgs args
+       config <- loadOrCreateConfig envPAT terminalColors editor
+
+       handleConfiguredArgs envPAT args
 
 shouldUseColors : HasIO io => io Bool
 shouldUseColors = do
@@ -254,16 +279,13 @@ main =
      -- drop 2 for `node` and `harmony.js`
      args <- drop 2 <$> getArgs
      -- short circuit for help
-     when (args == ["help"] || args == ["--help"]) $ do
+     when (args == [] || args == ["help"] || args == ["--help"]) $ do
        putStrLn $ help terminalColors
        exitSuccess
      when (args == ["version"] || args == ["--version"]) $ do
        printVersion
        exitSuccess
-     -- otherwise get a GitHub Personal Access Token and continue.
-     Just pat <- getEnv "GITHUB_PAT"
-       | Nothing => exitError "GITHUB_PAT environment variable must be set to a personal access token."
-     _ <- octokit pat
+     envPAT <- getEnv "GITHUB_PAT"
      _ <- git
-     handleArgs terminalColors editor args
+     handleArgs envPAT terminalColors editor args
 
