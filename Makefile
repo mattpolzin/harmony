@@ -2,7 +2,7 @@
 idris2 = idris2
 idris-adds-version = 0.3.0
 
-.PHONY: all build install package publish clean
+.PHONY: all build install package publish clean version
 
 all: build
 
@@ -27,13 +27,20 @@ build: node_modules depends/idris-adds-${idris-adds-version}
 
 harmony: build
 
+version:
+	@(if [[ "${v}" == '' ]]; then echo "please set the 'v' variable."; exit 1; fi)
+	sed -I '' "s/version = .*/version = ${v}/" ./harmony.ipkg
+	sed -I '' "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
+	sed -I '' "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
+
 package: build
 	./version-check.sh
 	./todo-check.sh
 	# leave ./harmony in place
 	mkdir harmony-npm
-	cp harmony ./harmony-npm
-	cp package.json ./harmony-npm
+	cp harmony ./harmony-npm/
+	cp package.json ./harmony-npm/
+	cp README.md ./harmony-npm/
 	tar -czvf harmony-npm.tar.gz harmony-npm
 	rm -rf ./harmony-npm
 
