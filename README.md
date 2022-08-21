@@ -156,11 +156,12 @@ Running `harmony list <team>` will list the members of the given GitHub Team.
 Running `harmony graph <team>` will graph the relative review workload of each of the members of the given GitHub Team.
 
 ### Config
-Running `harmony config <property>` read the given configuration property. `harmony config <property> <value>` will set the configuration property.
+Running `harmony config <property>` will read the given configuration property. `harmony config <property> <value>` will set the configuration property.
 
 Not all configuration properties can be read/set with this command.
 #### Properties
 - `assignTeams` -- When picking a reviewer from a team, assign the team as a reviewer as well.
+- `assignUsers` -- When assigning a team as a reviewer, pick a user to review as well.
 - `commentOnAssign` -- When assigning a reviewer chosen by Harmony, comment on the pull request.
 - `defaultRemote` -- When pushing new branches, what remote destination should be used.
 - `githubPAT` -- If the `$GITHUB_PAT` environment variable is not set, this Personal Access Token is used to authenticate with GitHub.
