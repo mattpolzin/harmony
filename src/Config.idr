@@ -57,6 +57,24 @@ syncIfOld config =
          now <- time
          pure $ cast (now - oneDay)
 
+||| Determine if any configuration settings are inconsistent with each other or result in
+||| behavior that is likely undesirable.
+checkConfigConsistency : Config -> Either (Doc AnsiStyle) ()
+checkConfigConsistency config = do
+  checkAssignSettings config
+  -- other checks...
+  where
+    checkAssignSettings : Config -> Either (Doc AnsiStyle) ()
+    checkAssignSettings config =
+      if not (config.assignTeams || config.assignUsers)
+         then Left $ (annotate (color Yellow) . hsep $ [
+                "`assignUsers` and `assignTeams` are both False."
+              , "This means `harmony assign` commands will only ever assign users that are specified with the `+<userlogin>` syntax."
+              , "More commonly, you want Harmony to at least assign either a team or a user from a team when you say `harmony assign teamname`;"
+              , "It's suggested to either `harmony config assignUsers true` or `harmony config assignTeams true` (or both)."
+              ]) <+> hardline
+         else Right ()
+
 record GitRemote where
   constructor Remote
   org, repo : String
@@ -114,7 +132,8 @@ setConfig @{config} prop value with (settablePropNamed prop)
   _ | Nothing = reject "\{prop} cannot be set via `config` command."
   _ | Just (Evidence _ p) with ((propSetter p) config value)
     _ | Nothing = reject "\{value} is not a valid value for \{prop}."
-    _ | Just config' = writeConfig config'
+    _ | Just config' = do either (renderIO @{config'}) pure (checkConfigConsistency config')
+                          writeConfig config'
 
 propGetter : SettableProp n h -> (Config -> String)
 propGetter AssignTeams     = show . assignTeams
@@ -222,6 +241,7 @@ createConfig envGithubPAT terminalColors editor = do
      ignore $ writeConfig config
      putStrLn "Your new configuration is:"
      printLn config
+     either renderIO pure (checkConfigConsistency config)
      pure config
   where
     orIfEmpty : Maybe String -> String -> String
