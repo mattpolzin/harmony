@@ -13,6 +13,10 @@ import FFI.GitHub
 import Language.JSON
 import System
 import System.File
+import Util
+
+import Text.PrettyPrint.Prettyprinter
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
@@ -81,28 +85,22 @@ parseGitHubURI str = parseHTTPS str <|> parseSSH str
     parseSSH : String -> Maybe GitRemote
     parseSSH = dropPrefix' "git@github.com:" >=> parseSuffix
 
-propSetters : List (String, (Config -> String -> Maybe Config))
-propSetters = [
-    ("assignTeams"    , update parseBool (\b => { assignTeams := b }))
-  , ("commentOnAssign", update parseBool (\b => { commentOnAssign := b }))
-  , ("defaultRemote"  , update Just (\s => { defaultRemote := Just s }))
-  , ("githubPAT"      , update Just (\s => { githubPAT := Just $ hide s }))
-  ]
-  where
-    parseBool : String -> Maybe Bool
-    parseBool x with (toLower x)
-      _ | "yes"   = Just True
-      _ | "true"  = Just True
-      _ | "no"    = Just False
-      _ | "false" = Just False
-      _ | _ = Nothing
+parseBool : String -> Maybe Bool
+parseBool x with (toLower x)
+  _ | "yes"   = Just True
+  _ | "true"  = Just True
+  _ | "no"    = Just False
+  _ | "false" = Just False
+  _ | _ = Nothing
 
-    update : Functor f => (String -> f a) -> (a -> b -> b) -> b -> String -> f b
-    update f g c = map (flip g c) . f
+update : Functor f => (String -> f a) -> (a -> b -> b) -> b -> String -> f b
+update f g c = map (flip g c) . f
 
-namespace PropSettersProperties
-  propSettersCoveragePrf : Data.Config.settableProps = Builtin.fst <$> Config.propSetters
-  propSettersCoveragePrf = Refl
+propSetter : SettableProp n h -> (Config -> String -> Maybe Config)
+propSetter AssignTeams     = update parseBool (\b => { assignTeams := b })
+propSetter CommentOnAssign = update parseBool (\b => { commentOnAssign := b })
+propSetter DefaultRemote   = update Just (\s => { defaultRemote := Just s })
+propSetter GithubPAT       = update Just (\s => { githubPAT := Just $ hide s })
 
 ||| Attempt to set a property and value given String representations.
 ||| After setting, write the config and return the updated result.
@@ -111,31 +109,33 @@ setConfig : Config =>
             (prop : String)
          -> (value : String)
          -> Promise Config
-setConfig @{config} prop value with (lookup prop propSetters)
-  _ | Nothing  = reject "\{prop} cannot be set via `config` command."
-  _ | (Just set) with (set config value)
-    _ | Nothing  = reject "\{value} is not a valid value for \{prop}."
-    _ | (Just config') = writeConfig config'
+setConfig @{config} prop value with (settablePropNamed prop)
+  _ | Nothing = reject "\{prop} cannot be set via `config` command."
+  _ | Just (Evidence _ p) with ((propSetter p) config value)
+    _ | Nothing = reject "\{value} is not a valid value for \{prop}."
+    _ | Just config' = writeConfig config'
 
-propGetters : List (String, (Config -> String))
-propGetters = [
-    ("assignTeams"    , show . assignTeams)
-  , ("commentOnAssign", show . commentOnAssign)
-  , ("defaultRemote"  , maybe "Not set (defaults to \"origin\")" show . defaultRemote)
-  , ("githubPAT"  , maybe "Not set (will use $GITHUB_PAT environment variable)" show . githubPAT)
-  ]
-
-namespace PropGettersProperties
-  propGetterCoveragePrf : Data.Config.settableProps = Builtin.fst <$> Config.propGetters
-  propGetterCoveragePrf = Refl
+propGetter : SettableProp n h -> (Config -> String)
+propGetter AssignTeams     = show . assignTeams
+propGetter CommentOnAssign = show . commentOnAssign
+propGetter DefaultRemote   = maybe "Not set (defaults to \"origin\")" show . defaultRemote
+propGetter GithubPAT       = maybe "Not set (will use $GITHUB_PAT environment variable)" show . githubPAT
 
 export
 getConfig : Config =>
             (prop : String)
          -> Promise String
-getConfig @{config} prop with (lookup prop propGetters)
-  getConfig prop | Nothing    = reject "\{prop} cannot get read via `config` command."
-  getConfig prop | (Just get) = pure $ get config
+getConfig @{config} prop with (settablePropNamed prop)
+  getConfig @{config} prop | Nothing = reject "\{prop} cannot get read via `config` command."
+  getConfig @{config} prop | (Just (Evidence _ p)) = pure $ (propGetter p) config
+
+
+export
+settablePropsWithHelp : Config => String
+settablePropsWithHelp = renderString . vsep $ help <$> settablePropNamesAndHelp
+  where
+    help : (String, String) -> Doc AnsiStyle
+    help (n, h) = (annotate (color Green) $ pretty n) <+> pretty ": \{replicate (longestSettablePropName `minus` (length n)) ' ' ++ h}"
 
 ||| Look for "origin" in a list of remote names or else
 ||| fallback to the first name.

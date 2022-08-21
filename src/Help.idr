@@ -21,7 +21,7 @@ harmony \{subcommand "<subcommand>"}
   \{subcommand "config"} {\{argument "<property>"}} [\{argument "<value>"}]
    - Get or set the value of a configuration property. Not all properties
      can be set and read via this subcommand.
-     \{argument "properties"}: \{join ", " $ option <$> settableProps}.
+     \{argument "properties"}: \{join ", " $ option <$> settablePropNames}.
   \{subcommand "sync"}
    - Synchronize local config with information from GitHub.
   \{subcommand "branch"}

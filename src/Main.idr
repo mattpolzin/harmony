@@ -227,6 +227,8 @@ handleConfiguredArgs : Config => Git =>
 handleConfiguredArgs _ ["config"] =
   reject $ "The config command expects one or two arguments. "
         ++ "Specify a property to read out or a property and a value to set it to."
+        ++ "\n\n"
+        ++ settablePropsWithHelp
 handleConfiguredArgs _ ["config", prop] =
   do value <- getConfig prop
      putStrLn value
