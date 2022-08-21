@@ -98,6 +98,7 @@ update f g c = map (flip g c) . f
 
 propSetter : SettableProp n h -> (Config -> String -> Maybe Config)
 propSetter AssignTeams     = update parseBool (\b => { assignTeams := b })
+propSetter AssignUsers     = update parseBool (\b => { assignUsers := b })
 propSetter CommentOnAssign = update parseBool (\b => { commentOnAssign := b })
 propSetter DefaultRemote   = update Just (\s => { defaultRemote := Just s })
 propSetter GithubPAT       = update Just (\s => { githubPAT := Just $ hide s })
@@ -117,6 +118,7 @@ setConfig @{config} prop value with (settablePropNamed prop)
 
 propGetter : SettableProp n h -> (Config -> String)
 propGetter AssignTeams     = show . assignTeams
+propGetter AssignUsers     = show . assignUsers
 propGetter CommentOnAssign = show . commentOnAssign
 propGetter DefaultRemote   = maybe "Not set (defaults to \"origin\")" show . defaultRemote
 propGetter GithubPAT       = maybe "Not set (will use $GITHUB_PAT environment variable)" show . githubPAT
@@ -128,7 +130,6 @@ getConfig : Config =>
 getConfig @{config} prop with (settablePropNamed prop)
   getConfig @{config} prop | Nothing = reject "\{prop} cannot get read via `config` command."
   getConfig @{config} prop | (Just (Evidence _ p)) = pure $ (propGetter p) config
-
 
 export
 settablePropsWithHelp : Config => String
@@ -190,6 +191,9 @@ createConfig envGithubPAT terminalColors editor = do
   putStr "Would you like harmony to assign teams in addition to individuals when it assigns reviewers? [Y/n] "
   assignTeams <- yesUnlessNo . trim <$> getLine
 
+  putStr "Would you like harmony to assign individual users when it assigns reviewers? [Y/n] "
+  assignUsers <- yesUnlessNo . trim <$> getLine
+
   _ <- liftIO $ octokit pat
   putStrLn "Creating config..."
   mainBranch <- getRepoDefaultBranch org repo
@@ -208,6 +212,7 @@ createConfig envGithubPAT terminalColors editor = do
        , defaultRemote
        , mainBranch
        , assignTeams
+       , assignUsers
        , commentOnAssign
        , teamSlugs
        , orgMembers
@@ -227,6 +232,9 @@ createConfig envGithubPAT terminalColors editor = do
     yesUnlessNo : String -> Bool
     yesUnlessNo "n" = False
     yesUnlessNo "N" = False
+    yesUnlessNo "no" = False
+    yesUnlessNo "NO" = False
+    yesUnlessNo "No" = False
     yesUnlessNo _   = True
 
     org : Maybe GitRemote -> Maybe String

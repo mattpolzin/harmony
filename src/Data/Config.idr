@@ -56,6 +56,8 @@ record Config where
   mainBranch    : String
   ||| True to assign teams as well as individual users to PRs.
   assignTeams   : Bool
+  ||| True to assign users as well as teams to PRs.
+  assignUsers   : Bool
   ||| True to comment on PRs after assigning users.
   commentOnAssign : Bool
   ||| Local cache of GitHub teams within the configured org.
@@ -75,7 +77,9 @@ record Config where
 public export
 data SettableProp : (name : String) -> (help : String) -> Type where
   AssignTeams     : SettableProp "assignTeams"
-                                 "[true/false] Determines whether or not to assign teams when assigning individual reviewers."
+                                 "[true/false] Determines whether or not to assign teams when assigning individual reviewers from a team."
+  AssignUsers     : SettableProp "assignUsers"
+                                 "[true/false] Determines whether or not to assign an individual user based on Harmony's heuristics when assigning teams. You might want to disable `assginUsers` to allow GitHub to pick users to assign based on the team. This setting does not affect the ability to assign individual users withe Harmony's `+<username>` syntax."
   CommentOnAssign : SettableProp "commentOnAssign"
                                  "[true/false] Determines whether to comment on PR indicating that Harmony chose a reviewer."
   DefaultRemote   : SettableProp "defaultRemote"
@@ -101,11 +105,13 @@ settablePropNamed "assignTeams"     = Just $ Evidence _ AssignTeams
 settablePropNamed "commentOnAssign" = Just $ Evidence _ CommentOnAssign
 settablePropNamed "defaultRemote"   = Just $ Evidence _ DefaultRemote
 settablePropNamed "githubPAT"       = Just $ Evidence _ GithubPAT
+settablePropNamed "assignUsers"     = Just $ Evidence _ AssignUsers
 settablePropNamed _ = Nothing
 
 namespace SettablePropNamedProps
   settablePropNamedOnto : {p : SettableProp n h} -> Config.settablePropNamed n === (Just $ Evidence h p)
   settablePropNamedOnto {p = AssignTeams}     = Refl
+  settablePropNamedOnto {p = AssignUsers}     = Refl
   settablePropNamedOnto {p = CommentOnAssign} = Refl
   settablePropNamedOnto {p = DefaultRemote}   = Refl
   settablePropNamedOnto {p = GithubPAT}       = Refl
@@ -113,6 +119,7 @@ namespace SettablePropNamedProps
 settableProps : List SomeSettableProp
 settableProps = [
     (_ ** _ ** AssignTeams)
+  , (_ ** _ ** AssignUsers)
   , (_ ** _ ** CommentOnAssign)
   , (_ ** _ ** DefaultRemote)
   , (_ ** _ ** GithubPAT)
@@ -121,6 +128,7 @@ settableProps = [
 namespace SettablePropsProps
   settablePropsCovering : {p : SettableProp n h} -> Elem (n ** h ** p) Config.settableProps
   settablePropsCovering {p = AssignTeams}     = %search
+  settablePropsCovering {p = AssignUsers}     = %search
   settablePropsCovering {p = CommentOnAssign} = %search
   settablePropsCovering {p = DefaultRemote}   = %search
   settablePropsCovering {p = GithubPAT}       = %search
@@ -164,6 +172,7 @@ Show Config where
     , "  defaultRemote: \{defaultRemote}"
     , "     mainBranch: \{show config.mainBranch}"
     , "    assignTeams: \{show config.assignTeams}"
+    , "    assignUsers: \{show config.assignUsers}"
     , "commentOnAssign: \{show config.commentOnAssign}"
     , "      teamSlugs: \{show config.teamSlugs}"
     , "     orgMembers: \{show config.orgMembers}"
@@ -178,9 +187,10 @@ Show Config where
 
 export
 json : Config -> JSON
-json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams commentOnAssign teamSlugs orgMembers githubPAT _) = 
+json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams assignUsers commentOnAssign teamSlugs orgMembers githubPAT _) = 
   JObject [
       ("assignTeams"    , JBoolean assignTeams)
+    , ("assignUsers"    , JBoolean assignUsers)
     , ("commentOnAssign", JBoolean commentOnAssign)
     , ("org"            , JString org)
     , ("repo"           , JString repo)
@@ -216,6 +226,8 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                               , "teamSlugs"
                                               , "orgMembers"
                                               ] config
+                                          let maybeAssignUsers = lookup "assignUsers" config
+                                          -- TODO 2.0.0:  ^ remove optionality with version 2.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
                                           let maybeDefaultRemote = lookup "defaultRemote" config
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           ua <- cast <$> integer updatedAt
@@ -224,6 +236,7 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                           dr <- maybe (Right Nothing) (optional string) maybeDefaultRemote
                                           mb <- string mainBranch
                                           at <- bool assignTeams
+                                          au <- maybe (Right True) bool maybeAssignUsers
                                           ca <- bool commentOnAssign
                                           ts <- array string teamSlugs 
                                           om <- array string orgMembers
@@ -235,6 +248,7 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                             , defaultRemote    = dr
                                             , mainBranch       = mb
                                             , assignTeams      = at
+                                            , assignUsers      = au
                                             , teamSlugs        = ts
                                             , commentOnAssign  = ca
                                             , orgMembers       = om
