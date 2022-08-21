@@ -2,9 +2,9 @@ module Data.Review
 
 import Data.Date
 import Data.Either
+import Data.Vect
 import Language.JSON
 import Language.JSON.Accessors
-import Data.Vect
 
 %default total
 

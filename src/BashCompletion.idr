@@ -4,8 +4,6 @@ import Data.Config
 import Data.List
 import Data.String
 
-import Debug.Trace
-
 %default total
 
 allRootCmds : List String

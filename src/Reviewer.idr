@@ -1,15 +1,16 @@
 module Reviewer
 
-import Data.Nat
-import Data.String
 import Data.List
 import Data.List.DeleteBy
 import Data.List1
+import Data.Nat
+import Data.String
 import System.Random.Node
-import Text.PrettyPrint.Prettyprinter
-import Text.PrettyPrint.Prettyprinter.Symbols
-import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import Util
+
+import Text.PrettyPrint.Prettyprinter
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
+import Text.PrettyPrint.Prettyprinter.Symbols
 
 %default total
 

@@ -112,6 +112,8 @@ prim__rootDir : Ptr GitRef
              -> (onFailure : String -> PrimIO ())
              -> PrimIO ()
 
+||| Get the absolute path of the Git repository's root directory
+||| (the location of the `.git` folder).
 export
 rootDir : Git => Promise String
 rootDir @{G ptr} = promiseIO $ prim__rootDir ptr

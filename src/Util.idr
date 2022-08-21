@@ -3,7 +3,10 @@ module Util
 import Data.Config
 import Data.Fuel
 import Data.List
+import Data.Promise
 import Data.String
+import FFI.Git
+
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
@@ -35,6 +38,12 @@ getManyLines = getMoreLines []
          case (acc, line) of
               ("" :: rest, "") => pure (reverse rest)
               _                => getMoreLines (line :: acc) fuel
+
+||| Get an absolute path for the given directory or file assuming the
+||| given path is relative to the root of the Git repository.
+export
+relativeToRoot : Git => String -> Promise String
+relativeToRoot path = rootDir <&> (++ "/\{path}")
 
 ||| If possible, extract a Jira ticket reference from the given string.
 |||

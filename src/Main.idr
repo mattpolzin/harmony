@@ -21,10 +21,11 @@ import PullRequest as PR
 import Reviewer
 import System
 import System.File
-import Text.PrettyPrint.Prettyprinter
-import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import User
 import Util
+
+import Text.PrettyPrint.Prettyprinter
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 

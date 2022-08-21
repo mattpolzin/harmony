@@ -8,12 +8,13 @@ import Data.PullRequest
 import Data.Review
 import Data.String
 import Data.User
-import FFI.GitHub
 import FFI.Git
+import FFI.GitHub
 import PullRequest
+import Util
+
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
-import Util
 
 %default total
 

@@ -1,10 +1,10 @@
 module FFI.Concurrency
 
-import FFI
-import Data.List1
-import Data.Vect
 import Data.Either
+import Data.List1
 import Data.Promise
+import Data.Vect
+import FFI
 import Language.JSON
 
 %default total

@@ -2,6 +2,7 @@ module Help
 
 import Data.Config
 import Data.String
+
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
