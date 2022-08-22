@@ -207,7 +207,7 @@ createConfig envGithubPAT terminalColors editor = do
   putStr "Would you like harmony to comment when it assigns reviewers? [Y/n] "
   commentOnAssign <- yesUnlessNo . trim <$> getLine
 
-  putStr "Would you like harmony to assign teams in addition to individuals when it assigns reviewers? [Y/n] "
+  putStr "Would you like harmony to assign teams when it assigns reviewers? [Y/n] "
   assignTeams <- yesUnlessNo . trim <$> getLine
 
   putStr "Would you like harmony to assign individual users when it assigns reviewers? [Y/n] "
@@ -250,12 +250,10 @@ createConfig envGithubPAT terminalColors editor = do
     orIfEmpty (Just _) x  = x
 
     yesUnlessNo : String -> Bool
-    yesUnlessNo "n" = False
-    yesUnlessNo "N" = False
-    yesUnlessNo "no" = False
-    yesUnlessNo "NO" = False
-    yesUnlessNo "No" = False
-    yesUnlessNo _   = True
+    yesUnlessNo answer with (toLower answer)
+      _ | "n"   = False
+      _ | "no"  = False
+      _ | _     = True
 
     org : Maybe GitRemote -> Maybe String
     org = map (.org)
