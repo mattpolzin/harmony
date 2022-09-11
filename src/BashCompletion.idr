@@ -4,8 +4,6 @@ import Data.Config
 import Data.List
 import Data.String
 
-import Debug.Trace
-
 %default total
 
 allRootCmds : List String
@@ -65,8 +63,8 @@ opts : Config => String -> String -> List String
 -- should have already been called).
 
 -- then the config command
-opts @{_} "--" "config" = settableProps
-opts @{_} partialConfigProp "config" = filter (isPrefixOf partialConfigProp) settableProps
+opts @{_} "--" "config" = settablePropNames
+opts @{_} partialConfigProp "config" = filter (isPrefixOf partialConfigProp) settablePropNames
 
 -- then list, which only accepts a single team slug:
 opts @{config} "--" "list"   = config.teamSlugs

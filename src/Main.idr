@@ -21,10 +21,11 @@ import PullRequest as PR
 import Reviewer
 import System
 import System.File
-import Text.PrettyPrint.Prettyprinter
-import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import User
 import Util
+
+import Text.PrettyPrint.Prettyprinter
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
@@ -227,6 +228,8 @@ handleConfiguredArgs : Config => Git =>
 handleConfiguredArgs _ ["config"] =
   reject $ "The config command expects one or two arguments. "
         ++ "Specify a property to read out or a property and a value to set it to."
+        ++ "\n\n"
+        ++ settablePropsWithHelp
 handleConfiguredArgs _ ["config", prop] =
   do value <- getConfig prop
      putStrLn value

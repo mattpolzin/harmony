@@ -19,12 +19,13 @@ import FFI.GitHub
 import Language.JSON
 import Language.JSON.Accessors
 import Reviewer
-import System.Node
 import System.File
+import System.File.Node
+import System.Node
+import Util
+
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
-import Util
-import System.File.Node
 
 %default total
 
@@ -119,6 +120,7 @@ reviewsForUser @{config} author prs =
     forkedReviews = fork . ("reviews --json " ++) . show . number
 
 ||| Request reviews.
+||| @ pullRequest     The Pull Request for which reviews should be requested.
 ||| @ teamNames       The slugs of teams from which to draw potential review candidates.
 ||| @ forcedReviewers The logins of users to force review from (in addition to the reviewer
 |||                   chosen from the selected teams).
@@ -129,29 +131,33 @@ requestReviewers : Config => Octokit =>
                 -> (forcedReviewers : List String) 
                 -> {default False dry: Bool} 
                 -> Promise ()
-requestReviewers @{config} pr teamNames forcedReviewers {dry} =
-  do (openReviewers, closedReviewers) <- listReviewers 100 {pageBreaks=4}
-     teamMembers <- join <$> traverse (listTeamMembers config.org) teamNames
-     -- printLn teamMembers
-     let chosenCandidates = chooseReviewers closedReviewers openReviewers teamMembers [] pr.author
-     -- printLn chosenCandidates
-     chosenUser <- randomReviewer chosenCandidates
-     let users = (toList chosenUser) ++ forcedReviewers
-     let teams = if config.assignTeams then teamNames else []
-     when (not dry) $
-       do ignore $ addPullReviewers config.org config.repo pr.number users teams
-          when config.commentOnAssign $
-            whenJust chosenUser $ \cu =>
-              createComment config.org config.repo pr.number (prComment cu)
-     if null users
-       then putStrLn . renderString $ vsep [
-                       annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
-                     , pretty "(perhaps the only option was the author of the pull request?)."
-                     ]
-       else putStrLn . renderString $ vsep [
-                       pretty "Assigned \{userNotice chosenUser}\{teamNotice teams} to the open PR "
-                     , pretty "for the current branch (\{pr.webURI})."
-                     ]
+requestReviewers @{config} pr teamNames forcedReviewers {dry} = do 
+  (openReviewers, closedReviewers) <- listReviewers 100 {pageBreaks=4}
+  teamMembers <- join <$> traverse (listTeamMembers config.org) teamNames
+
+  chosenUser <- if config.assignUsers
+                     then let chosenCandidates = chooseReviewers closedReviewers openReviewers teamMembers [] pr.author
+                          in  randomReviewer chosenCandidates
+                     else pure Nothing
+
+  let users = (toList chosenUser) ++ forcedReviewers
+  let teams = if config.assignTeams then teamNames else []
+  when (not dry) $
+    do ignore $ addPullReviewers config.org config.repo pr.number users teams
+       when config.commentOnAssign $
+         whenJust chosenUser $ \cu =>
+           createComment config.org config.repo pr.number (prComment cu)
+  if null users && config.assignUsers
+    then putStrLn . renderString $ vsep [
+                    annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
+                  , pretty "(perhaps the only option was the author of the pull request?)."
+                  , pretty "Assigned \{teamNotice teams} to the open PR "
+                  , pretty "for the current branch (\{pr.webURI})."
+                  ]
+    else putStrLn . renderString $ vsep [
+                    pretty "Assigned \{userNotice chosenUser}\{teamNotice teams} to the open PR "
+                  , pretty "for the current branch (\{pr.webURI})."
+                  ]
   where
     csv : List String -> String
     csv = renderString . encloseSep emptyDoc emptyDoc (pretty ", ") . map (annotate (color Green) . pretty)
@@ -171,11 +177,6 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} =
     prComment chosenUser = """
     :musical_note: Harmoniously assigned @\{chosenUser} to review this PR.
     """
-
-||| Get a full path for the given directory or file relative to the
-||| root folder for the Git repository.
-relativeToRoot : Git => String -> Promise String
-relativeToRoot path = rootDir <&> (++ "/\{path}")
 
 export
 identifyOrCreatePR : Config => Git => Octokit => 

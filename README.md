@@ -93,7 +93,7 @@ Many operating systems have an `open` command (though the name "open" is not ubi
 ### PR
 Running `harmony pr` with a branch checked out will reach out to GitHub to determine if there is an open PR for that branch. If there is a PR, Harmony will print a URI that can be used to view the PR. IF there is not a PR, Harmony will help you create one.
 
-If you need to create a PR still, you will be prompted for a branch to open the PR against (merge into, eventually), a title for the PR, and a description for the PR. If you have an `EDITOR` environment variable set, Harmony will use that editor to get the PR description from you. If you have a PR template at `.github/PULL_REQUEST_TEMPLATE.md`, Harmony will also preload that into your editor. If you do not have an `EDITOR` environment variable set, you will still be able to enter a description from the command line; PR templates are not supported for this input mode.
+If you need to create a PR still, you will be prompted for a branch to open the PR against (merge into, eventually), a title for the PR, and a description for the PR. If you have an `EDITOR` environment variable set, Harmony will use that editor to get the PR description from you. If you have a PR template at `.github/PULL_REQUEST_TEMPLATE.md`, Harmony will also preload that into your editor. If you do not have an `EDITOR` environment variable set, you will still be able to enter a description from the command line but PR templates are only supported when an `EDITOR` is specified.
 
 Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony pr)` to open a web browser to an existing PR for the current branch.
 
@@ -156,11 +156,12 @@ Running `harmony list <team>` will list the members of the given GitHub Team.
 Running `harmony graph <team>` will graph the relative review workload of each of the members of the given GitHub Team.
 
 ### Config
-Running `harmony config <property>` read the given configuration property. `harmony config <property> <value>` will set the configuration property.
+Running `harmony config <property>` will read the given configuration property. `harmony config <property> <value>` will set the configuration property.
 
 Not all configuration properties can be read/set with this command.
 #### Properties
 - `assignTeams` -- When picking a reviewer from a team, assign the team as a reviewer as well.
+- `assignUsers` -- When assigning a team as a reviewer, pick a user to review as well.
 - `commentOnAssign` -- When assigning a reviewer chosen by Harmony, comment on the pull request.
 - `defaultRemote` -- When pushing new branches, what remote destination should be used.
 - `githubPAT` -- If the `$GITHUB_PAT` environment variable is not set, this Personal Access Token is used to authenticate with GitHub.
