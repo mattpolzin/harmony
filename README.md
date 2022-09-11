@@ -13,6 +13,14 @@ Alternatively, you can build Harmony with Docker (see [Docker Build](#docker-bui
 ## Installation
 For any installation, you need to have a GitHub [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token).
 
+Your Personal Access Token should have the following permissions:
+- `repo` (Full control of private repositories)
+- `read:org` (Read org and team membership, read org projects)
+- `read:user`
+- `user:email`
+- `read:discussion`
+- `read:enterprise` (Read enterprise profile data)
+
 You can eiher add the PAT to your environment as the `GITHUB_PAT` variable (perhaps exporting it from your shell resource file or profile) or you can store your PAT in Harmony's config file. The first time you start Harmony, it will ask you to configure your PAT if you don't want to use the Environment variable. You only need one of (a) the ENV var and (b) the config property and the environment variable will take precedence if you have both set.
 
 ### NPM
