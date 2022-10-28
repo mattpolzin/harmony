@@ -7,6 +7,8 @@ import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import Text.PrettyPrint.Prettyprinter.Symbols
 
+%default total
+
 ||| Produce a graph of relative review workload for all developers matching the given
 ||| filter.
 ||| @ closedReviews The logins of each reviewer of each closed PR (duplicates intact).
@@ -42,14 +44,17 @@ reviewsGraph closedReviews openReviews candidates =
                   , emptyDoc
                   ]
 
-    -- The "detractor" is an indication of the amount of the score that was taken
-    -- away by the heuristic in `scoredReviewers` that weights closed reviews with
-    -- unanswered review requests negatively.
-    bar : (indentation : Nat) -> (score : Nat) -> (detractor : Nat) -> Doc AnsiStyle
-    bar idt score detractor = indent (cast idt) . hcat $
-                                [ annotate (color Red) . pretty $ replicate detractor '◦'
-                                , annotate (color Yellow) . pretty $ replicate score '·'
-                                ]
+    ||| Graph a single line (bar) of dots.
+    ||| @ indentation a number of leading spaces to product off to the left (uses Doc's @indent@)
+    ||| @ score the net score to graph out in yellow.
+    ||| @ detractor the amount detracting from the score, graphed in red.
+    ||| @ bonus a bonus indicator graphed on the far right in green.
+    bar : (indentation : Nat) -> (score : Nat) -> (detractor : Nat) -> (bonus : Nat) -> Doc AnsiStyle
+    bar idt score detractor bonus = indent (cast idt) . hcat $
+                                  [ annotate (color Red) . pretty $ replicate detractor '◦'
+                                  , annotate (color Yellow) . pretty $ replicate score '·'
+                                  , annotate (color Green) . pretty $ replicate bonus '▪'
+                                  ]
 
     graphOne : (highScore : Nat) -> (ReviewScore login) -> Doc AnsiStyle
     graphOne highScore (MkScore user partialScore combinedScore) =
@@ -62,7 +67,7 @@ reviewsGraph closedReviews openReviews candidates =
           -- the detractor representation at the high score to make everything
           -- line up nicely. The detractor is just there to give some indication
           -- of review requests that did not count positively toward the score.
-      in  bar idt combinedScore (min remainingSpace detractor) <++> user
+      in  bar idt combinedScore (min remainingSpace detractor) 0 <++> user
 
     graph : (highScore : Nat) -> List (ReviewScore login) -> Doc AnsiStyle
     graph highScore = vsep . map (graphOne highScore)
