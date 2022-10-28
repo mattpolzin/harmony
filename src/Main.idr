@@ -280,8 +280,8 @@ main : IO ()
 main =
   do terminalColors <- shouldUseColors
      editor <- getEnv "EDITOR"
-     -- drop 2 for `node` and `harmony.js`
-     args <- drop 2 <$> getArgs
+     -- drop 1 for `harmony.js`
+     args <- drop 1 <$> getArgs
      -- short circuit for help
      when (args == [] || args == ["help"] || args == ["--help"]) $ do
        putStrLn $ help terminalColors
