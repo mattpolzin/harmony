@@ -14,6 +14,7 @@ import Data.User
 import FFI.Concurrency
 import FFI.Git
 import FFI.GitHub
+import Graph
 import Help
 import Language.JSON
 import Language.JSON.Accessors
