@@ -8,6 +8,8 @@ license = "MIT"
 -- sourceloc =
 -- bugtracker =
 
+langversion >= 0.6.0
+
 depends = contrib
         , idris-adds >= 0.3.0
 
