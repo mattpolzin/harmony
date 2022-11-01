@@ -38,7 +38,7 @@ harmony \{subcommand "<subcommand>"}
    - Reflect on the current state of ones own PRs and review requests.
   \{subcommand "list"} {\{argument "<team-slug>"}}
    - List the members of the given GitHub Team.
-  \{subcommand "graph"} {\{argument "<team-slug>"}}
+  \{subcommand "graph"} [\{argument "-c/--completed"}] {\{argument "<team-slug>"}}
    - Graph the relative review workload of the members of the given GitHub Team.
   \{subcommand "assign"} {\{argument "<team-slug>"} | \{argument "+<user-login>"}} [...]
    - Assign the given team(s) and one lucky member from one of those teams

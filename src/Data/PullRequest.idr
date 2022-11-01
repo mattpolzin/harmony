@@ -10,18 +10,30 @@ import Language.JSON.Accessors
 
 %default total
 
+namespace FFI
+  public export
+  data GitHubPRState = Open | Closed
+
 public export
-data PRState = Open | Closed
+data PRState = Open | Closed | Merged
 
 export
 Show PRState where
   show Open   = "open"
   show Closed = "closed"
+  show Merged = "merged"
+
+export
+toGHState : PRState -> GitHubPRState
+toGHState Open   = Open
+toGHState Closed = Closed
+toGHState Merged = Closed
 
 export
 Eq PRState where
   Open   == Open   = True
   Closed == Closed = True
+  Merged == Merged = True
   _ == _ = False
 
 public export
@@ -58,10 +70,12 @@ export
 isRequestedReviewer : String -> PullRequest -> Bool
 isRequestedReviewer login = any (== login) . reviewers
 
-parseState : String -> Either String PRState
-parseState "open"   = Right Open
-parseState "closed" = Right Closed
-parseState str      = Left "Failed to parse a Pull Request State (open/closed). Found \{str}."
+parseState : (merged : Bool) -> String -> Either String PRState
+parseState False "open" = Right Open
+parseState True  "open" = Left "Found a PR to be merged & open; this is a contradiction so something is wrong."
+parseState False "closed" = Right Closed
+parseState True  "closed" = Right Merged
+parseState _ str = Left "Failed to parse a Pull Request State (open/closed). Found \{str}."
 
 parseDateTime : String -> Either String Date
 parseDateTime = maybeToEither "Failed to parse Date" . parseDateTimeString
@@ -70,10 +84,11 @@ export
 parsePR : JSON -> Either String PullRequest
 parsePR json =
  do pr <- object json
-    [pullNumber, authorLogin, stateStr, createdAtStr, reviewerList, head] <- lookupAll ["pull_number", "author", "state", "created_at", "reviewers", "head_ref"] pr
+    [pullNumber, authorLogin, stateStr, createdAtStr, mergedStr, reviewerList, head] <- lookupAll ["pull_number", "author", "state", "created_at", "merged", "reviewers", "head_ref"] pr
     number    <- integer pullNumber
     author    <- string authorLogin
-    state     <- parseState    =<< string stateStr
+    merged    <- bool mergedStr
+    state     <- (parseState merged) =<< string stateStr
     createdAt <- parseDateTime =<< string createdAtStr
     reviewers <- array string reviewerList
     headRef   <- string head
