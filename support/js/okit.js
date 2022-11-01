@@ -59,6 +59,7 @@ const digPr = pr => {
       author: pr.user.login,
       state: pr.state,
       created_at: pr.created_at,
+      merged: pr.merged_at !== null,
       reviewers: pr.requested_reviewers.map(u => u.login),
       head_ref: pr.head.ref
     }
@@ -66,8 +67,9 @@ const digPr = pr => {
 const digPrs = prJson =>
   prJson.map(digPr)
 
+// List PRs for a branch
 // Executes callback with stringified JSON [{"pull_number": Int, "author": String}]
-const okit_list_prs = (octokit, owner, repo, branch, onSuccess, onFailure) =>
+const okit_list_pull_requests_for_branch = (octokit, owner, repo, branch, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.pulls.list({ owner, repo, head: `${owner}:${branch}`, state: 'open', per_page: 10 }),
     r => onSuccess(JSON.stringify(digPrs(r.data))),
@@ -106,7 +108,7 @@ const okit_list_reviewers = (octokit, owner, repo, state, per_page, onSuccess, o
   )
 
 // list PRs
-// Executes callback with [{ "pull_number": Int, "author": String, "state": String, "reviewers": [String] }]
+// Executes callback with [{ "pull_number": Int, "author": String, "state": String, "merged": Boolean, "reviewers": [String] }]
 const okit_list_pull_requests = (octokit, owner, repo, state, per_page, page, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.pulls.list({ owner, repo, state, per_page, page }),

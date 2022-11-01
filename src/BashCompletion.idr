@@ -48,6 +48,12 @@ cmdOpts partialArg "contribute" =
   if partialArg `isPrefixOf` "--checkout"
      then Just ["--checkout"]
      else Just []
+cmdOpts "--" "graph" = Nothing
+cmdOpts "-" "graph"  = Just ["--completed", "-c"]
+cmdOpts partialArg "graph" =
+  if partialArg `isPrefixOf` "--completed"
+     then Just ["--completed"]
+     else Nothing
 
 -- anything else requires configuration being loaded
 cmdOpts _ _ = Nothing

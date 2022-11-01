@@ -117,7 +117,7 @@ namespace Reflect
   reflectOnSelf = do
     prs     <- listPartitionedPRs prCount {pageBreaks=4}
     myLogin <- login <$> getSelf
-    reviews <- reviewsForUser myLogin (take (cast reviewDetailsCount) . reverse . sortBy (compare `on` createdAt) $ combined prs)
+    reviews <- reviewsByUser myLogin (take (cast reviewDetailsCount) . reverse . sortBy (compare `on` createdAt) $ combined prs)
     let mostRecentReview = map submittedAt . head' $ sortBy (compare `on` submittedAt) reviews
     let history = tuple prs
     let (openAuthored, closedAuthored) = 

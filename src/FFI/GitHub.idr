@@ -68,7 +68,7 @@ listMyTeams : Octokit => Promise (List String)
 listMyTeams @{Kit ptr} =
   lines <$> (promiseIO $ prim__listMyTeams ptr)
 
-%foreign okit_ffi "list_prs"
+%foreign okit_ffi "list_pull_requests_for_branch"
 prim__listPRsForBranch : Ptr OctokitRef 
                       -> (owner : String) 
                       -> (repo : String) 
@@ -130,7 +130,11 @@ createComment : Octokit =>
 createComment @{Kit ptr} owner repo issueOrPrNumber message =
   ignore . promiseIO $ prim__createComment ptr owner repo issueOrPrNumber message
 
-pullRequestStateFilter : Maybe PRState -> String
+Show GitHubPRState where
+  show Open   = "open"
+  show Closed = "closed"
+
+pullRequestStateFilter : Maybe GitHubPRState -> String
 pullRequestStateFilter Nothing = "all"
 pullRequestStateFilter (Just s) = show s
 
@@ -149,7 +153,7 @@ export
 listPullReviewers : Octokit => 
                     (owner : String) 
                  -> (repo : String) 
-                 -> (stateFilter : Maybe PRState) 
+                 -> (stateFilter : Maybe GitHubPRState) 
                  -> (pageLimit : Fin 101) 
                  -> Promise (List String)
 listPullReviewers @{Kit ptr} owner repo stateFilter pageLimit = 
@@ -170,7 +174,7 @@ export
 listPullRequestsJsonStr : Octokit =>
                           (owner : String) 
                        -> (repo : String) 
-                       -> (stateFilter : Maybe PRState) 
+                       -> (stateFilter : Maybe GitHubPRState) 
                        -> (pageLimit : Fin 101) 
                        -> {default 0 page : Nat}
                        -> Promise String
@@ -191,7 +195,7 @@ export
 listPullRequests : Octokit => 
                    (owner : String) 
                 -> (repo : String) 
-                -> (stateFilter : Maybe PRState) 
+                -> (stateFilter : Maybe GitHubPRState) 
                 -> (pageLimit : Fin 101) 
                 -> {default 0 page : Nat}
                 -> Promise (List PullRequest)

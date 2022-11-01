@@ -8,6 +8,7 @@ import Data.Date
 import Data.List
 import Data.Promise
 import Data.PullRequest
+import Data.SortedMap
 import Data.String
 import Data.String.Extra
 import Data.User
@@ -89,13 +90,52 @@ listTeam @{config} team =
     putNameLn user =
       hsep [(fillBreak 15 . annotate italic $ pretty user.login), "-", (pretty user.name)]
 
+data GraphArg : Type where
+  TeamName : String -> GraphArg
+  IncludeCompletedReviews : GraphArg
+
+teamNameArg : GraphArg -> Maybe String
+teamNameArg (TeamName n) = Just n
+teamNameArg _ = Nothing
+
 graphTeam : Config => Octokit =>
-            (team : String) 
+            List GraphArg
          -> Promise ()
-graphTeam @{config} team =
-  do teamMemberLogins <- listTeamMembers config.org team
-     (openReviewers, closedReviewers) <- listReviewers 100 {pageBreaks=4}
-     renderIO $ reviewsGraph closedReviewers openReviewers teamMemberLogins
+graphTeam @{config} args = do
+  let includeCompletedReviews = find (\case IncludeCompletedReviews => True; _ => False) args
+  let Just teamName = head' $ mapMaybe teamNameArg args
+    | Nothing => reject "The graph command expects the name of a GitHub Team as an argument."
+  teamMemberLogins <- listTeamMembers config.org teamName
+  prs <- listPartitionedPRs 100 {pageBreaks=4}
+  let (openReviewers, closedReviewers) = prs.allReviewers
+  completedReviews <- 
+    case (isJust includeCompletedReviews) of
+         True  => countReviewsByEachUser (combined prs)
+         False => pure empty
+  renderIO $ reviewsGraph closedReviewers openReviewers teamMemberLogins (Just completedReviews)
+
+(<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
+(<||>) f g x = f x <|> g x
+
+infix 2 <||>
+
+parseGraphArgs : List String -> Either String (List GraphArg)
+parseGraphArgs [] = Right []
+parseGraphArgs (x :: y :: z :: xs) =
+  Left "graph accepts at most one team name and the --completed flag."
+parseGraphArgs args =
+  case (traverse (parseCompletedFlag <||> parseTeamArg) args) of
+       Just args => Right args
+       Nothing   =>
+         Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
+  where
+    parseCompletedFlag : String -> Maybe GraphArg
+    parseCompletedFlag "-c" = Just IncludeCompletedReviews
+    parseCompletedFlag "--completed" = Just IncludeCompletedReviews
+    parseCompletedFlag _ = Nothing
+
+    parseTeamArg : String -> Maybe GraphArg
+    parseTeamArg str = Just (TeamName str)
 
 data ContributeArg = Checkout | Skip Nat
 
@@ -122,25 +162,20 @@ contribute @{config} args =
               checkoutBranch branch
             putStrLn  pr.webURI
 
-(<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
-(<||>) f g x = f x <|> g x
-
-infix 2 <||>
-
 parseContributeArgs : List String -> Either String (List ContributeArg)
 parseContributeArgs [] = Right []
 parseContributeArgs (_ :: _ :: _ :: _) =
   Left "contribute's arguments must be either -<num> to skip num PRs or --checkout (-c) to checkout the branch needing review."
 parseContributeArgs args =
-  case (traverse (parseSkipArg <||> parseCheckoutArg) args) of
+  case (traverse (parseSkipArg <||> parseCheckoutFlag) args) of
        Just args => Right args
        Nothing   =>
          Left "contribute's arguments must be either -<num> to skip num PRs or --checkout (-c) to checkout the branch needing review."
   where
-    parseCheckoutArg : String -> Maybe ContributeArg
-    parseCheckoutArg "-c" = Just Checkout
-    parseCheckoutArg "--checkout" = Just Checkout
-    parseCheckoutArg _ = Nothing
+    parseCheckoutFlag : String -> Maybe ContributeArg
+    parseCheckoutFlag "-c" = Just Checkout
+    parseCheckoutFlag "--checkout" = Just Checkout
+    parseCheckoutFlag _ = Nothing
 
     parseSkipArg : String -> Maybe ContributeArg
     parseSkipArg skipArg =
@@ -202,10 +237,10 @@ handleAuthenticatedArgs ["list"] =
   reject "The list command expects the name of a GitHub Team as an argument."
 handleAuthenticatedArgs @{config} ["list", teamName] =
   listTeam teamName
-handleAuthenticatedArgs ["graph"] =
-  reject "The graph command expects the name of a GitHub Team as an argument."
-handleAuthenticatedArgs @{config} ["graph", teamName] =
-  graphTeam teamName
+handleAuthenticatedArgs @{config} ("graph" :: args) =
+  case (parseGraphArgs args) of
+       Right args => graphTeam args
+       Left err   => exitError err
 handleAuthenticatedArgs ["assign"] =
   reject "The assign commaand expects one or more names of GitHub Teams or Users as arguments."
 handleAuthenticatedArgs ["assign", "--dry"] =

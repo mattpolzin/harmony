@@ -11,6 +11,7 @@ import Data.Pagination
 import Data.Promise
 import Data.PullRequest
 import Data.Review
+import Data.SortedMap
 import Data.String
 import Data.String.Extra
 import FFI.Concurrency
@@ -53,6 +54,7 @@ combined history = history.openPRs ++ history.closedPRs
 ||| Extract a tuple of open and closed PR reviewer names
 ||| from a PR history. A given reviewer's login appears
 ||| in the result once for each review request.
+||| The tuple is structured (open list, closed list)
 export
 (.allReviewers) : PRHistory -> (List String, List String)
 (.allReviewers) = mapHom (join . map reviewers) . tuple
@@ -95,6 +97,10 @@ listPartitionedPRs @{config} {pageBreaks} prCount with ((finToNat prCount) `isGT
     _ | (No _)       = partition' (metaPages  (finToNat prCount)  1)
     _ | (Yes prf'') = partition' (metaPages' (finToNat prCount) (S pageBreaks))
 
+||| List the names of all reviewers of open and closed PRs. A
+||| given reviewer's login appears in the result once for each
+||| review request.
+||| The tuple is structured (open list, closed list)
 export
 listReviewers : Config => Octokit =>
                 {default 0 pageBreaks : Nat}
@@ -102,22 +108,52 @@ listReviewers : Config => Octokit =>
              -> Promise (List String, List String)
 listReviewers = map (.allReviewers) . (listPartitionedPRs {pageBreaks})
 
-||| Get the reviews on the given PRs by the given user.
-export
-reviewsForUser : Config => Octokit =>
-                 (author : String)
-              -> List PullRequest
-              -> Promise (List Review)
-reviewsForUser @{config} author prs =
-  do let filteredPrs = filter (\pr => not $ isAuthor author pr || isRequestedReviewer author pr) prs
-     -- ^ we know we aren't looking for reviews on the author's PRs.
-     reviewsJson <- promiseAll =<< traverse forkedReviews filteredPrs
-     -- ^ list of JSON Arrays
-     reviews <- either $ traverse (array parseReview) reviewsJson
-     pure $ filter (isAuthor author) (join reviews)
+||| Get all of the reviews on the given PRs.
+reviewsForPrs : Config => Octokit =>
+                List PullRequest
+             -> Promise (List Review)
+reviewsForPrs prs = do
+    reviewsJson <- promiseAll =<< traverse forkedReviews prs
+    -- ^ list of JSON Arrays
+    reviews <- either $ traverse (array parseReview) reviewsJson
+    pure $ join reviews
   where
     forkedReviews : PullRequest -> Promise Future
     forkedReviews = fork . ("reviews --json " ++) . show . number
+
+||| Get the reviews on the given PRs by the given user.
+export
+reviewsByUser : Config => Octokit =>
+                (author : String)
+             -> List PullRequest
+             -> Promise (List Review)
+reviewsByUser author prs = do
+  let filteredPrs = filter (\pr => not $ isAuthor author pr || isRequestedReviewer author pr) prs
+  -- ^ we know we aren't looking for reviews on the author's PRs.
+  reviews <- reviewsForPrs filteredPrs
+  pure $ filter (isAuthor author) reviews
+
+||| Get reviews for the given PRs broken down by review author.
+export
+reviewsByEachUser : Config => Octokit =>
+                    List PullRequest
+                 -> Promise (SortedMap String (List Review))
+reviewsByEachUser prs = do
+  reviews <- reviewsForPrs prs
+  let groupedReviews = groupAllWith (.author) reviews
+  let taggedGroups = groupedReviews <&> (\rs => ((head rs).author, forget rs))
+  pure $ fromList taggedGroups
+
+||| Get a map from each user to the number of reviews that user gave over the
+||| given pull requests. Any user that did not give reviews will not be included
+||| in the resulting map.
+|||
+||| IMPORTANT: This makes one API request per PR so it can be expensive and slow.
+export
+countReviewsByEachUser : Config => Octokit =>
+                         List PullRequest
+                      -> Promise (SortedMap String Nat)
+countReviewsByEachUser = pure . (map length) <=< reviewsByEachUser
 
 ||| Request reviews.
 ||| @ pullRequest     The Pull Request for which reviews should be requested.
