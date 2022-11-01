@@ -163,6 +163,8 @@ Running `harmony list <team>` will list the members of the given GitHub Team.
 ### Graph
 Running `harmony graph <team>` will graph the relative review workload of each of the members of the given GitHub Team.
 
+You can optionally graph completed PR reviews with the `--completed` flag as well, though these are not considered for Harmony's weighting algorithm for review workload.
+
 ### Config
 Running `harmony config <property>` will read the given configuration property. `harmony config <property> <value>` will set the configuration property.
 
