@@ -63,6 +63,8 @@ record Config where
   commentOnAssign : Bool
   ||| Local cache of GitHub teams within the configured org.
   teamSlugs     : List String
+  ||| Local cache of GitHub labels for the configured repo.
+  repoLabels    : List String
   ||| Local cache of GitHub members within the configured org.
   orgMembers    : List String
   ||| A GitHub Personal Access Token. This value is only used if
@@ -77,16 +79,21 @@ record Config where
 
 public export
 data SettableProp : (name : String) -> (help : String) -> Type where
-  AssignTeams     : SettableProp "assignTeams"
-                                 "[true/false] Determines whether or not to assign teams when assigning individual reviewers from a team."
-  AssignUsers     : SettableProp "assignUsers"
-                                 "[true/false] Determines whether or not to assign an individual user based on Harmony's heuristics when assigning teams. You might want to disable `assginUsers` to allow GitHub to pick users to assign based on the team. This setting does not affect the ability to assign individual users withe Harmony's `+<username>` syntax."
-  CommentOnAssign : SettableProp "commentOnAssign"
-                                 "[true/false] Determines whether to comment on PR indicating that Harmony chose a reviewer."
-  DefaultRemote   : SettableProp "defaultRemote"
-                                 "[string]     The name of the default Git remote to use (e.g. 'origin')."
-  GithubPAT       : SettableProp "githubPAT"
-                                 "[string]     The Personal Access Token Harmony should use to authenticate with GitHub. You can leave this unset if you want to set a PAT via the GITHUB_PAT environment variable."
+  AssignTeams     : SettableProp
+    "assignTeams"
+    "[true/false] Determines whether or not to assign teams when assigning individual reviewers from a team."
+  AssignUsers     : SettableProp
+    "assignUsers"
+    "[true/false] Determines whether or not to assign an individual user based on Harmony's heuristics when assigning teams. You might want to disable `assginUsers` to allow GitHub to pick users to assign based on the team. This setting does not affect the ability to assign individual users withe Harmony's `+<username>` syntax."
+  CommentOnAssign : SettableProp
+    "commentOnAssign"
+    "[true/false] Determines whether to comment on PR indicating that Harmony chose a reviewer."
+  DefaultRemote   : SettableProp
+    "defaultRemote"
+    "[string]     The name of the default Git remote to use (e.g. 'origin')."
+  GithubPAT       : SettableProp
+    "githubPAT"
+    "[string]     The Personal Access Token Harmony should use to authenticate with GitHub. You can leave this unset if you want to set a PAT via the GITHUB_PAT environment variable."
 
 public export
 SomeSettableProp : Type
@@ -176,6 +183,7 @@ Show Config where
     , "    assignUsers: \{show config.assignUsers}"
     , "commentOnAssign: \{show config.commentOnAssign}"
     , "      teamSlugs: \{show config.teamSlugs}"
+    , "     repoLabels: \{show config.repoLabels}"
     , "     orgMembers: \{show config.orgMembers}"
     , "      githubPAT: \{personalAccessToken}"
     ]
@@ -188,7 +196,8 @@ Show Config where
 
 export
 json : Config -> JSON
-json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams assignUsers commentOnAssign teamSlugs orgMembers githubPAT _) = 
+json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams assignUsers commentOnAssign
+               teamSlugs repoLabels orgMembers githubPAT _) = 
   JObject [
       ("assignTeams"    , JBoolean assignTeams)
     , ("assignUsers"    , JBoolean assignUsers)
@@ -199,6 +208,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams assignUse
     , ("mainBranch"     , JString mainBranch)
     , ("orgMembers"     , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"      , JArray $ JString <$> sort teamSlugs)
+    , ("repoLabels"     , JArray $ JString <$> sort repoLabels)
     , ("githubPAT"      , maybe JNull (JString . expose) githubPAT)
     , ("updatedAt"      , JNumber $ cast updatedAt)
     ]
@@ -229,6 +239,8 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                               ] config
                                           let maybeAssignUsers = lookup "assignUsers" config
                                           -- TODO 2.0.0:  ^ remove optionality with version 2.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
+                                          let maybeRepoLabels = lookup "repoLabels" config
+                                          -- TODO 2.0.0:  ^ remove optionality with version 2.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
                                           let maybeDefaultRemote = lookup "defaultRemote" config
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           ua <- cast <$> integer updatedAt
@@ -239,7 +251,8 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                           at <- bool assignTeams
                                           au <- maybe (Right True) bool maybeAssignUsers
                                           ca <- bool commentOnAssign
-                                          ts <- array string teamSlugs 
+                                          ts <- array string teamSlugs
+                                          rl <- maybe (Right []) (array string) maybeRepoLabels
                                           om <- array string orgMembers
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           pure $ MkConfig {
@@ -251,6 +264,7 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                             , assignTeams      = at
                                             , assignUsers      = au
                                             , teamSlugs        = ts
+                                            , repoLabels       = rl
                                             , commentOnAssign  = ca
                                             , orgMembers       = om
                                             , githubPAT        = (map Hide) gp

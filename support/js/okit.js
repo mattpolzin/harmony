@@ -32,6 +32,17 @@ const okit_get_repo_default_branch = (octokit, org, repo, onSuccess, onFailure) 
     idris__okit_stringify_error(onFailure)
   )
 
+// get repo labels
+const digLabelNames = labelsJson =>
+  labelsJson.map(l => l.name)
+
+const okit_list_repo_labels = (octokit, org, repo, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.issues.listLabelsForRepo({ owner: org, repo, per_page: 100 }),
+    r => onSuccess(newline_delimited(digLabelNames(r.data))),
+    idris__okit_stringify_error(onFailure)
+)
+
 // list teams
 const digTeams = teamsJson =>
   teamsJson.map(t => t.slug)
