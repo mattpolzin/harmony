@@ -100,14 +100,10 @@ handleAuthenticatedArgs @{config} ("graph" :: args) =
   case (parseGraphArgs args) of
        Right args => Commands.graph args
        Left err   => exitError err
-handleAuthenticatedArgs ["assign"] =
-  reject "The assign command expects one or more names of GitHub Teams or Users as arguments."
-handleAuthenticatedArgs ["assign", "--dry"] =
-  reject "The assign command expects one or more names of GitHub Teams or Users as arguments."
-handleAuthenticatedArgs ("assign" :: "--dry" :: assign1 :: assignRest) =
-  Commands.assign (assign1 :: assignRest) {dry=True}
-handleAuthenticatedArgs ("assign" :: assign1 :: assignRest) =
-  Commands.assign (assign1 :: assignRest)
+handleAuthenticatedArgs ("assign" :: "--dry" :: assignRest) =
+  Commands.assign assignRest {dry=True}
+handleAuthenticatedArgs ("assign" :: assignRest) =
+  Commands.assign assignRest
 handleAuthenticatedArgs ["label"] =
   reject "The label command expects one or more labels as arguments."
 handleAuthenticatedArgs ("label" :: label1 :: labels) =

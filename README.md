@@ -98,11 +98,11 @@ Running `harmony config <property>` will read the given configuration property. 
 
 Not all configuration properties can be read/set with this command.
 #### Properties
-- `assignTeams` -- When picking a reviewer from a team, assign the team as a reviewer as well.
-- `assignUsers` -- When assigning a team as a reviewer, pick a user to review as well.
-- `commentOnAssign` -- When assigning a reviewer chosen by Harmony, comment on the pull request.
-- `defaultRemote` -- When pushing new branches, what remote destination should be used.
-- `githubPAT` -- If the `$GITHUB_PAT` environment variable is not set, this Personal Access Token is used to authenticate with GitHub.
+- `assignTeams` (`true`/`false`) -- When picking a reviewer from a team, assign the team as a reviewer as well.
+- `assignUsers` (`true`/`false`) -- When assigning a team as a reviewer, pick a user to review as well.
+- `commentOnAssign` (`true`/`false`) -- When assigning a reviewer chosen by Harmony, comment on the pull request.
+- `defaultRemote` (optional string) -- When pushing new branches, what remote destination should be used.
+- `githubPAT` (optional string) -- If the `$GITHUB_PAT` environment variable is not set, this Personal Access Token is used to authenticate with GitHub.
 
 ### Branch
 Running `harmony branch` will print the URI for accessing the currently checked out branch on GitHub.
@@ -120,7 +120,7 @@ Many operating systems have an `open` command (though the name "open" is not ubi
 Running `harmony label {<label>} [...]` will help you create a PR if one does not exist yet and then it will apply the given labels to the PR.
 
 ### Assign
-Running `harmony assign {<team> | +<user>} [...]` will help you create a PR if one does not exist yet and then it will assign teams and/or users to the PR.
+Running `harmony assign {<team> | +<user>} [#<label>] [...]` will help you create a PR if one does not exist yet and then it will assign teams and/or users to the PR.
 
 If `harmony config assignUsers` is `True` (defualt) then harmony will pick someone to review the PR (from one of the listed teams) and assign them to the PR. If `harmony config assignTeams` is `True` then harmony will assign the teams you listed as reviewers of the PR. If `harmony config commentOnAssign` is `True` then harmony will comment on the Pull Request indicating that teams & users were "harmoniously assigned" -- this comment will @mention assigned users so it may be useful or annoying depending on the assigned user's GitHub notification settings.
 
@@ -131,6 +131,8 @@ If your team has GitHub set up to auto-assign individuals when a team is request
 harmony config assignTeams true
 harmony config assignUsers false
 ```
+
+You can optionally apply any number of labels to the PR at the same time as assigning reviewers by prefixing the labels with '#'.
 
 #### Examples
 Assign the most available reviewer from the "developers" GitHub Team:
