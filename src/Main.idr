@@ -81,8 +81,16 @@ label : Config => Git => Octokit =>
 label labels =
   do (_, openPr) <- identifyOrCreatePR !currentBranch
      allLabels <- addLabels openPr labels
-     putStrLn "Added \{show labels}."
-     putStrLn "All labels for PR of \{openPr.headRef}: \{show allLabels}."
+     renderIO $ vsep
+       [ "Added" <++> putLabels labels <+> " to PR."
+       , pretty "All labels for PR of \{openPr.headRef}:" <++> putLabels allLabels <+> "."
+       ]
+  where
+    putLabel : String -> Doc AnsiStyle
+    putLabel = enclose "\"" "\"" . annotate (color Green) . pretty
+
+    putLabels : List String -> Doc AnsiStyle
+    putLabels = hcat . intersperse (pretty ", ") . map putLabel
 
 listTeam : Config => Octokit =>
            (team : String) 
