@@ -44,18 +44,19 @@ exitError err =
 
 covering
 bashCompletion : HasIO io => 
-                 (curWord : String) 
+                 (subcommand : String)
+              -> (curWord : String) 
               -> (prevWord : String) 
               -> io ()
-bashCompletion curWord prevWord = 
-  let completions = maybe configuredOpts pure (cmdOpts curWord prevWord)
+bashCompletion subcommand curWord prevWord = 
+  let completions = maybe configuredOpts pure (BashCompletion.cmdOpts subcommand curWord prevWord)
   in  putStr $ unlines !completions
   where
     configuredOpts : io (List String)
     configuredOpts =
       do Right config <- loadConfig False Nothing
            | Left _ => pure []
-         pure (BashCompletion.opts curWord prevWord)
+         pure (BashCompletion.opts subcommand curWord prevWord)
 
 resolve'' : Promise () -> IO ()
 resolve'' = resolve' pure exitError
@@ -317,7 +318,8 @@ handleArgs : Git =>
           -> (editor : Maybe String)
           -> List String 
           -> IO ()
-handleArgs _ _ _ ["--bash-completion", curWord, prevWord] = bashCompletion curWord prevWord
+handleArgs _ _ _ ["--bash-completion", curWord, prevWord] = exitError "Bash completion is currently configured using a pre-v2.0 version of harmony. Please restart your shell, re-source your resource script, or re-run 'eval \"$(harmony --bash-completion-script)\"'"
+handleArgs _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = bashCompletion subcommand curWord prevWord
 handleArgs _ _ _ ["--bash-completion-script"] = putStrLn BashCompletion.script
 handleArgs envPAT terminalColors editor args = 
   resolve'' $
