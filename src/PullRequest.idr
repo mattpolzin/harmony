@@ -215,12 +215,16 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} = do
 
 export
 identifyOrCreatePR : Config => Git => Octokit => 
-                     (branch : String) 
+                     {default False isDraft : Bool}
+                  -> (branch : String) 
                   -> Promise (IdentifiedOrCreated, PullRequest)
-identifyOrCreatePR @{config} branch = do
+identifyOrCreatePR @{config} {isDraft} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
     | [] => (Created,) <$> createPR
     | _  => reject "Multiple PRs for the current brach. Harmony only handles 1 PR per branch currently."
+  when (isDraft && not openPr.isDraft) $
+--     putStrLn "Are you sure you want to convert the existing PR for this branch to a draft?"
+    reject "There is already a PR for the current branch and Harmony does not currently support converting existing PRs to drafts."
   pure (Identified, openPr)
     where
       inlineDescription : HasIO io => io String
@@ -265,5 +269,5 @@ identifyOrCreatePR @{config} branch = do
                             Just ed => either (const "") id <$> editorDescription ed templateFilePath
         putStrLn "Creating PR..."
         putStrLn branch
-        GitHub.createPR config.org config.repo branch baseBranch title description
+        GitHub.createPR {isDraft} config.org config.repo branch baseBranch title description
 

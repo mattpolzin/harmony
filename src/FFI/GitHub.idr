@@ -110,21 +110,23 @@ prim__createPR : Ptr OctokitRef
               -> (base : String) 
               -> (title : String) 
               -> (body : String) 
+              -> (isDraft : Bool)
               -> (onSuccess : String -> PrimIO ()) 
               -> (onFailure : String -> PrimIO ()) 
               -> PrimIO ()
 
 export
 createPR : Octokit => 
-           (owner : String) 
+           {default False isDraft : Bool}
+        -> (owner : String) 
         -> (repo : String) 
         -> (head : String) 
         -> (base : String) 
         -> (title : String) 
         -> (description : String) 
         -> Promise PullRequest
-createPR @{Kit ptr} owner repo head base title description =
-  either . parsePullRequestString =<< (promiseIO $ prim__createPR ptr owner repo head base title description)
+createPR @{Kit ptr} {isDraft} owner repo head base title description =
+  either . parsePullRequestString =<< (promiseIO $ prim__createPR ptr owner repo head base title description isDraft)
 
 %foreign okit_ffi "create_comment"
 prim__createComment : Ptr OctokitRef 

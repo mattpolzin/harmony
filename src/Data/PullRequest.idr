@@ -43,6 +43,8 @@ record PullRequest where
   number    : Integer
   ||| When the PR was created.
   createdAt : Date
+  ||| Is the PR currently a "draft"?
+  isDraft : Bool
   ||| The `login` of the author of the pull request.
   author    : String
   ||| Open or Closed status.
@@ -56,7 +58,7 @@ record PullRequest where
 
 export
 Show PullRequest where
-  show (MkPullRequest number _ author state _ headRef) = "[\{show number}] headRef: \{show author} (\{show state})"
+  show (MkPullRequest number _ _ author state _ headRef) = "[\{show number}] headRef: \{show author} (\{show state})"
 
 export
 (.webURI) : Config => PullRequest -> String
@@ -84,10 +86,11 @@ export
 parsePR : JSON -> Either String PullRequest
 parsePR json =
  do pr <- object json
-    [pullNumber, authorLogin, stateStr, createdAtStr, mergedStr, reviewerList, head] <- lookupAll ["pull_number", "author", "state", "created_at", "merged", "reviewers", "head_ref"] pr
+    [pullNumber, authorLogin, stateStr, createdAtStr, mergedStr, isDraftStr, reviewerList, head] <- lookupAll ["pull_number", "author", "state", "created_at", "merged", "draft", "reviewers", "head_ref"] pr
     number    <- integer pullNumber
     author    <- string authorLogin
     merged    <- bool mergedStr
+    isDraft   <- bool isDraftStr
     state     <- (parseState merged) =<< string stateStr
     createdAt <- parseDateTime =<< string createdAtStr
     reviewers <- array string reviewerList
@@ -95,6 +98,7 @@ parsePR json =
     pure $ MkPullRequest {
         number
       , createdAt
+      , isDraft
       , author
       , state
       , reviewers
