@@ -88,6 +88,11 @@ label @{config} labels =
        , pretty "All labels for PR of \{openPr.headRef}:" <++> putLabels allLabels <+> "."
        ]
   where
+    ||| In order to support tab completion of multi-word labels, spaces have been turned into
+    ||| another character to "slugify" the labels. Still, it is possible the user has entered
+    ||| a label that literally contains the character used during slugification, so to
+    ||| unslugify, we first see if a label appears in the configured list of labels. If it does
+    ||| then we use it exactly but if it doesn't then we unslugify it before using it.
     unslugify : (configLabels : List String) -> (slugifiedLabel : String) -> String
     unslugify configLabels slugifiedLabel =
       case find (== slugifiedLabel) configLabels of
