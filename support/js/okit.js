@@ -10,7 +10,11 @@ const idris__okit_unpromisify = (promise, onSuccess, onFailure) =>
 const idris__okit_stringify_error = (fn) => (err) => {
   const url = err.response.url
   const msg = err.response.data.message
-  return fn('Octokit Error: ' + msg + ' (' + url + ')')
+  const details =
+    Array.isArray(err.response.data.errors)
+    ? '\n - ' + err.response.data.errors.map(e => e.message).join('\n - ')
+    : ''
+  return fn('GitHub Error: ' + msg + ' (' + url + ')' + details)
 }
 
 const newline_delimited = array =>
