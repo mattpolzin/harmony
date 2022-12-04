@@ -56,24 +56,6 @@ pr = do
     | _ => pure ()
   putStrLn pr.webURI
 
-||| Assign the given teams & users as reviewers when the user executes
-||| `harmony assign ...`.
-export
-assign : Config => Git => Octokit => 
-         (assignArgs : List String) 
-      -> {default False dry : Bool} 
-      -> Promise ()
-assign args {dry} =
-  do (_, openPr) <- identifyOrCreatePR !currentBranch
-     let (forcedReviewers, teamNames) = partitionedArgs
-     requestReviewers openPr teamNames forcedReviewers {dry}
-  where
-    -- partition args into user logins and team slugs
-    partitionedArgs : (List String, List String)
-    partitionedArgs = 
-      let part = partition (isPrefixOf "+") args
-      in  mapFst (map $ drop 1) part
-
 ||| Apply the given labels to the current PR when the user executes
 ||| `harmony label <label> ...`.
 export
@@ -105,6 +87,30 @@ label @{config} labels =
 
     putLabels : List String -> Doc AnsiStyle
     putLabels = hcat . intersperse (pretty ", ") . map putLabel
+
+||| Assign the given teams & users as reviewers when the user executes
+||| `harmony assign ...`.
+export
+assign : Config => Git => Octokit => 
+         (assignArgs : List String) 
+      -> {default False dry : Bool} 
+      -> Promise ()
+assign args {dry} =
+  do let (forcedReviewers, teamNames, labelSlugs) = partitionedArgs
+     if (null forcedReviewers && null teamNames)
+        then reject "The assign command expects one or more names of GitHub Teams or Users as arguments."
+        else do (_, openPr) <- identifyOrCreatePR !currentBranch
+                requestReviewers openPr teamNames forcedReviewers {dry}
+                when (not (null labelSlugs || dry)) $
+                  label labelSlugs
+  where
+    -- partition args into user logins, team slugs, and label slugs
+    partitionedArgs : (List String, List String, List String)
+    partitionedArgs = 
+      let (userArgs, otherArgs) = partition (isPrefixOf "+") args
+          (labelArgs, teams) = partition (isPrefixOf "#") otherArgs
+          (users, labels) = mapHom (map $ drop 1) (userArgs, labelArgs)
+      in  (users, teams, labels)
 
 ||| List members of a given team when the user executes
 ||| `harmony list <team>`.

@@ -103,15 +103,17 @@ opts @{config} "assign" "--" _ = config.teamSlugs
 opts @{config} "assign" partialArg _ =
   if partialArg `isPrefixOf` "--dry"
      then ["--dry"]
-     else filter (isPrefixOf partialArg) slugsOrLogins
+     else filter (isPrefixOf partialArg) slugsOrLoginsOrLabels
   where
     -- If the word being typed is prefixed with '+' return user logins
     -- but otherwise return team slugs. 
-    slugsOrLogins : List String
-    slugsOrLogins =
+    slugsOrLoginsOrLabels : List String
+    slugsOrLoginsOrLabels =
       if "+" `isPrefixOf` partialArg
         then (strCons '+') <$> config.orgMembers
-        else config.teamSlugs
+        else if "#" `isPrefixOf` partialArg
+               then (strCons '#') . slugify <$> config.repoLabels
+               else config.teamSlugs
 
 opts @{_} _ _ _ = []
 
