@@ -5,7 +5,7 @@ import Data.List1
 import Data.Nat
 import Data.String
 import Data.ReviewScore
-import System.Random.Node
+import System.Random
 import Util
 
 import Text.PrettyPrint.Prettyprinter

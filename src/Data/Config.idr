@@ -52,7 +52,7 @@ record Config where
   repo          : String
   ||| The remote name (e.g. "origin"). If unspecified, "origin" is assumed.
   defaultRemote : Maybe String
-  -- TODO 2.0.0:         ^ remove optionality with version 2.0.0; until then, we will support this being absent to be non-breaking
+  -- TODO 3.0.0:         ^ remove optionality with version 3.0.0; until then, we will support this being absent to be non-breaking
   ||| The main branch. New PRs are based off of this branch.
   mainBranch    : String
   ||| True to assign teams as well as individual users to PRs.
@@ -238,9 +238,9 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                               , "orgMembers"
                                               ] config
                                           let maybeAssignUsers = lookup "assignUsers" config
-                                          -- TODO 2.0.0:  ^ remove optionality with version 2.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
+                                          -- TODO 3.0.0:  ^ remove optionality with version 3.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
                                           let maybeRepoLabels = lookup "repoLabels" config
-                                          -- TODO 2.0.0:  ^ remove optionality with version 2.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
+                                          -- TODO 3.0.0:  ^ remove optionality with version 3.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
                                           let maybeDefaultRemote = lookup "defaultRemote" config
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           ua <- cast <$> integer updatedAt
