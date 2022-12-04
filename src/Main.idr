@@ -1,31 +1,21 @@
 module Main
 
-import AppVersion
-import BashCompletion
-import Config as Cfg
 import Data.Config
-import Data.Date
-import Data.List
 import Data.Promise
 import Data.PullRequest
-import Data.SortedMap
 import Data.String
-import Data.String.Extra
 import Data.User
-import FFI.Concurrency
+
+import AppVersion
+import BashCompletion
+import Commands
+import Config
 import FFI.Git
 import FFI.GitHub
-import Graph
 import Help
-import Label
 import Language.JSON
-import Language.JSON.Accessors
-import PullRequest as PR
-import Reviewer
 import System
 import System.File
-import User
-import Util
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -61,166 +51,6 @@ bashCompletion subcommand curWord prevWord =
 resolve'' : Promise () -> IO ()
 resolve'' = resolve' pure exitError
 
-assign : Config => Git => Octokit => 
-         (assignArgs : List String) 
-      -> {default False dry : Bool} 
-      -> Promise ()
-assign args {dry} =
-  do (_, openPr) <- identifyOrCreatePR !currentBranch
-     let (forcedReviewers, teamNames) = partitionedArgs
-     requestReviewers openPr teamNames forcedReviewers {dry}
-  where
-    -- partition args into user logins and team slugs
-    partitionedArgs : (List String, List String)
-    partitionedArgs = 
-      let part = partition (isPrefixOf "+") args
-      in  mapFst (map $ drop 1) part
-
-label : Config => Git => Octokit =>
-        (labels : List String)
-     -> Promise ()
-label @{config} labels =
-  do (_, openPr) <- identifyOrCreatePR !currentBranch
-     let finalLabels = unslugify config.repoLabels <$> labels
-     allLabels <- addLabels openPr finalLabels
-     renderIO $ vsep
-       [ "Added" <++> putLabels finalLabels <+> " to PR."
-       , pretty "All labels for PR of \{openPr.headRef}:" <++> putLabels allLabels <+> "."
-       ]
-  where
-    ||| In order to support tab completion of multi-word labels, spaces have been turned into
-    ||| another character to "slugify" the labels. Still, it is possible the user has entered
-    ||| a label that literally contains the character used during slugification, so to
-    ||| unslugify, we first see if a label appears in the configured list of labels. If it does
-    ||| then we use it exactly but if it doesn't then we unslugify it before using it.
-    unslugify : (configLabels : List String) -> (slugifiedLabel : String) -> String
-    unslugify configLabels slugifiedLabel =
-      case find (== slugifiedLabel) configLabels of
-           Just label => label
-           Nothing    => BashCompletion.unslugify slugifiedLabel
-
-    putLabel : String -> Doc AnsiStyle
-    putLabel = enclose "\"" "\"" . annotate (color Green) . pretty
-
-    putLabels : List String -> Doc AnsiStyle
-    putLabels = hcat . intersperse (pretty ", ") . map putLabel
-
-listTeam : Config => Octokit =>
-           (team : String) 
-        -> Promise ()
-listTeam @{config} team =
-  do teamMemberLogins <- sort <$> listTeamMembers config.org team
-     teamMembersJson <- promiseAll =<< traverse forkedUser teamMemberLogins
-     teamMembers <- traverse (either . parseUser) teamMembersJson
-     renderIO . vsep $ putNameLn <$> teamMembers
-  where
-    forkedUser : (login : String) -> Promise Future
-    forkedUser = fork . ("user --json " ++)
-
-    putNameLn : User -> Doc AnsiStyle
-    putNameLn user =
-      hsep [(fillBreak 15 . annotate italic $ pretty user.login), "-", (pretty user.name)]
-
-data GraphArg : Type where
-  TeamName : String -> GraphArg
-  IncludeCompletedReviews : GraphArg
-
-teamNameArg : GraphArg -> Maybe String
-teamNameArg (TeamName n) = Just n
-teamNameArg _ = Nothing
-
-graphTeam : Config => Octokit =>
-            List GraphArg
-         -> Promise ()
-graphTeam @{config} args = do
-  let includeCompletedReviews = find (\case IncludeCompletedReviews => True; _ => False) args
-  let Just teamName = head' $ mapMaybe teamNameArg args
-    | Nothing => reject "The graph command expects the name of a GitHub Team as an argument."
-  teamMemberLogins <- listTeamMembers config.org teamName
-  prs <- listPartitionedPRs 100 {pageBreaks=4}
-  let (openReviewers, closedReviewers) = prs.allReviewers
-  completedReviews <- 
-    case (isJust includeCompletedReviews) of
-         True  => countReviewsByEachUser (combined prs)
-         False => pure empty
-  renderIO $ reviewsGraph closedReviewers openReviewers teamMemberLogins (Just completedReviews)
-
-(<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
-(<||>) f g x = f x <|> g x
-
-infix 2 <||>
-
-parseGraphArgs : List String -> Either String (List GraphArg)
-parseGraphArgs [] = Right []
-parseGraphArgs (x :: y :: z :: xs) =
-  Left "graph accepts at most one team name and the --completed flag."
-parseGraphArgs args =
-  case (traverse (parseCompletedFlag <||> parseTeamArg) args) of
-       Just args => Right args
-       Nothing   =>
-         Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
-  where
-    parseCompletedFlag : String -> Maybe GraphArg
-    parseCompletedFlag "-c" = Just IncludeCompletedReviews
-    parseCompletedFlag "--completed" = Just IncludeCompletedReviews
-    parseCompletedFlag _ = Nothing
-
-    parseTeamArg : String -> Maybe GraphArg
-    parseTeamArg str = Just (TeamName str)
-
-data ContributeArg = Checkout | Skip Nat
-
-skipArg : ContributeArg -> Maybe Nat
-skipArg (Skip n) = Just n
-skipArg _ = Nothing
-
-contribute : Config => Git => Octokit =>
-             (args : List ContributeArg)
-          -> Promise ()
-contribute @{config} args =
-  do openPrs <- listPullRequests config.org config.repo (Just Open) 100
-     myLogin <- login <$> getSelf
-     let skip = fromMaybe 0 (head' $ mapMaybe skipArg args)
-     let checkout = find (\case Checkout => True; _ => False) args
-     let filtered = filter (not . isAuthor myLogin) openPrs
-     let parted = partition (isRequestedReviewer myLogin) filtered
-     let (mine, theirs) = (mapHom $ sortBy (compare `on` .createdAt)) parted
-     let pr = head' . drop skip $ mine ++ theirs
-     case pr of
-          Nothing => reject "No open PRs to review!"
-          Just pr => do
-            whenJust (checkout $> pr.headRef) $ \branch => do
-              checkoutBranch branch
-            putStrLn  pr.webURI
-
-parseContributeArgs : List String -> Either String (List ContributeArg)
-parseContributeArgs [] = Right []
-parseContributeArgs (_ :: _ :: _ :: _) =
-  Left "contribute's arguments must be either -<num> to skip num PRs or --checkout (-c) to checkout the branch needing review."
-parseContributeArgs args =
-  case (traverse (parseSkipArg <||> parseCheckoutFlag) args) of
-       Just args => Right args
-       Nothing   =>
-         Left "contribute's arguments must be either -<num> to skip num PRs or --checkout (-c) to checkout the branch needing review."
-  where
-    parseCheckoutFlag : String -> Maybe ContributeArg
-    parseCheckoutFlag "-c" = Just Checkout
-    parseCheckoutFlag "--checkout" = Just Checkout
-    parseCheckoutFlag _ = Nothing
-
-    parseSkipArg : String -> Maybe ContributeArg
-    parseSkipArg skipArg =
-      case unpack skipArg of
-           ('-' :: skip) => map (Skip . cast) . parsePositive $ pack skip
-           _             => Nothing
-
-printCurrentBranchURI : Config => Git => Promise ()
-printCurrentBranchURI @{config} = do
-  branch <- currentBranch
-  let org = config.org
-  let repo = config.repo
-  let uri = "https://github.com/\{org}/\{repo}/tree/\{branch}"
-  putStrLn uri
 
 ||| Handle commands that require both configuration and
 ||| authentication.
@@ -249,41 +79,39 @@ handleAuthenticatedArgs @{config} ["user", "--json", username] =
 
 -- user-facing commands:
 handleAuthenticatedArgs ["whoami"] =
-  printInfoOnSelf
+  Commands.whoami
 handleAuthenticatedArgs ["sync"] =
-  ignore $ syncConfig True
+  Commands.sync
 handleAuthenticatedArgs ["branch"] =
-  printCurrentBranchURI
+  Commands.branch
 handleAuthenticatedArgs ["pr"] =
-  do (Identified, pr) <- identifyOrCreatePR !currentBranch
-       | _ => pure ()
-     putStrLn pr.webURI
+  Commands.pr
 handleAuthenticatedArgs ["reflect"] =
-  reflectOnSelf
+  Commands.reflect
 handleAuthenticatedArgs ("contribute" :: args) =
   case (parseContributeArgs args) of
-       Right args => contribute args
+       Right args => Commands.contribute args
        Left err   => exitError err
 handleAuthenticatedArgs ["list"] =
   reject "The list command expects the name of a GitHub Team as an argument."
 handleAuthenticatedArgs @{config} ["list", teamName] =
-  listTeam teamName
+  Commands.list teamName
 handleAuthenticatedArgs @{config} ("graph" :: args) =
   case (parseGraphArgs args) of
-       Right args => graphTeam args
+       Right args => Commands.graph args
        Left err   => exitError err
 handleAuthenticatedArgs ["assign"] =
   reject "The assign command expects one or more names of GitHub Teams or Users as arguments."
 handleAuthenticatedArgs ["assign", "--dry"] =
   reject "The assign command expects one or more names of GitHub Teams or Users as arguments."
 handleAuthenticatedArgs ("assign" :: "--dry" :: assign1 :: assignRest) =
-  assign (assign1 :: assignRest) {dry=True}
+  Commands.assign (assign1 :: assignRest) {dry=True}
 handleAuthenticatedArgs ("assign" :: assign1 :: assignRest) =
-  assign (assign1 :: assignRest)
+  Commands.assign (assign1 :: assignRest)
 handleAuthenticatedArgs ["label"] =
   reject "The label command expects one or more labels as arguments."
 handleAuthenticatedArgs ("label" :: label1 :: labels) =
-  label (label1 :: labels)
+  Commands.label (label1 :: labels)
 
 -- error case:
 handleAuthenticatedArgs args =
