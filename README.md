@@ -4,7 +4,7 @@ Harmony is a small tool that helps teams keep GitHub reviews running smoothly. I
 
 ## Dependencies
 ### Runtime
-Running Harmony only requires NodeJS 12+ (and a local installation of `git`).
+Running Harmony only requires NodeJS 14+ (and a local installation of `git`).
 ### Build time
 Building the latest commits of Harmony requires a HEAD build of the Idris 2 compiler. Each release page also indicates the version of Idris 2 that particular release will build against.
 
@@ -91,7 +91,7 @@ Would you like harmony to assign teams in addition to individuals when it assign
 Creating config...
 ```
 
-Once configured, Harmony supports the following commands: `branch`, `pr`, `assign`, `contribute`, `whoami`, `reflect`, `list`, `graph`, `config`, and `sync`.
+Once configured, Harmony supports the following commands: `branch`, `pr`, `label`, `assign`, `contribute`, `whoami`, `reflect`, `list`, `graph`, `config`, and `sync`.
 
 ### Branch
 Running `harmony branch` will print the URI for accessing the currently checked out branch on GitHub.
@@ -104,6 +104,9 @@ Running `harmony pr` with a branch checked out will reach out to GitHub to deter
 If you need to create a PR still, you will be prompted for a branch to open the PR against (merge into, eventually), a title for the PR, and a description for the PR. If you have an `EDITOR` environment variable set, Harmony will use that editor to get the PR description from you. If you have a PR template at `.github/PULL_REQUEST_TEMPLATE.md`, Harmony will also preload that into your editor. If you do not have an `EDITOR` environment variable set, you will still be able to enter a description from the command line but PR templates are only supported when an `EDITOR` is specified.
 
 Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony pr)` to open a web browser to an existing PR for the current branch.
+
+### Label
+Running `harmony label {<label>} [...]` will help you create a PR if one does not exist yet and then it will apply the given labels to the PR.
 
 ### Assign
 Running `harmony assign {<team> | +<user>} [...]` will help you create a PR if one does not exist yet and then it will pick someone to review the PR (from one of the listed teams) and assign both that user and the teams you listed as reviewers of the PR.

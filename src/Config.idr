@@ -31,16 +31,18 @@ export
 syncConfig : Config => Octokit => (echo : Bool) -> Promise Config
 syncConfig @{config} echo =
  do teamSlugs  <- listTeams config.org
+    labelNames <- listRepoLabels config.org config.repo
     orgMembers <- listOrgMembers config.org
     updatedAt  <- cast {to=Timestamp} <$> time
     let config' = { updatedAt  := updatedAt
                   , teamSlugs  := teamSlugs
+                  , repoLabels := labelNames
                   , orgMembers := orgMembers
                   } config
     ignore $ writeConfig config'
     when echo $
       do putStrLn "Your updated configuration is:"
-         printLn config
+         printLn config'
     pure config'
 
 export
@@ -223,6 +225,7 @@ createConfig envGithubPAT terminalColors editor = do
     , editor
     }
   do teamSlugs  <- listTeams org
+     repoLabels <- listRepoLabels org repo
      orgMembers <- listOrgMembers org
      let config = MkConfig {
          updatedAt
@@ -234,6 +237,7 @@ createConfig envGithubPAT terminalColors editor = do
        , assignUsers
        , commentOnAssign
        , teamSlugs
+       , repoLabels
        , orgMembers
        , githubPAT = hide <$> configPAT
        , ephemeral

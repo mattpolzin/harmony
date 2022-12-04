@@ -20,9 +20,8 @@ import FFI.GitHub
 import Language.JSON
 import Language.JSON.Accessors
 import Reviewer
+import System
 import System.File
-import System.File.Node
-import System.Node
 import Util
 
 import Text.PrettyPrint.Prettyprinter
@@ -242,7 +241,7 @@ identifyOrCreatePR @{config} branch = do
         description <- assert_total $ readFile "pr_description.tmp.md" 
         --              ^ ignore the possibility that an infinte file was produced.
         when !(exists "pr_description.tmp.md") $
-          Node.removeFile "pr_description.tmp.md"
+          ignore $ removeFile "pr_description.tmp.md"
         pure description
 
       createPR : Promise PullRequest

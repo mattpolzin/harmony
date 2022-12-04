@@ -10,7 +10,11 @@ const idris__okit_unpromisify = (promise, onSuccess, onFailure) =>
 const idris__okit_stringify_error = (fn) => (err) => {
   const url = err.response.url
   const msg = err.response.data.message
-  return fn('Octokit Error: ' + msg + ' (' + url + ')')
+  const details =
+    Array.isArray(err.response.data.errors)
+    ? '\n - ' + err.response.data.errors.map(e => e.message).join('\n - ')
+    : ''
+  return fn('GitHub Error: ' + msg + ' (' + url + ')' + details)
 }
 
 const newline_delimited = array =>
@@ -31,6 +35,17 @@ const okit_get_repo_default_branch = (octokit, org, repo, onSuccess, onFailure) 
     r => onSuccess(digDefaultBranch(r.data)),
     idris__okit_stringify_error(onFailure)
   )
+
+// get repo labels
+const digLabelNames = labelsJson =>
+  labelsJson.map(l => l.name)
+
+const okit_list_repo_labels = (octokit, org, repo, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.issues.listLabelsForRepo({ owner: org, repo, per_page: 100 }),
+    r => onSuccess(newline_delimited(digLabelNames(r.data))),
+    idris__okit_stringify_error(onFailure)
+)
 
 // list teams
 const digTeams = teamsJson =>
@@ -136,6 +151,15 @@ const digReviews = reviewsJson =>
       submitted_at: review.submitted_at
     }
   })
+
+// Add PR labels
+// Returns all labels currently applied to the PR.
+const okit_add_labels = (octokit, owner, repo, pull_number, labels, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.issues.addLabels({ owner, repo, issue_number: Number(pull_number), labels: from_comma_delimited(labels) }),
+    r => onSuccess(newline_delimited(digLabelNames(r.data))),
+    idris__okit_stringify_error(onFailure)
+  )
 
 // Executes callback with [{author: String, state: String, submitted_at: String}]
 const okit_list_pr_reviews = (octokit, owner, repo, pull_number, onSuccess, onFailure) =>
