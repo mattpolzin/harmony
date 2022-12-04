@@ -17,6 +17,7 @@ import FFI.Git
 import FFI.GitHub
 import Graph
 import Help
+import Label
 import Language.JSON
 import Language.JSON.Accessors
 import PullRequest as PR
@@ -73,6 +74,15 @@ assign args {dry} =
     partitionedArgs = 
       let part = partition (isPrefixOf "+") args
       in  mapFst (map $ drop 1) part
+
+label : Config => Git => Octokit =>
+        (labels : List String)
+     -> Promise ()
+label labels =
+  do (_, openPr) <- identifyOrCreatePR !currentBranch
+     allLabels <- addLabels openPr labels
+     putStrLn "Added \{show labels}."
+     putStrLn "All labels for PR of \{openPr.headRef}: \{show allLabels}."
 
 listTeam : Config => Octokit =>
            (team : String) 
@@ -242,13 +252,17 @@ handleAuthenticatedArgs @{config} ("graph" :: args) =
        Right args => graphTeam args
        Left err   => exitError err
 handleAuthenticatedArgs ["assign"] =
-  reject "The assign commaand expects one or more names of GitHub Teams or Users as arguments."
+  reject "The assign command expects one or more names of GitHub Teams or Users as arguments."
 handleAuthenticatedArgs ["assign", "--dry"] =
-  reject "The assign commaand expects one or more names of GitHub Teams or Users as arguments."
+  reject "The assign command expects one or more names of GitHub Teams or Users as arguments."
 handleAuthenticatedArgs ("assign" :: "--dry" :: assign1 :: assignRest) =
   assign (assign1 :: assignRest) {dry=True}
 handleAuthenticatedArgs ("assign" :: assign1 :: assignRest) =
   assign (assign1 :: assignRest)
+handleAuthenticatedArgs ["label"] =
+  reject "The label command expects one or more labels as arguments."
+handleAuthenticatedArgs ("label" :: label1 :: labels) =
+  label (label1 :: labels)
 
 -- error case:
 handleAuthenticatedArgs args =

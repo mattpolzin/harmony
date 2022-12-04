@@ -152,6 +152,15 @@ const digReviews = reviewsJson =>
     }
   })
 
+// Add PR labels
+// Returns all labels currently applied to the PR.
+const okit_add_labels = (octokit, owner, repo, pull_number, labels, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.issues.addLabels({ owner, repo, issue_number: Number(pull_number), labels: from_comma_delimited(labels) }),
+    r => onSuccess(newline_delimited(digLabelNames(r.data))),
+    idris__okit_stringify_error(onFailure)
+  )
+
 // Executes callback with [{author: String, state: String, submitted_at: String}]
 const okit_list_pr_reviews = (octokit, owner, repo, pull_number, onSuccess, onFailure) =>
   idris__okit_unpromisify(

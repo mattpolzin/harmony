@@ -232,8 +232,7 @@ prim__addPullReviewers : Ptr OctokitRef
 
 ||| Add reviewers to a Pull Request.
 |||
-||| onSuccess will receive a newline delimited list of
-||| all reviewers of the modified PR.
+||| Will produce a list of applied reviewers.
 export
 addPullReviewers : Octokit => 
                    (owner : String) 
@@ -244,6 +243,30 @@ addPullReviewers : Octokit =>
                 -> Promise (List String)
 addPullReviewers @{Kit ptr} owner repo pullNumber reviewers teamReviewers = 
   lines <$> (promiseIO $ prim__addPullReviewers ptr owner repo pullNumber (join "," reviewers) (join "," teamReviewers))
+
+%foreign okit_ffi "add_labels"
+prim__addLabels : Ptr OctokitRef
+               -> (owner : String)
+               -> (repo : String)
+               -> (pullNumber : Integer)
+               -> (labels : String)
+               -> (onSuccess : String -> PrimIO ())
+               -> (onFailure : String -> PrimIO ())
+               -> PrimIO ()
+
+||| Add labels to a Pull Request.
+|||
+||| Will produce a list of all labels
+||| (both new & previously applied).
+export
+addPullLabels : Octokit =>
+                (owner : String)
+             -> (repo : String)
+             -> (pullNumber : Integer)
+             -> (labels : List String)
+             -> Promise (List String)
+addPullLabels @{Kit ptr} owner repo pullNumber labels =
+  lines <$> (promiseIO $ prim__addLabels ptr owner repo pullNumber (join "," labels))
 
 %foreign okit_ffi "list_pr_reviews"
 prim__listPullReviews : Ptr OctokitRef 
