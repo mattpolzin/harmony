@@ -79,14 +79,21 @@ assign args {dry} =
 label : Config => Git => Octokit =>
         (labels : List String)
      -> Promise ()
-label labels =
+label @{config} labels =
   do (_, openPr) <- identifyOrCreatePR !currentBranch
-     allLabels <- addLabels openPr labels
+     let finalLabels = unslugify config.repoLabels <$> labels
+     allLabels <- addLabels openPr finalLabels
      renderIO $ vsep
-       [ "Added" <++> putLabels labels <+> " to PR."
+       [ "Added" <++> putLabels finalLabels <+> " to PR."
        , pretty "All labels for PR of \{openPr.headRef}:" <++> putLabels allLabels <+> "."
        ]
   where
+    unslugify : (configLabels : List String) -> (slugifiedLabel : String) -> String
+    unslugify configLabels slugifiedLabel =
+      case find (== slugifiedLabel) configLabels of
+           Just label => label
+           Nothing    => BashCompletion.unslugify slugifiedLabel
+
     putLabel : String -> Doc AnsiStyle
     putLabel = enclose "\"" "\"" . annotate (color Green) . pretty
 

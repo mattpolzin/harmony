@@ -23,6 +23,15 @@ allRootCmds = [ "assign"
               , "whoami"
               ]
 
+||| Turn spaces into '+' so that multi-word phrases can be used with tab-completion.
+slugify : String -> String
+slugify = pack . replaceOn ' ' '◌' . unpack
+
+||| Take a slugified phrase and undo the transformation to get the original phrase back.
+export
+unslugify : String -> String
+unslugify = pack . replaceOn '◌' ' ' . unpack
+
 ||| Attempt to handle completions for root commands but
 ||| if we ar not currently on the root command (at least
 ||| one argument has already been entered), we return
@@ -70,8 +79,8 @@ opts @{_} "config" partialConfigProp "config" = filter (isPrefixOf partialConfig
 opts @{_} "config" _ _ = []
 
 -- and the label command
-opts @{config} "label" "--" _ = config.repoLabels
-opts @{config} "label" partialLabel _ = filter (isPrefixOf partialLabel) config.repoLabels
+opts @{config} "label" "--" _ = slugify <$> config.repoLabels
+opts @{config} "label" partialLabel _ = filter (isPrefixOf partialLabel) $ slugify <$> config.repoLabels
 
 -- then list, which only accepts a single team slug:
 opts @{config} "list" "--" "list" = config.teamSlugs
