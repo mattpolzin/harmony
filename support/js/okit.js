@@ -74,6 +74,7 @@ const digPr = pr => {
       author: pr.user.login,
       state: pr.state,
       created_at: pr.created_at,
+      draft: pr.draft,
       merged: pr.merged_at !== null,
       reviewers: pr.requested_reviewers.map(u => u.login),
       head_ref: pr.head.ref
@@ -93,9 +94,9 @@ const okit_list_pull_requests_for_branch = (octokit, owner, repo, branch, onSucc
 
 // Create PR
 // Executes callback with stringified JSON {"pull_number": Int, "author": String}
-const okit_create_pr = (octokit, owner, repo, head, base, title, body, onSuccess, onFailure) =>
+const okit_create_pr = (octokit, owner, repo, head, base, title, body, isDraft, onSuccess, onFailure) =>
   idris__okit_unpromisify(
-    octokit.rest.pulls.create({ owner, repo, head, base, title, body }),
+    octokit.rest.pulls.create({ owner, repo, head, base, title, body, draft: Boolean(isDraft) }),
     r => onSuccess(JSON.stringify(digPr(r.data))),
     idris__okit_stringify_error(onFailure)
   )

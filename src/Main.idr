@@ -84,8 +84,10 @@ handleAuthenticatedArgs ["sync"] =
   Commands.sync
 handleAuthenticatedArgs ["branch"] =
   Commands.branch
+handleAuthenticatedArgs ["pr", "--draft"] =
+  Commands.pr {isDraft=True}
 handleAuthenticatedArgs ["pr"] =
-  Commands.pr
+  Commands.pr {isDraft=False}
 handleAuthenticatedArgs ["reflect"] =
   Commands.reflect
 handleAuthenticatedArgs ("contribute" :: args) =

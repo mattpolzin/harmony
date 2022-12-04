@@ -50,9 +50,10 @@ reflect = reflectOnSelf
 ||| does not exist when the user executes `harmony pr`
 export
 pr : Config => Git => Octokit =>
-     Promise ()
-pr = do
-  (Identified, pr) <- identifyOrCreatePR !currentBranch
+     {default False isDraft : Bool}
+  -> Promise ()
+pr {isDraft} = do
+  (Identified, pr) <- identifyOrCreatePR {isDraft} !currentBranch
     | _ => pure ()
   putStrLn pr.webURI
 
