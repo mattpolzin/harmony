@@ -117,8 +117,8 @@ assign args {dry} =
 ||| `harmony list <team>`.
 export
 list : Config => Octokit =>
-           (team : String) 
-        -> Promise ()
+       (team : String) 
+    -> Promise ()
 list @{config} team =
   do teamMemberLogins <- sort <$> listTeamMembers config.org team
      teamMembersJson <- promiseAll =<< traverse forkedUser teamMemberLogins
@@ -144,8 +144,8 @@ teamNameArg _ = Nothing
 ||| the user executes `harmony graph <team>`.
 export
 graph : Config => Octokit =>
-            List GraphArg
-         -> Promise ()
+        List GraphArg
+     -> Promise ()
 graph @{config} args = do
   let includeCompletedReviews = find (\case IncludeCompletedReviews => True; _ => False) args
   let Just teamName = head' $ mapMaybe teamNameArg args
@@ -158,6 +158,13 @@ graph @{config} args = do
          True  => countReviewsByEachUser (combined prs)
          False => pure empty
   renderIO $ reviewsGraph closedReviewers openReviewers teamMemberLogins (Just completedReviews)
+
+export
+health : Config => Octokit =>
+         Promise ()
+health = do
+  prs <- listOpenPRs {pageBreaks = 4} 100
+  for_ prs (putStrLn . show)
 
 (<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
 (<||>) f g x = f x <|> g x
