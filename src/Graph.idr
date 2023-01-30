@@ -44,8 +44,17 @@ record PRsOnDate dateTy where
 
 Pretty dateTy => Graphable (PRsOnDate dateTy) where
   totalWidth g = g.prCount
-  label g = (pretty g.date) <++> countInParens
+  label g = coloredLabel <++> countInParens
     where
+      coloredLabel : Doc AnsiStyle
+      coloredLabel = if g.prCount == 0
+                        then (annotate (color Green) $ pretty g.date)
+                        else if g.prCount < 2
+                                then pretty g.date
+                                else if g.prCount < 6
+                                    then (annotate (color Yellow) $ pretty g.date)
+                                    else (annotate (color Red) $ pretty g.date)
+
       countInParens : Doc AnsiStyle
       countInParens = if g.prCount > 4
                          then (annotate italic $ pretty "(\{show g.prCount})")
