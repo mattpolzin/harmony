@@ -63,10 +63,17 @@ handleAuthenticatedArgs @{config} ["reviews", "--json", prNumber] =
   whenJust (parsePositive prNumber) $ \pr => do
     reviewsJsonStr <- listPullReviewsJsonStr config.org config.repo pr
     putStr reviewsJsonStr
-handleAuthenticatedArgs @{config} ["pulls", "--json", pageLimit, page] =
-  let args : Maybe (Fin 101, Nat) = bitraverse parseLim parsePg (pageLimit, page)
-  in  whenJust args $ \(lim, pg) => do
-        pullsJsonStr <- listPullRequestsJsonStr config.org config.repo Nothing lim {page=pg}
+handleAuthenticatedArgs @{config} ["pulls", "--json", stateFilter, pageLimit, page] =
+  let args : Maybe (Maybe GitHubPRState, Fin 101, Nat) = do
+    (lim, pg) <- bitraverse parseLim parsePg (pageLimit, page)
+    filter <- case stateFilter of
+                   "none"   => Just Nothing
+                   "open"   => Just (Just Open)
+                   "closed" => Just (Just Closed)
+                   _        => Nothing -- <- error case
+    pure (filter, lim, pg)
+  in  whenJust args $ \(filter, lim, pg) => do
+        pullsJsonStr <- listPullRequestsJsonStr config.org config.repo filter lim {page=pg}
         putStr pullsJsonStr
   where
     parseLim : String -> Maybe (Fin 101)
@@ -84,6 +91,10 @@ handleAuthenticatedArgs ["sync"] =
   Commands.sync
 handleAuthenticatedArgs ["branch"] =
   Commands.branch
+handleAuthenticatedArgs ("health" :: _ :: _) =
+  reject "The health command does not take any arguments."
+handleAuthenticatedArgs ["health"] =
+  Commands.health
 handleAuthenticatedArgs ["pr", "--draft"] =
   Commands.pr {isDraft=True}
 handleAuthenticatedArgs ["pr"] =

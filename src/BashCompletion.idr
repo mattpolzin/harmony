@@ -13,6 +13,7 @@ allRootCmds = [ "assign"
               , "config"
               , "contribute"
               , "graph"
+              , "health"
               , "help"
               , "label"
               , "list"
@@ -45,6 +46,7 @@ cmdOpts _ partialCmd "harmony" = Just $ filter (isPrefixOf partialCmd) allRootCm
 
 -- then the subcommands that take no arguments;
 cmdOpts "sync"    _ _ = Just []
+cmdOpts "health"  _ _ = Just []
 cmdOpts "help"    _ _ = Just []
 cmdOpts "--help"  _ _ = Just []
 cmdOpts "reflect" _ _ = Just []

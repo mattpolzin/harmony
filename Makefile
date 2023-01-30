@@ -2,6 +2,10 @@
 idris2 = idris2
 idris-adds-version = 0.3.0
 
+idris2-version = $(shell $(idris2) --version | sed -En 's/Idris 2, version ([^-]+).*/\1/p')
+idris2-build   = $(shell $(idris2) --version | sed -En 's/Idris 2, version [^-]+(.*)/\1/p')
+idris2-minor-version = $(shell echo ${idris2-version} | sed -En 's/0\.(.*)\../\1/p')
+
 .PHONY: all build install package publish clean version
 
 all: build
@@ -21,8 +25,12 @@ node_modules:
 
 build: node_modules depends/idris-adds-${idris-adds-version}
 	IDRIS2_DATA=./support $(idris2) --build harmony.ipkg
-	@echo "#!/usr/bin/env node\n" > ./harmony
-	@cat ./build/exec/harmony >> ./harmony
+	@if [[ ${idris2-minor-version} -gt 6 ]] || [[ "${idris2-build}" != '' ]]; then \
+	  cp ./build/exec/harmony ./harmony; \
+	else \
+	  echo "#!/usr/bin/env node\n" > ./harmony; \
+	  cat ./build/exec/harmony >> ./harmony; \
+	fi
 	@chmod +x ./harmony
 
 harmony: build

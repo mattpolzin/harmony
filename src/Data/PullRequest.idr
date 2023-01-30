@@ -4,6 +4,7 @@ import Data.Config
 import Data.Date
 import Data.Either
 import Data.List
+import Data.String
 import Data.Vect
 import Language.JSON
 import Language.JSON.Accessors
@@ -58,7 +59,11 @@ record PullRequest where
 
 export
 Show PullRequest where
-  show (MkPullRequest number _ _ author state _ headRef) = "[\{show number}] headRef: \{show author} (\{show state})"
+  show (MkPullRequest number _ _ author state _ headRef) =
+    "[\{show number}] (\{show state}) \{authorString} - headRef: \{headRef}"
+    where
+      authorString : String
+      authorString = padRight 15 ' ' $ show author
 
 export
 (.webURI) : Config => PullRequest -> String

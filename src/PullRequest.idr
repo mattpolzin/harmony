@@ -69,15 +69,41 @@ partition = uncurry MkPRHistory . partition ((== Open) . (.state))
 
 ||| Create a fork of this program that retrieves the given page of PRs
 ||| and outputs the result as JSON.
-forkedPRs : (perPage : Nat) -> (currentPageIdx : Nat) -> (currentPageSize : Nat) -> (x : ()) -> Promise Future
-forkedPRs perPage page _ _ = fork "pulls --json \{show perPage} \{show page}"
+forkedPRs : (filter : Maybe GitHubPRState) -> (perPage : Nat) -> (currentPageIdx : Nat) -> (currentPageSize : Nat) -> (x : ()) -> Promise Future
+forkedPRs filter perPage page _ _ = fork "pulls --json \{filterString} \{show perPage} \{show page}"
+  where
+    filterString : String
+    filterString = case filter of
+                        Nothing     => "none"
+                        Just Open   => "open"
+                        Just Closed => "closed"
+
+||| Grab all of the given pages of PRs and create a list of PRs from them.
+list' : (filter : Maybe GitHubPRState) -> Pagination _ _ _ () -> Promise (List PullRequest)
+list' filter pgs = do
+  prJsons <- promiseAll =<< traverse' (forkedPRs filter)  pgs
+  pulls   <- either $ traverse (array parsePR) prJsons
+  pure $ join pulls
+
+||| Get the most recent open PRs by creation date.
+|||
+||| @prCount The number of PRs to retrieve.
+||| @pageBreaks The number of pages over which to break the requests up.
+export
+listOpenPRs : Config => Octokit =>
+              {default 0 pageBreaks : Nat}
+           -> (prCount : Fin 101)
+           -> Promise (List PullRequest)
+listOpenPRs @{config} {pageBreaks} prCount with ((finToNat prCount) `isGT` 0, pageBreaks `isGT` 0)
+  _ | (No _, _) = pure empty
+  _ | (_, No _) = listPullRequests config.org config.repo (Just Open) prCount
+  _ | (Yes prf, Yes prf') with ((S pageBreaks) `isLTE` (finToNat prCount))
+    _ | (No _)      = list' (Just Open) (metaPages  (finToNat prCount)  1)
+    _ | (Yes prf'') = list' (Just Open) (metaPages' (finToNat prCount) (S pageBreaks))
 
 ||| Grab all of the given pages of PRs and create a history from them.
 partition' : Pagination _ _ _ () -> Promise PRHistory
-partition' pgs =
-  do prJsons <- promiseAll =<< traverse' forkedPRs pgs
-     pulls   <- either $ traverse (array parsePR) prJsons
-     pure $ partition (join pulls)
+partition' = map partition . (list' Nothing)
 
 ||| Get the most recent PRs by creation date and partition them
 ||| into open and closed PRs.
@@ -93,7 +119,7 @@ listPartitionedPRs @{config} {pageBreaks} prCount with ((finToNat prCount) `isGT
   _ | (No _, _) = pure empty
   _ | (_, No _) = partition <$> listPullRequests config.org config.repo Nothing prCount
   _ | (Yes prf, Yes prf') with ((S pageBreaks) `isLTE` (finToNat prCount))
-    _ | (No _)       = partition' (metaPages  (finToNat prCount)  1)
+    _ | (No _)      = partition' (metaPages  (finToNat prCount)  1)
     _ | (Yes prf'') = partition' (metaPages' (finToNat prCount) (S pageBreaks))
 
 ||| List the names of all reviewers of open and closed PRs. A
