@@ -91,6 +91,8 @@ handleAuthenticatedArgs ["sync"] =
   Commands.sync
 handleAuthenticatedArgs ["branch"] =
   Commands.branch
+handleAuthenticatedArgs ("health" :: _ :: _) =
+  reject "The health command does not take any arguments."
 handleAuthenticatedArgs ["health"] =
   Commands.health
 handleAuthenticatedArgs ["pr", "--draft"] =

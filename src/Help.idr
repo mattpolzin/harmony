@@ -40,6 +40,8 @@ harmony \{subcommand "<subcommand>"}
    - List the members of the given GitHub Team.
   \{subcommand "graph"} [\{argument "-c/--completed"}] {\{argument "<team-slug>"}}
    - Graph the relative review workload of the members of the given GitHub Team.
+  \{subcommand "health"}
+   - Graph all open PRs grouped by the month they were created.
   \{subcommand "label"} {\{argument "<label>"}} [...]
    - Add one or more labels to a PR, creating a new PR if one does not exist.
      Labels that do not exist yet will be created automatically.
