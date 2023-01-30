@@ -91,7 +91,7 @@ Would you like harmony to assign teams in addition to individuals when it assign
 Creating config...
 ```
 
-Once configured, Harmony supports the following commands: `config`, `branch`, `pr`, `label`, `assign`, `contribute`, `whoami`, `reflect`, `list`, `graph`, and `sync`.
+Once configured, Harmony supports the following commands: `config`, `branch`, `pr`, `label`, `assign`, `contribute`, `whoami`, `reflect`, `list`, `graph`, `health`, and `sync`.
 
 ### Config
 Running `harmony config <property>` will read the given configuration property. `harmony config <property> <value>` will set the configuration property.
