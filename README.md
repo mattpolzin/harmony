@@ -189,6 +189,11 @@ Running `harmony graph <team>` will graph the relative review workload of each o
 
 You can optionally graph completed PR reviews with the `--completed` flag as well, though these are not considered for Harmony's weighting algorithm for review workload.
 
+### Health
+Running `harmony health` will graph all open PRs grouped by the month when each was created.
+
+The idea is that a healthy repository does not have many old PRs still open because those PRs represent effort spent by developers that hasn't yet paid off.
+
 ### Sync
 Running `harmony sync` will sync the locally configured team slugs and user logins that are used by auto-completion for Harmony. This sync is also performed automatically the first time you run Harmony after more than a day without the configuration being synced.
 
