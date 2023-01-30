@@ -1,5 +1,6 @@
 module Data.Date
 
+import Data.Nat
 import Data.List1
 import Data.String
 
@@ -9,6 +10,13 @@ public export
 record Date where
   constructor MkDate
   year, month, day : Nat
+
+||| Take a month number and increment it, wrapping
+||| around to 1 after 12.
+export
+nextMonth : Nat -> Nat
+nextMonth k =
+  if k == 12 then 1 else (S k)
 
 export
 Show Date where

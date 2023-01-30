@@ -1,8 +1,10 @@
 module Graph
 
+import Data.Fuel
 import Data.List
 import Data.ReviewScore
 import Data.SortedMap
+import Data.Nat
 
 import Data.Date
 import Data.PullRequest
@@ -35,15 +37,20 @@ Pretty login => Graphable (AugmentedReviewScore login) where
   detractor  (Augmented x _     ) = x.partialScore `minus` x.combinedScore
   bonus      (Augmented _ sbonus) = sbonus
 
-record ReviewsOnDate dateTy where
-  constructor MkReviewsOnDate
+record PRsOnDate dateTy where
+  constructor MkPRsOnDate
   date : dateTy
-  reviewCount : Nat
+  prCount : Nat
 
-Pretty dateTy => Graphable (ReviewsOnDate dateTy) where
-  totalWidth g = g.reviewCount
-  label g = pretty g.date
-  score g = g.reviewCount
+Pretty dateTy => Graphable (PRsOnDate dateTy) where
+  totalWidth g = g.prCount
+  label g = (pretty g.date) <++> countInParens
+    where
+      countInParens : Doc AnsiStyle
+      countInParens = if g.prCount > 4
+                         then (annotate italic $ pretty "(\{show g.prCount})")
+                         else pretty ""
+  score g = g.prCount
   detractor _ = 0
   bonus _ = 0
 
@@ -76,16 +83,52 @@ graphOne highScore x =
 graph : Graphable g => (highScore : Nat) -> List g -> Doc AnsiStyle
 graph highScore = vsep . map (graphOne highScore)
 
+||| Produce a graph of open pull requests per month (by the month the PR was created).
 export
 healthGraph : (openPullRequests : List PullRequest)
            -> Doc AnsiStyle
 healthGraph openPullRequests =
   let groups = groupBy ((==) `on` .month `on` .createdAt) $ sortBy (compare `on` .createdAt) openPullRequests
       max    = foldr (\xs,m => max (length xs) m) 1 groups
-  in graph max (map graphable groups)
+  in vsep [ header
+          , graph max (unfoldGraph (limit 48) groups Nothing)
+          ]
   where
-    graphable : (List1 PullRequest) -> ReviewsOnDate Date
-    graphable (pr ::: tail) = MkReviewsOnDate pr.createdAt (S $ length tail)
+    graphable : (List1 PullRequest) -> PRsOnDate Date
+    graphable (pr ::: tail) = MkPRsOnDate pr.createdAt (S $ length tail)
+
+    unfoldGraph : Fuel -> List (List1 PullRequest) -> (acc : Maybe (Date, List1 (PRsOnDate Date))) -> List (PRsOnDate Date)
+    unfoldGraph Dry _ Nothing = []
+    unfoldGraph Dry _ (Just (x, ys)) = forget ys
+    unfoldGraph _ [] Nothing = []
+    unfoldGraph _ [] (Just (x, ys)) = forget ys
+    unfoldGraph (More fuel) (next@(nextOne ::: tail) :: xs) Nothing =
+      unfoldGraph fuel xs (Just (nextOne.createdAt, (graphable next) ::: []))
+    unfoldGraph (More fuel) (next@(nextOne ::: tail) :: xs) (Just (prevDate, acc)) =
+      if (nextMonth prevDate.month) == nextOne.createdAt.month
+         then insertNext
+         else insertPlaceholder
+      where
+        insertNext : List (PRsOnDate Date)
+        insertNext =
+          unfoldGraph fuel xs (Just (nextOne.createdAt, graphable next ::: forget acc))
+
+        insertPlaceholder : List (PRsOnDate Date)
+        insertPlaceholder =
+          let placeholderDate : Date = { month $= nextMonth } prevDate
+              placeholder = MkPRsOnDate placeholderDate 0
+          in unfoldGraph fuel (next :: xs) (Just (placeholderDate, placeholder ::: forget acc))
+
+    yellowDot : Doc AnsiStyle
+    yellowDot = annotate (color Yellow) "·"
+
+    header : Doc AnsiStyle
+    header = vsep $
+               catMaybes [ Just $ emptyDoc
+                         , Just $ pretty "Open Pull Requests grouped by month craetaed."
+                         , Just $ emptyDoc
+                         , Just $ emptyDoc
+                         ]
 
 ||| Produce a graph of relative review workload for all developers matching the given
 ||| filter.
