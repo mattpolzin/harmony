@@ -164,7 +164,7 @@ health : Config => Octokit =>
          Promise ()
 health = do
   prs <- listOpenPRs {pageBreaks = 4} 100
-  for_ prs (putStrLn . show)
+  renderIO $ healthGraph prs
 
 (<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
 (<||>) f g x = f x <|> g x

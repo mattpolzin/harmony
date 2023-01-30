@@ -4,14 +4,51 @@ import Data.List
 import Data.ReviewScore
 import Data.SortedMap
 
+import Data.Date
+import Data.PullRequest
+
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import Text.PrettyPrint.Prettyprinter.Symbols
 
 %default total
 
+interface Graphable g where
+  totalWidth : g -> Nat
+  label : g -> Doc AnsiStyle
+  ||| The score represents the total positive impact.
+  score : g -> Nat
+  ||| The detractor is a quantity that gets overlaid on top of the score to indicate
+  ||| a negative impact.
+  detractor : g -> Nat
+  ||| The bonus indicates some measure that is not always represented but when it is,
+  ||| it has additive impact beyond the score.
+  bonus : g -> Nat
+
 data AugmentedReviewScore : login -> Type where
   Augmented : ReviewScore login -> (bonus : Nat) -> AugmentedReviewScore login
+
+Pretty login => Graphable (AugmentedReviewScore login) where
+  totalWidth (Augmented x sbonus) = x.partialScore + sbonus
+  label      (Augmented x _     ) = annotate italic $ pretty x.user
+  score      (Augmented x _     ) = x.combinedScore
+  detractor  (Augmented x _     ) = x.partialScore `minus` x.combinedScore
+  bonus      (Augmented _ sbonus) = sbonus
+
+record ReviewsOnDate dateTy where
+  constructor MkReviewsOnDate
+  date : dateTy
+  reviewCount : Nat
+
+Pretty dateTy => Graphable (ReviewsOnDate dateTy) where
+  totalWidth g = g.reviewCount
+  label g = pretty g.date
+  score g = g.reviewCount
+  detractor _ = 0
+  bonus _ = 0
+
+Pretty Date where
+  pretty = pretty . show
 
 ||| Graph a single line (bar) of dots.
 ||| @ indentation a number of leading spaces to product off to the left (uses Doc's @indent@)
@@ -25,21 +62,30 @@ bar idt score detractor bonus = indent (cast idt) . hcat $
                               , annotate (color Green) . hcat $ replicate bonus (pretty '▪')
                               ]
 
-graphOne : Pretty login => (highScore : Nat) -> (AugmentedReviewScore login) -> Doc AnsiStyle
-graphOne highScore (Augmented (MkScore user partialScore combinedScore) bonus) =
-  let idt    = highScore `minus` (partialScore + bonus)
-      user   = annotate italic $ pretty user
-      detractor = (partialScore `minus` combinedScore)
-      remainingSpace = highScore `minus` combinedScore
+graphOne : Graphable g => (highScore : Nat) -> g -> Doc AnsiStyle
+graphOne highScore x =
       -- we create a bar with the combinedScore and then fill in any
       -- remaining space with an indication of the detractor. We cap
       -- the detractor representation at the high score to make everything
       -- line up nicely. The detractor is just there to give some indication
       -- of review requests that did not count positively toward the score.
-  in  bar idt combinedScore (min remainingSpace detractor) bonus <++> user
+  let idt = highScore `minus` (totalWidth x)
+      remainingSpace = highScore `minus` (score x)
+  in bar idt (score x) (min remainingSpace (detractor x)) (bonus x) <++> (label x)
 
-graph : Pretty login => (highScore : Nat) -> List (AugmentedReviewScore login) -> Doc AnsiStyle
+graph : Graphable g => (highScore : Nat) -> List g -> Doc AnsiStyle
 graph highScore = vsep . map (graphOne highScore)
+
+export
+healthGraph : (openPullRequests : List PullRequest)
+           -> Doc AnsiStyle
+healthGraph openPullRequests =
+  let groups = groupBy ((==) `on` .month `on` .createdAt) $ sortBy (compare `on` .createdAt) openPullRequests
+      max    = foldr (\xs,m => max (length xs) m) 1 groups
+  in graph max (map graphable groups)
+  where
+    graphable : (List1 PullRequest) -> ReviewsOnDate Date
+    graphable (pr ::: tail) = MkReviewsOnDate pr.createdAt (S $ length tail)
 
 ||| Produce a graph of relative review workload for all developers matching the given
 ||| filter.
