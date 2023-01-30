@@ -55,7 +55,7 @@ Pretty dateTy => Graphable (PRsOnDate dateTy) where
   bonus _ = 0
 
 Pretty Date where
-  pretty = pretty . show
+  pretty = pretty . showYearAndMonth
 
 ||| Graph a single line (bar) of dots.
 ||| @ indentation a number of leading spaces to product off to the left (uses Doc's @indent@)
