@@ -95,10 +95,10 @@ handleAuthenticatedArgs ("health" :: _ :: _) =
   reject "The health command does not take any arguments."
 handleAuthenticatedArgs ["health"] =
   Commands.health
-handleAuthenticatedArgs ["pr", "--draft"] =
-  Commands.pr {isDraft=True}
-handleAuthenticatedArgs ["pr"] =
-  Commands.pr {isDraft=False}
+handleAuthenticatedArgs ("pr" :: "--draft" :: args) =
+  Commands.pr {isDraft=True} args
+handleAuthenticatedArgs ("pr" :: args) =
+  Commands.pr {isDraft=False} args
 handleAuthenticatedArgs ["reflect"] =
   Commands.reflect
 handleAuthenticatedArgs ("contribute" :: args) =

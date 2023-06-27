@@ -46,17 +46,6 @@ reflect : Config => Octokit =>
           Promise ()
 reflect = reflectOnSelf
 
-||| Print the URI for the current branch's PR or create a new PR if one
-||| does not exist when the user executes `harmony pr`
-export
-pr : Config => Git => Octokit =>
-     {default False isDraft : Bool}
-  -> Promise ()
-pr {isDraft} = do
-  (Identified, pr) <- identifyOrCreatePR {isDraft} !currentBranch
-    | _ => pure ()
-  putStrLn pr.webURI
-
 ||| Apply the given labels to the current PR when the user executes
 ||| `harmony label <label> ...`.
 export
@@ -89,6 +78,23 @@ label @{config} labels =
     putLabels : List String -> Doc AnsiStyle
     putLabels = hcat . intersperse (pretty ", ") . map putLabel
 
+||| Print the URI for the current branch's PR or create a new PR if one
+||| does not exist when the user executes `harmony pr`
+export
+pr : Config => Git => Octokit =>
+     {default False isDraft : Bool}
+  -> (labelArgs : List String)
+  -> Promise ()
+pr {isDraft} labelSlugs =
+  if all ("#" `isPrefixOf`) labelSlugs
+     then do (actionTaken, pr) <- identifyOrCreatePR {isDraft} !currentBranch
+             case actionTaken of
+                  Identified => putStrLn pr.webURI
+                  Created    => when (not (null labelSlugs)) $
+                                  label labelSlugs
+     else reject "The pr command only accepts labels prefixed with '#' and the --draft flag."
+
+
 ||| Assign the given teams & users as reviewers when the user executes
 ||| `harmony assign ...`.
 export
@@ -96,14 +102,14 @@ assign : Config => Git => Octokit =>
          (assignArgs : List String) 
       -> {default False dry : Bool} 
       -> Promise ()
-assign args {dry} =
-  do let (forcedReviewers, teamNames, labelSlugs) = partitionedArgs
-     if (null forcedReviewers && null teamNames)
-        then reject "The assign command expects one or more names of GitHub Teams or Users as arguments."
-        else do (_, openPr) <- identifyOrCreatePR !currentBranch
-                requestReviewers openPr teamNames forcedReviewers {dry}
-                when (not (null labelSlugs || dry)) $
-                  label labelSlugs
+assign args {dry} = do
+  let (forcedReviewers, teamNames, labelSlugs) = partitionedArgs
+  if (null forcedReviewers && null teamNames)
+     then reject "The assign command expects one or more names of GitHub Teams or Users as arguments."
+     else do (_, openPr) <- identifyOrCreatePR !currentBranch
+             requestReviewers openPr teamNames forcedReviewers {dry}
+             when (not (null labelSlugs || dry)) $
+               label labelSlugs
   where
     -- partition args into user logins, team slugs, and label slugs
     partitionedArgs : (List String, List String, List String)
