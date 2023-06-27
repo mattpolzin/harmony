@@ -33,6 +33,10 @@ export
 unslugify : String -> String
 unslugify = pack . replaceOn '◌' ' ' . unpack
 
+isHashPrefix : String -> Bool
+isHashPrefix str =
+  ("#" `isPrefixOf` str) || ("\\#" `isPrefixOf` str)
+
 ||| Attempt to handle completions for root commands but
 ||| if we ar not currently on the root command (at least
 ||| one argument has already been entered), we return
@@ -58,7 +62,9 @@ cmdOpts "pr" "--" "pr" = Just ["--draft"]
 cmdOpts "pr" partialArg "pr" =
   if partialArg `isPrefixOf` "--draft"
      then Just ["--draft"]
-     else Just []
+     else if isHashPrefix partialArg
+         then Nothing -- <- allows us to fall through to handle with config below.
+         else Just []
 cmdOpts "contribute" "-"  _ = Just ["--checkout", "-c"]
 cmdOpts "contribute" "--" _ = Just ["--checkout", "-c"]
 cmdOpts "contribute" partialArg _  =
@@ -103,6 +109,12 @@ opts @{config} "graph" partialTeamName previous =
      then filter (isPrefixOf partialTeamName) config.teamSlugs
      else []
 
+-- then pr (handled partially above, but when labels are specified, handled here)
+opts @{config} "pr" partialArg _ =
+  if isHashPrefix partialArg
+     then (strCons '#') . slugify <$> config.repoLabels
+     else []
+
 -- finally, assign auto-completes with 
 -- either a team slug or '+' followed by a user login:
 opts @{config} "assign" "--" "assign" = "--dry" :: config.teamSlugs
@@ -118,11 +130,11 @@ opts @{config} "assign" partialArg _ =
     slugsOrLoginsOrLabels =
       if "+" `isPrefixOf` partialArg
         then (strCons '+') <$> config.orgMembers
-        else if "#" `isPrefixOf` partialArg
+        else if isHashPrefix partialArg
                then (strCons '#') . slugify <$> config.repoLabels
                else config.teamSlugs
 
-opts @{_} _ _ _ = []
+opts @{_} _ partialArg _ = [partialArg ++ "_hello", "world"]
 
 ||| The Bash Completion script calls to harmony with a special --bash-completion
 ||| flag and passes harmony the subcommand (i.e. first argument after harmony),

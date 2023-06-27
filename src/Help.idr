@@ -27,8 +27,11 @@ harmony \{subcommand "<subcommand>"}
    - Synchronize local config with information from GitHub.
   \{subcommand "branch"}
    - Print the GitHub URI for the currently checked out branch.
-  \{subcommand "pr"} [\{argument "--draft"}]
+  \{subcommand "pr"} [\{argument "--draft"}] [\{argument "#<label>"}] [...]
    - Identify an existing PR or create a new one for the current branch.
+     
+     Optionally apply any number of labels by prefixing them with '#'.
+
   \{subcommand "contribute"} [\{argument "-c/--checkout"}] [\{argument "-<num>"}]
    - Contribute to an open PR. Prints a URL. Prioritizes PRs you are
      requested to review but will also return other PRs.
