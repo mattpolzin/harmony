@@ -169,7 +169,7 @@ health = do
 (<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
 (<||>) f g x = f x <|> g x
 
-infix 2 <||>
+infixr 2 <||>
 
 ||| Parse arguments for the graph command.
 export
