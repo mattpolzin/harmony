@@ -134,7 +134,7 @@ opts @{config} "assign" partialArg _ =
                then (strCons '#') . slugify <$> config.repoLabels
                else config.teamSlugs
 
-opts @{_} _ partialArg _ = [partialArg ++ "_hello", "world"]
+opts @{_} _ _ _ = []
 
 ||| The Bash Completion script calls to harmony with a special --bash-completion
 ||| flag and passes harmony the subcommand (i.e. first argument after harmony),
