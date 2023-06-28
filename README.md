@@ -114,6 +114,8 @@ Running `harmony pr [--draft]` with a branch checked out will reach out to GitHu
 
 If you need to create a PR still, you will be prompted for a branch to open the PR against (merge into, eventually), a title for the PR, and a description for the PR. If you have an `EDITOR` environment variable set, Harmony will use that editor to get the PR description from you. If you have a PR template at `.github/PULL_REQUEST_TEMPLATE.md`, Harmony will also preload that into your editor. If you do not have an `EDITOR` environment variable set, you will still be able to enter a description from the command line but PR templates are only supported when an `EDITOR` is specified.
 
+Specifically when creating a PR, you can also specify any number of labels to apply by prefixing them with '#'. For example, `harmony pr #backport #bugfix` would create a PR and apply the `backport` and `bugfix` labels. Note that if a PR has already been created, the command you want is `harmony label` which adds labels to PRs.
+
 Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony pr)` to open a web browser to an existing PR for the current branch.
 
 ### Label
