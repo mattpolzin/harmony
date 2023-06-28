@@ -121,6 +121,8 @@ Many operating systems have an `open` command (though the name "open" is not ubi
 ### Label
 Running `harmony label {<label>} [...]` will help you create a PR if one does not exist yet and then it will apply the given labels to the PR. This is essentially an alias for the `harmony pr` command but without support for creating draft PRs.
 
+Note that labels are _not_ prefixed with '#' for this command. There is no need to differentiate labels from other kinds of arguments to `harmony label`.
+
 ### Assign
 Running `harmony assign {<team> | +<user>} [#<label>] [...]` will help you create a PR if one does not exist yet and then it will assign teams and/or users to the PR.
 
