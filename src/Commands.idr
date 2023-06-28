@@ -79,7 +79,9 @@ label @{config} labels =
     putLabels = hcat . intersperse (pretty ", ") . map putLabel
 
 ||| Print the URI for the current branch's PR or create a new PR if one
-||| does not exist when the user executes `harmony pr`
+||| does not exist when the user executes `harmony pr`. Supports creation
+||| of draft PRs (default False) and can accept any number of labels to apply
+||| to the new or current PR.
 export
 pr : Config => Git => Octokit =>
      {default False isDraft : Bool}
@@ -90,10 +92,10 @@ pr {isDraft} labelSlugs =
      then do (actionTaken, pr) <- identifyOrCreatePR {isDraft} !currentBranch
              case actionTaken of
                   Identified => putStrLn pr.webURI
-                  Created    => when (not (null labelSlugs)) $
-                                  label labelSlugs
+                  Created    => pure ()
+             when (not $ null labelSlugs) $
+               label labelSlugs
      else reject "The pr command only accepts labels prefixed with '#' and the --draft flag."
-
 
 ||| Assign the given teams & users as reviewers when the user executes
 ||| `harmony assign ...`.
