@@ -50,10 +50,9 @@ package: build
 	cp package.json ./harmony-npm/
 	cp README.md ./harmony-npm/
 	tar -czvf harmony-npm.tar.gz harmony-npm
-	rm -rf ./harmony-npm
 
 publish : package
-	npm publish harmony-npm.tar.gz
+	npm publish ./harmony-npm
 
 install: harmony
 	npm install --global
@@ -62,6 +61,6 @@ clean:
 	rm -rf ./depends
 	rm -rf ./build
 	rm -rf ./node_modules
+	rm -rf ./harmony-npm
 	rm -f ./harmony
 	rm -f ./harmony-npm.tar.gz
-

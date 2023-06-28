@@ -3,6 +3,7 @@
 build/
 depends/
 node_modules/
+harmony-npm/
 
 config.json
 harmony
