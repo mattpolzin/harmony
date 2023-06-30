@@ -29,10 +29,42 @@ slugify : String -> String
 slugify = pack . replaceOn ' ' '◌' . unpack
 
 ||| Take a slugified phrase and undo the transformation to get the original phrase back.
-export
+public export
 unslugify : String -> String
 unslugify = pack . replaceOn '◌' ' ' . unpack
 
+hashify : String -> String
+hashify = strCons '#'
+
+public export
+unhashify : String -> String
+unhashify str = case strM str of
+                     StrNil => ""
+                     (StrCons '#' str') => str'
+                     (StrCons '\\' str') =>
+                       case strM str' of
+                            StrNil => str
+                            (StrCons '#' str'') => str''
+                            (StrCons _ _) => str
+                     (StrCons _ _) => str
+
+namespace TestUnhashify
+  test1 : unhashify "" = ""
+  test1 = Refl
+
+  test2 : unhashify "\\" = "\\"
+  test2 = Refl
+
+  test3 : unhashify "#hello" = "hello"
+  test3 = Refl
+
+  test4 : unhashify "\\hello" = "\\hello"
+  test4 = Refl
+
+  test5 : unhashify "\\#hello" = "hello"
+  test5 = Refl
+
+export
 isHashPrefix : String -> Bool
 isHashPrefix str =
   ("#" `isPrefixOf` str) || ("\\#" `isPrefixOf` str)
@@ -112,7 +144,7 @@ opts @{config} "graph" partialTeamName previous =
 -- then pr (handled partially above, but when labels are specified, handled here)
 opts @{config} "pr" partialArg _ =
   if isHashPrefix partialArg
-     then (strCons '#') . slugify <$> config.repoLabels
+     then hashify . slugify <$> config.repoLabels
      else []
 
 -- finally, assign auto-completes with 
@@ -122,7 +154,7 @@ opts @{config} "assign" "--" _ = config.teamSlugs
 opts @{config} "assign" partialArg _ =
   if partialArg `isPrefixOf` "--dry"
      then ["--dry"]
-     else filter (isPrefixOf partialArg) slugsOrLoginsOrLabels
+     else slugsOrLoginsOrLabels
   where
     -- If the word being typed is prefixed with '+' return user logins
     -- but otherwise return team slugs. 
@@ -131,7 +163,7 @@ opts @{config} "assign" partialArg _ =
       if "+" `isPrefixOf` partialArg
         then (strCons '+') <$> config.orgMembers
         else if isHashPrefix partialArg
-               then (strCons '#') . slugify <$> config.repoLabels
+               then hashify . slugify <$> config.repoLabels
                else config.teamSlugs
 
 opts @{_} _ _ _ = []

@@ -46,6 +46,45 @@ reflect : Config => Octokit =>
           Promise ()
 reflect = reflectOnSelf
 
+||| In order to support tab completion of multi-word labels, spaces have been turned into
+||| another character to "slugify" the labels. Still, it is possible the user has entered
+||| a label that literally contains the character used during slugification, so to
+||| unslugify, we first see if a label appears in the configured list of labels. If it does
+||| then we use it exactly but if it doesn't then we unslugify it before using it.
+unslugifyLabel : (configLabels : List String) -> (slugifiedLabel : String) -> String
+unslugifyLabel configLabels slugifiedLabel =
+  case find (== slugifiedLabel) configLabels of
+       Just label => label
+       Nothing    => BashCompletion.unslugify $ BashCompletion.unhashify slugifiedLabel
+
+namespace TestUnslugifyLabel
+  test1 : unslugifyLabel ["hello", "world"] "hello" = "hello"
+  test1 = Refl
+
+  test2 : unslugifyLabel ["hello", "world"] "#world" = "world"
+  test2 = Refl
+
+  test3 : unslugifyLabel ["hello", "world"] "\\#hello" = "hello"
+  test3 = Refl
+
+  test4 : unslugifyLabel ["hello world"] "hello world" = "hello world"
+  test4 = Refl
+
+  test5 : unslugifyLabel ["hello world"] "#hello world" = "hello world"
+  test5 = Refl
+
+  test6 : unslugifyLabel ["hello world"] "\\#hello world" = "hello world"
+  test6 = Refl
+
+  test7 : unslugifyLabel ["hello world"] "hello◌world" = "hello world"
+  test7 = Refl
+
+  test8 : unslugifyLabel ["hello world"] "#hello◌world" = "hello world"
+  test8 = Refl
+
+  test9 : unslugifyLabel ["hello world"] "\\#hello◌world" = "hello world"
+  test9 = Refl
+
 ||| Apply the given labels to the current PR when the user executes
 ||| `harmony label <label> ...`.
 export
@@ -54,24 +93,13 @@ label : Config => Git => Octokit =>
      -> Promise ()
 label @{config} labels =
   do (_, openPr) <- identifyOrCreatePR !currentBranch
-     let finalLabels = unslugify config.repoLabels <$> labels
+     let finalLabels = unslugifyLabel config.repoLabels <$> labels
      allLabels <- addLabels openPr finalLabels
      renderIO $ vsep
        [ "Added" <++> putLabels finalLabels <+> " to PR."
        , pretty "All labels for PR of \{openPr.headRef}:" <++> putLabels allLabels <+> "."
        ]
   where
-    ||| In order to support tab completion of multi-word labels, spaces have been turned into
-    ||| another character to "slugify" the labels. Still, it is possible the user has entered
-    ||| a label that literally contains the character used during slugification, so to
-    ||| unslugify, we first see if a label appears in the configured list of labels. If it does
-    ||| then we use it exactly but if it doesn't then we unslugify it before using it.
-    unslugify : (configLabels : List String) -> (slugifiedLabel : String) -> String
-    unslugify configLabels slugifiedLabel =
-      case find (== slugifiedLabel) configLabels of
-           Just label => label
-           Nothing    => BashCompletion.unslugify slugifiedLabel
-
     putLabel : String -> Doc AnsiStyle
     putLabel = enclose "\"" "\"" . annotate (color Green) . pretty
 
@@ -88,7 +116,7 @@ pr : Config => Git => Octokit =>
   -> (labelArgs : List String)
   -> Promise ()
 pr {isDraft} labelSlugs =
-  if all ("#" `isPrefixOf`) labelSlugs
+  if all isHashPrefix labelSlugs
      then do (actionTaken, pr) <- identifyOrCreatePR {isDraft} !currentBranch
              case actionTaken of
                   Identified => putStrLn pr.webURI
@@ -117,7 +145,7 @@ assign args {dry} = do
     partitionedArgs : (List String, List String, List String)
     partitionedArgs = 
       let (userArgs, otherArgs) = partition (isPrefixOf "+") args
-          (labelArgs, teams) = partition (isPrefixOf "#") otherArgs
+          (labelArgs, teams) = partition isHashPrefix otherArgs
           (users, labels) = mapHom (map $ drop 1) (userArgs, labelArgs)
       in  (users, teams, labels)
 
