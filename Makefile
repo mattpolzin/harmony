@@ -45,6 +45,7 @@ package: build
 	./version-check.sh
 	./todo-check.sh
 	# leave ./harmony in place
+	rm -rf ./harmony-npm
 	mkdir harmony-npm
 	cp harmony ./harmony-npm/
 	cp package.json ./harmony-npm/
