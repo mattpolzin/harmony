@@ -97,12 +97,14 @@ cmdOpts "pr" partialArg "pr" =
      else if isHashPrefix partialArg
          then Nothing -- <- allows us to fall through to handle with config below.
          else Just []
-cmdOpts "contribute" "-"  _ = Just ["--checkout", "-c"]
-cmdOpts "contribute" "--" _ = Just ["--checkout", "-c"]
+cmdOpts "contribute" "-"  _ = Just ["--checkout", "-c", "--ignore", "-i"]
+cmdOpts "contribute" "--" _ = Just ["--checkout", "-c", "--ignore", "-i"]
 cmdOpts "contribute" partialArg _  =
   if partialArg `isPrefixOf` "--checkout"
      then Just ["--checkout"]
-     else Just []
+     else if partialArg `isPrefixOf` "--ignore"
+             then Just ["--ignore"]
+             else Just []
 cmdOpts "graph" "--" _ = Nothing
 cmdOpts "graph" "-"  _ = Just ["--completed", "-c"]
 cmdOpts "graph" partialArg _ =

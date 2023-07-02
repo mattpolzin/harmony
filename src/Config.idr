@@ -59,6 +59,15 @@ syncIfOld config =
          now <- time
          pure $ cast (now - oneDay)
 
+||| Add the given PR numbers to the list of ignored PRs in the
+||| config file. This results in a write to the config file and
+||| also returns the updated config.
+export
+addIgnoredPRs : Config -> List Integer -> Promise Config
+addIgnoredPRs config is =
+  writeConfig $
+    { ignoredPRs := (nub $ config.ignoredPRs ++ is) } config
+
 ||| Determine if any configuration settings are inconsistent with each other or result in
 ||| behavior that is likely undesirable.
 checkConfigConsistency : Config -> Either (Doc AnsiStyle) ()
@@ -239,6 +248,7 @@ createConfig envGithubPAT terminalColors editor = do
        , teamSlugs
        , repoLabels
        , orgMembers
+       , ignoredPRs = []
        , githubPAT = hide <$> configPAT
        , ephemeral
        }

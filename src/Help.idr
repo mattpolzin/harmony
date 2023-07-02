@@ -32,9 +32,17 @@ harmony \{subcommand "<subcommand>"}
      
      Optionally apply any number of labels by prefixing them with '#'.
 
-  \{subcommand "contribute"} [\{argument "-c/--checkout"}] [\{argument "-<num>"}]
+  \{subcommand "contribute"} [\{argument "-c/--checkout"}] [\{argument "-<num>"}] [\{argument "-i/--ignore"} {\{argument "<uri>/<pr-number>"}}]
    - Contribute to an open PR. Prints a URL. Prioritizes PRs you are
      requested to review but will also return other PRs.
+
+     Use dash followed by a number (e.g. '-3') to skip that number of
+     potential PRs and return the next.
+
+     Specify a PR to ignore (only affects the local Harmony config on
+     this machine) if you would like to more permanently skip a potential
+     PR. Do this with the '--ignore' option followed by a GitHub URI or
+     Pull Request number.
   \{subcommand "whoami"}
    - Print information about the configured and authenticated user.
   \{subcommand "reflect"}
