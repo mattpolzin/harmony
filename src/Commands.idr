@@ -2,7 +2,9 @@ module Commands
 
 import Data.Config
 import Data.Date
+import Data.Either
 import Data.List
+import Data.List1
 import Data.Promise
 import Data.PullRequest
 import Data.SortedMap
@@ -227,45 +229,32 @@ parseGraphArgs args =
     parseTeamArg : String -> Maybe GraphArg
     parseTeamArg str = Just (TeamName str)
 
-data ContributeArg = Checkout | Skip Nat
+data IgnoreOpt = PRNum Nat
+
+data ContributeArg = Checkout | Ignore IgnoreOpt | Skip Nat
 
 skipArg : ContributeArg -> Maybe Nat
 skipArg (Skip n) = Just n
 skipArg _ = Nothing
 
-||| Present the user with a PR to review when they execute
-||| `harmony contribute`.
-export
-contribute : Config => Git => Octokit =>
-             (args : List ContributeArg)
-          -> Promise ()
-contribute @{config} args =
-  do openPrs <- listPullRequests config.org config.repo (Just Open) 100
-     myLogin <- login <$> getSelf
-     let skip = fromMaybe 0 (head' $ mapMaybe skipArg args)
-     let checkout = find (\case Checkout => True; _ => False) args
-     let filtered = filter (not . isAuthor myLogin) openPrs
-     let parted = partition (isRequestedReviewer myLogin) filtered
-     let (mine, theirs) = (mapHom $ sortBy (compare `on` .createdAt)) parted
-     let pr = head' . drop skip $ mine ++ theirs
-     case pr of
-          Nothing => reject "No open PRs to review!"
-          Just pr => do
-            whenJust (checkout $> pr.headRef) $ \branch => do
-              checkoutBranch branch
-            putStrLn  pr.webURI
+ignorePRNums : List ContributeArg -> List Integer
+ignorePRNums [] = []
+ignorePRNums ((Ignore (PRNum k)) :: xs) = cast k :: ignorePRNums xs
+ignorePRNums (_ :: xs) = ignorePRNums xs
+
+contributeUsageError : String
+contributeUsageError =
+  "contribute's arguments must be -<num> to skip num PRs, --ignore (-i) <uri>/<pr-number>, or --checkout (-c) to checkout the branch needing review."
 
 ||| Parse arguments to the contribute subcommand.
 export
 parseContributeArgs : List String -> Either String (List ContributeArg)
 parseContributeArgs [] = Right []
-parseContributeArgs (_ :: _ :: _ :: _) =
-  Left "contribute's arguments must be either -<num> to skip num PRs or --checkout (-c) to checkout the branch needing review."
 parseContributeArgs args =
-  case (traverse (parseSkipArg <||> parseCheckoutFlag) args) of
-       Just args => Right args
-       Nothing   =>
-         Left "contribute's arguments must be either -<num> to skip num PRs or --checkout (-c) to checkout the branch needing review."
+  let (ignoreArgs, rest) = recombineIgnoreArgs args
+      ignoreArgs' = Ignore <$> ignoreArgs
+      rest' = (traverse (parseSkipArg <||> parseCheckoutFlag) rest)
+      in  maybeToEither contributeUsageError ((ignoreArgs' ++) <$> rest')
   where
     parseCheckoutFlag : String -> Maybe ContributeArg
     parseCheckoutFlag "-c" = Just Checkout
@@ -278,6 +267,65 @@ parseContributeArgs args =
            ('-' :: skip) => map (Skip . cast) . parsePositive $ pack skip
            _             => Nothing
 
+    -- expect a Nat or else a URI here of the form: https://github.com/<org>/<repo>/pull/<pr-number>
+    parseIgnoreOpt : String -> Maybe IgnoreOpt
+    parseIgnoreOpt str =
+      let parts = split (== '/') str
+          lastPart  = last parts
+      in PRNum <$> parsePositive lastPart
+
+    -- the --ignore option takes the next argument as its input so we will
+    -- take two consecutive list elements and combine them for that option.
+    -- The options will be returned separately and the rest will be left for
+    -- later.
+    recombineIgnoreArgs : List String -> (List IgnoreOpt, List String)
+    recombineIgnoreArgs [] = ([], [])
+    recombineIgnoreArgs ("-i" :: []) = ([], ["-i"])
+    recombineIgnoreArgs ("--ignore" :: []) = ([], ["--ignore"])
+    recombineIgnoreArgs ("-i" :: (x :: xs)) = 
+      case parseIgnoreOpt x of
+           Just opt => mapFst (opt ::) (recombineIgnoreArgs xs)
+           Nothing  => mapSnd (\xs' => "-i" :: x :: xs') (recombineIgnoreArgs xs)
+    recombineIgnoreArgs ("--ignore" :: (x :: xs)) =
+      case parseIgnoreOpt x of
+           Just opt => mapFst (opt ::) (recombineIgnoreArgs xs)
+           Nothing  => mapSnd (\xs' => "--ignore" :: x :: xs') (recombineIgnoreArgs xs)
+    recombineIgnoreArgs (x :: xs) = mapSnd (x ::) (recombineIgnoreArgs xs)
+
+||| Present the user with a PR to review when they execute
+||| `harmony contribute`.
+export
+contribute : Config => Git => Octokit =>
+             (args : List ContributeArg)
+          -> Promise ()
+contribute @{config} args = do
+  openPrs <- listPullRequests config.org config.repo (Just Open) 100
+  myLogin <- login <$> getSelf
+  let newIgnorePRNums = ignorePRNums args
+  config' <-
+    if (null newIgnorePRNums)
+       then pure config
+       else addIgnoredPRs config newIgnorePRNums
+  let skip = fromMaybe 0 (head' $ mapMaybe skipArg args)
+  let checkout = find (\case Checkout => True; _ => False) args
+  let notMine = filter (not . isAuthor myLogin) openPrs
+  let notIgnored = filter (isNotIgnored config') notMine
+  let parted = partition (isRequestedReviewer myLogin) notIgnored
+  let (requestedOfMe, others) = (mapHom $ sortBy (compare `on` .createdAt)) parted
+  let pr = head' . drop skip $ requestedOfMe ++ others
+  case pr of
+       Nothing => reject "No open PRs to review!"
+       Just pr => do
+         whenJust (checkout $> pr.headRef) $ \branch => do
+           checkoutBranch branch
+         putStrLn  (pr.webURI @{config'})
+
+  where
+    isNotIgnored : Config -> PullRequest -> Bool
+    isNotIgnored config pr =
+      isNothing $
+        find (== pr.number) config.ignoredPRs
+
 ||| Print the GitHub URI for the current branch when the user
 ||| executes `harmony branch`.
 export
@@ -288,3 +336,4 @@ branch @{config} = do
   let repo = config.repo
   let uri = "https://github.com/\{org}/\{repo}/tree/\{branch}"
   putStrLn uri
+

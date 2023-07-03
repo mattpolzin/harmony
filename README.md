@@ -159,6 +159,8 @@ Running `harmony contribute` will print the URI of the oldest PR waiting for you
 
 You can skip PRs and retrieve the next-oldest one by passing a dash followed by the number to skip (e.g. `-2` to skip the two oldest waiting PRs).
 
+You can also more permanently ignore a particular PR (perhaps it has gone stagnant but your org does not want to close it for whatever reason). To do this, use the `--ignore` or `-i` option and pass it the GitHub URI or the Pull Request Number of a PR to ignore. This PR will be omitted from consideration for the `contribute` command from then on. This only impacts your local machine where the ignore list is stored in Harmony's config file.
+
 You can simultaneously get the URI for a PR to review and checkout the branch needing review by passing the `--checkout` or `-c` option to the `contribute` command.
 
 Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony contribute)` to open a web browser to the PR that Harmony is suggesting.
@@ -177,6 +179,16 @@ harmony contribute -3
 Retrieve a URI for a PR to contribute a review and check the git branch out as well:
 ```shell
 harmony contribute --checkout
+```
+
+Permanently ignore a PR by URI:
+```shell
+harmony contribute --ignore https://github.com/myorg/myrepo/pull/1234
+```
+
+Permanently ignore a PR by its number:
+```shell
+harmony contribute --ignore 1234
 ```
 
 ### Who Am I

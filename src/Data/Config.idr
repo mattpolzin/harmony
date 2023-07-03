@@ -67,6 +67,10 @@ record Config where
   repoLabels    : List String
   ||| Local cache of GitHub members within the configured org.
   orgMembers    : List String
+  ||| A list of Pull Request numbers that should be ignored
+  ||| (specifically when determining the results of the
+  ||| contribute command).
+  ignoredPRs    : List Integer
   ||| A GitHub Personal Access Token. This value is only used if
   ||| there is no $GITHUB_PAT environment variable set. One of
   ||| either the environment variable or this config property
@@ -76,6 +80,10 @@ record Config where
   ephemeral     : Ephemeral -- not written out to file
 
 %name Config config
+
+--
+-- Settable Properties Setup
+--
 
 public export
 data SettableProp : (name : String) -> (help : String) -> Type where
@@ -159,6 +167,10 @@ export
 longestSettablePropName : Nat
 longestSettablePropName = foldr max 0 $ (length . propName') <$> settableProps
 
+--
+-- Accessors
+-- 
+
 export
 (.filepath) : Config -> String
 config.filepath = config.ephemeral.filepath
@@ -170,6 +182,10 @@ config.colors = config.ephemeral.colors
 export
 (.editor) : Config -> Maybe String
 config.editor = config.ephemeral.editor
+
+--
+-- Show
+--
 
 export
 Show Config where
@@ -185,6 +201,7 @@ Show Config where
     , "      teamSlugs: \{show config.teamSlugs}"
     , "     repoLabels: \{show config.repoLabels}"
     , "     orgMembers: \{show config.orgMembers}"
+    , "     ignoredPRs: \{show config.ignoredPRs}"
     , "      githubPAT: \{personalAccessToken}"
     ]
       where
@@ -194,10 +211,14 @@ Show Config where
         personalAccessToken : String
         personalAccessToken = maybe "Not set (will use $GITHUB_PAT environment variable)" show config.githubPAT
 
+--
+-- JSON Serialization
+--
+
 export
 json : Config -> JSON
 json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams assignUsers commentOnAssign
-               teamSlugs repoLabels orgMembers githubPAT _) = 
+               teamSlugs repoLabels orgMembers ignoredPRs githubPAT _) = 
   JObject [
       ("assignTeams"    , JBoolean assignTeams)
     , ("assignUsers"    , JBoolean assignUsers)
@@ -209,9 +230,14 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams assignUse
     , ("orgMembers"     , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"      , JArray $ JString <$> sort teamSlugs)
     , ("repoLabels"     , JArray $ JString <$> sort repoLabels)
+    , ("ignoredPRs"     , JArray $ JNumber . cast <$> sort ignoredPRs)
     , ("githubPAT"      , maybe JNull (JString . expose) githubPAT)
     , ("updatedAt"      , JNumber $ cast updatedAt)
     ]
+
+--
+-- JSON Parsing
+--
 
 export
 parseConfig : (ephemeral : Ephemeral) -> (filecontents : String) -> Either String Config
@@ -241,6 +267,8 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                           -- TODO 3.0.0:  ^ remove optionality with version 3.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
                                           let maybeRepoLabels = lookup "repoLabels" config
                                           -- TODO 3.0.0:  ^ remove optionality with version 3.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
+                                          let maybeIgnoredPRs = lookup "ignoredPRs" config
+                                          -- TODO 3.0.0:  ^ remove optionality with version 3.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
                                           let maybeDefaultRemote = lookup "defaultRemote" config
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           ua <- cast <$> integer updatedAt
@@ -254,6 +282,7 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                           ts <- array string teamSlugs
                                           rl <- maybe (Right []) (array string) maybeRepoLabels
                                           om <- array string orgMembers
+                                          ip <- maybe (Right []) (array integer) maybeIgnoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           pure $ MkConfig {
                                               updatedAt        = ua
@@ -267,6 +296,7 @@ parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> 
                                             , repoLabels       = rl
                                             , commentOnAssign  = ca
                                             , orgMembers       = om
+                                            , ignoredPRs       = ip
                                             , githubPAT        = (map Hide) gp
                                             , ephemeral        = ephemeral
                                             }
