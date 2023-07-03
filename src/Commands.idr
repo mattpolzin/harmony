@@ -193,9 +193,9 @@ graph @{config} args = do
   let (openReviewers, closedReviewers) = prs.allReviewers
   completedReviews <- 
     case (isJust includeCompletedReviews) of
-         True  => countReviewsByEachUser (combined prs)
-         False => pure empty
-  renderIO $ reviewsGraph closedReviewers openReviewers teamMemberLogins (Just completedReviews)
+         True  => Just <$> countReviewsByEachUser (combined prs)
+         False => pure Nothing
+  renderIO $ reviewsGraph closedReviewers openReviewers teamMemberLogins completedReviews
 
 export
 health : Config => Octokit =>
