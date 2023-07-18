@@ -276,9 +276,21 @@ identifyOrCreatePR @{config} {isDraft} branch = do
 
       createPR : Promise PullRequest
       createPR = do
-        when (!remoteTrackingBranch == Nothing) $
-          do putStrLn "Creating a new remote branch..."
-             pushNewBranch (fromMaybe "origin" config.defaultRemote) branch
+        -- create a remote tracking branch if needed
+        whenNothing !remoteTrackingBranch $ do
+          putStrLn "Creating a new remote branch..."
+          pushNewBranch (fromMaybe "origin" config.defaultRemote) branch
+
+        -- ask if unpushed commits should be pushed
+        whenJust !unpushedCommits $ \unpushedString => do
+          putStrLn "The following commits have not been pushed:\n"
+          putStrLn unpushedString
+          putStrLn "\n"
+          pushUnpushedChanges <-
+            yesNoPrompt "Would you like to push these changes before creating a PR?"
+          when pushUnpushedChanges push
+
+        -- proceed to creating a PR
         putStrLn "Creating a new PR for the current branch (\{branch})."
         putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
         baseBranchInput <- trim <$> getLine

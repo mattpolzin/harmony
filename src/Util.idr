@@ -12,6 +12,13 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
+||| Run the given applicative when the input is @Nothing@.
+||| The dual of @whenJust@.
+export
+whenNothing : Applicative f => Maybe a -> f () -> f ()
+whenNothing Nothing x = x
+whenNothing (Just _) _ = pure ()
+
 ||| Render with or without color based on configuration
 export
 renderString : Config => Doc AnsiStyle -> String
