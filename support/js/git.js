@@ -70,6 +70,20 @@ const git_remote_tracking_branch = (git, onSuccess, onFailure) =>
     onFailure
   )
 
+const git_uncommitted_changes = (git, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('diff', '--name-only'),
+    idris__git_trim(onSuccess),
+    onFailure
+  )
+
+const git_staged_changes = (git, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('diff', '--staged', '--name-only'),
+    idris__git_trim(onSuccess),
+    onFailure
+  )
+
 const git_unpushed_commits = (git, onSuccess, onFailure) =>
   idris__git_unpromisify(
     git.raw('log', '@{push}..'),

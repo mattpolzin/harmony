@@ -106,6 +106,40 @@ remoteTrackingBranch @{G ptr} = do
          StrNil         => Nothing
          (StrCons x xs) => Just str
 
+%foreign git_ffi "uncommitted_changes"
+prim__uncommittedChanges : Ptr GitRef
+                        -> (onSuccess : String -> PrimIO ())
+                        -> (onFailure : String -> PrimIO ())
+                        -> PrimIO ()
+
+||| Get the Git output for filenames with uncommitted changes. If there
+||| are no files with uncommitted changes, returns @Nothing@.
+export
+uncommittedChanges : Git => Promise (Maybe String)
+uncommittedChanges @{G ptr} = do
+  str <- promiseIO $ prim__uncommittedChanges ptr
+  pure $
+    case strM str of
+         StrNil         => Nothing
+         (StrCons x xs) => Just str
+
+%foreign git_ffi "staged_changes"
+prim__stagedChanges : Ptr GitRef
+                   -> (onSuccess : String -> PrimIO ())
+                   -> (onFailure : String -> PrimIO ())
+                   -> PrimIO ()
+
+||| Get the Git output for filenames with staged changes. If there
+||| are no files with staged changes, returns @Nothing@.
+export
+stagedChanges : Git => Promise (Maybe String)
+stagedChanges @{G ptr} = do
+  str <- promiseIO $ prim__stagedChanges ptr
+  pure $
+    case strM str of
+         StrNil         => Nothing
+         (StrCons x xs) => Just str
+
 %foreign git_ffi "unpushed_commits"
 prim__unpushedCommits : Ptr GitRef
                      -> (onSuccess : String -> PrimIO ())
