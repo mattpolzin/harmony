@@ -12,6 +12,13 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
+||| Run the given applicative when the input is @Nothing@.
+||| The dual of @whenJust@.
+export
+whenNothing : Applicative f => Maybe a -> f () -> f ()
+whenNothing Nothing x = x
+whenNothing (Just _) _ = pure ()
+
 ||| Render with or without color based on configuration
 export
 renderString : Config => Doc AnsiStyle -> String
@@ -38,6 +45,21 @@ getManyLines = getMoreLines []
          case (acc, line) of
               ("" :: rest, "") => pure (reverse rest)
               _                => getMoreLines (line :: acc) fuel
+
+||| Ask a question and receive a yes/no response with yes being the default.
+||| You probably want your question String to end with a question mark;
+||| @yesNoPrompt@ will append "[Y/n]" to the end of your question for you.
+export
+yesNoPrompt : HasIO io => (question : String) -> io Bool
+yesNoPrompt question = do
+  putStr "\{question} [Y/n] "
+  yesUnlessNo . trim <$> getLine
+    where
+      yesUnlessNo : String -> Bool
+      yesUnlessNo answer with (toLower answer)
+        _ | "n"   = False
+        _ | "no"  = False
+        _ | _     = True
 
 ||| Get an absolute path for the given directory or file assuming the
 ||| given path is relative to the root of the Git repository.

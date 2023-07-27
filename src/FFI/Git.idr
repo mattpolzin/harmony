@@ -56,6 +56,16 @@ pushNewBranch : Git => (remoteName : String) -> (branch : String) -> Promise ()
 pushNewBranch @{G ptr} remoteName branch =
   ignore . promiseIO $ prim__pushNewBranch ptr remoteName branch
 
+%foreign git_ffi "push"
+prim__push : Ptr GitRef
+          -> (onSuccess : String -> PrimIO ())
+          -> (onFailure : String -> PrimIO ())
+          -> PrimIO ()
+
+export
+push : Git => Promise ()
+push @{G ptr} = ignore . promiseIO $ prim__push ptr
+
 %foreign git_ffi "list_remotes"
 prim__listRemotes : Ptr GitRef
                  -> (onSuccess : String -> PrimIO ())
@@ -89,12 +99,64 @@ prim__remoteTrackingBranch : Ptr GitRef
 
 export
 remoteTrackingBranch : Git => Promise (Maybe String)
-remoteTrackingBranch @{G ptr} =
-  do str <- promiseIO $ prim__remoteTrackingBranch ptr
-     pure $
-       case strM str of
-            StrNil         => Nothing
-            (StrCons x xs) => Just str
+remoteTrackingBranch @{G ptr} = do
+  str <- promiseIO $ prim__remoteTrackingBranch ptr
+  pure $
+    case strM str of
+         StrNil         => Nothing
+         (StrCons x xs) => Just str
+
+%foreign git_ffi "uncommitted_changes"
+prim__uncommittedChanges : Ptr GitRef
+                        -> (onSuccess : String -> PrimIO ())
+                        -> (onFailure : String -> PrimIO ())
+                        -> PrimIO ()
+
+||| Get the Git output for filenames with uncommitted changes. If there
+||| are no files with uncommitted changes, returns @Nothing@.
+export
+uncommittedChanges : Git => Promise (Maybe String)
+uncommittedChanges @{G ptr} = do
+  str <- promiseIO $ prim__uncommittedChanges ptr
+  pure $
+    case strM str of
+         StrNil         => Nothing
+         (StrCons x xs) => Just str
+
+%foreign git_ffi "staged_changes"
+prim__stagedChanges : Ptr GitRef
+                   -> (onSuccess : String -> PrimIO ())
+                   -> (onFailure : String -> PrimIO ())
+                   -> PrimIO ()
+
+||| Get the Git output for filenames with staged changes. If there
+||| are no files with staged changes, returns @Nothing@.
+export
+stagedChanges : Git => Promise (Maybe String)
+stagedChanges @{G ptr} = do
+  str <- promiseIO $ prim__stagedChanges ptr
+  pure $
+    case strM str of
+         StrNil         => Nothing
+         (StrCons x xs) => Just str
+
+%foreign git_ffi "unpushed_commits"
+prim__unpushedCommits : Ptr GitRef
+                     -> (onSuccess : String -> PrimIO ())
+                     -> (onFailure : String -> PrimIO ())
+                     -> PrimIO ()
+
+||| Get the Git output for unpushed commits (multiple lines per
+||| commit including the ref, author, and commit message). If there
+||| are no unpushed commits, returns @Nothing@.
+export
+unpushedCommits : Git => Promise (Maybe String)
+unpushedCommits @{G ptr} = do
+  str <- promiseIO $ prim__unpushedCommits ptr
+  pure $
+    case strM str of
+         StrNil         => Nothing
+         (StrCons x xs) => Just str
 
 %foreign git_ffi "user_email"
 prim__userEmail : Ptr GitRef

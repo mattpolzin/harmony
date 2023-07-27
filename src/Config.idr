@@ -215,14 +215,14 @@ createConfig envGithubPAT terminalColors editor = do
   putStrLn "What GitHub remote repo would you like to use harmony for\{remoteDefaultStr}?"
   defaultRemote <- Just . orIfEmpty (Just remoteGuess) . trim <$> getLine
   
-  putStr "Would you like harmony to comment when it assigns reviewers? [Y/n] "
-  commentOnAssign <- yesUnlessNo . trim <$> getLine
+  commentOnAssign <-
+    yesNoPrompt "Would you like harmony to comment when it assigns reviewers?"
 
-  putStr "Would you like harmony to assign teams when it assigns reviewers? [Y/n] "
-  assignTeams <- yesUnlessNo . trim <$> getLine
+  assignTeams <-
+    yesNoPrompt "Would you like harmony to assign teams when it assigns reviewers?"
 
-  putStr "Would you like harmony to assign individual users when it assigns reviewers? [Y/n] "
-  assignUsers <- yesUnlessNo . trim <$> getLine
+  assignUsers <-
+    yesNoPrompt "Would you like harmony to assign individual users when it assigns reviewers?"
 
   _ <- liftIO $ octokit pat
   putStrLn "Creating config..."
@@ -262,12 +262,6 @@ createConfig envGithubPAT terminalColors editor = do
     orIfEmpty Nothing  x  = x
     orIfEmpty (Just y) "" = y
     orIfEmpty (Just _) x  = x
-
-    yesUnlessNo : String -> Bool
-    yesUnlessNo answer with (toLower answer)
-      _ | "n"   = False
-      _ | "no"  = False
-      _ | _     = True
 
     org : Maybe GitRemote -> Maybe String
     org = map (.org)

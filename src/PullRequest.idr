@@ -274,11 +274,47 @@ identifyOrCreatePR @{config} {isDraft} branch = do
           ignore $ removeFile "pr_description.tmp.md"
         pure description
 
+      continueGivenUncommittedChanges : Promise Bool
+      continueGivenUncommittedChanges = do
+        case !uncommittedChanges of
+             Just files => do
+               putStrLn "The following files have uncommitted changes:"
+               putStrLn files
+               yesNoPrompt "Would you like to continue creating a Pull Request anyway?"
+             Nothing => pure True
+
+      continueGivenStagedChanges : Promise Bool
+      continueGivenStagedChanges = do
+        case !stagedChanges of
+             Just files => do
+               putStrLn "The following files have staged but uncommitted changes:"
+               putStrLn files
+               yesNoPrompt "Would you like to continue creating a Pull Request anyway?"
+             Nothing => pure True
+
       createPR : Promise PullRequest
       createPR = do
-        when (!remoteTrackingBranch == Nothing) $
-          do putStrLn "Creating a new remote branch..."
-             pushNewBranch (fromMaybe "origin" config.defaultRemote) branch
+        -- create a remote tracking branch if needed
+        whenNothing !remoteTrackingBranch $ do
+          putStrLn "Creating a new remote branch..."
+          pushNewBranch (fromMaybe "origin" config.defaultRemote) branch
+
+        -- ask if we should continue despite uncommitted changes
+        True <- continueGivenUncommittedChanges
+          | False => reject "Not creating a PR (for now)..."
+        True <- continueGivenStagedChanges
+          | False => reject "Not creating a PR (for now)..."
+
+        -- ask if unpushed commits should be pushed
+        whenJust !unpushedCommits $ \unpushedString => do
+          putStrLn "The following commits have not been pushed:\n"
+          putStrLn unpushedString
+          putStrLn "\n"
+          pushUnpushedChanges <-
+            yesNoPrompt "Would you like to push these changes before creating a PR?"
+          when pushUnpushedChanges push
+
+        -- proceed to creating a PR
         putStrLn "Creating a new PR for the current branch (\{branch})."
         putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
         baseBranchInput <- trim <$> getLine

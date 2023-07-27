@@ -7,12 +7,15 @@ const git_git = () =>
 const idris__git_unpromisify = (promise, onSuccess, onFailure) =>
   promise.then(r => onSuccess(r)(), e => onFailure(e)())
 
+// trim a result (second argument) and pass it to the given callback (first argument).
+const idris__git_trim = callback => value => callback(value.trim())
+
 // current branch
 // @Returns String
 const git_current_branch = (git, onSuccess, onFailure) =>
   idris__git_unpromisify(
     git.raw('branch', '--show-current'),
-    r => onSuccess(r.trim()),
+    idris__git_trim(onSuccess),
     onFailure
   )
 
@@ -32,18 +35,25 @@ const git_push_new_branch = (git, remoteName, branch, onSuccess, onFailure) =>
     onFailure
   )
 
+const git_push = (git, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('push'),
+    r => onSuccess(''),
+    onFailure
+  )
+
 // remote URI
 const git_remote_uri = (git, remoteName, onSuccess, onFailure) =>
   idris__git_unpromisify(
     git.raw('remote', 'get-url', remoteName),
-    r => onSuccess(r.trim()),
+    idris__git_trim(onSuccess),
     onFailure
   )
 
 const git_list_remotes = (git, onSuccess, onFailure) =>
   idris__git_unpromisify(
     git.raw('remote'),
-    r => onSuccess(r.trim()),
+    idris__git_trim(onSuccess),
     onFailure
   )
 
@@ -56,21 +66,42 @@ const git_remote_tracking_branch = (git, onSuccess, onFailure) =>
       .then(headRef => 
         git.raw('for-each-ref', '--format', '%(upstream:short)', `${headRef.trim()}`),
         onFailure),
-    r => onSuccess(r.trim()),
+    idris__git_trim(onSuccess),
+    onFailure
+  )
+
+const git_uncommitted_changes = (git, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('diff', '--name-only'),
+    idris__git_trim(onSuccess),
+    onFailure
+  )
+
+const git_staged_changes = (git, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('diff', '--staged', '--name-only'),
+    idris__git_trim(onSuccess),
+    onFailure
+  )
+
+const git_unpushed_commits = (git, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('log', '@{push}..'),
+    idris__git_trim(onSuccess),
     onFailure
   )
 
 const git_user_email = (git, onSuccess, onFailure) =>
   idris__git_unpromisify(
     git.raw('config', '--get', 'user.email'),
-    r => onSuccess(r.trim()),
+    idris__git_trim(onSuccess),
     onFailure
   )
 
 const git_root_dir = (git, onSuccess, onFailure) =>
   idris__git_unpromisify(
     git.raw('rev-parse', '--show-toplevel'),
-    r => onSuccess(r.trim()),
+    idris__git_trim(onSuccess),
     onFailure
   )
 
