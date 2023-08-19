@@ -235,6 +235,14 @@ prim__addPullReviewers : Ptr OctokitRef
 ||| Add reviewers to a Pull Request.
 |||
 ||| Will produce a list of applied reviewers.
+|||
+||| Applies team reviewers first as one API request and then
+||| individual reviewers second as a second API request. This
+||| implementation detail forces (or allows) GitHub to take a
+||| team assignment and pick someone from it whereas if a team
+||| and some individuals are assigned in one go then GitHub will
+||| never apply its round-robin or weight-balanced selection but
+||| instead will leave the team itself assigned.
 export
 addPullReviewers : Octokit => 
                    (owner : String) 
@@ -243,8 +251,10 @@ addPullReviewers : Octokit =>
                 -> (reviewers : List String) 
                 -> (teamReviewers : List String) 
                 -> Promise (List String)
-addPullReviewers @{Kit ptr} owner repo pullNumber reviewers teamReviewers = 
-  lines <$> (promiseIO $ prim__addPullReviewers ptr owner repo pullNumber (join "," reviewers) (join "," teamReviewers))
+addPullReviewers @{Kit ptr} owner repo pullNumber reviewers teamReviewers = do
+  teamReviewers <- lines <$> (promiseIO $ prim__addPullReviewers ptr owner repo pullNumber "" (join "," teamReviewers))
+  individualReviewers <- lines <$> (promiseIO $ prim__addPullReviewers ptr owner repo pullNumber (join "," reviewers) "")
+  pure $ teamReviewers ++ individualReviewers
 
 %foreign okit_ffi "add_labels"
 prim__addLabels : Ptr OctokitRef
