@@ -33,7 +33,7 @@ syncConfig @{config} echo =
  do teamSlugs  <- listTeams config.org
     labelNames <- listRepoLabels config.org config.repo
     orgMembers <- listOrgMembers config.org
-    updatedAt  <- cast {to=Timestamp} <$> time
+    updatedAt  <- cast {to=Data.Config.Timestamp} <$> time
     let config' = { updatedAt  := updatedAt
                   , teamSlugs  := teamSlugs
                   , repoLabels := labelNames
@@ -53,7 +53,7 @@ syncIfOld config =
              syncConfig False
      else pure config
   where
-    oneDayAgo : HasIO io => io Timestamp
+    oneDayAgo : HasIO io => io Data.Config.Timestamp
     oneDayAgo =
       do let oneDay = 86_400
          now <- time
