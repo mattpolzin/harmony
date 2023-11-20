@@ -95,14 +95,22 @@ graph highScore = vsep . map (graphOne highScore)
 ||| Produce a graph of open pull requests per month (by the month the PR was created).
 export
 healthGraph : (openPullRequests : List PullRequest)
+           -> (org : String)
+           -> (repo : String)
            -> Doc AnsiStyle
-healthGraph openPullRequests =
+healthGraph openPullRequests org repo =
   let groups = groupBy ((==) `on` .month `on` .createdAt) $ sortBy (compare `on` .createdAt) openPullRequests
       max    = foldr (\xs,m => max (length xs) m) 1 groups
   in vsep [ header
           , graph max (unfoldGraph (limit 48) groups Nothing)
+          , emptyDoc
+          , pretty link
+          , emptyDoc
           ]
   where
+    link : String
+    link = "https://github.com/\{org}/\{repo}/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc"
+
     graphable : (List1 PullRequest) -> PRsOnDate Date
     graphable (pr ::: tail) = MkPRsOnDate pr.createdAt (S $ length tail)
 

@@ -200,9 +200,9 @@ graph @{config} args = do
 export
 health : Config => Octokit =>
          Promise ()
-health = do
+health @{config} = do
   prs <- listOpenPRs {pageBreaks = 4} 100
-  renderIO $ healthGraph prs
+  renderIO $ healthGraph prs config.org config.repo
 
 (<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
 (<||>) f g x = f x <|> g x
