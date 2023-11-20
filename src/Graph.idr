@@ -134,7 +134,7 @@ healthGraph openPullRequests =
     header : Doc AnsiStyle
     header = vsep $
                catMaybes [ Just $ emptyDoc
-                         , Just $ pretty "Open Pull Requests grouped by month craetaed."
+                         , Just $ pretty "Open Pull Requests grouped by month created."
                          , Just $ emptyDoc
                          , Just $ emptyDoc
                          ]
