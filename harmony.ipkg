@@ -12,6 +12,8 @@ langversion >= 0.6.0
 
 depends = contrib
         , idris-adds >= 0.3.0
+        , parser >= 0.1.0
+        , parser-json >= 0.1.0
         , json >= 0.5.0
 
 modules = Main

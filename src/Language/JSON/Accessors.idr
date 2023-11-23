@@ -3,7 +3,7 @@ module Language.JSON.Accessors
 import Data.Either
 import Data.List
 import Data.Vect
-import Language.JSON
+import JSON.Parser
 
 %default total
 
