@@ -5,7 +5,7 @@ import Data.List
 import Data.List.Elem
 import Data.String
 import Data.Vect
-import Language.JSON
+import JSON.Parser
 import Language.JSON.Accessors
 
 import public Data.DPair
@@ -220,9 +220,9 @@ json : Config -> JSON
 json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams assignUsers commentOnAssign
                teamSlugs repoLabels orgMembers ignoredPRs githubPAT _) = 
   JObject [
-      ("assignTeams"    , JBoolean assignTeams)
-    , ("assignUsers"    , JBoolean assignUsers)
-    , ("commentOnAssign", JBoolean commentOnAssign)
+      ("assignTeams"    , JBool assignTeams)
+    , ("assignUsers"    , JBool assignUsers)
+    , ("commentOnAssign", JBool commentOnAssign)
     , ("org"            , JString org)
     , ("repo"           , JString repo)
     , ("defaultRemote"  , maybe JNull JString defaultRemote)
@@ -230,9 +230,9 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams assignUse
     , ("orgMembers"     , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"      , JArray $ JString <$> sort teamSlugs)
     , ("repoLabels"     , JArray $ JString <$> sort repoLabels)
-    , ("ignoredPRs"     , JArray $ JNumber . cast <$> sort ignoredPRs)
+    , ("ignoredPRs"     , JArray $ JInteger . cast <$> sort ignoredPRs)
     , ("githubPAT"      , maybe JNull (JString . expose) githubPAT)
-    , ("updatedAt"      , JNumber $ cast updatedAt)
+    , ("updatedAt"      , JInteger $ cast updatedAt)
     ]
 
 --
@@ -241,7 +241,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams assignUse
 
 export
 parseConfig : (ephemeral : Ephemeral) -> (filecontents : String) -> Either String Config
-parseConfig ephemeral = (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parseConfigJson
+parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> parseConfigJson
   where
     parseConfigJson : JSON -> Either String Config
     parseConfigJson (JObject config) = do [   updatedAt

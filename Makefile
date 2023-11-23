@@ -29,8 +29,9 @@ depends/idris-adds-${idris-adds-version}:
 	    make && \
 	    cp -R ./build/ttc/* ../../../depends/idris-adds-${idris-adds-version}/
 
-build/deps/depends/elab-util-${idris-elab-util-version}:
-	mkdir -p build/deps/depends/elab-util-${idris-elab-util-version}
+depends/elab-util-${idris-elab-util-version}:
+	mkdir -p depends/elab-util-${idris-elab-util-version}
+	mkdir -p build/deps
 	cd build/deps && \
 		if [ ! -d ./idris2-elab-util ]; then \
 			git clone https://github.com/stefan-hoeck/idris2-elab-util.git; \
@@ -38,9 +39,9 @@ build/deps/depends/elab-util-${idris-elab-util-version}:
 	  cd idris2-elab-util && \
 	    git checkout ${idris-elab-util-hash} && \
 	    $(idris2) --build elab-util.ipkg && \
-	    cp -R ./build/ttc/* ../depends/elab-util-${idris-elab-util-version}/
+	    cp -R ./build/ttc/* ../../../depends/elab-util-${idris-elab-util-version}/
 
-depends/parser-${idris-parser-version}: build/deps/depends/elab-util-${idris-elab-util-version}
+depends/parser-${idris-parser-version}: depends/elab-util-${idris-elab-util-version}
 	mkdir -p depends/parser-${idris-parser-version}
 	mkdir -p build/deps
 	cd build/deps && \
@@ -49,7 +50,7 @@ depends/parser-${idris-parser-version}: build/deps/depends/elab-util-${idris-ela
 		fi && \
 	  cd idris2-parser && \
 	    git checkout ${idris-parser-hash} && \
-			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../depends" $(idris2) --build parser.ipkg && \
+			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../depends" $(idris2) --build parser.ipkg && \
 	    cp -R ./build/ttc/* ../../../depends/parser-${idris-parser-version}/
 
 depends/parser-json-${idris-parser-version}: depends/parser-${idris-parser-version}
@@ -61,10 +62,10 @@ depends/parser-json-${idris-parser-version}: depends/parser-${idris-parser-versi
 		fi && \
 	  cd idris2-parser/json && \
 	    git checkout ${idris-parser-hash} && \
-			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../depends:../../../../depends" $(idris2) --build parser-json.ipkg && \
+			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../../depends" $(idris2) --build parser-json.ipkg && \
 	    cp -R ./build/ttc/* ../../../../depends/parser-json-${idris-parser-version}/
 
-depends/json-${idris-json-version}: build/deps/depends/elab-util-${idris-elab-util-version} depends/parser-${idris-parser-version} depends/parser-json-${idris-parser-version}
+depends/json-${idris-json-version}: depends/elab-util-${idris-elab-util-version} depends/parser-${idris-parser-version} depends/parser-json-${idris-parser-version}
 	mkdir -p depends/json-${idris-json-version}
 	mkdir -p build/deps
 	cd build/deps && \
@@ -73,7 +74,7 @@ depends/json-${idris-json-version}: build/deps/depends/elab-util-${idris-elab-ut
 		fi && \
 	  cd idris2-json && \
 	    git checkout ${idris-json-hash} && \
-			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../depends:../../../depends" $(idris2) --build json.ipkg && \
+			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../depends" $(idris2) --build json.ipkg && \
 	    cp -R ./build/ttc/* ../../../depends/json-${idris-json-version}/
 
 node_modules:

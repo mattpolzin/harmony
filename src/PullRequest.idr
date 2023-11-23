@@ -17,7 +17,7 @@ import Data.String.Extra
 import FFI.Concurrency
 import FFI.Git
 import FFI.GitHub
-import Language.JSON
+import JSON.Parser
 import Language.JSON.Accessors
 import Reviewer
 import System

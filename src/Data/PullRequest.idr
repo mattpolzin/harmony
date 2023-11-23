@@ -6,7 +6,7 @@ import Data.Either
 import Data.List
 import Data.String
 import Data.Vect
-import Language.JSON
+import JSON.Parser
 import Language.JSON.Accessors
 
 %default total
@@ -114,11 +114,11 @@ parsePR json =
 export
 parsePullRequestString : String -> Either String PullRequest
 parsePullRequestString =
-  (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parsePR
+  (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> parsePR
 
 ||| Parse a list of users from a JSON String
 export
 parsePullRequestsString : String -> Either String (List PullRequest)
 parsePullRequestsString =
-  (maybeToEither "Failed to parse JSON" . JSON.parse) >=> array parsePR
+  (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> array parsePR
 

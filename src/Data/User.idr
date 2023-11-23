@@ -2,7 +2,7 @@ module Data.User
 
 import Data.Either
 import Data.Vect
-import Language.JSON
+import JSON.Parser
 import Language.JSON.Accessors
 
 %default total
@@ -43,11 +43,11 @@ parseUser _          = Left "Expected config JSON to be an Object."
 export
 parseUserString : String -> Either String User
 parseUserString =
-  (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parseUser
+  (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> parseUser
 
 ||| Parse a list of users from a JSON String
 export
 parseUsersString : String -> Either String (List User)
 parseUsersString =
-  (maybeToEither "Failed to parse JSON" . JSON.parse) >=> array parseUser
+  (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> array parseUser
 

@@ -8,7 +8,7 @@ import Data.String.Extra
 import Data.User
 import Data.Vect
 import FFI
-import Language.JSON
+import JSON.Parser
 import Language.JSON.Accessors
 
 import public Data.Fin

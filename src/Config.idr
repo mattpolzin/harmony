@@ -10,7 +10,7 @@ import Data.String
 import Decidable.Equality
 import FFI.Git
 import FFI.GitHub
-import Language.JSON
+import JSON.Parser
 import System
 import System.File
 import Util
@@ -22,7 +22,7 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 writeConfig : Config -> Promise Config
 writeConfig config =
-  do res <- writeFile config.filepath (format 2 $ json config)
+  do res <- writeFile config.filepath (show $ json config)
      case res of
           Right () => pure config
           Left err => reject "Failed to write updated config file to \{config.filepath}: \{show err}."
