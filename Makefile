@@ -37,7 +37,7 @@ build: ./node_modules/ depends/idris-adds-${idris-adds-version}
 	@if [[ ${idris2-minor-version} -gt 6 ]] || [[ "${idris2-build}" != '' ]]; then \
 	  cp ./build/exec/harmony ./harmony; \
 	else \
-	  echo "#!/usr/bin/env node\n" > ./harmony; \
+	  echo "#!/usr/bin/env node" > ./harmony; \
 	  cat ./build/exec/harmony >> ./harmony; \
 	fi
 	@chmod +x ./harmony

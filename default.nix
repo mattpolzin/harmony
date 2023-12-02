@@ -1,6 +1,6 @@
-{ stdenv, callPackage, fetchFromGitHub, idris2 }:
+{ stdenv, lib, callPackage, fetchFromGitHub, idris2, makeWrapper, nodejs }:
 let 
-  nodeDependencies = (callPackage ./node2nix.nix {}).nodeDependencies;
+  nodeDependencies = (callPackage ./node2nix.nix { inherit nodejs; }).nodeDependencies;
   idrisAddsVersion = "0.3.0";
   idrisAddsSrc = fetchFromGitHub {
     owner = "mattpolzin";
@@ -13,7 +13,8 @@ stdenv.mkDerivation {
   pname = "harmony";
   version = "2.6.1";
 
-  buildInputs = [ idris2 ];
+  nativeBuildInputs = [ idris2 makeWrapper ];
+  buildInputs = [ nodejs ];
 
   src = ./.;
 
@@ -34,6 +35,10 @@ stdenv.mkDerivation {
 
     mkdir -p $out/bin
     cp harmony $out/bin/
+
+    wrapProgram $out/bin/harmony \
+      --prefix PATH : ${lib.makeBinPath [ nodeDependencies ]} \
+      --prefix NODE_PATH : ${nodeDependencies}/lib/node_modules
 
     runHook postInstall
   '';
