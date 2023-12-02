@@ -13,7 +13,9 @@
   {
     packages = forAllSystems (system: 
       {
-        harmony = import ./default.nix { inherit system; };
+        harmony = with nixpkgs.legacyPackages.${system}.default;
+          callPackage ./default.nix {};
+
         default = self.packages.${system}.harmony;
       }
     );
