@@ -4,7 +4,10 @@ Harmony is a small tool that helps teams keep GitHub reviews running smoothly. I
 
 ## Dependencies
 ### Runtime
-Running Harmony only requires NodeJS 14+ (and a local installation of `git`).
+Running Harmony requires NodeJS 14+ (and a local installation of `git`) or alternatively Nix with flakes enabled.
+
+If you'd like to try Harmony out without even "installing" it and you have Nix installed with flakes enabled, you can run it as `nix run github:mattpolzin/harmony`.
+
 ### Build time
 Building the latest commits of Harmony requires a HEAD build of the Idris 2 compiler. Each release page also indicates the version of Idris 2 that particular release will build against.
 
