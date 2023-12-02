@@ -6,7 +6,7 @@ idris2-version = $(shell $(idris2) --version | sed -En 's/Idris 2, version ([^-]
 idris2-build   = $(shell $(idris2) --version | sed -En 's/Idris 2, version [^-]+(.*)/\1/p')
 idris2-minor-version = $(shell echo ${idris2-version} | sed -En 's/0\.(.*)\../\1/p')
 
-.PHONY: all build install package publish clean version
+.PHONY: all build nix-build install package publish clean version
 
 all: build
 
@@ -34,6 +34,12 @@ build: node_modules depends/idris-adds-${idris-adds-version}
 	@chmod +x ./harmony
 
 harmony: build
+
+node2nix ?= nix run nixpkgs\#node2nix
+
+nix-build:
+	${MAKE} clean
+	$(node2nix) -- --composition node2nix.nix -l
 
 version:
 	@(if [[ "${v}" == '' ]]; then echo "please set the 'v' variable."; exit 1; fi)
