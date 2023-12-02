@@ -29,6 +29,18 @@ You can install Harmony via npm directly by running `npm install -g @mattpolzin/
 ### GitHub Release
 You can install any Harmony release by downloading the `harmony-npm.tar.gz` file from the GitHub Release page, unzipping it, and running `npm install --global`.
 
+### Nix Flake
+You can add Harmony to your Flake inputs as follows:
+```nix
+  inputs = {
+    ...
+    harmony.url = "github:mattpolzin/harmony";
+    harmony.inputs.nixpkgs.follows = "nixpkgs";
+  };
+```
+
+Then in your outputs, being Harmony into a package install list as `harmony.packages.<system>.harmony`.
+
 ### From Source
 The build script assumes a HEAD build of Idris 2 is installed on your system. For an alternative, see the [Docker Build](#docker-build) instructions below.
 
