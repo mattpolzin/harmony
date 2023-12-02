@@ -2,7 +2,7 @@
   description = "Harmony GitHub collaboration tool";
 
   inputs = {
-    nixpkgs.url = "https://github.com/nixos/nixpkgs";
+    nixpkgs.url = github:NixOS/nixpkgs;
   };
 
   outputs = { self, nixpkgs }:
@@ -13,7 +13,7 @@
   {
     packages = forAllSystems (system: 
       {
-        harmony = with nixpkgs.legacyPackages.${system}.default;
+        harmony = with nixpkgs.legacyPackages.${system};
           callPackage ./default.nix {};
 
         default = self.packages.${system}.harmony;
