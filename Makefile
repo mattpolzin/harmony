@@ -13,17 +13,26 @@ all: build
 depends/idris-adds-${idris-adds-version}:
 	mkdir -p depends/idris-adds-${idris-adds-version}
 	mkdir -p build/deps
+ifeq ($(IDRIS_ADDS_SRC),)
 	cd build/deps && \
 	  git clone https://github.com/mattpolzin/idris-adds.git && \
 	  cd idris-adds && \
 	    git checkout ${idris-adds-version} && \
 	    make && \
 	    cp -R ./build/ttc/* ../../../depends/idris-adds-${idris-adds-version}/
+else
+	cd build/deps && \
+	  cp -R $(IDRIS_ADDS_SRC) ./idris-adds && \
+		chmod -R +rw ./idris-adds && \
+		cd idris-adds && \
+			make && \
+	    cp -R ./build/ttc/* ../../../depends/idris-adds-${idris-adds-version}/
+endif
 
-node_modules:
+./node_modules/: package.json
 	npm install
 
-build: node_modules depends/idris-adds-${idris-adds-version}
+build: ./node_modules/ depends/idris-adds-${idris-adds-version}
 	IDRIS2_DATA=./support $(idris2) --build harmony.ipkg
 	@if [[ ${idris2-minor-version} -gt 6 ]] || [[ "${idris2-build}" != '' ]]; then \
 	  cp ./build/exec/harmony ./harmony; \
@@ -39,7 +48,8 @@ node2nix ?= nix run nixpkgs\#node2nix
 
 nix-build:
 	${MAKE} clean
-	$(node2nix) -- --composition node2nix.nix -l
+	$(node2nix) -- --composition node2nix.nix # -l # <- can't use -l for lockfile because lockfile version 3 not supported yet.
+	nix build .
 
 version:
 	@(if [[ "${v}" == '' ]]; then echo "please set the 'v' variable."; exit 1; fi)
