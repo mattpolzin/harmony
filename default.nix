@@ -11,7 +11,7 @@ let
 in
 stdenv.mkDerivation {
   pname = "harmony";
-  version = "2.6.1";
+  version = "2.6.2";
 
   nativeBuildInputs = [ idris2 makeWrapper ];
   buildInputs = [ nodejs ];

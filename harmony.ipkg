@@ -1,5 +1,5 @@
 package harmony
-version = 2.6.1
+version = 2.6.2
 authors = "Mathew Polzin"
 license = "MIT"
 -- brief =

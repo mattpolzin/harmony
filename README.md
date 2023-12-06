@@ -170,7 +170,7 @@ harmony assign web +carl001 +emmaham
 ```
 
 ### Contribute
-Running `harmony contribute` will print the URI of the oldest PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that you are not assigned to.
+Running `harmony contribute` will print the URI of the oldest non-draft PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that you are not assigned to.
 
 You can skip PRs and retrieve the next-oldest one by passing a dash followed by the number to skip (e.g. `-2` to skip the two oldest waiting PRs).
 
@@ -211,6 +211,8 @@ Running `harmony whoami` will print information about the currently configured a
 
 ### Reflect
 Running `harmony reflect` will show a summary of your review requests and authored pull requests.
+
+![Reflect Screenshot](./docs/images/reflect.png)
 
 ### List
 Running `harmony list <team>` will list the members of the given GitHub Team.
