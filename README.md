@@ -2,6 +2,8 @@
 # Harmony
 Harmony is a small tool that helps teams keep GitHub reviews running smoothly. It takes the work out of picking someone from a pool of developers to review a new PR. Harmony does this by heuristically determining who on a particular GitHub Team has the least current/recent review workload.
 
+Harmony offers a heuristic for PR assignments that is different than GitHub's round robin or weighted algorithms, but Harmony can also work well even if your team uses GitHub's automatic PR assignments ([see below](#deferring-to-github)).
+
 ## Dependencies
 ### Runtime
 Running Harmony requires NodeJS 14+ (and a local installation of `git`) or alternatively Nix with flakes enabled.
@@ -145,13 +147,14 @@ If `harmony config assignUsers` is `True` (defualt) then harmony will pick someo
 
 You can also require that specific additional users (on top of the one Harmony will pick for you) are assigned to the PR. You do this by specifying those users' logins prefixed with '+' as arguments to Harmony.
 
+You can optionally apply any number of labels to the PR at the same time as assigning reviewers by prefixing the labels with '#'.
+
+#### Deferring to GitHub
 If your team has GitHub set up to auto-assign individuals when a team is requested for review, you probably want to tell harmony not to also pick someone using its heuristics. You can run the following `config` commands to tell harmony to assign a team but not also pick an individual from that team:
 ```shell
 harmony config assignTeams true
 harmony config assignUsers false
 ```
-
-You can optionally apply any number of labels to the PR at the same time as assigning reviewers by prefixing the labels with '#'.
 
 #### Examples
 Assign the most available reviewer from the "developers" GitHub Team:
