@@ -56,6 +56,7 @@ version:
 	sed -I '' "s/version = .*/version = ${v}/" ./harmony.ipkg
 	sed -I '' "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
 	sed -I '' "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
+	sed -I '' "s/version = \".*\";/version = \"${v}\";/" ./default.nix
 
 package: build
 	./version-check.sh
