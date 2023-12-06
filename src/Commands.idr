@@ -300,6 +300,7 @@ contribute : Config => Git => Octokit =>
           -> Promise ()
 contribute @{config} args = do
   openPrs <- listPullRequests config.org config.repo (Just Open) 100
+  let nonDraftPrs = filter (not . isDraft) openPrs
   myLogin <- login <$> getSelf
   let newIgnorePRNums = ignorePRNums args
   config' <-
@@ -308,7 +309,7 @@ contribute @{config} args = do
        else addIgnoredPRs config newIgnorePRNums
   let skip = fromMaybe 0 (head' $ mapMaybe skipArg args)
   let checkout = find (\case Checkout => True; _ => False) args
-  let notMine = filter (not . isAuthor myLogin) openPrs
+  let notMine = filter (not . isAuthor myLogin) nonDraftPrs
   let notIgnored = filter (isNotIgnored config') notMine
   let parted = partition (isRequestedReviewer myLogin) notIgnored
   let (requestedOfMe, others) = (mapHom $ sortBy (compare `on` .createdAt)) parted
