@@ -212,6 +212,8 @@ Running `harmony whoami` will print information about the currently configured a
 ### Reflect
 Running `harmony reflect` will show a summary of your review requests and authored pull requests.
 
+![Reflect Screenshot](./docs/images/reflect.png)
+
 ### List
 Running `harmony list <team>` will list the members of the given GitHub Team.
 
