@@ -2,9 +2,14 @@
 # Harmony
 Harmony is a small tool that helps teams keep GitHub reviews running smoothly. It takes the work out of picking someone from a pool of developers to review a new PR. Harmony does this by heuristically determining who on a particular GitHub Team has the least current/recent review workload.
 
+Harmony offers a heuristic for PR assignments that is different than GitHub's round robin or weighted algorithms, but Harmony can also work well even if your team uses GitHub's automatic PR assignments ([see below](#deferring-to-github)).
+
 ## Dependencies
 ### Runtime
-Running Harmony only requires NodeJS 14+ (and a local installation of `git`).
+Running Harmony requires NodeJS 14+ (and a local installation of `git`) or alternatively Nix with flakes enabled.
+
+If you'd like to try Harmony out without even "installing" it and you have Nix installed with flakes enabled, you can run it as `nix run github:mattpolzin/harmony`.
+
 ### Build time
 Building the latest commits of Harmony requires a HEAD build of the Idris 2 compiler. Each release page also indicates the version of Idris 2 that particular release will build against.
 
@@ -28,6 +33,18 @@ You can install Harmony via npm directly by running `npm install -g @mattpolzin/
 
 ### GitHub Release
 You can install any Harmony release by downloading the `harmony-npm.tar.gz` file from the GitHub Release page, unzipping it, and running `npm install --global`.
+
+### Nix Flake
+You can add Harmony to your Flake inputs as follows:
+```nix
+  inputs = {
+    ...
+    harmony.url = "github:mattpolzin/harmony";
+    harmony.inputs.nixpkgs.follows = "nixpkgs";
+  };
+```
+
+Then, in your outputs, bring Harmony into a package install list as `harmony.packages.<system>.harmony`.
 
 ### From Source
 The build script assumes a HEAD build of Idris 2 is installed on your system. For an alternative, see the [Docker Build](#docker-build) instructions below.
@@ -130,13 +147,14 @@ If `harmony config assignUsers` is `True` (defualt) then harmony will pick someo
 
 You can also require that specific additional users (on top of the one Harmony will pick for you) are assigned to the PR. You do this by specifying those users' logins prefixed with '+' as arguments to Harmony.
 
+You can optionally apply any number of labels to the PR at the same time as assigning reviewers by prefixing the labels with '#'.
+
+#### Deferring to GitHub
 If your team has GitHub set up to auto-assign individuals when a team is requested for review, you probably want to tell harmony not to also pick someone using its heuristics. You can run the following `config` commands to tell harmony to assign a team but not also pick an individual from that team:
 ```shell
 harmony config assignTeams true
 harmony config assignUsers false
 ```
-
-You can optionally apply any number of labels to the PR at the same time as assigning reviewers by prefixing the labels with '#'.
 
 #### Examples
 Assign the most available reviewer from the "developers" GitHub Team:
@@ -155,7 +173,7 @@ harmony assign web +carl001 +emmaham
 ```
 
 ### Contribute
-Running `harmony contribute` will print the URI of the oldest PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that you are not assigned to.
+Running `harmony contribute` will print the URI of the oldest non-draft PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that you are not assigned to.
 
 You can skip PRs and retrieve the next-oldest one by passing a dash followed by the number to skip (e.g. `-2` to skip the two oldest waiting PRs).
 
@@ -196,6 +214,8 @@ Running `harmony whoami` will print information about the currently configured a
 
 ### Reflect
 Running `harmony reflect` will show a summary of your review requests and authored pull requests.
+
+![Reflect Screenshot](./docs/images/reflect.png)
 
 ### List
 Running `harmony list <team>` will list the members of the given GitHub Team.

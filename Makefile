@@ -13,13 +13,14 @@ idris2-version = $(shell $(idris2) --version | sed -En 's/Idris 2, version ([^-]
 idris2-build   = $(shell $(idris2) --version | sed -En 's/Idris 2, version [^-]+(.*)/\1/p')
 idris2-minor-version = $(shell echo ${idris2-version} | sed -En 's/0\.(.*)\../\1/p')
 
-.PHONY: all build install package publish clean version
+.PHONY: all build nix-build install package publish clean version
 
 all: build
 
 depends/idris-adds-${idris-adds-version}:
 	mkdir -p depends/idris-adds-${idris-adds-version}
 	mkdir -p build/deps
+ifeq ($(IDRIS_ADDS_SRC),)
 	cd build/deps && \
 		if [ ! -d ./idris-adds ]; then \
 			git clone https://github.com/mattpolzin/idris-adds.git; \
@@ -28,6 +29,14 @@ depends/idris-adds-${idris-adds-version}:
 	    git checkout ${idris-adds-version} && \
 	    make && \
 	    cp -R ./build/ttc/* ../../../depends/idris-adds-${idris-adds-version}/
+else
+	cd build/deps && \
+	  cp -R $(IDRIS_ADDS_SRC) ./idris-adds && \
+		chmod -R +rw ./idris-adds && \
+		cd idris-adds && \
+			make && \
+	    cp -R ./build/ttc/* ../../../depends/idris-adds-${idris-adds-version}/
+endif
 
 depends/elab-util-${idris-elab-util-version}:
 	mkdir -p depends/elab-util-${idris-elab-util-version}
@@ -77,26 +86,34 @@ depends/json-${idris-json-version}: depends/elab-util-${idris-elab-util-version}
 			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../depends" $(idris2) --build json.ipkg && \
 	    cp -R ./build/ttc/* ../../../depends/json-${idris-json-version}/
 
-node_modules:
+./node_modules/: package.json
 	npm install
 
-build: node_modules depends/idris-adds-${idris-adds-version} depends/json-${idris-json-version}
+build: ./node_modules/ depends/idris-adds-${idris-adds-version} depends/json-${idris-json-version}
 	IDRIS2_DATA=./support $(idris2) --build harmony.ipkg
 	@if [[ ${idris2-minor-version} -gt 6 ]] || [[ "${idris2-build}" != '' ]]; then \
 	  cp ./build/exec/harmony ./harmony; \
 	else \
-	  echo "#!/usr/bin/env node\n" > ./harmony; \
+	  echo "#!/usr/bin/env node" > ./harmony; \
 	  cat ./build/exec/harmony >> ./harmony; \
 	fi
 	@chmod +x ./harmony
 
 harmony: build
 
+node2nix ?= nix run nixpkgs\#node2nix
+
+nix-build:
+	${MAKE} clean
+	$(node2nix) -- --composition node2nix.nix # -l # <- can't use -l for lockfile because lockfile version 3 not supported yet.
+	nix build .
+
 version:
 	@(if [[ "${v}" == '' ]]; then echo "please set the 'v' variable."; exit 1; fi)
 	sed -I '' "s/version = .*/version = ${v}/" ./harmony.ipkg
 	sed -I '' "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
 	sed -I '' "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
+	sed -I '' "s/version = \".*\";/version = \"${v}\";/" ./default.nix
 
 package: build
 	./version-check.sh
