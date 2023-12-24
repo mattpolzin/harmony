@@ -8,6 +8,27 @@ let
     rev = "${idrisAddsVersion}";
     hash = "sha256-OSu381nUNZqFJs4HzmMxGda60k7xsa1GulQq7kU/R2o=";
   };
+  elabUtilRev = "2fc2d188640ce6822b5e250db73b62f5a952ca4d";
+  elabUtilSrc = fetchFromGitHub {
+    owner = "stefan-hoek";
+    repo = "idris2-elab-util";
+    rev = "${elabUtilRev}";
+    hash = "";
+  };
+  idrisJsonRev = "2e54a37ed3c35c2d12c8927c923ad253355812a8";
+  idrisJsonSrc = fetchFromGitHub {
+    owner = "stefan-hoek";
+    repo = "idris2-json";
+    rev = "${idrisJsonRev}";
+    hash = "";
+  };
+  idrisParserRev = "0fde36cf11c12a61edcfe09d585c5a60426bc706";
+  idrisParserSrc = fetchFromGitHub {
+    owner = "stefan-hoek";
+    repo = "idris2-parser";
+    rev = "${idrisParserRev}";
+    hash = "";
+  };
 in
 stdenv.mkDerivation {
   pname = "harmony";
@@ -18,12 +39,16 @@ stdenv.mkDerivation {
 
   src = ./.;
 
+  IDRIS_ADDS_SRC = "${idrisAddsSrc}";
+  IDRIS_ELAB_UTIL_SRC = "${elabUtilSrc}";
+  IDRIS_PARSER_SRC = "${idrisParserSrc}";
+  IDRIS_JSON_SRC = "${idrisJsonSrc}";
+
   buildPhase = ''
     runHook preBuild
 
     ln -s ${nodeDependencies}/lib/node_modules ./node_modules
     export PATH="${nodeDependencies}/bin:$PATH"
-    export IDRIS_ADDS_SRC="${idrisAddsSrc}"
 
     make build
 

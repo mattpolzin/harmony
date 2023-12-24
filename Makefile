@@ -41,6 +41,7 @@ endif
 depends/elab-util-${idris-elab-util-version}:
 	mkdir -p depends/elab-util-${idris-elab-util-version}
 	mkdir -p build/deps
+ifeq ($(IDRIS_ELAB_UTIL_SRC),)
 	cd build/deps && \
 		if [ ! -d ./idris2-elab-util ]; then \
 			git clone https://github.com/stefan-hoeck/idris2-elab-util.git; \
@@ -49,10 +50,19 @@ depends/elab-util-${idris-elab-util-version}:
 	    git checkout ${idris-elab-util-hash} && \
 	    $(idris2) --build elab-util.ipkg && \
 	    cp -R ./build/ttc/* ../../../depends/elab-util-${idris-elab-util-version}/
+else
+	cd build/deps && \
+	  cp -R $(IDRIS_ELAB_UTIL_SRC) ./elab-util && \
+		chmod -R +rw ./elab-util && \
+		cd elab-util && \
+	    $(idris2) --build elab-util.ipkg && \
+	    cp -R ./build/ttc/* ../../../depends/elab-util-${idris-elab-util-version}/
+endif
 
 depends/parser-${idris-parser-version}: depends/elab-util-${idris-elab-util-version}
 	mkdir -p depends/parser-${idris-parser-version}
 	mkdir -p build/deps
+ifeq ($(IDRIS_PARSER_SRC),)
 	cd build/deps && \
 		if [ ! -d ./idris2-parser ]; then \
 			git clone https://github.com/stefan-hoeck/idris2-parser.git; \
@@ -61,10 +71,19 @@ depends/parser-${idris-parser-version}: depends/elab-util-${idris-elab-util-vers
 	    git checkout ${idris-parser-hash} && \
 			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../depends" $(idris2) --build parser.ipkg && \
 	    cp -R ./build/ttc/* ../../../depends/parser-${idris-parser-version}/
+else
+	cd build/deps && \
+	  cp -R $(IDRIS_PARSER_SRC) ./idris2-parser && \
+		chmod -R +rw ./idris2-parser && \
+		cd idris2-parser && \
+			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../depends" $(idris2) --build parser.ipkg && \
+	    cp -R ./build/ttc/* ../../../depends/parser-${idris-parser-version}/
+endif
 
 depends/parser-json-${idris-parser-version}: depends/parser-${idris-parser-version}
 	mkdir -p depends/parser-json-${idris-parser-version}
 	mkdir -p build/deps
+ifeq ($(IDRIS_PARSER_SRC),)
 	cd build/deps && \
 		if [ ! -d ./idris2-parser ]; then \
 			git clone https://github.com/stefan-hoeck/idris2-parser.git; \
@@ -73,10 +92,21 @@ depends/parser-json-${idris-parser-version}: depends/parser-${idris-parser-versi
 	    git checkout ${idris-parser-hash} && \
 			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../../depends" $(idris2) --build parser-json.ipkg && \
 	    cp -R ./build/ttc/* ../../../../depends/parser-json-${idris-parser-version}/
+else
+	cd build/deps && \
+		if [ ! -d ./idris2-parser ]; then \
+			cp -R $(IDRIS_PARSER_SRC) ./idris2-parser && \
+			chmod -R +rw ./idris2-parser; \
+		fi && \
+		cd idris2-parser/json && \
+			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../../depends" $(idris2) --build parser-json.ipkg && \
+	    cp -R ./build/ttc/* ../../../../depends/parser-json-${idris-parser-version}/
+endif
 
 depends/json-${idris-json-version}: depends/elab-util-${idris-elab-util-version} depends/parser-${idris-parser-version} depends/parser-json-${idris-parser-version}
 	mkdir -p depends/json-${idris-json-version}
 	mkdir -p build/deps
+ifeq ($(IDRIS_JSON_SRC),)
 	cd build/deps && \
 		if [ ! -d ./idris2-json ]; then \
 			git clone https://github.com/stefan-hoeck/idris2-json.git; \
@@ -85,6 +115,14 @@ depends/json-${idris-json-version}: depends/elab-util-${idris-elab-util-version}
 	    git checkout ${idris-json-hash} && \
 			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../depends" $(idris2) --build json.ipkg && \
 	    cp -R ./build/ttc/* ../../../depends/json-${idris-json-version}/
+else
+	cd build/deps && \
+		cp -R $(IDRIS_JSON_SRC) ./idris2-json && \
+		chmod -R +rw ./idris2-json && \
+		cd idris2-json && \
+			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../depends" $(idris2) --build json.ipkg && \
+	    cp -R ./build/ttc/* ../../../depends/json-${idris-json-version}/
+endif
 
 ./node_modules/: package.json
 	npm install
@@ -103,6 +141,8 @@ harmony: build
 
 node2nix ?= nix run nixpkgs\#node2nix
 
+# This executes a Nix build. Call as `make nix-build` from CLI, not
+# from a Nix file.
 nix-build:
 	${MAKE} clean
 	$(node2nix) -- --composition node2nix.nix # -l # <- can't use -l for lockfile because lockfile version 3 not supported yet.
