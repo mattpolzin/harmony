@@ -22,7 +22,12 @@ jobs:
         uses: actions/checkout@v3
       - name: Build
         shell: bash
-        run: make
+        run: |
+          echo ''
+          echo 'Building with Idris 2 version:'
+          idris2 --version
+          echo ''
+          make
 #      - name: Test
 #        run: make test
 
@@ -37,7 +42,12 @@ jobs:
         uses: actions/checkout@v3
       - name: Build
         shell: bash
-        run: make
+        run: |
+          echo ''
+          echo 'Building with Idris 2 version:'
+          idris2 --version
+          echo ''
+          make
 #      - name: Test
 #        run: make test
 
