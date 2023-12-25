@@ -80,6 +80,15 @@ else
 	    cp -R ./build/ttc/* ../../../depends/parser-${idris-parser-version}/
 endif
 
+define PATCH
+5c5,6
+< depends   = parser
+---
+> depends   = elab-util
+>           , parser
+endef
+
+export PATCH
 depends/parser-json-${idris-parser-version}: depends/parser-${idris-parser-version}
 	mkdir -p depends/parser-json-${idris-parser-version}
 	mkdir -p build/deps
@@ -90,6 +99,7 @@ ifeq ($(IDRIS_PARSER_SRC),)
 		fi && \
 	  cd idris2-parser/json && \
 	    git checkout ${idris-parser-hash} && \
+			echo "$$PATCH" | patch parser-json.ipkg - && \
 			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../../depends" $(idris2) --build parser-json.ipkg && \
 	    cp -R ./build/ttc/* ../../../../depends/parser-json-${idris-parser-version}/
 else
