@@ -32,7 +32,7 @@ let
 in
 stdenv.mkDerivation {
   pname = "harmony";
-  version = "2.6.3";
+  version = "3.0.0";
 
   nativeBuildInputs = [ idris2 makeWrapper ];
   buildInputs = [ nodejs ];
