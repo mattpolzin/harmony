@@ -129,7 +129,7 @@ propSetter : SettableProp n h -> (Config -> String -> Maybe Config)
 propSetter AssignTeams     = update parseBool (\b => { assignTeams := b })
 propSetter AssignUsers     = update parseBool (\b => { assignUsers := b })
 propSetter CommentOnAssign = update parseBool (\b => { commentOnAssign := b })
-propSetter DefaultRemote   = update Just (\s => { defaultRemote := Just s })
+propSetter DefaultRemote   = update Just (\s => { defaultRemote := s })
 propSetter GithubPAT       = update Just (\s => { githubPAT := Just $ hide s })
 
 ||| Attempt to set a property and value given String representations.
@@ -150,7 +150,7 @@ propGetter : SettableProp n h -> (Config -> String)
 propGetter AssignTeams     = show . assignTeams
 propGetter AssignUsers     = show . assignUsers
 propGetter CommentOnAssign = show . commentOnAssign
-propGetter DefaultRemote   = maybe "Not set (defaults to \"origin\")" show . defaultRemote
+propGetter DefaultRemote   = show . defaultRemote
 propGetter GithubPAT       = maybe "Not set (will use $GITHUB_PAT environment variable)" show . githubPAT
 
 export
@@ -213,7 +213,7 @@ createConfig envGithubPAT terminalColors editor = do
 
   let remoteDefaultStr = enterForDefaultStr remoteGuess
   putStrLn "What GitHub remote repo would you like to use harmony for\{remoteDefaultStr}?"
-  defaultRemote <- Just . orIfEmpty (Just remoteGuess) . trim <$> getLine
+  defaultRemote <- orIfEmpty (Just remoteGuess) . trim <$> getLine
   
   commentOnAssign <-
     yesNoPrompt "Would you like harmony to comment when it assigns reviewers?"

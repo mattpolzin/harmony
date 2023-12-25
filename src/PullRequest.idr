@@ -297,7 +297,7 @@ identifyOrCreatePR @{config} {isDraft} branch = do
         -- create a remote tracking branch if needed
         whenNothing !remoteTrackingBranch $ do
           putStrLn "Creating a new remote branch..."
-          pushNewBranch (fromMaybe "origin" config.defaultRemote) branch
+          pushNewBranch config.defaultRemote branch
 
         -- ask if we should continue despite uncommitted changes
         True <- continueGivenUncommittedChanges

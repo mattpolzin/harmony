@@ -50,9 +50,8 @@ record Config where
   updatedAt     : Timestamp
   org           : String
   repo          : String
-  ||| The remote name (e.g. "origin"). If unspecified, "origin" is assumed.
-  defaultRemote : Maybe String
-  -- TODO 3.0.0:         ^ remove optionality with version 3.0.0; until then, we will support this being absent to be non-breaking
+  ||| The remote name (e.g. "origin")
+  defaultRemote : String
   ||| The main branch. New PRs are based off of this branch.
   mainBranch    : String
   ||| True to assign teams as well as individual users to PRs.
@@ -193,7 +192,7 @@ Show Config where
       "      updatedAt: \{show config.updatedAt}"
     , "            org: \{show config.org}"
     , "           repo: \{show config.repo}"
-    , "  defaultRemote: \{defaultRemote}"
+    , "  defaultRemote: \{show config.defaultRemote}"
     , "     mainBranch: \{show config.mainBranch}"
     , "    assignTeams: \{show config.assignTeams}"
     , "    assignUsers: \{show config.assignUsers}"
@@ -205,9 +204,6 @@ Show Config where
     , "      githubPAT: \{personalAccessToken}"
     ]
       where
-        defaultRemote : String
-        defaultRemote = maybe "Not set (defaults to \"origin\")" show config.defaultRemote
-
         personalAccessToken : String
         personalAccessToken = maybe "Not set (will use $GITHUB_PAT environment variable)" show config.githubPAT
 
@@ -225,7 +221,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams assignUse
     , ("commentOnAssign", JBool commentOnAssign)
     , ("org"            , JString org)
     , ("repo"           , JString repo)
-    , ("defaultRemote"  , maybe JNull JString defaultRemote)
+    , ("defaultRemote"  , JString defaultRemote)
     , ("mainBranch"     , JString mainBranch)
     , ("orgMembers"     , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"      , JArray $ JString <$> sort teamSlugs)
@@ -252,6 +248,10 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , commentOnAssign
                                             , teamSlugs
                                             , orgMembers
+                                            , defaultRemote
+                                            , assignUsers
+                                            , repoLabels
+                                            , ignoredPRs
                                             ] <-
                                             lookupAll [
                                                 "updatedAt"
@@ -262,27 +262,24 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               , "commentOnAssign"
                                               , "teamSlugs"
                                               , "orgMembers"
+                                              , "defaultRemote"
+                                              , "assignUsers"
+                                              , "repoLabels"
+                                              , "ignoredPRs"
                                               ] config
-                                          let maybeAssignUsers = lookup "assignUsers" config
-                                          -- TODO 3.0.0:  ^ remove optionality with version 3.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
-                                          let maybeRepoLabels = lookup "repoLabels" config
-                                          -- TODO 3.0.0:  ^ remove optionality with version 3.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
-                                          let maybeIgnoredPRs = lookup "ignoredPRs" config
-                                          -- TODO 3.0.0:  ^ remove optionality with version 3.0.0 by moving into above list of required props; until then, we will support this being absent to be non-breaking
-                                          let maybeDefaultRemote = lookup "defaultRemote" config
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
-                                          dr <- maybe (Right Nothing) (optional string) maybeDefaultRemote
+                                          dr <- string defaultRemote
                                           mb <- string mainBranch
                                           at <- bool assignTeams
-                                          au <- maybe (Right True) bool maybeAssignUsers
+                                          au <- bool assignUsers
                                           ca <- bool commentOnAssign
                                           ts <- array string teamSlugs
-                                          rl <- maybe (Right []) (array string) maybeRepoLabels
+                                          rl <- array string repoLabels
                                           om <- array string orgMembers
-                                          ip <- maybe (Right []) (array integer) maybeIgnoredPRs
+                                          ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           pure $ MkConfig {
                                               updatedAt        = ua
