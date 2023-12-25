@@ -109,6 +109,7 @@ else
 			chmod -R +rw ./idris2-parser; \
 		fi && \
 		cd idris2-parser/json && \
+			echo "$$PATCH" | patch parser-json.ipkg - && \
 			IDRIS2_PACKAGE_PATH="$IDRIS2_PACKAGE_PATH:../../../../depends" $(idris2) --build parser-json.ipkg && \
 	    cp -R ./build/ttc/* ../../../../depends/parser-json-${idris-parser-version}/
 endif
