@@ -140,7 +140,7 @@ endif
 
 build: ./node_modules/ depends/idris-adds-${idris-adds-version} depends/json-${idris-json-version}
 	IDRIS2_DATA=./support $(idris2) --build harmony.ipkg
-	@if [[ ${idris2-minor-version} -gt 6 ]] || [[ "${idris2-build}" != '' ]]; then \
+	@if [ ${idris2-minor-version} -gt 6 ] || [ "${idris2-build}" != '' ]; then \
 	  cp ./build/exec/harmony ./harmony; \
 	else \
 	  echo "#!/usr/bin/env node" > ./harmony; \

@@ -61,7 +61,7 @@ docker pull mattpolzin2/idris-docker:nightly
 
 Then, from a directory containing this Harmony git repository, build Harmony:
 ```shell
-docker run --rm -v "$(pwd):/build" mattpolzin2/idris-docker:nightly bash -c "cd /build && make"
+docker run --rm -v "$(pwd):/build" mattpolzin2/idris-docker:nightly bash -c "apt-get update && apt-get install -y git && cd /build && make"
 ```
 
 At this point you are done with Docker. From the same directory, install Harmony globally:
