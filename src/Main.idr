@@ -13,7 +13,7 @@ import Config
 import FFI.Git
 import FFI.GitHub
 import Help
-import Language.JSON
+import JSON.Parser
 import System
 import System.File
 

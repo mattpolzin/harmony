@@ -3,7 +3,7 @@ module Language.JSON.Accessors
 import Data.Either
 import Data.List
 import Data.Vect
-import Language.JSON
+import JSON.Parser
 
 %default total
 
@@ -22,7 +22,7 @@ optional f json = Just <$> (f json)
 
 export
 bool : JSON -> Either String Bool
-bool (JBoolean x) = Right x
+bool (JBool x) = Right x
 bool json = Left "Expected a bool but found \{show json}."
 
 export
@@ -32,7 +32,7 @@ string json = Left "Expected a string but found \{show json}."
 
 export
 integer : JSON -> Either String Integer
-integer (JNumber x) = Right $ cast x
+integer (JInteger x) = Right $ cast x
 integer json = Left "Expected an integer but found \{show json}."
 
 export

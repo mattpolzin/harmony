@@ -3,7 +3,7 @@ module Data.Review
 import Data.Date
 import Data.Either
 import Data.Vect
-import Language.JSON
+import JSON.Parser
 import Language.JSON.Accessors
 
 %default total
@@ -50,10 +50,10 @@ parseReview json =
 export
 parseReviewString : String -> Either String Review
 parseReviewString =
-  (maybeToEither "Failed to parse JSON" . JSON.parse) >=> parseReview
+  (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> parseReview
 
 ||| Parse a list of reviews from a JSON String
 export
 parseReviewsString : String -> Either String (List Review)
 parseReviewsString =
-  (maybeToEither "Failed to parse JSON" . JSON.parse) >=> array parseReview
+  (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> array parseReview

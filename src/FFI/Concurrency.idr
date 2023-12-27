@@ -5,7 +5,7 @@ import Data.List1
 import Data.Promise
 import Data.Vect
 import FFI
-import Language.JSON
+import JSON.Parser
 
 %default total
 
@@ -54,7 +54,7 @@ promiseAll : Foldable t => t Future -> Promise (List JSON)
 promiseAll xs =
   do f <- all xs
      str <- promisify $ \ok,err => prim__awaitStringify f (\x => toPrim $ ok x) (\y => toPrim $ err y)
-     JArray xs <- either . maybeToEither "Failed to parse JSON from \{str}" $ parse str
+     JArray xs <- either . mapFst (const "Failed to parse JSON from \{str}") $ parseJSON Virtual str
        | other => reject "Expected a JSON array from futures but got \{show other}."
      pure xs
 

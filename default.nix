@@ -1,4 +1,4 @@
-{ stdenv, lib, callPackage, fetchFromGitHub, idris2, makeWrapper, nodejs }:
+{ stdenv, lib, callPackage, fetchFromGitHub, idris2, git, makeWrapper, nodejs }:
 let 
   nodeDependencies = (callPackage ./node2nix.nix { inherit nodejs; }).nodeDependencies;
   idrisAddsVersion = "0.3.0";
@@ -8,22 +8,47 @@ let
     rev = "${idrisAddsVersion}";
     hash = "sha256-OSu381nUNZqFJs4HzmMxGda60k7xsa1GulQq7kU/R2o=";
   };
+  elabUtilRev = "2fc2d188640ce6822b5e250db73b62f5a952ca4d";
+  elabUtilSrc = fetchFromGitHub {
+    owner = "stefan-hoeck";
+    repo = "idris2-elab-util";
+    rev = "${elabUtilRev}";
+    hash = "sha256-CYPrhB9y4CMk2Wiecpk+5isybcf3ZsbmaKdKOyo0JWk=";
+  };
+  idrisJsonRev = "2e54a37ed3c35c2d12c8927c923ad253355812a8";
+  idrisJsonSrc = fetchFromGitHub {
+    owner = "stefan-hoeck";
+    repo = "idris2-json";
+    rev = "${idrisJsonRev}";
+    hash = "sha256-+lwOdkovhOsvaSKH+jJY7uhr40JjXpUJ4ECR9qxZv14=";
+  };
+  idrisParserRev = "0fde36cf11c12a61edcfe09d585c5a60426bc706";
+  idrisParserSrc = fetchFromGitHub {
+    owner = "stefan-hoeck";
+    repo = "idris2-parser";
+    rev = "${idrisParserRev}";
+    hash = "sha256-ShwVAUsobrwmuYszYld1RqlRUvnrACpyyqK2JKaIWYM=";
+  };
 in
-stdenv.mkDerivation {
+stdenv.mkDerivation (finalAttrs: {
   pname = "harmony";
-  version = "2.6.2";
+  version = "3.0.0";
 
   nativeBuildInputs = [ idris2 makeWrapper ];
-  buildInputs = [ nodejs ];
+  buildInputs = [ nodejs git ];
 
   src = ./.;
+
+  IDRIS_ADDS_SRC = "${idrisAddsSrc}";
+  IDRIS_ELAB_UTIL_SRC = "${elabUtilSrc}";
+  IDRIS_PARSER_SRC = "${idrisParserSrc}";
+  IDRIS_JSON_SRC = "${idrisJsonSrc}";
 
   buildPhase = ''
     runHook preBuild
 
     ln -s ${nodeDependencies}/lib/node_modules ./node_modules
     export PATH="${nodeDependencies}/bin:$PATH"
-    export IDRIS_ADDS_SRC="${idrisAddsSrc}"
 
     make build
 
@@ -37,10 +62,10 @@ stdenv.mkDerivation {
     cp harmony $out/bin/
 
     wrapProgram $out/bin/harmony \
-      --prefix PATH : ${lib.makeBinPath [ nodeDependencies ]} \
+      --prefix PATH : ${lib.makeBinPath [ nodeDependencies git "$out" ]} \
       --prefix NODE_PATH : ${nodeDependencies}/lib/node_modules
 
     runHook postInstall
   '';
 
-}
+})

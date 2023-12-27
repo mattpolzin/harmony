@@ -6,7 +6,7 @@ Harmony offers a heuristic for PR assignments that is different than GitHub's ro
 
 ## Dependencies
 ### Runtime
-Running Harmony requires NodeJS 14+ (and a local installation of `git`) or alternatively Nix with flakes enabled.
+Running Harmony requires NodeJS 18+ (and a local installation of `git`) or alternatively Nix with flakes enabled.
 
 If you'd like to try Harmony out without even "installing" it and you have Nix installed with flakes enabled, you can run it as `nix run github:mattpolzin/harmony`.
 
@@ -61,7 +61,7 @@ docker pull mattpolzin2/idris-docker:nightly
 
 Then, from a directory containing this Harmony git repository, build Harmony:
 ```shell
-docker run --rm -v "$(pwd):/build" mattpolzin2/idris-docker:nightly bash -c "cd /build && make"
+docker run --rm -v "$(pwd):/build" mattpolzin2/idris-docker:nightly bash -c "apt-get update && apt-get install -y git && cd /build && make"
 ```
 
 At this point you are done with Docker. From the same directory, install Harmony globally:

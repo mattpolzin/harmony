@@ -23,7 +23,7 @@ import Reviewer
 import User
 import Util
 
-import Language.JSON
+import JSON.Parser
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 

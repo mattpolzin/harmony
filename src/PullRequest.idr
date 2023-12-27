@@ -17,7 +17,7 @@ import Data.String.Extra
 import FFI.Concurrency
 import FFI.Git
 import FFI.GitHub
-import Language.JSON
+import JSON.Parser
 import Language.JSON.Accessors
 import Reviewer
 import System
@@ -297,7 +297,7 @@ identifyOrCreatePR @{config} {isDraft} branch = do
         -- create a remote tracking branch if needed
         whenNothing !remoteTrackingBranch $ do
           putStrLn "Creating a new remote branch..."
-          pushNewBranch (fromMaybe "origin" config.defaultRemote) branch
+          pushNewBranch config.defaultRemote branch
 
         -- ask if we should continue despite uncommitted changes
         True <- continueGivenUncommittedChanges
