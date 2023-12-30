@@ -1,4 +1,6 @@
 
+module ZshCompletion
+
 import BashCompletion
 
 ||| Zsh completion is performed via Harmony's Bash completion support.
