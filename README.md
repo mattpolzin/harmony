@@ -75,11 +75,10 @@ Set up Bash completion by adding the following to your Bash resource file or pro
 eval "$(harmony --bash-completion-script)"
 ```
 
-You can set up tab completion in Zsh, too:
+### Zsh completion
+Zsh completion is supported via `bashcompinit` and can be loaded by adding the following to your Zsh resource file or profile:
 ```shell
-autoload -U +X compinit && compinit
-autoload -U +X bashcompinit && bashcompinit
-eval "$(harmony --bash-completion-script)"
+eval "$(harmony --zsh-completion-script)"
 ```
 
 ## Usage

@@ -1,4 +1,13 @@
-{ stdenv, lib, callPackage, fetchFromGitHub, idris2, git, makeWrapper, nodejs }:
+{ callPackage
+, fetchFromGitHub
+, git
+, idris2
+, lib
+, installShellFiles
+, makeWrapper
+, nodejs
+, stdenv
+}:
 let 
   nodeDependencies = (callPackage ./node2nix.nix { inherit nodejs; }).nodeDependencies;
   idrisAddsVersion = "0.3.0";
@@ -34,7 +43,7 @@ stdenv.mkDerivation (finalAttrs: {
   pname = "harmony";
   version = "3.0.0";
 
-  nativeBuildInputs = [ idris2 makeWrapper ];
+  nativeBuildInputs = [ idris2 installShellFiles makeWrapper ];
   buildInputs = [ nodejs git ];
 
   src = ./.;
@@ -65,7 +74,18 @@ stdenv.mkDerivation (finalAttrs: {
       --prefix PATH : ${lib.makeBinPath [ nodeDependencies git "$out" ]} \
       --prefix NODE_PATH : ${nodeDependencies}/lib/node_modules
 
+    installShellCompletion --cmd harmony \
+      --bash <($out/bin/harmony --bash-completion-script) \
+      --zsh <($out/bin/harmony --zsh-completion-script) \
+
     runHook postInstall
   '';
+
+  meta = with lib; {
+    description = "Harmony GitHub collaboration tool";
+    homepage = "https://github.com/mattpolzin/harmony";
+    license = licenses.mit;
+    mainProgram = "harmony";
+  };
 
 })

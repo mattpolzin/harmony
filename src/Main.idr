@@ -7,7 +7,6 @@ import Data.String
 import Data.User
 
 import AppVersion
-import BashCompletion
 import Commands
 import Config
 import FFI.Git
@@ -16,6 +15,9 @@ import Help
 import JSON.Parser
 import System
 import System.File
+
+import BashCompletion
+import ZshCompletion
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -157,7 +159,7 @@ handleConfiguredArgs @{config} envPAT args = do
    handleAuthenticatedArgs @{config'} args
 
 
--- bash completion is a special case where we don't want to create the config
+-- bash and zsh completion are special cases where we don't want to create the config
 -- if it doesn't exist yet so we handle it up front before loading config and then
 -- handling any other input.
 covering
@@ -167,9 +169,9 @@ handleArgs : Git =>
           -> (editor : Maybe String)
           -> List String 
           -> IO ()
-handleArgs _ _ _ ["--bash-completion", curWord, prevWord] = exitError "Bash completion is currently configured using a pre-v2.0 version of harmony. Please restart your shell, re-source your resource script, or re-run 'eval \"$(harmony --bash-completion-script)\"'"
 handleArgs _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = bashCompletion subcommand curWord prevWord
 handleArgs _ _ _ ["--bash-completion-script"] = putStrLn BashCompletion.script
+handleArgs _ _ _ ["--zsh-completion-script"] = putStrLn ZshCompletion.script
 handleArgs envPAT terminalColors editor args = 
   resolve'' $
     do -- create the config file before continuing if it does not exist yet
