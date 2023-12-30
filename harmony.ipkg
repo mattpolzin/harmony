@@ -2,11 +2,11 @@ package harmony
 version = 3.0.0
 authors = "Mathew Polzin"
 license = "MIT"
--- brief =
--- readme =
--- homepage =
--- sourceloc =
--- bugtracker =
+brief = "Harmony GitHub collaboration tool"
+readme = "https://github.com/mattpolzin/harmony/blob/main/README.md"
+homepage = "https://github.com/mattpolzin/harmony"
+sourceloc = "https://github.com/mattpolzin/harmony"
+bugtracker = "https://github.com/mattpolzin/harmony/issues"
 
 langversion >= 0.7.0
 
