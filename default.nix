@@ -41,7 +41,7 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "harmony";
-  version = "3.0.0";
+  version = "3.1.0";
 
   nativeBuildInputs = [ idris2 installShellFiles makeWrapper ];
   buildInputs = [ nodejs git ];
