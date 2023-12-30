@@ -274,13 +274,13 @@ let
         sha512 = "VRLSGzik+Unrup6BsouBeHsf4d1hOEgYWTm/7Nmw1sXoN1+tRly/Gy/po3yeahnP4jfnQWWAhQAqcNfH7ngOkA==";
       };
     };
-    "@types/node-20.10.5" = {
+    "@types/node-20.10.6" = {
       name = "_at_types_slash_node";
       packageName = "@types/node";
-      version = "20.10.5";
+      version = "20.10.6";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@types/node/-/node-20.10.5.tgz";
-        sha512 = "nNPsNE65wjMxEKI93yOP+NPGGBJz/PoN3kZsVLee0XMiJolxSekEVD8wRwBUBqkwc7UWop0edW50yrCQW4CyRw==";
+        url = "https://registry.npmjs.org/@types/node/-/node-20.10.6.tgz";
+        sha512 = "Vac8H+NlRNNlAmDfGUP7b5h/KA+AtWIzuXy0E6OyP8f1tCLYAtPvKRRDJjAPqhpCb0t6U2j7/xqAuLEebW2kiw==";
       };
     };
     "aggregate-error-3.1.0" = {
@@ -535,13 +535,13 @@ let
         sha512 = "1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA==";
       };
     };
-    "simple-git-3.21.0" = {
+    "simple-git-3.22.0" = {
       name = "simple-git";
       packageName = "simple-git";
-      version = "3.21.0";
+      version = "3.22.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/simple-git/-/simple-git-3.21.0.tgz";
-        sha512 = "oTzw9248AF5bDTMk9MrxsRzEzivMlY+DWH0yWS4VYpMhNLhDWnN06pCtaUyPnqv/FpsdeNmRqmZugMABHRPdDA==";
+        url = "https://registry.npmjs.org/simple-git/-/simple-git-3.22.0.tgz";
+        sha512 = "6JujwSs0ac82jkGjMHiCnTifvf1crOiY/+tfs/Pqih6iow7VrpNKRRNdWm6RtaXpvvv/JGNYhlUtLhGFqHF+Yw==";
       };
     };
     "undici-types-5.26.5" = {
@@ -626,7 +626,7 @@ let
       sources."@types/aws-lambda-8.10.130"
       sources."@types/btoa-lite-1.0.2"
       sources."@types/jsonwebtoken-9.0.5"
-      sources."@types/node-20.10.5"
+      sources."@types/node-20.10.6"
       sources."aggregate-error-3.1.0"
       sources."before-after-hook-2.2.3"
       sources."bottleneck-2.19.5"
@@ -661,7 +661,7 @@ let
           sources."lru-cache-6.0.0"
         ];
       })
-      sources."simple-git-3.21.0"
+      sources."simple-git-3.22.0"
       sources."undici-types-5.26.5"
       sources."universal-github-app-jwt-1.1.1"
       sources."universal-user-agent-6.0.1"
