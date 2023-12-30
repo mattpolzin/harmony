@@ -76,6 +76,7 @@ stdenv.mkDerivation (finalAttrs: {
 
     installShellCompletion --cmd harmony \
       --bash <($out/bin/harmony --bash-completion-script) \
+      --zsh <($out/bin/harmony --zsh-completion-script) \
 
     runHook postInstall
   '';
