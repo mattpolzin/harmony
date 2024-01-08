@@ -72,17 +72,17 @@ addIgnoredPRs config is =
 ||| behavior that is likely undesirable.
 checkConfigConsistency : Config -> Either (Doc AnsiStyle) ()
 checkConfigConsistency config = do
-  checkAssignSettings config
+  checkRequestSettings config
   -- other checks...
   where
-    checkAssignSettings : Config -> Either (Doc AnsiStyle) ()
-    checkAssignSettings config =
-      if not (config.assignTeams || config.assignUsers)
+    checkRequestSettings : Config -> Either (Doc AnsiStyle) ()
+    checkRequestSettings config =
+      if not (config.requestTeams || config.requestUsers)
          then Left $ (annotate (color Yellow) . hsep $ [
-                "`assignUsers` and `assignTeams` are both False."
-              , "This means `harmony assign` commands will only ever assign users that are specified with the `+<userlogin>` syntax."
-              , "More commonly, you want Harmony to at least assign either a team or a user from a team when you say `harmony assign teamname`;"
-              , "It's suggested to either `harmony config assignUsers true` or `harmony config assignTeams true` (or both)."
+                "`requestUsers` and `requestTeams` are both False."
+              , "This means `harmony request` commands will only ever request reviews from users that are specified with the `+<userlogin>` syntax."
+              , "More commonly, you want Harmony to at least request review for either a team or a user from a team when you say `harmony request teamname`;"
+              , "It's suggested to either `harmony config requestUsers true` or `harmony config requestTeams true` (or both)."
               ]) <+> hardline
          else Right ()
 
@@ -126,11 +126,11 @@ update : Functor f => (String -> f a) -> (a -> b -> b) -> b -> String -> f b
 update f g c = map (flip g c) . f
 
 propSetter : SettableProp n h -> (Config -> String -> Maybe Config)
-propSetter AssignTeams     = update parseBool (\b => { assignTeams := b })
-propSetter AssignUsers     = update parseBool (\b => { assignUsers := b })
-propSetter CommentOnAssign = update parseBool (\b => { commentOnAssign := b })
-propSetter DefaultRemote   = update Just (\s => { defaultRemote := s })
-propSetter GithubPAT       = update Just (\s => { githubPAT := Just $ hide s })
+propSetter RequestTeams     = update parseBool (\b => { requestTeams := b })
+propSetter RequestUsers     = update parseBool (\b => { requestUsers := b })
+propSetter CommentOnRequest = update parseBool (\b => { commentOnRequest := b })
+propSetter DefaultRemote    = update Just (\s => { defaultRemote := s })
+propSetter GithubPAT        = update Just (\s => { githubPAT := Just $ hide s })
 
 ||| Attempt to set a property and value given String representations.
 ||| After setting, write the config and return the updated result.
@@ -147,11 +147,11 @@ setConfig @{config} prop value with (settablePropNamed prop)
                           writeConfig config'
 
 propGetter : SettableProp n h -> (Config -> String)
-propGetter AssignTeams     = show . assignTeams
-propGetter AssignUsers     = show . assignUsers
-propGetter CommentOnAssign = show . commentOnAssign
-propGetter DefaultRemote   = show . defaultRemote
-propGetter GithubPAT       = maybe "Not set (will use $GITHUB_PAT environment variable)" show . githubPAT
+propGetter RequestTeams     = show . requestTeams
+propGetter RequestUsers     = show . requestUsers
+propGetter CommentOnRequest = show . commentOnRequest
+propGetter DefaultRemote    = show . defaultRemote
+propGetter GithubPAT        = maybe "Not set (will use $GITHUB_PAT environment variable)" show . githubPAT
 
 export
 getConfig : Config =>
@@ -215,14 +215,14 @@ createConfig envGithubPAT terminalColors editor = do
   putStrLn "What GitHub remote repo would you like to use harmony for\{remoteDefaultStr}?"
   defaultRemote <- orIfEmpty (Just remoteGuess) . trim <$> getLine
   
-  commentOnAssign <-
-    yesNoPrompt "Would you like harmony to comment when it assigns reviewers?"
+  commentOnRequest <-
+    yesNoPrompt "Would you like harmony to comment when it requests reviewers?"
 
-  assignTeams <-
-    yesNoPrompt "Would you like harmony to assign teams when it assigns reviewers?"
+  requestTeams <-
+    yesNoPrompt "Would you like harmony to request reviews from teams when it requests reviewers?"
 
-  assignUsers <-
-    yesNoPrompt "Would you like harmony to assign individual users when it assigns reviewers?"
+  requestUsers <-
+    yesNoPrompt "Would you like harmony to request reviews from individual users when it requests a teams review?"
 
   _ <- liftIO $ octokit pat
   putStrLn "Creating config..."
@@ -242,9 +242,9 @@ createConfig envGithubPAT terminalColors editor = do
        , repo
        , defaultRemote
        , mainBranch
-       , assignTeams
-       , assignUsers
-       , commentOnAssign
+       , requestTeams
+       , requestUsers
+       , commentOnRequest
        , teamSlugs
        , repoLabels
        , orgMembers

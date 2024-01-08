@@ -54,12 +54,12 @@ record Config where
   defaultRemote : String
   ||| The main branch. New PRs are based off of this branch.
   mainBranch    : String
-  ||| True to assign teams as well as individual users to PRs.
-  assignTeams   : Bool
-  ||| True to assign users as well as teams to PRs.
-  assignUsers   : Bool
-  ||| True to comment on PRs after assigning users.
-  commentOnAssign : Bool
+  ||| True to request review from teams as well as individual users on PRs.
+  requestTeams   : Bool
+  ||| True to request review from users as well as teams on PRs.
+  requestUsers   : Bool
+  ||| True to comment on PRs after requesting review from users.
+  commentOnRequest : Bool
   ||| Local cache of GitHub teams within the configured org.
   teamSlugs     : List String
   ||| Local cache of GitHub labels for the configured repo.
@@ -86,14 +86,14 @@ record Config where
 
 public export
 data SettableProp : (name : String) -> (help : String) -> Type where
-  AssignTeams     : SettableProp
-    "assignTeams"
-    "[true/false] Determines whether or not to assign teams when assigning individual reviewers from a team."
-  AssignUsers     : SettableProp
-    "assignUsers"
-    "[true/false] Determines whether or not to assign an individual user based on Harmony's heuristics when assigning teams. You might want to disable `assginUsers` to allow GitHub to pick users to assign based on the team. This setting does not affect the ability to assign individual users withe Harmony's `+<username>` syntax."
-  CommentOnAssign : SettableProp
-    "commentOnAssign"
+  RequestTeams     : SettableProp
+    "requestTeams"
+    "[true/false] Determines whether or not to request reviews from teams when requesting individual reviewers from a team."
+  RequestUsers     : SettableProp
+    "requestUsers"
+    "[true/false] Determines whether or not to request reviews from an individual user based on Harmony's heuristics when requestin review from teams. You might want to disable `requestUsers` to allow GitHub to pick users to request based on the team. This setting does not affect the ability to request reviews from individual users withe Harmony's `+<username>` syntax."
+  CommentOnRequest : SettableProp
+    "commentOnRequest"
     "[true/false] Determines whether to comment on PR indicating that Harmony chose a reviewer."
   DefaultRemote   : SettableProp
     "defaultRemote"
@@ -116,37 +116,37 @@ propHelp x = h
 
 export
 settablePropNamed : (name : String) -> Maybe (Exists (SettableProp name))
-settablePropNamed "assignTeams"     = Just $ Evidence _ AssignTeams
-settablePropNamed "commentOnAssign" = Just $ Evidence _ CommentOnAssign
-settablePropNamed "defaultRemote"   = Just $ Evidence _ DefaultRemote
-settablePropNamed "githubPAT"       = Just $ Evidence _ GithubPAT
-settablePropNamed "assignUsers"     = Just $ Evidence _ AssignUsers
+settablePropNamed "requestTeams"     = Just $ Evidence _ RequestTeams
+settablePropNamed "commentOnRequest" = Just $ Evidence _ CommentOnRequest
+settablePropNamed "defaultRemote"    = Just $ Evidence _ DefaultRemote
+settablePropNamed "githubPAT"        = Just $ Evidence _ GithubPAT
+settablePropNamed "requestUsers"     = Just $ Evidence _ RequestUsers
 settablePropNamed _ = Nothing
 
 namespace SettablePropNamedProps
   settablePropNamedOnto : {p : SettableProp n h} -> Config.settablePropNamed n === (Just $ Evidence h p)
-  settablePropNamedOnto {p = AssignTeams}     = Refl
-  settablePropNamedOnto {p = AssignUsers}     = Refl
-  settablePropNamedOnto {p = CommentOnAssign} = Refl
-  settablePropNamedOnto {p = DefaultRemote}   = Refl
-  settablePropNamedOnto {p = GithubPAT}       = Refl
+  settablePropNamedOnto {p = RequestTeams}     = Refl
+  settablePropNamedOnto {p = RequestUsers}     = Refl
+  settablePropNamedOnto {p = CommentOnRequest} = Refl
+  settablePropNamedOnto {p = DefaultRemote}    = Refl
+  settablePropNamedOnto {p = GithubPAT}        = Refl
 
 settableProps : List SomeSettableProp
 settableProps = [
-    (_ ** _ ** AssignTeams)
-  , (_ ** _ ** AssignUsers)
-  , (_ ** _ ** CommentOnAssign)
+    (_ ** _ ** RequestTeams)
+  , (_ ** _ ** RequestUsers)
+  , (_ ** _ ** CommentOnRequest)
   , (_ ** _ ** DefaultRemote)
   , (_ ** _ ** GithubPAT)
   ]
 
 namespace SettablePropsProps
   settablePropsCovering : {p : SettableProp n h} -> Elem (n ** h ** p) Config.settableProps
-  settablePropsCovering {p = AssignTeams}     = %search
-  settablePropsCovering {p = AssignUsers}     = %search
-  settablePropsCovering {p = CommentOnAssign} = %search
-  settablePropsCovering {p = DefaultRemote}   = %search
-  settablePropsCovering {p = GithubPAT}       = %search
+  settablePropsCovering {p = RequestTeams}     = %search
+  settablePropsCovering {p = RequestUsers}     = %search
+  settablePropsCovering {p = CommentOnRequest} = %search
+  settablePropsCovering {p = DefaultRemote}    = %search
+  settablePropsCovering {p = GithubPAT}        = %search
 
 propName' : SomeSettableProp -> String
 propName' (_ ** _ ** p) = propName p
@@ -189,19 +189,19 @@ config.editor = config.ephemeral.editor
 export
 Show Config where
   show config = unlines [
-      "      updatedAt: \{show config.updatedAt}"
-    , "            org: \{show config.org}"
-    , "           repo: \{show config.repo}"
-    , "  defaultRemote: \{show config.defaultRemote}"
-    , "     mainBranch: \{show config.mainBranch}"
-    , "    assignTeams: \{show config.assignTeams}"
-    , "    assignUsers: \{show config.assignUsers}"
-    , "commentOnAssign: \{show config.commentOnAssign}"
-    , "      teamSlugs: \{show config.teamSlugs}"
-    , "     repoLabels: \{show config.repoLabels}"
-    , "     orgMembers: \{show config.orgMembers}"
-    , "     ignoredPRs: \{show config.ignoredPRs}"
-    , "      githubPAT: \{personalAccessToken}"
+      "       updatedAt: \{show config.updatedAt}"
+    , "             org: \{show config.org}"
+    , "            repo: \{show config.repo}"
+    , "   defaultRemote: \{show config.defaultRemote}"
+    , "      mainBranch: \{show config.mainBranch}"
+    , "    requestTeams: \{show config.requestTeams}"
+    , "    requestUsers: \{show config.requestUsers}"
+    , "commentOnRequest: \{show config.commentOnRequest}"
+    , "       teamSlugs: \{show config.teamSlugs}"
+    , "      repoLabels: \{show config.repoLabels}"
+    , "      orgMembers: \{show config.orgMembers}"
+    , "      ignoredPRs: \{show config.ignoredPRs}"
+    , "       githubPAT: \{personalAccessToken}"
     ]
       where
         personalAccessToken : String
@@ -213,22 +213,22 @@ Show Config where
 
 export
 json : Config -> JSON
-json (MkConfig updatedAt org repo defaultRemote mainBranch assignTeams assignUsers commentOnAssign
+json (MkConfig updatedAt org repo defaultRemote mainBranch requestTeams requestUsers commentOnRequest
                teamSlugs repoLabels orgMembers ignoredPRs githubPAT _) = 
   JObject [
-      ("assignTeams"    , JBool assignTeams)
-    , ("assignUsers"    , JBool assignUsers)
-    , ("commentOnAssign", JBool commentOnAssign)
-    , ("org"            , JString org)
-    , ("repo"           , JString repo)
-    , ("defaultRemote"  , JString defaultRemote)
-    , ("mainBranch"     , JString mainBranch)
-    , ("orgMembers"     , JArray $ JString <$> sort orgMembers)
-    , ("teamSlugs"      , JArray $ JString <$> sort teamSlugs)
-    , ("repoLabels"     , JArray $ JString <$> sort repoLabels)
-    , ("ignoredPRs"     , JArray $ JInteger . cast <$> sort ignoredPRs)
-    , ("githubPAT"      , maybe JNull (JString . expose) githubPAT)
-    , ("updatedAt"      , JInteger $ cast updatedAt)
+      ("requestTeams"    , JBool requestTeams)
+    , ("requestUsers"    , JBool requestUsers)
+    , ("commentOnRequest", JBool commentOnRequest)
+    , ("org"             , JString org)
+    , ("repo"            , JString repo)
+    , ("defaultRemote"   , JString defaultRemote)
+    , ("mainBranch"      , JString mainBranch)
+    , ("orgMembers"      , JArray $ JString <$> sort orgMembers)
+    , ("teamSlugs"       , JArray $ JString <$> sort teamSlugs)
+    , ("repoLabels"      , JArray $ JString <$> sort repoLabels)
+    , ("ignoredPRs"      , JArray $ JInteger . cast <$> sort ignoredPRs)
+    , ("githubPAT"       , maybe JNull (JString . expose) githubPAT)
+    , ("updatedAt"       , JInteger $ cast updatedAt)
     ]
 
 --
@@ -244,12 +244,9 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , org
                                             , repo
                                             , mainBranch
-                                            , assignTeams
-                                            , commentOnAssign
                                             , teamSlugs
                                             , orgMembers
                                             , defaultRemote
-                                            , assignUsers
                                             , repoLabels
                                             , ignoredPRs
                                             ] <-
@@ -258,45 +255,58 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               , "org"
                                               , "repo"
                                               , "mainBranch"
-                                              , "assignTeams"
-                                              , "commentOnAssign"
                                               , "teamSlugs"
                                               , "orgMembers"
                                               , "defaultRemote"
-                                              , "assignUsers"
                                               , "repoLabels"
                                               , "ignoredPRs"
                                               ] config
+                                          -- TODO 4.0.0: Stop supporting the old aliases "assign..." and move the 
+                                          --             new "request..." versions into the required lookup above.
+                                          requestTeams <- exactlyOneOf "assignTeams" "requestTeams"
+                                          requestUsers <- exactlyOneOf "assignUsers" "requestUsers"
+                                          commentOnRequest <- exactlyOneOf "commentOnAssign" "commentOnRequest"
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
                                           dr <- string defaultRemote
                                           mb <- string mainBranch
-                                          at <- bool assignTeams
-                                          au <- bool assignUsers
-                                          ca <- bool commentOnAssign
+                                          at <- bool requestTeams
+                                          au <- bool requestUsers
+                                          ca <- bool commentOnRequest
                                           ts <- array string teamSlugs
                                           rl <- array string repoLabels
                                           om <- array string orgMembers
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           pure $ MkConfig {
-                                              updatedAt        = ua
-                                            , org              = o
-                                            , repo             = r
-                                            , defaultRemote    = dr
-                                            , mainBranch       = mb
-                                            , assignTeams      = at
-                                            , assignUsers      = au
-                                            , teamSlugs        = ts
-                                            , repoLabels       = rl
-                                            , commentOnAssign  = ca
-                                            , orgMembers       = om
-                                            , ignoredPRs       = ip
-                                            , githubPAT        = (map Hide) gp
-                                            , ephemeral        = ephemeral
+                                              updatedAt         = ua
+                                            , org               = o
+                                            , repo              = r
+                                            , defaultRemote     = dr
+                                            , mainBranch        = mb
+                                            , requestTeams      = at
+                                            , requestUsers      = au
+                                            , teamSlugs         = ts
+                                            , repoLabels        = rl
+                                            , commentOnRequest  = ca
+                                            , orgMembers        = om
+                                            , ignoredPRs        = ip
+                                            , githubPAT         = (map Hide) gp
+                                            , ephemeral         = ephemeral
                                             }
+      where
+        exactlyOneOf : String -> String -> Either String JSON
+        exactlyOneOf key1 key2 = do
+          let maybeKey1 = lookup key1 config
+          let maybeKey2 = lookup key2 config
+          case (maybeKey1, maybeKey2) of
+               (Nothing, Nothing) => Left "Expected config JSON to contain either the '\{key1}' key (deprecated) or the '\{key2}' key (newer)."
+               (Nothing, (Just value)) => Right value
+               ((Just value), Nothing) => Right value
+               ((Just _), (Just _)) => Left "Expected config JSON to contain only one of the '\{key1}' key (deprecated) or the '\{key2}' key (newer). Found values for both."
+
     parseConfigJson (JArray _) = Left "Expected config JSON to be an Object, not an array."
     parseConfigJson _          = Left "Expected config JSON to be an Object."
 
