@@ -165,6 +165,8 @@ version:
 	sed -I '' "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
 	sed -I '' "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
 	sed -I '' "s/version = \".*\";/version = \"${v}\";/" ./default.nix
+	@npm update
+	@$(node2nix) -- --composition node2nix.nix # -l # <- can't use -l for lockfile because lockfile version 3 not supported yet.
 
 package: build
 	./version-check.sh

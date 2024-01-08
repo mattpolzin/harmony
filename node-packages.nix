@@ -220,13 +220,13 @@ let
         sha512 = "FLWs/AvZllw/AGVs+nJ+ELCDZZJk+kY0zMen118xhL2zD0s1etIUHm1odgjP7epxYU1ln7SZxEUWYop5bhsdgQ==";
       };
     };
-    "@octokit/webhooks-12.0.10" = {
+    "@octokit/webhooks-12.0.11" = {
       name = "_at_octokit_slash_webhooks";
       packageName = "@octokit/webhooks";
-      version = "12.0.10";
+      version = "12.0.11";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/webhooks/-/webhooks-12.0.10.tgz";
-        sha512 = "Q8d26l7gZ3L1SSr25NFbbP0B431sovU5r0tIqcvy8Z4PrD1LBv0cJEjvDLOieouzPSTzSzufzRIeXD7S+zAESA==";
+        url = "https://registry.npmjs.org/@octokit/webhooks/-/webhooks-12.0.11.tgz";
+        sha512 = "YEQOb7v0TZ662nh5jsbY1CMgJyMajCEagKrHWC30LTCwCtnuIrLtEpE20vq4AtH0SuZI90+PtV66/Bnnw0jkvg==";
       };
     };
     "@octokit/webhooks-methods-4.0.0" = {
@@ -247,13 +247,13 @@ let
         sha512 = "y92CpG4kFFtBBjni8LHoV12IegJ+KFxLgKRengrVjKmGE5XMeCuGvlfRe75lTRrgXaG6XIWJlFpIDTlkoJsU8w==";
       };
     };
-    "@types/aws-lambda-8.10.130" = {
+    "@types/aws-lambda-8.10.131" = {
       name = "_at_types_slash_aws-lambda";
       packageName = "@types/aws-lambda";
-      version = "8.10.130";
+      version = "8.10.131";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@types/aws-lambda/-/aws-lambda-8.10.130.tgz";
-        sha512 = "HxTfLeGvD1wTJqIGwcBCpNmHKenja+We1e0cuzeIDFfbEj3ixnlTInyPR/81zAe0Ss/Ip12rFK6XNeMLVucOSg==";
+        url = "https://registry.npmjs.org/@types/aws-lambda/-/aws-lambda-8.10.131.tgz";
+        sha512 = "IWmFpqnVDvskYWnNSiu/qlRn80XlIOU0Gy5rKCl/NjhnI95pV8qIHs6L5b+bpHhyzuOSzjLgBcwgFSXrC1nZWA==";
       };
     };
     "@types/btoa-lite-1.0.2" = {
@@ -274,13 +274,13 @@ let
         sha512 = "VRLSGzik+Unrup6BsouBeHsf4d1hOEgYWTm/7Nmw1sXoN1+tRly/Gy/po3yeahnP4jfnQWWAhQAqcNfH7ngOkA==";
       };
     };
-    "@types/node-20.10.6" = {
+    "@types/node-20.10.7" = {
       name = "_at_types_slash_node";
       packageName = "@types/node";
-      version = "20.10.6";
+      version = "20.10.7";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@types/node/-/node-20.10.6.tgz";
-        sha512 = "Vac8H+NlRNNlAmDfGUP7b5h/KA+AtWIzuXy0E6OyP8f1tCLYAtPvKRRDJjAPqhpCb0t6U2j7/xqAuLEebW2kiw==";
+        url = "https://registry.npmjs.org/@types/node/-/node-20.10.7.tgz";
+        sha512 = "fRbIKb8C/Y2lXxB5eVMj4IU7xpdox0Lh8bUPEdtLysaylsml1hOOx1+STloRs/B9nf7C6kPRmmg/V7aQW7usNg==";
       };
     };
     "aggregate-error-3.1.0" = {
@@ -553,13 +553,13 @@ let
         sha512 = "JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==";
       };
     };
-    "universal-github-app-jwt-1.1.1" = {
+    "universal-github-app-jwt-1.1.2" = {
       name = "universal-github-app-jwt";
       packageName = "universal-github-app-jwt";
-      version = "1.1.1";
+      version = "1.1.2";
       src = fetchurl {
-        url = "https://registry.npmjs.org/universal-github-app-jwt/-/universal-github-app-jwt-1.1.1.tgz";
-        sha512 = "G33RTLrIBMFmlDV4u4CBF7dh71eWwykck4XgaxaIVeZKOYZRAAxvcGMRFTUclVY6xoUPQvO4Ne5wKGxYm/Yy9w==";
+        url = "https://registry.npmjs.org/universal-github-app-jwt/-/universal-github-app-jwt-1.1.2.tgz";
+        sha512 = "t1iB2FmLFE+yyJY9+3wMx0ejB+MQpEVkH0gQv7dR6FZyltyq+ZZO0uDpbopxhrZ3SLEO4dCEkIujOMldEQ2iOA==";
       };
     };
     "universal-user-agent-6.0.1" = {
@@ -593,7 +593,7 @@ let
   args = {
     name = "_at_mattpolzin_slash_harmony";
     packageName = "@mattpolzin/harmony";
-    version = "3.0.0";
+    version = "3.2.0";
     src = ./.;
     dependencies = [
       sources."@kwsites/file-exists-1.1.1"
@@ -620,13 +620,13 @@ let
       sources."@octokit/request-8.1.6"
       sources."@octokit/request-error-5.0.1"
       sources."@octokit/types-12.4.0"
-      sources."@octokit/webhooks-12.0.10"
+      sources."@octokit/webhooks-12.0.11"
       sources."@octokit/webhooks-methods-4.0.0"
       sources."@octokit/webhooks-types-7.1.0"
-      sources."@types/aws-lambda-8.10.130"
+      sources."@types/aws-lambda-8.10.131"
       sources."@types/btoa-lite-1.0.2"
       sources."@types/jsonwebtoken-9.0.5"
-      sources."@types/node-20.10.6"
+      sources."@types/node-20.10.7"
       sources."aggregate-error-3.1.0"
       sources."before-after-hook-2.2.3"
       sources."bottleneck-2.19.5"
@@ -663,7 +663,7 @@ let
       })
       sources."simple-git-3.22.0"
       sources."undici-types-5.26.5"
-      sources."universal-github-app-jwt-1.1.1"
+      sources."universal-github-app-jwt-1.1.2"
       sources."universal-user-agent-6.0.1"
       sources."wrappy-1.0.2"
       sources."yallist-4.0.0"
