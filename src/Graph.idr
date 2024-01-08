@@ -12,6 +12,7 @@ import Data.PullRequest
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 import Text.PrettyPrint.Prettyprinter.Symbols
+import Text.PrettyPrint.Prettyprinter.Util
 
 %default total
 
@@ -147,8 +148,7 @@ healthGraph openPullRequests org repo =
                          , Just $ emptyDoc
                          ]
 
-||| Produce a graph of relative review workload for all developers matching the given
-||| filter.
+||| Produce a graph of relative review workload for developers.
 ||| @ closedReviews    The logins of each reviewer of each closed PR (duplicates intact).
 ||| @ openReviews      The logins of each reviewer of each open PR (duplicates intact).
 ||| @ candidates       The logins of all potential reviewers that should be considered.
@@ -172,7 +172,10 @@ reviewsGraph closedReviews openReviews candidates completedReviews =
            [] => emptyDoc
            ((MkScore _ s c) :: _) =>
              let highScore = c + (s `minus` c) + maxBonus
-             in  header <+> graph (if highScore > 0 then highScore else 1) augmentedOptions <+> line
+             in  vsep [ header 
+                      , graph (if highScore > 0 then highScore else 1) augmentedOptions
+                      , footer
+                      ]
   where
     yellowDot : Doc AnsiStyle
     yellowDot = annotate (color Yellow) "·"
@@ -192,8 +195,22 @@ reviewsGraph closedReviews openReviews candidates completedReviews =
                          , if (null completedReviews) then Nothing else Just $ pretty "1x the number of completed reviews" <++> parens greenBox
                          , Just $ parens $ redDot <++> pretty "overlayed on" <++> yellowDot
                          , Just $ emptyDoc
-                         , Just $ emptyDoc
                          ]
+
+    note : Doc AnsiStyle -> Doc AnsiStyle
+    note doc = (annotate bold "Note:") <++> doc
+
+    footer : Doc AnsiStyle
+    footer = vsep 
+      [ emptyDoc
+      , note $ reflow """
+        It is a strongly held opinion of Harmony that the above graph is not a measure of each developers' productivity.
+        It is a proxy for each developers' existing PR review workload that may help to understand how Harmony is
+        choosing reviewers or similarly help one developer decide which other developers have capacity to help review
+        their work.
+        """
+      , emptyDoc
+      ]
 
     augment : (completedReviews : SortedMap login Nat) -> ReviewScore login -> AugmentedReviewScore login
     augment completed score =
