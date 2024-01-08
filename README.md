@@ -2,7 +2,7 @@
 # Harmony
 Harmony is a small tool that helps teams keep GitHub reviews running smoothly. It takes the work out of picking someone from a pool of developers to review a new PR. Harmony does this by heuristically determining who on a particular GitHub Team has the least current/recent review workload.
 
-Harmony offers a heuristic for PR assignments that is different than GitHub's round robin or weighted algorithms, but Harmony can also work well even if your team uses GitHub's automatic PR assignments ([see below](#deferring-to-github)).
+Harmony offers a heuristic for PR review requests that is different than GitHub's round robin or weighted algorithms, but Harmony can also work well even if your team uses GitHub's automatic PR review requests ([see below](#deferring-to-github)).
 
 ## Dependencies
 ### Runtime
@@ -102,21 +102,21 @@ What repository would you like to use harmony for (ENTER for default: myrepo)?
 
 What GitHub remote repo would you like to use harmony for (ENTER for default: origin)?
 
-Would you like harmony to comment when it assigns reviewers? [Y/n] 
-Would you like harmony to assign teams in addition to individuals when it assigns reviewers? [Y/n] 
+Would you like harmony to comment when it requests reviewers? [Y/n] 
+Would you like harmony to request team reviews in addition to individuals when it requests reviewers? [Y/n] 
 Creating config...
 ```
 
-Once configured, Harmony supports the following commands: `config`, `branch`, `pr`, `label`, `assign`, `contribute`, `whoami`, `reflect`, `list`, `graph`, `health`, and `sync`.
+Once configured, Harmony supports the following commands: `config`, `branch`, `pr`, `label`, `request`, `contribute`, `whoami`, `reflect`, `list`, `graph`, `health`, and `sync`.
 
 ### Config
 Running `harmony config <property>` will read the given configuration property. `harmony config <property> <value>` will set the configuration property.
 
 Not all configuration properties can be read/set with this command.
 #### Properties
-- `assignTeams` (`true`/`false`) -- When picking a reviewer from a team, assign the team as a reviewer as well.
-- `assignUsers` (`true`/`false`) -- When assigning a team as a reviewer, pick a user to review as well.
-- `commentOnAssign` (`true`/`false`) -- When assigning a reviewer chosen by Harmony, comment on the pull request.
+- `requestTeams` (`true`/`false`) -- When picking a reviewer from a team, request the team as a reviewer as well.
+- `requestUsers` (`true`/`false`) -- When requesting a team as a reviewer, pick a user to review as well.
+- `commentOnRequest` (`true`/`false`) -- When requesting a reviewer chosen by Harmony, comment on the pull request.
 - `defaultRemote` (optional string) -- When pushing new branches, what remote destination should be used.
 - `githubPAT` (optional string) -- If the `$GITHUB_PAT` environment variable is not set, this Personal Access Token is used to authenticate with GitHub.
 
@@ -139,40 +139,41 @@ Running `harmony label {<label>} [...]` will help you create a PR if one does no
 
 Note that labels are _not_ prefixed with '#' for this command. There is no need to differentiate labels from other kinds of arguments to `harmony label`.
 
-### Assign
-Running `harmony assign {<team> | +<user>} [#<label>] [...]` will help you create a PR if one does not exist yet and then it will assign teams and/or users to the PR.
+### Request
+Running `harmony request {<team> | +<user>} [#<label>] [...]` will help you create a PR if one does not exist yet and then it will request reviews from teams and/or users.
 
-If `harmony config assignUsers` is `True` (defualt) then harmony will pick someone to review the PR (from one of the listed teams) and assign them to the PR. If `harmony config assignTeams` is `True` then harmony will assign the teams you listed as reviewers of the PR. If `harmony config commentOnAssign` is `True` then harmony will comment on the Pull Request indicating that teams & users were "harmoniously assigned" -- this comment will @mention assigned users so it may be useful or annoying depending on the assigned user's GitHub notification settings.
+If `harmony config requestUsers` is `True` (defualt) then harmony will pick someone to review the PR (from one of the listed teams). If `harmony config requestTeams` is `True` (default) then harmony will request reviews from the teams you listed. If `harmony config commentOnRequest` is `True` then harmony will comment on the Pull Request indicating that teams & users were "harmoniously requested" -- this comment will @mention requested users so it may be useful or annoying depending on the requested user's GitHub notification settings.
 
-You can also require that specific additional users (on top of the one Harmony will pick for you) are assigned to the PR. You do this by specifying those users' logins prefixed with '+' as arguments to Harmony.
+You can also require that specific additional users (on top of the one Harmony will pick for you) are requested to review the PR. You do this by specifying those users' logins prefixed with '+' as arguments to Harmony. This will request review from those specific additional users regardless of the `requestUsers` setting; that setting controls whether Harmony picks users from each Team you specify to review PRs.
 
-You can optionally apply any number of labels to the PR at the same time as assigning reviewers by prefixing the labels with '#'.
+You can optionally apply any number of labels to the PR at the same time as requesting reviewers by prefixing the labels with '#'.
 
 #### Deferring to GitHub
-If your team has GitHub set up to auto-assign individuals when a team is requested for review, you probably want to tell harmony not to also pick someone using its heuristics. You can run the following `config` commands to tell harmony to assign a team but not also pick an individual from that team:
+If your team has GitHub set up to auto-request reviews from individuals when a team is requested for review, you probably want to tell harmony not to also pick someone using its heuristics. You can run the following `config` commands to tell harmony to request a team but not also pick an individual from that team:
 ```shell
-harmony config assignTeams true
-harmony config assignUsers false
+harmony config requestTeams true
+harmony config requestUsers false
 ```
+This does not prevent you from requesting specific individuals with the `+<user>` syntax described above.
 
 #### Examples
-Assign the most available reviewer from the "developers" GitHub Team:
+Request review from the most available reviewer from the "developers" GitHub Team:
 ```shell
-harmony assign developers
+harmony request developers
 ```
 
-Assign the most available reviewer from either the "frontend" or "backend" GitHub Team:
+Request review from the most available reviewer from either the "frontend" or "backend" GitHub Team:
 ```shell
-harmony assign frontend backend
+harmony request frontend backend
 ```
 
-Assign the most available reviewer from the "web" team and additionally assign the users with logins "carl001" and "emmaham":
+Request review from the most available reviewer from the "web" team and additionally request review from the users with logins "carl001" and "emmaham":
 ```shell
-harmony assign web +carl001 +emmaham
+harmony request web +carl001 +emmaham
 ```
 
 ### Contribute
-Running `harmony contribute` will print the URI of the oldest non-draft PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that you are not assigned to.
+Running `harmony contribute` will print the URI of the oldest non-draft PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that your review is not requested on.
 
 You can skip PRs and retrieve the next-oldest one by passing a dash followed by the number to skip (e.g. `-2` to skip the two oldest waiting PRs).
 
@@ -183,7 +184,7 @@ You can simultaneously get the URI for a PR to review and checkout the branch ne
 Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony contribute)` to open a web browser to the PR that Harmony is suggesting.
 
 #### Examples
-Retrieve a URI for the oldest unreviewed and open PR (prioritizing PRs for which you are an assigned reviewer):
+Retrieve a URI for the oldest unreviewed and open PR (prioritizing PRs for which you are a requested reviewer):
 ```shell
 harmony contribute
 ```
