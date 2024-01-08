@@ -38,11 +38,13 @@ printWarning : HasIO io =>
                String 
             -> io ()
 printWarning warning =
-  do stderrColors <- isTTY stderr
-     if stderrColors
-          then ignore $ fPutStrLn stderr . renderString . layoutPretty defaultLayoutOptions . annotate (color Yellow) . pretty $ trim warning
-          else ignore $ fPutStrLn stderr warning
-     exitFailure
+  if !(isTTY stderr)
+    then do
+      ignore $ fPutStrLn stderr . renderString . layoutPretty defaultLayoutOptions . annotate (color Yellow) . pretty $ trim warning
+      ignore $ fPutStrLn stderr ""
+    else do
+      ignore $ fPutStrLn stderr warning
+      ignore $ fPutStrLn stderr ""
 
 covering
 bashCompletion : HasIO io => 
