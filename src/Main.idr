@@ -158,7 +158,7 @@ handleConfiguredArgs : Config => Git =>
                     -> Promise ()
 handleConfiguredArgs _ ["config"] =
   reject $ "The config command expects one or two arguments. "
-        ++ "Specify a property to read out or a property and a value to set it to."
+        ++ "Specify a property to read it out or specify both a property and a value to set it to."
         ++ "\n\n"
         ++ settablePropsWithHelp
 handleConfiguredArgs _ ["config", prop] =

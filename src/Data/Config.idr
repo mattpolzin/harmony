@@ -102,6 +102,17 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     "githubPAT"
     "[string]     The Personal Access Token Harmony should use to authenticate with GitHub. You can leave this unset if you want to set a PAT via the GITHUB_PAT environment variable."
 
+  -- TODO 4.0.0: remove deprecated aliases below
+  AssignTeams : SettableProp 
+    "assignTeams"
+    "[true/false] Deprecated alias for the 'requestTeams' config option."
+  AssignUsers : SettableProp
+    "assignUsers"
+    "[true/false] Deprecated alias for the 'requestUsers' config option."
+  CommentOnAssign : SettableProp
+    "commentOnAssign"
+    "[true/false] Deprecated alias for the 'commentOnRequest' config option."
+
 public export
 SomeSettableProp : Type
 SomeSettableProp = (n ** h ** SettableProp n h)
@@ -121,6 +132,9 @@ settablePropNamed "commentOnRequest" = Just $ Evidence _ CommentOnRequest
 settablePropNamed "defaultRemote"    = Just $ Evidence _ DefaultRemote
 settablePropNamed "githubPAT"        = Just $ Evidence _ GithubPAT
 settablePropNamed "requestUsers"     = Just $ Evidence _ RequestUsers
+settablePropNamed "assignTeams"      = Just $ Evidence _ AssignTeams
+settablePropNamed "assignUsers"      = Just $ Evidence _ AssignUsers
+settablePropNamed "commentOnAssign"  = Just $ Evidence _ CommentOnAssign
 settablePropNamed _ = Nothing
 
 namespace SettablePropNamedProps
@@ -130,6 +144,9 @@ namespace SettablePropNamedProps
   settablePropNamedOnto {p = CommentOnRequest} = Refl
   settablePropNamedOnto {p = DefaultRemote}    = Refl
   settablePropNamedOnto {p = GithubPAT}        = Refl
+  settablePropNamedOnto {p = AssignTeams}      = Refl
+  settablePropNamedOnto {p = AssignUsers}      = Refl
+  settablePropNamedOnto {p = CommentOnAssign}  = Refl
 
 settableProps : List SomeSettableProp
 settableProps = [
@@ -138,6 +155,9 @@ settableProps = [
   , (_ ** _ ** CommentOnRequest)
   , (_ ** _ ** DefaultRemote)
   , (_ ** _ ** GithubPAT)
+  , (_ ** _ ** AssignUsers)
+  , (_ ** _ ** AssignTeams)
+  , (_ ** _ ** CommentOnAssign)
   ]
 
 namespace SettablePropsProps
@@ -147,6 +167,9 @@ namespace SettablePropsProps
   settablePropsCovering {p = CommentOnRequest} = %search
   settablePropsCovering {p = DefaultRemote}    = %search
   settablePropsCovering {p = GithubPAT}        = %search
+  settablePropsCovering {p = AssignTeams}      = %search
+  settablePropsCovering {p = AssignUsers}      = %search
+  settablePropsCovering {p = CommentOnAssign}  = %search
 
 propName' : SomeSettableProp -> String
 propName' (_ ** _ ** p) = propName p
