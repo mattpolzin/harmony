@@ -102,7 +102,7 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     "githubPAT"
     "[string]     The Personal Access Token Harmony should use to authenticate with GitHub. You can leave this unset if you want to set a PAT via the GITHUB_PAT environment variable."
 
-  -- TODO 4.0.0: remove deprecated aliases below
+  -- TODO 5.0.0: remove deprecated aliases below
   AssignTeams : SettableProp 
     "assignTeams"
     "[true/false] Deprecated alias for the 'requestTeams' config option."
@@ -284,7 +284,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               , "repoLabels"
                                               , "ignoredPRs"
                                               ] config
-                                          -- TODO 4.0.0: Stop supporting the old aliases "assign..." and move the 
+                                          -- TODO 5.0.0: Stop supporting the old aliases "assign..." and move the 
                                           --             new "request..." versions into the required lookup above.
                                           requestTeams <- exactlyOneOf "assignTeams" "requestTeams"
                                           requestUsers <- exactlyOneOf "assignUsers" "requestUsers"

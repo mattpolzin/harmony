@@ -128,7 +128,7 @@ handleAuthenticatedArgs @{config} ("graph" :: args) =
        Right args => Commands.graph args
        Left err   => exitError err
 
-  -- TODO 4.0.0: Remove the aliases for the deprecated assign command.
+  -- TODO 5.0.0: Remove the aliases for the deprecated assign command.
 handleAuthenticatedArgs ("assign" :: "--dry" :: requestRest) = do
   printWarning "The 'assign' command is a deprecated alias for the new 'request' command."
   Commands.request requestRest {dry=True}

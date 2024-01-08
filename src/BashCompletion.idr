@@ -9,7 +9,7 @@ import Data.String
 
 allRootCmds : List String
 allRootCmds = [ "request"
-              , "assign" -- TODO 4.0.0: <- remove this alias for the deprecated assign command.
+              , "assign" -- TODO 5.0.0: <- remove this alias for the deprecated assign command.
               , "branch"
               , "config"
               , "contribute"
@@ -150,7 +150,7 @@ opts @{config} "pr" partialArg _ =
      then hashify . slugify <$> config.repoLabels
      else []
 
--- TODO 4.0.0: remove all of the following that deals with the alias 
+-- TODO 5.0.0: remove all of the following that deals with the alias 
 --             for the deprecated assign command.
 opts @{config} "assign" "--" "assign" = "--dry" :: config.teamSlugs
 opts @{config} "assign" "--" _ = config.teamSlugs
