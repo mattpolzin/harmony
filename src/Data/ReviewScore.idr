@@ -19,7 +19,7 @@ loginScore (MkScore l s c) = (l, c)
 
 ||| Get scored reviewers sorted from lowest to highest score.
 ||| A low score indicates less review work (a better candidate for
-||| assigning a new PR to).
+||| requesting review from on a new PR).
 |||
 ||| The resulting `Score` contains both a partial score (the score
 ||| based only on open reivews) and also a combined score (the score

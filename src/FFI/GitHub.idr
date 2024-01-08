@@ -239,10 +239,10 @@ prim__addPullReviewers : Ptr OctokitRef
 ||| Applies team reviewers first as one API request and then
 ||| individual reviewers second as a second API request. This
 ||| implementation detail forces (or allows) GitHub to take a
-||| team assignment and pick someone from it whereas if a team
-||| and some individuals are assigned in one go then GitHub will
+||| team review request and pick someone from it whereas if a team
+||| and some individuals are requested in one go then GitHub will
 ||| never apply its round-robin or weight-balanced selection but
-||| instead will leave the team itself assigned.
+||| instead will leave the team itself requested.
 export
 addPullReviewers : Octokit => 
                    (owner : String) 

@@ -56,12 +56,12 @@ harmony \{subcommand "<subcommand>"}
   \{subcommand "label"} {\{argument "<label>"}} [...]
    - Add one or more labels to a PR, creating a new PR if one does not exist.
      Labels that do not exist yet will be created automatically.
-  \{subcommand "assign"} {\{argument "<team-slug>"} | \{argument "+<user-login>"}} [\{argument "#<label>"}] [...]
-   - Assign the given team(s) and one lucky member from one of those teams
-     to review the PR for the current branch.
+  \{subcommand "request"} {\{argument "<team-slug>"} | \{argument "+<user-login>"}} [\{argument "#<label>"}] [...]
+   - Request review from the given team(s) and one lucky member from one
+     of those teams to review the PR for the current branch.
      
-     Also assign any users with logins specified. You specify these
-     additional users by prefixing their logins with '+'.
+     Also request reviews from any users with logins specified. You specify
+     these additional users by prefixing their logins with '+'.
 
      Optionally apply any number of labels by prefixing them with '#'.
      

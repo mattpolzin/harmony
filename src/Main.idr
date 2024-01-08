@@ -34,6 +34,16 @@ exitError err =
           else ignore $ fPutStrLn stderr err
      exitFailure
 
+printWarning : HasIO io => 
+               String 
+            -> io ()
+printWarning warning =
+  do stderrColors <- isTTY stderr
+     if stderrColors
+          then ignore $ fPutStrLn stderr . renderString . layoutPretty defaultLayoutOptions . annotate (color Yellow) . pretty $ trim warning
+          else ignore $ fPutStrLn stderr warning
+     exitFailure
+
 covering
 bashCompletion : HasIO io => 
                  (subcommand : String)
@@ -115,10 +125,19 @@ handleAuthenticatedArgs @{config} ("graph" :: args) =
   case (parseGraphArgs args) of
        Right args => Commands.graph args
        Left err   => exitError err
-handleAuthenticatedArgs ("assign" :: "--dry" :: assignRest) =
-  Commands.assign assignRest {dry=True}
-handleAuthenticatedArgs ("assign" :: assignRest) =
-  Commands.assign assignRest
+
+  -- TODO 4.0.0: Remove the aliases for the deprecated assign command.
+handleAuthenticatedArgs ("assign" :: "--dry" :: requestRest) = do
+  printWarning "The 'assign' command is a deprecated alias for the new 'request' command."
+  Commands.request requestRest {dry=True}
+handleAuthenticatedArgs ("assign" :: requestRest) = do
+  printWarning "The 'assign' command is a deprecated alias for the new 'request' command."
+  Commands.request requestRest
+
+handleAuthenticatedArgs ("request" :: "--dry" :: requestRest) =
+  Commands.request requestRest {dry=True}
+handleAuthenticatedArgs ("request" :: requestRest) =
+  Commands.request requestRest
 handleAuthenticatedArgs ["label"] =
   reject "The label command expects one or more labels as arguments."
 handleAuthenticatedArgs ("label" :: label1 :: labels) =

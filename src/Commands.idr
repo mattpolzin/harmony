@@ -127,17 +127,17 @@ pr {isDraft} labelSlugs =
                label labelSlugs
      else reject "The pr command only accepts labels prefixed with '#' and the --draft flag."
 
-||| Assign the given teams & users as reviewers when the user executes
-||| `harmony assign ...`.
+||| Request review from the given teams & users as reviewers when the user executes
+||| `harmony request ...`.
 export
-assign : Config => Git => Octokit => 
-         (assignArgs : List String) 
+request : Config => Git => Octokit => 
+         (requestArgs : List String) 
       -> {default False dry : Bool} 
       -> Promise ()
-assign args {dry} = do
+request args {dry} = do
   let (forcedReviewers, teamNames, labelSlugs) = partitionedArgs
   if (null forcedReviewers && null teamNames)
-     then reject "The assign command expects one or more names of GitHub Teams or Users as arguments."
+     then reject "The request command expects one or more names of GitHub Teams or Users as arguments."
      else do (_, openPr) <- identifyOrCreatePR !currentBranch
              requestReviewers openPr teamNames forcedReviewers {dry}
              when (not (null labelSlugs || dry)) $
