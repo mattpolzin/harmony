@@ -10,6 +10,11 @@ import Language.JSON.Accessors
 
 import public Data.DPair
 
+import Language.Reflection
+import Util.Reflection
+
+%language ElabReflection
+
 %default total
 
 ||| Unix Timestamp (seconds since epoch).
@@ -91,7 +96,12 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     "[true/false] Determines whether or not to request reviews from teams when requesting individual reviewers from a team."
   RequestUsers     : SettableProp
     "requestUsers"
-    "[true/false] Determines whether or not to request reviews from an individual user based on Harmony's heuristics when requestin review from teams. You might want to disable `requestUsers` to allow GitHub to pick users to request based on the team. This setting does not affect the ability to request reviews from individual users withe Harmony's `+<username>` syntax."
+    """
+    [true/false] Determines whether or not to request reviews from an individual user based on Harmony's heuristics when \
+    requestin review from teams. You might want to disable `requestUsers` to allow GitHub to pick users to request based on \
+    the team. This setting does not affect the ability to request reviews from individual users withe Harmony's `+<username>` \
+    syntax.
+    """
   CommentOnRequest : SettableProp
     "commentOnRequest"
     "[true/false] Determines whether to comment on PR indicating that Harmony chose a reviewer."
@@ -100,7 +110,10 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     "[string]     The name of the default Git remote to use (e.g. 'origin')."
   GithubPAT       : SettableProp
     "githubPAT"
-    "[string]     The Personal Access Token Harmony should use to authenticate with GitHub. You can leave this unset if you want to set a PAT via the GITHUB_PAT environment variable."
+    """
+    [string]     The Personal Access Token Harmony should use to authenticate with GitHub. You can leave this unset if you \
+    want to set a PAT via the GITHUB_PAT environment variable.
+    """
 
   -- TODO 5.0.0: remove deprecated aliases below
   AssignTeams : SettableProp 
@@ -137,16 +150,13 @@ settablePropNamed "assignUsers"      = Just $ Evidence _ AssignUsers
 settablePropNamed "commentOnAssign"  = Just $ Evidence _ CommentOnAssign
 settablePropNamed _ = Nothing
 
-namespace SettablePropNamedProps
-  settablePropNamedOnto : {p : SettableProp n h} -> Config.settablePropNamed n === (Just $ Evidence h p)
-  settablePropNamedOnto {p = RequestTeams}     = Refl
-  settablePropNamedOnto {p = RequestUsers}     = Refl
-  settablePropNamedOnto {p = CommentOnRequest} = Refl
-  settablePropNamedOnto {p = DefaultRemote}    = Refl
-  settablePropNamedOnto {p = GithubPAT}        = Refl
-  settablePropNamedOnto {p = AssignTeams}      = Refl
-  settablePropNamedOnto {p = AssignUsers}      = Refl
-  settablePropNamedOnto {p = CommentOnAssign}  = Refl
+namespace SettablePropNamedProperties
+  settablePropNamedOnto : (p : SettableProp n h) -> Config.settablePropNamed n === (Just $ Evidence h p)
+  settablePropNamedOnto prop = %runElab ( do
+      cons <- getCons `{ Data.Config.SettableProp }
+      check $ elabCase `( prop ) `( Data.Config.SettableProp n h )
+                       cons (\name => (MkClause name `( Refl )))
+    )
 
 settableProps : List SomeSettableProp
 settableProps = [
@@ -160,16 +170,13 @@ settableProps = [
   , (_ ** _ ** CommentOnAssign)
   ]
 
-namespace SettablePropsProps
-  settablePropsCovering : {p : SettableProp n h} -> Elem (n ** h ** p) Config.settableProps
-  settablePropsCovering {p = RequestTeams}     = %search
-  settablePropsCovering {p = RequestUsers}     = %search
-  settablePropsCovering {p = CommentOnRequest} = %search
-  settablePropsCovering {p = DefaultRemote}    = %search
-  settablePropsCovering {p = GithubPAT}        = %search
-  settablePropsCovering {p = AssignTeams}      = %search
-  settablePropsCovering {p = AssignUsers}      = %search
-  settablePropsCovering {p = CommentOnAssign}  = %search
+namespace SettablePropsProperties
+  settablePropsCovering : (p : SettableProp n h) -> Elem (n ** h ** p) Config.settableProps
+  settablePropsCovering prop = %runElab ( do
+      cons <- getCons `{ Data.Config.SettableProp }
+      check $ elabCase `( prop ) `( Data.Config.SettableProp n h )
+                       cons (\name => (MkClause name `( %search )))
+    )
 
 propName' : SomeSettableProp -> String
 propName' (_ ** _ ** p) = propName p
