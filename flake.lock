@@ -84,16 +84,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1704504523,
-        "narHash": "sha256-CM/0KWIeIxHunMpBd1y9gn1pwXp+0XLje0CqVumlCsc=",
-        "owner": "mattpolzin",
+        "lastModified": 1704779897,
+        "narHash": "sha256-O8YioErELfZXHl5S3ju3BLqCqWjxtueRxc3zks0QNOU=",
+        "owner": "idris-lang",
         "repo": "Idris2",
-        "rev": "52814b4f52244d6aa6a647e6611b8517c817a43d",
+        "rev": "da6f0b0e4e99b398190deca2dfef6bec84f0062c",
         "type": "github"
       },
       "original": {
-        "owner": "mattpolzin",
-        "ref": "fix-install-output-buildIdris",
+        "owner": "idris-lang",
         "repo": "Idris2",
         "type": "github"
       }

@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = github:NixOS/nixpkgs/nixpkgs-unstable;
 
-    idris.url = github:mattpolzin/Idris2/fix-install-output-buildIdris;
+    idris.url = github:idris-lang/Idris2;
     idris.inputs.nixpkgs.follows = "nixpkgs";
 
     alejandra.url = github:kamadorueda/alejandra;
