@@ -2,7 +2,6 @@
   callPackage,
   fetchFromGitHub,
   git,
-  idris2,
   buildIdris,
   lib,
   installShellFiles,
