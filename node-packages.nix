@@ -36,13 +36,13 @@
         sha512 = "NCSCktSx+XmjuSUVn2dLfqQ9WIYePGP95SDJs4I9cn/0ZkeXcPkaoCLl64Us3dRKL2ozC7hArwze5Eu+/qt1tg==";
       };
     };
-    "@octokit/auth-app-6.0.2" = {
+    "@octokit/auth-app-6.0.3" = {
       name = "_at_octokit_slash_auth-app";
       packageName = "@octokit/auth-app";
-      version = "6.0.2";
+      version = "6.0.3";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/auth-app/-/auth-app-6.0.2.tgz";
-        sha512 = "HYuRX3Fvhs2y9i7a4F8f+A5HWfacRWmpERHGBEOtgvKVjJkOQZKUY2v6HiSszYecHAF8Ojqngp2iraSP3SvNpQ==";
+        url = "https://registry.npmjs.org/@octokit/auth-app/-/auth-app-6.0.3.tgz";
+        sha512 = "9N7IlBAKEJR3tJgPSubCxIDYGXSdc+2xbkjYpk9nCyqREnH8qEMoMhiEB1WgoA9yTFp91El92XNXAi+AjuKnfw==";
       };
     };
     "@octokit/auth-oauth-app-7.0.1" = {
@@ -279,13 +279,13 @@
         sha512 = "VRLSGzik+Unrup6BsouBeHsf4d1hOEgYWTm/7Nmw1sXoN1+tRly/Gy/po3yeahnP4jfnQWWAhQAqcNfH7ngOkA==";
       };
     };
-    "@types/node-20.10.7" = {
+    "@types/node-20.10.8" = {
       name = "_at_types_slash_node";
       packageName = "@types/node";
-      version = "20.10.7";
+      version = "20.10.8";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@types/node/-/node-20.10.7.tgz";
-        sha512 = "fRbIKb8C/Y2lXxB5eVMj4IU7xpdox0Lh8bUPEdtLysaylsml1hOOx1+STloRs/B9nf7C6kPRmmg/V7aQW7usNg==";
+        url = "https://registry.npmjs.org/@types/node/-/node-20.10.8.tgz";
+        sha512 = "f8nQs3cLxbAFc00vEU59yf9UyGUftkPaLGfvbVOIDdx2i1b8epBqj2aNGyP19fiyXWvlmZ7qC1XLjAzw/OKIeA==";
       };
     };
     "aggregate-error-3.1.0" = {
@@ -604,7 +604,7 @@
       sources."@kwsites/file-exists-1.1.1"
       sources."@kwsites/promise-deferred-1.1.1"
       sources."@octokit/app-14.0.2"
-      sources."@octokit/auth-app-6.0.2"
+      sources."@octokit/auth-app-6.0.3"
       sources."@octokit/auth-oauth-app-7.0.1"
       sources."@octokit/auth-oauth-device-6.0.1"
       sources."@octokit/auth-oauth-user-4.0.1"
@@ -631,7 +631,7 @@
       sources."@types/aws-lambda-8.10.131"
       sources."@types/btoa-lite-1.0.2"
       sources."@types/jsonwebtoken-9.0.5"
-      sources."@types/node-20.10.7"
+      sources."@types/node-20.10.8"
       sources."aggregate-error-3.1.0"
       sources."before-after-hook-2.2.3"
       sources."bottleneck-2.19.5"
