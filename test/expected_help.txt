@@ -1,65 +1,63 @@
 harmony <subcommand>
 
 Subcommands:
-  help
-   - Print help
-  version
-   - Print version
-  config {<property>} [<value>]
-   - Get or set the value of a configuration property. Not all properties
-     can be set and read via this subcommand.
-     properties: assignTeams, assignUsers, commentOnAssign, defaultRemote, githubPAT.
-  sync
-   - Synchronize local config with information from GitHub.
-  branch
-   - Print the GitHub URI for the currently checked out branch.
-  pr [--draft] [#<label>] [...]
-   - Identify an existing PR or create a new one for the current branch.
-     
-     Optionally apply any number of labels by prefixing them with '#'.
-
-  contribute [-c/--checkout] [-<num>] [-i/--ignore {<uri>/<pr-number>}]
-   - Contribute to an open PR. Prints a URL. Prioritizes PRs you are
-     requested to review but will also return other PRs.
-
-     Use dash followed by a number (e.g. '-3') to skip that number of
-     potential PRs and return the next.
-
-     Specify a PR to ignore (only affects the local Harmony config on
-     this machine) if you would like to more permanently skip a potential
-     PR. Do this with the '--ignore' option followed by a GitHub URI or
-     Pull Request number.
-  whoami
-   - Print information about the configured and authenticated user.
-  reflect
-   - Reflect on the current state of ones own PRs and review requests.
-  list {<team-slug>}
-   - List the members of the given GitHub Team.
-  graph [-c/--completed] {<team-slug>}
-   - Graph the relative review workload of the members of the given GitHub Team.
-  health
-   - Graph all open PRs grouped by the month they were created.
-  label {<label>} [...]
-   - Add one or more labels to a PR, creating a new PR if one does not exist.
-     Labels that do not exist yet will be created automatically.
   assign {<team-slug> | +<user-login>} [#<label>] [...]
-   - Assign the given team(s) and one lucky member from one of those teams
-     to review the PR for the current branch.
-     
-     Also assign any users with logins specified. You specify these
-     additional users by prefixing their logins with '+'.
+      Assign the given team(s) and one lucky member from one of those teams to
+      review the PR for the current branch.
 
-     Optionally apply any number of labels by prefixing them with '#'.
-     
-Bash Completion:
-  You can set up bash completion by adding the following to your resource
-  or bash profile:
-    
-    eval "$(harmony --bash-completion-script)"
-    
-  Zsh users will also need to have the following in their resource or
-  zsh profile before the above eval:
-    
-    autoload -U +X compinit && compinit
-    autoload -U +X bashcompinit && bashcompinit
-    
+      Also assign any users with logins specified. You specify these additional
+      users by prefixing their logins with '+'.
+
+      Optionally apply any number of labels by prefixing them with '#'.
+  branch 
+      Print the GitHub URI for the currently checked out branch.
+  config {<property>} [<value>]
+      Get or set the value of a configuration property. Not all properties can
+      be set and read via this subcommand.
+      properties: assignTeams, assignUsers, commentOnAssign, defaultRemote, githubPAT.
+  contribute [-c/--checkout] [-<num>] [-i/--ignore {<uri>/<pr-number>}]
+      Contribute to an open PR. Prints a URL. Prioritizes PRs you are requested
+      to review but will also return other PRs.
+
+      Use dash followed by a number (e.g. '-3') to skip that number of potential
+      PRs and return the next.
+
+      Specify a PR to ignore (only affects the local Harmony config on this
+      machine) if you would like to more permanently skip a potential PR. Do
+      this with the '--ignore' option followed by a GitHub URI or Pull Request
+      number.
+  graph [-c/--completed] {<team-slug>}
+      Graph the relative review workload of the members of the given GitHub Team.
+  health 
+      Graph all open PRs grouped by the month they were created.
+  help [<subcommand>]
+      Print help
+  label {<label>} [...]
+      Add one or more labels to a PR, creating a new PR if one does not exist.
+      Labels that do not exist yet will be created automatically.
+  list {<team-slug>}
+      List the members of the given GitHub Team.
+  pr [--draft] [#<label>] [...]
+      Identify an existing PR or create a new one for the current branch.
+
+      Optionally apply any number of labels by prefixing them with '#'.
+  reflect 
+      Reflect on the current state of ones own PRs and review requests.
+  sync 
+      Synchronize local config with information from GitHub.
+  version 
+      Print version
+  whoami 
+      Print information about the configured and authenticated user.
+
+Prompt Completion:
+  You can set up bash completion by adding the following to your bashrc file or
+  bash profile:
+
+  eval "$(harmony --bash-completion-script)"
+
+  You can set up zsh completion by adding the following to your zshrc file or
+  zsh profile:
+
+  eval "$(harmony --zsh-completion-script)"
+
