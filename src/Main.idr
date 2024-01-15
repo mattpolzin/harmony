@@ -197,6 +197,9 @@ main =
      when (args == [] || args == ["help"] || args == ["--help"]) $ do
        putStrLn (help terminalColors)
        exitSuccess
+     when (head' args == Just "help") $ do
+       putStrLn (subcommandHelp terminalColors $ fromMaybe "" . head' $ drop 1 args)
+       exitSuccess
      when (args == ["version"] || args == ["--version"]) $ do
        printVersion
        exitSuccess
