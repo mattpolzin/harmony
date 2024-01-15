@@ -11,82 +11,93 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 helpDocs : Doc AnsiStyle
 helpDocs = vsep
-  [ "harmony" <++> subcommand "<subcommand>" [] ""
-  , heading "Subcommands" $
-      vsep
-        [ subcommand "help" [] "Print help"
-        , subcommand "version" [] "Print version"
-        , subcommand "config" [argument True "<property>", argument False "<value>"] $
-            reflow """
+  [ "harmony" <++> subcommand' "<subcommand>"
+  , heading "Subcommands" $ vsep
+      [ subcommand "help" [] ["Print help"]
+      , subcommand "version" [] ["Print version"]
+      , subcommand "config" [argument True "<property>", argument False "<value>"] $
+          [ reflow """
               Get or set the value of a configuration property. Not all properties
               can be set and read via this subcommand.
               """
-              <+> line
-              <+> argument' "properties" <+> ":" <++> (concatWith (\a,b => a <+> "," <++> b) $ option <$> settablePropNames) <+> "."
-        , subcommand "sync" [] "Synchronize local config with information from GitHub."
---   \{subcommand "branch"}
---      Print the GitHub URI for the currently checked out branch.
---   \{subcommand "pr"} [\{argument "--draft"}] [\{argument "#<label>"}] [...]
---      Identify an existing PR or create a new one for the current branch.
---      
---      Optionally apply any number of labels by prefixing them with '#'.
---   \{subcommand "contribute"} [\{argument "-c/--checkout"}] [\{argument "-<num>"}] [\{argument "-i/--ignore"} {\{argument "<uri>/<pr-number>"}}]
---      Contribute to an open PR. Prints a URL. Prioritizes PRs you are
---      requested to review but will also return other PRs.
--- 
---      Use dash followed by a number (e.g. '-3') to skip that number of
---      potential PRs and return the next.
--- 
---      Specify a PR to ignore (only affects the local Harmony config on
---      this machine) if you would like to more permanently skip a potential
---      PR. Do this with the '--ignore' option followed by a GitHub URI or
---      Pull Request number.
---   \{subcommand "whoami"}
---      Print information about the configured and authenticated user.
---   \{subcommand "reflect"}
---      Reflect on the current state of ones own PRs and review requests.
---   \{subcommand "list"} {\{argument "<team-slug>"}}
---      List the members of the given GitHub Team.
---   \{subcommand "graph"} [\{argument "-c/--completed"}] {\{argument "<team-slug>"}}
---      Graph the relative review workload of the members of the given GitHub Team.
---   \{subcommand "health"}
---      Graph all open PRs grouped by the month they were created.
---   \{subcommand "label"} {\{argument "<label>"}} [...]
---      Add one or more labels to a PR, creating a new PR if one does not exist.
---      Labels that do not exist yet will be created automatically.
---   \{subcommand "assign"} {\{argument "<team-slug>"} | \{argument "+<user-login>"}} [\{argument "#<label>"}] [...]
---      Assign the given team(s) and one lucky member from one of those teams
---      to review the PR for the current branch.
---      
---      Also assign any users with logins specified. You specify these
---      additional users by prefixing their logins with '+'.
--- 
---      Optionally apply any number of labels by prefixing them with '#'.
---      
-        ]
+            <+> line
+            <+> argument' "properties" <+> ":" <++> (concatWith (\a,b => a <+> "," <++> b) $ option <$> settablePropNames) <+> "."
+          ]
+      , subcommand "sync" [] ["Synchronize local config with information from GitHub."]
+      , subcommand "branch" [] ["Print the GitHub URI for the currently checked out branch."]
+      , subcommand "pr" [argument False "--draft", argument False "#<label>", argument False "..."] $
+          [ "Identify an existing PR or create a new one for the current branch."
+          , "Optionally apply any number of labels by prefixing them with '#'."
+          ]
+      , subcommand "contribute" [argument False "-c/--checkout", argument False "-<num>", argument False "-i/--ignore {<uri>/<pr-number>}"]
+          [ reflow """
+              Contribute to an open PR. Prints a URL. Prioritizes PRs you are
+              requested to review but will also return other PRs.
+              """
+          , reflow """
+              Use dash followed by a number (e.g. '-3') to skip that number of
+              potential PRs and return the next.
+              """
+          , reflow """
+              Specify a PR to ignore (only affects the local Harmony config on
+              this machine) if you would like to more permanently skip a potential
+              PR. Do this with the '--ignore' option followed by a GitHub URI or
+              Pull Request number.
+              """
+          ]
+      , subcommand "whoami" [] ["Print information about the configured and authenticated user."]
+      , subcommand "reflect" [] ["Reflect on the current state of ones own PRs and review requests."]
+      , subcommand "list" [argument True "<team-slug>"] ["List the members of the given GitHub Team."]
+      , subcommand "graph" [argument False "-c/--completed", argument True "<team-slug>"]
+          ["Graph the relative review workload of the members of the given GitHub Team."]
+      , subcommand "health" [] ["Graph all open PRs grouped by the month they were created."]
+      , subcommand "label" [argument True "<label>", argument False "..."] $
+          [ "Add one or more labels to a PR, creating a new PR if one does not exist."
+            <+> line
+            <+> "Labels that do not exist yet will be created automatically."
+          ]
+      , subcommand "assign" [argument True "<team-slug> | +<user-login>", argument False "#<label>", argument False "..."] $
+          [ reflow """
+              Assign the given team(s) and one lucky member from one of those teams
+              to review the PR for the current branch.
+              """
+          , reflow """
+              Also assign any users with logins specified. You specify these
+              additional users by prefixing their logins with '+'.
+              """
+          , "Optionally apply any number of labels by prefixing them with '#'."
+          ]
+      ]
+  , heading "Prompt Completion" $ vsep
+      [ reflow """
+          You can set up bash completion by adding the following to your bashrc
+          file or bash profile:
+          """
+      , ""
+      , shell "eval \"$(harmony --bash-completion-script)\""
+      , ""
+      , reflow """
+          You can set up zsh completion by adding the following to your zshrc
+          file or zsh profile:
+          """
+      , ""
+      , shell "eval \"$(harmony --zsh-completion-script)\""
+      , ""
+      ]
   ]
--- \{heading "Bash Completion"}:
---   You can set up bash completion by adding the following to your resource
---   or bash profile:
---     
---     \{shell "eval \"$(harmony --bash-completion-script)\""}
---     
---   Zsh users will also need to have the following in their resource or
---   zsh profile before the above eval:
---     
---     \{shell "autoload -U +X compinit && compinit"}
---     \{shell "autoload -U +X bashcompinit && bashcompinit"}
---     
--- """
   where
     option : String -> Doc AnsiStyle
     option = annotate bold . pretty
+
+    subcommand' : String -> Doc AnsiStyle
+    subcommand' = annotate (color Magenta) . pretty
     
-    subcommand : String -> (arguments : List (Doc AnsiStyle)) -> (description : Doc AnsiStyle) -> Doc AnsiStyle
-    subcommand n xs desc = 
-      let name = annotate (color Magenta) $ pretty n
+    subcommand : String -> (arguments : List (Doc AnsiStyle)) -> (paragraphs : List (Doc AnsiStyle)) -> Doc AnsiStyle
+    subcommand n xs paras = 
+      let name = subcommand' n
           args = hsep xs
-      in  name <+> args <+> line <+> indent 4 desc
+          desc = concatWith (\p,q => p <+> line <+> line <+> q) paras
+      in  name <++> args <+> line <+> indent 4 desc
 
     argument' : String -> Doc AnsiStyle
     argument' = annotate (color Green) . pretty
@@ -101,7 +112,7 @@ helpDocs = vsep
     heading : String -> (section : Doc AnsiStyle) -> Doc AnsiStyle
     heading n section = 
       let name = annotate underline $ pretty n
-      in  name <+> ":" <+> line <+> indent 2 section
+      in  line <+> name <+> ":" <+> line <+> indent 2 section
 
     shell : String -> Doc AnsiStyle
     shell = annotate italic . pretty
