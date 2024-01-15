@@ -28,6 +28,10 @@ jobs:
           idris2 --version
           echo ''
           make
+      - name: Check Executable
+        run: |
+          ./harmony help > output.txt
+          git diff --no-index -- test/expected_help.txt output.txt
 #      - name: Test
 #        run: make test
 
@@ -48,6 +52,10 @@ jobs:
           idris2 --version
           echo ''
           make
+      - name: Check Executable
+        run: |
+          ./harmony help > output.txt
+          git diff --no-index -- test/expected_help.txt output.txt
 #      - name: Test
 #        run: make test
 
