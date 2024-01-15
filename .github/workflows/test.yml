@@ -31,7 +31,7 @@ jobs:
       - name: Check Executable
         run: |
           ./harmony help > output.txt
-          diff test/expected_help.txt output.txt
+          git diff --no-index -- test/expected_help.txt output.txt
 #      - name: Test
 #        run: make test
 
@@ -55,7 +55,7 @@ jobs:
       - name: Check Executable
         run: |
           ./harmony help > output.txt
-          diff test/expected_help.txt output.txt
+          git diff --no-index -- test/expected_help.txt output.txt
 #      - name: Test
 #        run: make test
 
