@@ -84,13 +84,15 @@ cmdOpts _ partialCmd "harmony" = Just $ filter (isPrefixOf partialCmd) allRootCm
 -- then the subcommands that take no arguments;
 cmdOpts "sync"    _ _ = Just []
 cmdOpts "health"  _ _ = Just []
-cmdOpts "help"    _ _ = Just []
 cmdOpts "--help"  _ _ = Just []
 cmdOpts "reflect" _ _ = Just []
 cmdOpts "version" _ _ = Just []
 
 -- next subcommands that have options with no configuration requirement:
-cmdOpts "pr" "-" "pr" = Just ["--draft"]
+cmdOpts "help" "--" "help" = Just allRootCmds
+cmdOpts "help" partialArg "help" =
+  Just $ filter (isPrefixOf partialArg) allRootCmds 
+cmdOpts "pr" "-"  "pr" = Just ["--draft"]
 cmdOpts "pr" "--" "pr" = Just ["--draft"]
 cmdOpts "pr" partialArg "pr" =
   if partialArg `isPrefixOf` "--draft"

@@ -15,6 +15,7 @@ import Help
 import JSON.Parser
 import System
 import System.File
+import Util
 
 import BashCompletion
 import ZshCompletion
@@ -215,7 +216,10 @@ main =
      args <- drop 1 <$> getArgs
      -- short circuit for help
      when (args == [] || args == ["help"] || args == ["--help"]) $ do
-       putStrLn $ help terminalColors
+       putStrLn (help terminalColors)
+       exitSuccess
+     when (head' args == Just "help") $ do
+       putStrLn (subcommandHelp terminalColors $ fromMaybe "" . head' $ drop 1 args)
        exitSuccess
      when (args == ["version"] || args == ["--version"]) $ do
        printVersion
