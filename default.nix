@@ -68,7 +68,7 @@
   };
 
   harmonyPkg = buildIdris {
-    version = "3.3.0";
+    version = "4.0.0";
     projectName = "harmony";
     src = ./.;
 

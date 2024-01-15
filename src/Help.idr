@@ -46,14 +46,14 @@ subcommandHelp' n@"label" = subcommand n [argument True "<label>", argument Fals
     <+> line
     <+> "Labels that do not exist yet will be created automatically."
   ]
-subcommandHelp' n@"assign" = subcommand n [argument True "<team-slug> | +<user-login>", argument False "#<label>", argument False "..."] $
+subcommandHelp' n@"request" = subcommand n [argument True "<team-slug> | +<user-login>", argument False "#<label>", argument False "..."] $
   [ reflow """
-      Assign the given team(s) and one lucky member from one of those teams
-      to review the PR for the current branch.
+      Request review from the given team(s) and one lucky member from one
+      of those teams to review the PR for the current branch.
       """
   , reflow """
-      Also assign any users with logins specified. You specify these
-      additional users by prefixing their logins with '+'.
+      Also request reviews from any users with logins specified. You specify
+      these additional users by prefixing their logins with '+'.
       """
   , "Optionally apply any number of labels by prefixing them with '#'."
   ]
@@ -63,7 +63,7 @@ subcommandHelp' n@"config" = subcommand n [argument True "<property>", argument 
       can be set and read via this subcommand.
       """
     <+> line
-    <+> argument' "properties" <+> ":" <++> (concatWith (\a,b => a <+> "," <++> b) $ option <$> settablePropNames) <+> "."
+    <+> argument' "properties" <+> ":" <++> (align $ concatWith (\a,b => a <+> "," <+> softline <+> b) $ option <$> settablePropNames)
   ]
 subcommandHelp' n@"pr" = subcommand n [argument False "--draft", argument False "#<label>", argument False "..."] $
   [ "Identify an existing PR or create a new one for the current branch."
@@ -109,8 +109,7 @@ helpDocs : Doc AnsiStyle
 helpDocs = vsep
   [ "harmony" <++> subcommand' "<subcommand>"
   , heading "Subcommands" $ vsep
-      [ subcommandHelp' "assign"
-      , subcommandHelp' "branch"
+      [ subcommandHelp' "branch"
       , subcommandHelp' "config"
       , subcommandHelp' "contribute"
       , subcommandHelp' "graph"
@@ -120,6 +119,7 @@ helpDocs = vsep
       , subcommandHelp' "list"
       , subcommandHelp' "pr"
       , subcommandHelp' "reflect"
+      , subcommandHelp' "request"
       , subcommandHelp' "sync"
       , subcommandHelp' "version"
       , subcommandHelp' "whoami"

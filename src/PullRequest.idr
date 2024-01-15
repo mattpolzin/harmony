@@ -196,27 +196,27 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} = do
   (openReviewers, closedReviewers) <- listReviewers 100 {pageBreaks=4}
   teamMembers <- join <$> traverse (listTeamMembers config.org) teamNames
 
-  chosenUser <- if config.assignUsers
+  chosenUser <- if config.requestUsers
                      then let chosenCandidates = chooseReviewers closedReviewers openReviewers teamMembers [] pr.author
                           in  randomReviewer chosenCandidates
                      else pure Nothing
 
   let users = (toList chosenUser) ++ forcedReviewers
-  let teams = if config.assignTeams then teamNames else []
+  let teams = if config.requestTeams then teamNames else []
   when (not dry) $
     do ignore $ addPullReviewers config.org config.repo pr.number users teams
-       when config.commentOnAssign $
+       when config.commentOnRequest $
          whenJust chosenUser $ \cu =>
            createComment config.org config.repo pr.number (prComment cu)
-  if null users && config.assignUsers
+  if null users && config.requestUsers
     then putStrLn . renderString $ vsep [
                     annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
                   , pretty "(perhaps the only option was the author of the pull request?)."
-                  , pretty "Assigned \{teamNotice teams} to the open PR "
+                  , pretty "Requested review from \{teamNotice teams} for the open PR "
                   , pretty "for the current branch (\{pr.webURI})."
                   ]
     else putStrLn . renderString $ vsep [
-                    pretty "Assigned \{userNotice chosenUser}\{teamNotice teams} to the open PR "
+                    pretty "Requested review from \{userNotice chosenUser}\{teamNotice teams} for the open PR "
                   , pretty "for the current branch (\{pr.webURI})."
                   ]
   where
@@ -236,7 +236,7 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} = do
 
     prComment : String -> String
     prComment chosenUser = """
-    :musical_note: Harmoniously assigned @\{chosenUser} to review this PR.
+    :musical_note: Harmoniously requested review from @\{chosenUser}.
     """
 
 export

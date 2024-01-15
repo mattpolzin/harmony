@@ -8,7 +8,8 @@ import Data.String
 %default total
 
 allRootCmds : List String
-allRootCmds = [ "assign"
+allRootCmds = [ "request"
+              , "assign" -- TODO 5.0.0: <- remove this alias for the deprecated assign command.
               , "branch"
               , "config"
               , "contribute"
@@ -151,11 +152,30 @@ opts @{config} "pr" partialArg _ =
      then hashify . slugify <$> config.repoLabels
      else []
 
--- finally, assign auto-completes with 
--- either a team slug or '+' followed by a user login:
+-- TODO 5.0.0: remove all of the following that deals with the alias 
+--             for the deprecated assign command.
 opts @{config} "assign" "--" "assign" = "--dry" :: config.teamSlugs
 opts @{config} "assign" "--" _ = config.teamSlugs
 opts @{config} "assign" partialArg _ =
+  if partialArg `isPrefixOf` "--dry"
+     then ["--dry"]
+     else slugsOrLoginsOrLabels
+  where
+    -- If the word being typed is prefixed with '+' return user logins
+    -- but otherwise return team slugs. 
+    slugsOrLoginsOrLabels : List String
+    slugsOrLoginsOrLabels =
+      if "+" `isPrefixOf` partialArg
+        then (strCons '+') <$> config.orgMembers
+        else if isHashPrefix partialArg
+               then hashify . slugify <$> config.repoLabels
+               else config.teamSlugs
+
+-- finally, request auto-completes with 
+-- either a team slug or '+' followed by a user login:
+opts @{config} "request" "--" "request" = "--dry" :: config.teamSlugs
+opts @{config} "request" "--" _ = config.teamSlugs
+opts @{config} "request" partialArg _ =
   if partialArg `isPrefixOf` "--dry"
      then ["--dry"]
      else slugsOrLoginsOrLabels
