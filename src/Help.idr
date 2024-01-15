@@ -63,7 +63,7 @@ subcommandHelp' n@"config" = subcommand n [argument True "<property>", argument 
       can be set and read via this subcommand.
       """
     <+> line
-    <+> argument' "properties" <+> ":" <++> (concatWith (\a,b => a <+> "," <++> b) $ option <$> settablePropNames) <+> "."
+    <+> argument' "properties" <+> ":" <++> (align $ concatWith (\a,b => a <+> "," <+> softline <+> b) $ option <$> settablePropNames)
   ]
 subcommandHelp' n@"pr" = subcommand n [argument False "--draft", argument False "#<label>", argument False "..."] $
   [ "Identify an existing PR or create a new one for the current branch."
