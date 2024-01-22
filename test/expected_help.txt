@@ -1,6 +1,8 @@
 harmony <subcommand>
 
 Subcommands:
+  assign 
+      Deprecated alias for 'request' command.
   branch 
       Print the GitHub URI for the currently checked out branch.
   config {<property>} [<value>]
