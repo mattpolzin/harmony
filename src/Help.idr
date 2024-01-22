@@ -9,6 +9,9 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
+warning : String -> Doc AnsiStyle
+warning = annotate (color Yellow) . pretty
+
 option : String -> Doc AnsiStyle
 option = annotate bold . pretty
 
@@ -95,6 +98,8 @@ subcommandHelp' n@"whoami"  = subcommand n [] ["Print information about the conf
 subcommandHelp' n@"reflect" = subcommand n [] ["Reflect on the current state of ones own PRs and review requests."]
 subcommandHelp' n@"list"    = subcommand n [argument True "<team-slug>"] ["List the members of the given GitHub Team."]
 subcommandHelp' n@"health"  = subcommand n [] ["Graph all open PRs grouped by the month they were created."]
+subcommandHelp' n@"assign"  = subcommand n [] [warning "Deprecated alias for 'request' command."]
+-- TODO 5.0.0:     ^ remove deprecated command help
 subcommandHelp' c           = pretty "Unreconized command: \{c}"
 
 ||| Print help for a particular subcommand.
@@ -109,7 +114,9 @@ helpDocs : Doc AnsiStyle
 helpDocs = vsep
   [ "harmony" <++> subcommand' "<subcommand>"
   , heading "Subcommands" $ vsep
-      [ subcommandHelp' "branch"
+      [ subcommandHelp' "assign"
+      -- TODO 5.0.0: ^ remove deprecated command help
+      , subcommandHelp' "branch"
       , subcommandHelp' "config"
       , subcommandHelp' "contribute"
       , subcommandHelp' "graph"
