@@ -20,7 +20,8 @@
     hash = "sha256-OSu381nUNZqFJs4HzmMxGda60k7xsa1GulQq7kU/R2o=";
   };
   idrisAddsPkg = buildIdris {
-    projectName = "idris-adds";
+    ipkgName = "idris-adds";
+    version = idrisAddsVersion;
     src = idrisAddsSrc;
     idrisLibraries = [];
   };
@@ -32,7 +33,8 @@
     hash = "sha256-CYPrhB9y4CMk2Wiecpk+5isybcf3ZsbmaKdKOyo0JWk=";
   };
   elabUtilPkg = buildIdris {
-    projectName = "elab-util";
+    ipkgName = "elab-util";
+    version = elabUtilRev;
     src = elabUtilSrc;
     idrisLibraries = [];
   };
@@ -44,7 +46,8 @@
     hash = "sha256-+lwOdkovhOsvaSKH+jJY7uhr40JjXpUJ4ECR9qxZv14=";
   };
   idrisJsonPkg = buildIdris {
-    projectName = "json";
+    ipkgName = "json";
+    version = idrisJsonRev;
     src = idrisJsonSrc;
     idrisLibraries = libraries [elabUtilPkg idrisParserPkg idrisParserJsonPkg];
   };
@@ -56,12 +59,14 @@
     hash = "sha256-ShwVAUsobrwmuYszYld1RqlRUvnrACpyyqK2JKaIWYM=";
   };
   idrisParserPkg = buildIdris {
-    projectName = "parser";
+    ipkgName = "parser";
+    version = idrisParserRev;
     src = idrisParserSrc;
     idrisLibraries = libraries [elabUtilPkg];
   };
   idrisParserJsonPkg = buildIdris rec {
-    projectName = "parser-json";
+    ipkgName = "parser-json";
+    version = idrisParserRev;
     src = idrisParserSrc;
     sourceRoot = "${src.name}/json";
     idrisLibraries = libraries [idrisParserPkg elabUtilPkg];
@@ -69,7 +74,7 @@
 
   harmonyPkg = buildIdris {
     version = "4.0.1";
-    projectName = "harmony";
+    ipkgName = "harmony";
     src = ./.;
 
     idrisLibraries = libraries [idrisAddsPkg elabUtilPkg idrisParserPkg idrisParserJsonPkg idrisJsonPkg];
