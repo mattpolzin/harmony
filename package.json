@@ -1,8 +1,8 @@
 {
   "name": "@mattpolzin/harmony",
   "version": "4.0.0",
-  "engines" : { 
-    "node" : ">=18.0.0"
+  "engines": {
+    "node": ">=18.0.0"
   },
   "publishConfig": {
     "access": "public"
@@ -17,10 +17,12 @@
   "homepage": "https://github.com/mattpolzin/harmony#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mattpolzin/harmony.git"
+    "url": "git+https://github.com/mattpolzin/harmony.git"
   },
   "main": "harmony",
-  "bin": "./harmony",
+  "bin": {
+    "harmony": "harmony"
+  },
   "scripts": {},
   "author": "Mathew Polzin",
   "license": "MIT",
