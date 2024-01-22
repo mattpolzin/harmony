@@ -90,13 +90,13 @@
         sha512 = "oxeWzmBFxWd+XolxKTc4zr+h3mt+yofn4r7OfoIkR/Cj/o70eEGmPsFbueyJE2iBAGpjgTnEOKM3pnuEGVmiqg==";
       };
     };
-    "@octokit/core-5.0.2" = {
+    "@octokit/core-5.1.0" = {
       name = "_at_octokit_slash_core";
       packageName = "@octokit/core";
-      version = "5.0.2";
+      version = "5.1.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/core/-/core-5.0.2.tgz";
-        sha512 = "cZUy1gUvd4vttMic7C0lwPed8IYXWYp8kHIMatyhY8t8n3Cpw2ILczkV5pGMPqef7v0bLo0pOHrEHarsau2Ydg==";
+        url = "https://registry.npmjs.org/@octokit/core/-/core-5.1.0.tgz";
+        sha512 = "BDa2VAMLSh3otEiaMJ/3Y36GU4qf6GI+VivQ/P41NC6GHcdxpKlqV0ikSZ5gdQsmS3ojXeRx5vasgNTinF0Q4g==";
       };
     };
     "@octokit/endpoint-9.0.4" = {
@@ -279,13 +279,13 @@
         sha512 = "VRLSGzik+Unrup6BsouBeHsf4d1hOEgYWTm/7Nmw1sXoN1+tRly/Gy/po3yeahnP4jfnQWWAhQAqcNfH7ngOkA==";
       };
     };
-    "@types/node-20.11.3" = {
+    "@types/node-20.11.5" = {
       name = "_at_types_slash_node";
       packageName = "@types/node";
-      version = "20.11.3";
+      version = "20.11.5";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@types/node/-/node-20.11.3.tgz";
-        sha512 = "nrlmbvGPNGaj84IJZXMPhQuCMEVTT/hXZMJJG/aIqVL9fKxqk814sGGtJA4GI6hpJSLQjpi6cn0Qx9eOf9SDVg==";
+        url = "https://registry.npmjs.org/@types/node/-/node-20.11.5.tgz";
+        sha512 = "g557vgQjUUfN76MZAN/dt1z3dzcUsimuysco0KeluHgrPdJXkP/XdAURgyO2W9fZWHRtRBiVKzKn8vyOAwlG+w==";
       };
     };
     "aggregate-error-3.1.0" = {
@@ -598,7 +598,7 @@
   args = {
     name = "_at_mattpolzin_slash_harmony";
     packageName = "@mattpolzin/harmony";
-    version = "4.0.0";
+    version = "4.0.1";
     src = ./.;
     dependencies = [
       sources."@kwsites/file-exists-1.1.1"
@@ -610,7 +610,7 @@
       sources."@octokit/auth-oauth-user-4.0.1"
       sources."@octokit/auth-token-4.0.0"
       sources."@octokit/auth-unauthenticated-5.0.1"
-      sources."@octokit/core-5.0.2"
+      sources."@octokit/core-5.1.0"
       sources."@octokit/endpoint-9.0.4"
       sources."@octokit/graphql-7.0.2"
       sources."@octokit/oauth-app-6.0.0"
@@ -631,7 +631,7 @@
       sources."@types/aws-lambda-8.10.131"
       sources."@types/btoa-lite-1.0.2"
       sources."@types/jsonwebtoken-9.0.5"
-      sources."@types/node-20.11.3"
+      sources."@types/node-20.11.5"
       sources."aggregate-error-3.1.0"
       sources."before-after-hook-2.2.3"
       sources."bottleneck-2.19.5"
