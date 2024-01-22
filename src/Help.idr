@@ -99,7 +99,7 @@ subcommandHelp' n@"reflect" = subcommand n [] ["Reflect on the current state of 
 subcommandHelp' n@"list"    = subcommand n [argument True "<team-slug>"] ["List the members of the given GitHub Team."]
 subcommandHelp' n@"health"  = subcommand n [] ["Graph all open PRs grouped by the month they were created."]
 subcommandHelp' n@"assign"  = subcommand n [] [warning "Deprecated alias for 'request' command."]
--- TODO 0.5.0:     ^ remove deprecated command help
+-- TODO 5.0.0:     ^ remove deprecated command help
 subcommandHelp' c           = pretty "Unreconized command: \{c}"
 
 ||| Print help for a particular subcommand.
