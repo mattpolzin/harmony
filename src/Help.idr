@@ -115,7 +115,7 @@ helpDocs = vsep
   [ "harmony" <++> subcommand' "<subcommand>"
   , heading "Subcommands" $ vsep
       [ subcommandHelp' "assign"
-      -- TODO 0.5.0: ^ remove deprecated command help
+      -- TODO 5.0.0: ^ remove deprecated command help
       , subcommandHelp' "branch"
       , subcommandHelp' "config"
       , subcommandHelp' "contribute"
