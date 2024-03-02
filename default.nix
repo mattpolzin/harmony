@@ -13,24 +13,40 @@
 
   nodeDependencies = (callPackage ./node2nix.nix {inherit nodejs;}).nodeDependencies;
   idrisAddsVersion = "0.3.0";
+  elabUtilRev = "2fc2d188640ce6822b5e250db73b62f5a952ca4d";
+  idrisJsonRev = "2e54a37ed3c35c2d12c8927c923ad253355812a8";
+  idrisParserRev = "0fde36cf11c12a61edcfe09d585c5a60426bc706";
+
   idrisAddsSrc = fetchFromGitHub {
     owner = "mattpolzin";
     repo = "idris-adds";
     rev = "${idrisAddsVersion}";
     hash = "sha256-OSu381nUNZqFJs4HzmMxGda60k7xsa1GulQq7kU/R2o=";
   };
-  idrisAddsPkg = buildIdris {
-    ipkgName = "idris-adds";
-    version = idrisAddsVersion;
-    src = idrisAddsSrc;
-    idrisLibraries = [];
-  };
-  elabUtilRev = "2fc2d188640ce6822b5e250db73b62f5a952ca4d";
   elabUtilSrc = fetchFromGitHub {
     owner = "stefan-hoeck";
     repo = "idris2-elab-util";
     rev = "${elabUtilRev}";
     hash = "sha256-CYPrhB9y4CMk2Wiecpk+5isybcf3ZsbmaKdKOyo0JWk=";
+  };
+  idrisJsonSrc = fetchFromGitHub {
+    owner = "stefan-hoeck";
+    repo = "idris2-json";
+    rev = "${idrisJsonRev}";
+    hash = "sha256-+lwOdkovhOsvaSKH+jJY7uhr40JjXpUJ4ECR9qxZv14=";
+  };
+  idrisParserSrc = fetchFromGitHub {
+    owner = "stefan-hoeck";
+    repo = "idris2-parser";
+    rev = "${idrisParserRev}";
+    hash = "sha256-ShwVAUsobrwmuYszYld1RqlRUvnrACpyyqK2JKaIWYM=";
+  };
+
+  idrisAddsPkg = buildIdris {
+    ipkgName = "idris-adds";
+    version = idrisAddsVersion;
+    src = idrisAddsSrc;
+    idrisLibraries = [];
   };
   elabUtilPkg = buildIdris {
     ipkgName = "elab-util";
@@ -38,25 +54,11 @@
     src = elabUtilSrc;
     idrisLibraries = [];
   };
-  idrisJsonRev = "2e54a37ed3c35c2d12c8927c923ad253355812a8";
-  idrisJsonSrc = fetchFromGitHub {
-    owner = "stefan-hoeck";
-    repo = "idris2-json";
-    rev = "${idrisJsonRev}";
-    hash = "sha256-+lwOdkovhOsvaSKH+jJY7uhr40JjXpUJ4ECR9qxZv14=";
-  };
   idrisJsonPkg = buildIdris {
     ipkgName = "json";
     version = idrisJsonRev;
     src = idrisJsonSrc;
     idrisLibraries = libraries [elabUtilPkg idrisParserPkg idrisParserJsonPkg];
-  };
-  idrisParserRev = "0fde36cf11c12a61edcfe09d585c5a60426bc706";
-  idrisParserSrc = fetchFromGitHub {
-    owner = "stefan-hoeck";
-    repo = "idris2-parser";
-    rev = "${idrisParserRev}";
-    hash = "sha256-ShwVAUsobrwmuYszYld1RqlRUvnrACpyyqK2JKaIWYM=";
   };
   idrisParserPkg = buildIdris {
     ipkgName = "parser";
