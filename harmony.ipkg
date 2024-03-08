@@ -1,5 +1,5 @@
 package harmony
-version = 4.0.2
+version = 4.1.0
 authors = "Mathew Polzin"
 license = "MIT"
 brief = "Harmony GitHub collaboration tool"

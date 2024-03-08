@@ -598,7 +598,7 @@
   args = {
     name = "_at_mattpolzin_slash_harmony";
     packageName = "@mattpolzin/harmony";
-    version = "4.0.2";
+    version = "4.1.0";
     src = ./.;
     dependencies = [
       sources."@kwsites/file-exists-1.1.1"
