@@ -1,5 +1,5 @@
 package harmony
-version = 4.0.1
+version = 4.0.2
 authors = "Mathew Polzin"
 license = "MIT"
 brief = "Harmony GitHub collaboration tool"
@@ -11,7 +11,7 @@ bugtracker = "https://github.com/mattpolzin/harmony/issues"
 langversion >= 0.7.0
 
 depends = contrib
-        , idris-adds >= 0.3.0
+        , idris-adds >= 0.4.0
         , elab-util >= 0.1.0
         , parser >= 0.1.0
         , parser-json >= 0.1.0
