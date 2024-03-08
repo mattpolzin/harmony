@@ -137,8 +137,12 @@ handleAuthenticatedArgs ("assign" :: requestRest) = do
   printWarning "The 'assign' command is a deprecated alias for the new 'request' command."
   Commands.request requestRest
 
+handleAuthenticatedArgs ("rq" :: "--dry" :: requestRest) =
+  Commands.request requestRest {dry=True}
 handleAuthenticatedArgs ("request" :: "--dry" :: requestRest) =
   Commands.request requestRest {dry=True}
+handleAuthenticatedArgs ("rq" :: requestRest) =
+  Commands.request requestRest
 handleAuthenticatedArgs ("request" :: requestRest) =
   Commands.request requestRest
 handleAuthenticatedArgs ["label"] =
