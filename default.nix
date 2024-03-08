@@ -12,7 +12,7 @@
   libraries = map (p: p.library {});
 
   nodeDependencies = (callPackage ./node2nix.nix {inherit nodejs;}).nodeDependencies;
-  idrisAddsVersion = "0.4.0";
+  idrisAddsVersion = "0.4.1";
   elabUtilRev = "2fc2d188640ce6822b5e250db73b62f5a952ca4d";
   idrisJsonRev = "2e54a37ed3c35c2d12c8927c923ad253355812a8";
   idrisParserRev = "0fde36cf11c12a61edcfe09d585c5a60426bc706";
@@ -21,7 +21,7 @@
     owner = "mattpolzin";
     repo = "idris-adds";
     rev = "${idrisAddsVersion}";
-    hash = "sha256-GzT31/8Mldn9feDKg/C5LfMYVWHV+FYZJPJo2li0fbE=";
+    hash = "sha256-WEr6oRZ8+50G1qv7Kv62M4DRsgAa6x1BCODC1vDOQUY=";
   };
   elabUtilSrc = fetchFromGitHub {
     owner = "stefan-hoeck";

@@ -1,7 +1,7 @@
 
 idris2 ?= idris2
 
-idris-adds-version = 0.4.0
+idris-adds-version = 0.4.1
 idris-json-version = 0.5.0
 idris-json-hash    = 2e54a37ed3c35c2d12c8927c923ad253355812a8
 idris-elab-util-version = 0.6.0
