@@ -46,6 +46,8 @@ Subcommands:
       these additional users by prefixing their logins with '+'.
 
       Optionally apply any number of labels by prefixing them with '#'.
+  rq 
+      Alias for 'request' command.
   sync 
       Synchronize local config with information from GitHub.
   version 
