@@ -9,6 +9,7 @@ import Data.String
 
 allRootCmds : List String
 allRootCmds = [ "request"
+              , "rq"
               , "assign" -- TODO 5.0.0: <- remove this alias for the deprecated assign command.
               , "branch"
               , "config"
@@ -118,6 +119,24 @@ cmdOpts "graph" partialArg _ =
 -- anything else requires configuration being loaded
 cmdOpts _ _ _ = Nothing
 
+
+optsForRequestCmd : Config => String -> List String
+optsForRequestCmd @{config} partialArg =
+  if partialArg `isPrefixOf` "--dry"
+     then ["--dry"]
+     else slugsOrLoginsOrLabels
+  where
+    -- If the word being typed is prefixed with '+' return user logins
+    -- but otherwise return team slugs. 
+    slugsOrLoginsOrLabels : List String
+    slugsOrLoginsOrLabels =
+      if "+" `isPrefixOf` partialArg
+        then (strCons '+') <$> config.orgMembers
+        else if isHashPrefix partialArg
+               then hashify . slugify <$> config.repoLabels
+               else config.teamSlugs
+
+
 export
 opts : Config => (subcommand : String) -> (curWord : String) -> (prevWord : String) -> List String
 -- we assume we are not handling a root command (see @cmdOpts@ which
@@ -156,41 +175,21 @@ opts @{config} "pr" partialArg _ =
 --             for the deprecated assign command.
 opts @{config} "assign" "--" "assign" = "--dry" :: config.teamSlugs
 opts @{config} "assign" "--" _ = config.teamSlugs
-opts @{config} "assign" partialArg _ =
-  if partialArg `isPrefixOf` "--dry"
-     then ["--dry"]
-     else slugsOrLoginsOrLabels
-  where
-    -- If the word being typed is prefixed with '+' return user logins
-    -- but otherwise return team slugs. 
-    slugsOrLoginsOrLabels : List String
-    slugsOrLoginsOrLabels =
-      if "+" `isPrefixOf` partialArg
-        then (strCons '+') <$> config.orgMembers
-        else if isHashPrefix partialArg
-               then hashify . slugify <$> config.repoLabels
-               else config.teamSlugs
+opts           "assign" partialArg _ =
+  optsForRequestCmd partialArg
 
 -- finally, request auto-completes with 
 -- either a team slug or '+' followed by a user login:
+opts @{config} "rq"      "--" "rq"      = "--dry" :: config.teamSlugs
 opts @{config} "request" "--" "request" = "--dry" :: config.teamSlugs
+opts @{config} "rq"      "--" _ = config.teamSlugs
 opts @{config} "request" "--" _ = config.teamSlugs
-opts @{config} "request" partialArg _ =
-  if partialArg `isPrefixOf` "--dry"
-     then ["--dry"]
-     else slugsOrLoginsOrLabels
-  where
-    -- If the word being typed is prefixed with '+' return user logins
-    -- but otherwise return team slugs. 
-    slugsOrLoginsOrLabels : List String
-    slugsOrLoginsOrLabels =
-      if "+" `isPrefixOf` partialArg
-        then (strCons '+') <$> config.orgMembers
-        else if isHashPrefix partialArg
-               then hashify . slugify <$> config.repoLabels
-               else config.teamSlugs
+opts           "rq"      partialArg _ =
+  optsForRequestCmd partialArg
+opts           "request" partialArg _ =
+  optsForRequestCmd partialArg
 
-opts @{_} _ _ _ = []
+opts _ _ _ = []
 
 ||| The Bash Completion script calls to harmony with a special --bash-completion
 ||| flag and passes harmony the subcommand (i.e. first argument after harmony),

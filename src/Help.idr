@@ -98,6 +98,7 @@ subcommandHelp' n@"whoami"  = subcommand n [] ["Print information about the conf
 subcommandHelp' n@"reflect" = subcommand n [] ["Reflect on the current state of ones own PRs and review requests."]
 subcommandHelp' n@"list"    = subcommand n [argument True "<team-slug>"] ["List the members of the given GitHub Team."]
 subcommandHelp' n@"health"  = subcommand n [] ["Graph all open PRs grouped by the month they were created."]
+subcommandHelp' n@"rq"      = subcommand n [] ["Alias for 'request' command."]
 subcommandHelp' n@"assign"  = subcommand n [] [warning "Deprecated alias for 'request' command."]
 -- TODO 5.0.0:     ^ remove deprecated command help
 subcommandHelp' c           = pretty "Unreconized command: \{c}"
@@ -127,6 +128,7 @@ helpDocs = vsep
       , subcommandHelp' "pr"
       , subcommandHelp' "reflect"
       , subcommandHelp' "request"
+      , subcommandHelp' "rq"
       , subcommandHelp' "sync"
       , subcommandHelp' "version"
       , subcommandHelp' "whoami"

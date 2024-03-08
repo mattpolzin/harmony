@@ -142,6 +142,8 @@ Note that labels are _not_ prefixed with '#' for this command. There is no need 
 ### Request
 Running `harmony request {<team> | +<user>} [#<label>] [...]` will help you create a PR if one does not exist yet and then it will request reviews from teams and/or users.
 
+There is also a `harmony rq` alias for `harmony request`.
+
 If `harmony config requestUsers` is `True` (defualt) then harmony will pick someone to review the PR (from one of the listed teams). If `harmony config requestTeams` is `True` (default) then harmony will request reviews from the teams you listed. If `harmony config commentOnRequest` is `True` then harmony will comment on the Pull Request indicating that teams & users were "harmoniously requested" -- this comment will @mention requested users so it may be useful or annoying depending on the requested user's GitHub notification settings.
 
 You can also require that specific additional users (on top of the one Harmony will pick for you) are requested to review the PR. You do this by specifying those users' logins prefixed with '+' as arguments to Harmony. This will request review from those specific additional users regardless of the `requestUsers` setting; that setting controls whether Harmony picks users from each Team you specify to review PRs.
