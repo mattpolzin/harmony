@@ -2,13 +2,14 @@
   callPackage,
   fetchFromGitHub,
   git,
-  buildIdris,
+  idris2Packages,
   lib,
   installShellFiles,
   makeWrapper,
   nodejs,
   stdenv,
 }: let
+  inherit (idris2Packages) buildIdris;
   libraries = map (p: p.library {});
 
   nodeDependencies = (callPackage ./node2nix.nix {inherit nodejs;}).nodeDependencies;
