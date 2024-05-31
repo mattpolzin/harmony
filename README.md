@@ -118,6 +118,7 @@ Not all configuration properties can be read/set with this command.
 - `requestUsers` (`true`/`false`) -- When requesting a team as a reviewer, pick a user to review as well.
 - `commentOnRequest` (`true`/`false`) -- When requesting a reviewer chosen by Harmony, comment on the pull request.
 - `defaultRemote` (optional string) -- When pushing new branches, what remote destination should be used.
+- `mainBranch` (optional string) -- When creating a PR, this is the default base branch.
 - `githubPAT` (optional string) -- If the `$GITHUB_PAT` environment variable is not set, this Personal Access Token is used to authenticate with GitHub.
 
 ### Branch
