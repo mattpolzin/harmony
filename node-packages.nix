@@ -27,49 +27,49 @@
         sha512 = "GaHYm+c0O9MjZRu0ongGBRbinu8gVAMd2UZjji6jVmqKtZluZnptXGWhz1E8j8D2HJ3f/yMxKAUC0b+57wncIw==";
       };
     };
-    "@octokit/app-14.0.2" = {
+    "@octokit/app-14.1.0" = {
       name = "_at_octokit_slash_app";
       packageName = "@octokit/app";
-      version = "14.0.2";
+      version = "14.1.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/app/-/app-14.0.2.tgz";
-        sha512 = "NCSCktSx+XmjuSUVn2dLfqQ9WIYePGP95SDJs4I9cn/0ZkeXcPkaoCLl64Us3dRKL2ozC7hArwze5Eu+/qt1tg==";
+        url = "https://registry.npmjs.org/@octokit/app/-/app-14.1.0.tgz";
+        sha512 = "g3uEsGOQCBl1+W1rgfwoRFUIR6PtvB2T1E4RpygeUU5LrLvlOqcxrt5lfykIeRpUPpupreGJUYl70fqMDXdTpw==";
       };
     };
-    "@octokit/auth-app-6.0.4" = {
+    "@octokit/auth-app-6.1.1" = {
       name = "_at_octokit_slash_auth-app";
       packageName = "@octokit/auth-app";
-      version = "6.0.4";
+      version = "6.1.1";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/auth-app/-/auth-app-6.0.4.tgz";
-        sha512 = "TPmJYgd05ok3nzHj7Y6we/V7Ez1wU3ztLFW3zo/afgYFtqYZg0W7zb6Kp5ag6E85r8nCE1JfS6YZoZusa14o9g==";
+        url = "https://registry.npmjs.org/@octokit/auth-app/-/auth-app-6.1.1.tgz";
+        sha512 = "VrTtzRpyuT5nYGUWeGWQqH//hqEZDV+/yb6+w5wmWpmmUA1Tx950XsAc2mBBfvusfcdF2E7w8jZ1r1WwvfZ9pA==";
       };
     };
-    "@octokit/auth-oauth-app-7.0.1" = {
+    "@octokit/auth-oauth-app-7.1.0" = {
       name = "_at_octokit_slash_auth-oauth-app";
       packageName = "@octokit/auth-oauth-app";
-      version = "7.0.1";
+      version = "7.1.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/auth-oauth-app/-/auth-oauth-app-7.0.1.tgz";
-        sha512 = "RE0KK0DCjCHXHlQBoubwlLijXEKfhMhKm9gO56xYvFmP1QTMb+vvwRPmQLLx0V+5AvV9N9I3lr1WyTzwL3rMDg==";
+        url = "https://registry.npmjs.org/@octokit/auth-oauth-app/-/auth-oauth-app-7.1.0.tgz";
+        sha512 = "w+SyJN/b0l/HEb4EOPRudo7uUOSW51jcK1jwLa+4r7PA8FPFpoxEnHBHMITqCsc/3Vo2qqFjgQfz/xUUvsSQnA==";
       };
     };
-    "@octokit/auth-oauth-device-6.0.1" = {
+    "@octokit/auth-oauth-device-6.1.0" = {
       name = "_at_octokit_slash_auth-oauth-device";
       packageName = "@octokit/auth-oauth-device";
-      version = "6.0.1";
+      version = "6.1.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/auth-oauth-device/-/auth-oauth-device-6.0.1.tgz";
-        sha512 = "yxU0rkL65QkjbqQedgVx3gmW7YM5fF+r5uaSj9tM/cQGVqloXcqP2xK90eTyYvl29arFVCW8Vz4H/t47mL0ELw==";
+        url = "https://registry.npmjs.org/@octokit/auth-oauth-device/-/auth-oauth-device-6.1.0.tgz";
+        sha512 = "FNQ7cb8kASufd6Ej4gnJ3f1QB5vJitkoV1O0/g6e6lUsQ7+VsSNRHRmFScN2tV4IgKA12frrr/cegUs0t+0/Lw==";
       };
     };
-    "@octokit/auth-oauth-user-4.0.1" = {
+    "@octokit/auth-oauth-user-4.1.0" = {
       name = "_at_octokit_slash_auth-oauth-user";
       packageName = "@octokit/auth-oauth-user";
-      version = "4.0.1";
+      version = "4.1.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/auth-oauth-user/-/auth-oauth-user-4.0.1.tgz";
-        sha512 = "N94wWW09d0hleCnrO5wt5MxekatqEJ4zf+1vSe8MKMrhZ7gAXKFOKrDEZW2INltvBWJCyDUELgGRv8gfErH1Iw==";
+        url = "https://registry.npmjs.org/@octokit/auth-oauth-user/-/auth-oauth-user-4.1.0.tgz";
+        sha512 = "FrEp8mtFuS/BrJyjpur+4GARteUCrPeR/tZJzD8YourzoVhRics7u7we/aDcKv+yywRNwNi/P4fRi631rG/OyQ==";
       };
     };
     "@octokit/auth-token-4.0.0" = {
@@ -90,31 +90,31 @@
         sha512 = "oxeWzmBFxWd+XolxKTc4zr+h3mt+yofn4r7OfoIkR/Cj/o70eEGmPsFbueyJE2iBAGpjgTnEOKM3pnuEGVmiqg==";
       };
     };
-    "@octokit/core-5.1.0" = {
+    "@octokit/core-5.2.0" = {
       name = "_at_octokit_slash_core";
       packageName = "@octokit/core";
-      version = "5.1.0";
+      version = "5.2.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/core/-/core-5.1.0.tgz";
-        sha512 = "BDa2VAMLSh3otEiaMJ/3Y36GU4qf6GI+VivQ/P41NC6GHcdxpKlqV0ikSZ5gdQsmS3ojXeRx5vasgNTinF0Q4g==";
+        url = "https://registry.npmjs.org/@octokit/core/-/core-5.2.0.tgz";
+        sha512 = "1LFfa/qnMQvEOAdzlQymH0ulepxbxnCYAKJZfMci/5XJyIHWgEYnDmgnKakbTh7CH2tFQ5O60oYDvns4i9RAIg==";
       };
     };
-    "@octokit/endpoint-9.0.4" = {
+    "@octokit/endpoint-9.0.5" = {
       name = "_at_octokit_slash_endpoint";
       packageName = "@octokit/endpoint";
-      version = "9.0.4";
+      version = "9.0.5";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/endpoint/-/endpoint-9.0.4.tgz";
-        sha512 = "DWPLtr1Kz3tv8L0UvXTDP1fNwM0S+z6EJpRcvH66orY6Eld4XBMCSYsaWp4xIm61jTWxK68BrR7ibO+vSDnZqw==";
+        url = "https://registry.npmjs.org/@octokit/endpoint/-/endpoint-9.0.5.tgz";
+        sha512 = "ekqR4/+PCLkEBF6qgj8WqJfvDq65RH85OAgrtnVp1mSxaXF03u2xW/hUdweGS5654IlC0wkNYC18Z50tSYTAFw==";
       };
     };
-    "@octokit/graphql-7.0.2" = {
+    "@octokit/graphql-7.1.0" = {
       name = "_at_octokit_slash_graphql";
       packageName = "@octokit/graphql";
-      version = "7.0.2";
+      version = "7.1.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/graphql/-/graphql-7.0.2.tgz";
-        sha512 = "OJ2iGMtj5Tg3s6RaXH22cJcxXRi7Y3EBqbHTBRq+PQAqfaS8f/236fUrWhfSn8P4jovyzqucxme7/vWSSZBX2Q==";
+        url = "https://registry.npmjs.org/@octokit/graphql/-/graphql-7.1.0.tgz";
+        sha512 = "r+oZUH7aMFui1ypZnAvZmn0KSqAUgE1/tUXIWaqUCa1758ts/Jio84GZuzsvUkme98kv0WFY8//n0J1Z+vsIsQ==";
       };
     };
     "@octokit/oauth-app-6.1.0" = {
@@ -135,13 +135,13 @@
         sha512 = "CdoJukjXXxqLNK4y/VOiVzQVjibqoj/xHgInekviUJV73y/BSIcwvJ/4aNHPBPKcPWFnd4/lO9uqRV65jXhcLA==";
       };
     };
-    "@octokit/oauth-methods-4.0.1" = {
+    "@octokit/oauth-methods-4.1.0" = {
       name = "_at_octokit_slash_oauth-methods";
       packageName = "@octokit/oauth-methods";
-      version = "4.0.1";
+      version = "4.1.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/oauth-methods/-/oauth-methods-4.0.1.tgz";
-        sha512 = "1NdTGCoBHyD6J0n2WGXg9+yDLZrRNZ0moTEex/LSPr49m530WNKcCfXDghofYptr3st3eTii+EHoG5k/o+vbtw==";
+        url = "https://registry.npmjs.org/@octokit/oauth-methods/-/oauth-methods-4.1.0.tgz";
+        sha512 = "4tuKnCRecJ6CG6gr0XcEXdZtkTDbfbnD5oaHBmLERTjTMZNi2CbfEHZxPU41xXLDG4DfKf+sonu00zvKI9NSbw==";
       };
     };
     "@octokit/openapi-types-20.0.0" = {
@@ -153,6 +153,15 @@
         sha512 = "EtqRBEjp1dL/15V7WiX5LJMIxxkdiGJnabzYx5Apx4FkQIFgAfKumXeYAqqJCj1s+BMX4cPFIFC4OLCR6stlnA==";
       };
     };
+    "@octokit/openapi-types-22.2.0" = {
+      name = "_at_octokit_slash_openapi-types";
+      packageName = "@octokit/openapi-types";
+      version = "22.2.0";
+      src = fetchurl {
+        url = "https://registry.npmjs.org/@octokit/openapi-types/-/openapi-types-22.2.0.tgz";
+        sha512 = "QBhVjcUa9W7Wwhm6DBFu6ZZ+1/t/oYxqc2tp81Pi41YNuJinbFRx8B133qVOrAaBbF7D/m0Et6f9/pZt9Rc+tg==";
+      };
+    };
     "@octokit/plugin-paginate-graphql-4.0.1" = {
       name = "_at_octokit_slash_plugin-paginate-graphql";
       packageName = "@octokit/plugin-paginate-graphql";
@@ -160,6 +169,15 @@
       src = fetchurl {
         url = "https://registry.npmjs.org/@octokit/plugin-paginate-graphql/-/plugin-paginate-graphql-4.0.1.tgz";
         sha512 = "R8ZQNmrIKKpHWC6V2gum4x9LG2qF1RxRjo27gjQcG3j+vf2tLsEfE7I/wRWEPzYMaenr1M+qDAtNcwZve1ce1A==";
+      };
+    };
+    "@octokit/plugin-paginate-rest-11.3.1" = {
+      name = "_at_octokit_slash_plugin-paginate-rest";
+      packageName = "@octokit/plugin-paginate-rest";
+      version = "11.3.1";
+      src = fetchurl {
+        url = "https://registry.npmjs.org/@octokit/plugin-paginate-rest/-/plugin-paginate-rest-11.3.1.tgz";
+        sha512 = "ryqobs26cLtM1kQxqeZui4v8FeznirUsksiA+RYemMPJ7Micju0WSkv50dBksTuZks9O5cg4wp+t8fZ/cLY56g==";
       };
     };
     "@octokit/plugin-paginate-rest-9.2.1" = {
@@ -171,13 +189,13 @@
         sha512 = "wfGhE/TAkXZRLjksFXuDZdmGnJQHvtU/joFQdweXUgzo1XwvBCD4o4+75NtFfjfLK5IwLf9vHTfSiU3sLRYpRw==";
       };
     };
-    "@octokit/plugin-rest-endpoint-methods-10.4.1" = {
+    "@octokit/plugin-rest-endpoint-methods-13.2.2" = {
       name = "_at_octokit_slash_plugin-rest-endpoint-methods";
       packageName = "@octokit/plugin-rest-endpoint-methods";
-      version = "10.4.1";
+      version = "13.2.2";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/plugin-rest-endpoint-methods/-/plugin-rest-endpoint-methods-10.4.1.tgz";
-        sha512 = "xV1b+ceKV9KytQe3zCVqjg+8GTGfDYwaT1ATU5isiUyVtlVAO3HNdzpS4sr4GBx4hxQ46s7ITtZrAsxG22+rVg==";
+        url = "https://registry.npmjs.org/@octokit/plugin-rest-endpoint-methods/-/plugin-rest-endpoint-methods-13.2.2.tgz";
+        sha512 = "EI7kXWidkt3Xlok5uN43suK99VWqc8OaIMktY9d9+RNKl69juoTyxmLoWPIZgJYzi41qj/9zU7G/ljnNOJ5AFA==";
       };
     };
     "@octokit/plugin-retry-6.0.1" = {
@@ -198,22 +216,22 @@
         sha512 = "nOpWtLayKFpgqmgD0y3GqXafMFuKcA4tRPZIfu7BArd2lEZeb1988nhWhwx4aZWmjDmUfdgVf7W+Tt4AmvRmMQ==";
       };
     };
-    "@octokit/request-8.2.0" = {
+    "@octokit/request-8.4.0" = {
       name = "_at_octokit_slash_request";
       packageName = "@octokit/request";
-      version = "8.2.0";
+      version = "8.4.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/request/-/request-8.2.0.tgz";
-        sha512 = "exPif6x5uwLqv1N1irkLG1zZNJkOtj8bZxuVHd71U5Ftuxf2wGNvAJyNBcPbPC+EBzwYEbBDdSFb8EPcjpYxPQ==";
+        url = "https://registry.npmjs.org/@octokit/request/-/request-8.4.0.tgz";
+        sha512 = "9Bb014e+m2TgBeEJGEbdplMVWwPmL1FPtggHQRkV+WVsMggPtEkLKPlcVYm/o8xKLkpJ7B+6N8WfQMtDLX2Dpw==";
       };
     };
-    "@octokit/request-error-5.0.1" = {
+    "@octokit/request-error-5.1.0" = {
       name = "_at_octokit_slash_request-error";
       packageName = "@octokit/request-error";
-      version = "5.0.1";
+      version = "5.1.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/request-error/-/request-error-5.0.1.tgz";
-        sha512 = "X7pnyTMV7MgtGmiXBwmO6M5kIPrntOXdyKZLigNfQWSEQzVxR4a4vo49vJjTWX70mPndj8KhfT4Dx+2Ng3vnBQ==";
+        url = "https://registry.npmjs.org/@octokit/request-error/-/request-error-5.1.0.tgz";
+        sha512 = "GETXfE05J0+7H2STzekpKObFe765O5dlAKUTLNGeH+x47z7JjXHfsHKo5z21D/o/IOZTUEI6nyWyR+bZVP/n5Q==";
       };
     };
     "@octokit/types-12.6.0" = {
@@ -225,13 +243,22 @@
         sha512 = "1rhSOfRa6H9w4YwK0yrf5faDaDTb+yLyBUKOCV4xtCDB5VmIPqd/v9yr9o6SAzOAlRxMiRiCic6JVM1/kunVkw==";
       };
     };
-    "@octokit/webhooks-12.1.2" = {
+    "@octokit/types-13.5.0" = {
+      name = "_at_octokit_slash_types";
+      packageName = "@octokit/types";
+      version = "13.5.0";
+      src = fetchurl {
+        url = "https://registry.npmjs.org/@octokit/types/-/types-13.5.0.tgz";
+        sha512 = "HdqWTf5Z3qwDVlzCrP8UJquMwunpDiMPt5er+QjGzL4hqr/vBVY/MauQgS1xWxCDT1oMx1EULyqxncdCY/NVSQ==";
+      };
+    };
+    "@octokit/webhooks-12.2.0" = {
       name = "_at_octokit_slash_webhooks";
       packageName = "@octokit/webhooks";
-      version = "12.1.2";
+      version = "12.2.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/webhooks/-/webhooks-12.1.2.tgz";
-        sha512 = "+nGS3ReCByF6m+nbNB59x7Aa3CNjCCGuBLFzfkiJP1O3uVKKuJbkP4uO4t46YqH26nlugmOhqjT7nx5D0VPtdA==";
+        url = "https://registry.npmjs.org/@octokit/webhooks/-/webhooks-12.2.0.tgz";
+        sha512 = "CyuLJ0/P7bKZ+kIYw+fnkeVdhUzNuDKgNSI7pU/m7Nod0T7kP+s4s2f0pNmG9HL8/RZN1S0ZWTDll3VTMrFLAw==";
       };
     };
     "@octokit/webhooks-methods-4.1.0" = {
@@ -243,22 +270,22 @@
         sha512 = "zoQyKw8h9STNPqtm28UGOYFE7O6D4Il8VJwhAtMHFt2C4L0VQT1qGKLeefUOqHNs1mNRYSadVv7x0z8U2yyeWQ==";
       };
     };
-    "@octokit/webhooks-types-7.3.2" = {
+    "@octokit/webhooks-types-7.4.0" = {
       name = "_at_octokit_slash_webhooks-types";
       packageName = "@octokit/webhooks-types";
-      version = "7.3.2";
+      version = "7.4.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@octokit/webhooks-types/-/webhooks-types-7.3.2.tgz";
-        sha512 = "JWOoOgtWTFnTSAamPXXyjTY5/apttvNxF+vPBnwdSu5cj5snrd7FO0fyw4+wTXy8fHduq626JjhO+TwCyyA6vA==";
+        url = "https://registry.npmjs.org/@octokit/webhooks-types/-/webhooks-types-7.4.0.tgz";
+        sha512 = "FE2V+QZ2UYlh+9wWd5BPLNXG+J/XUD/PPq0ovS+nCcGX4+3qVbi3jYOmCTW48hg9SBBLtInx9+o7fFt4H5iP0Q==";
       };
     };
-    "@types/aws-lambda-8.10.136" = {
+    "@types/aws-lambda-8.10.138" = {
       name = "_at_types_slash_aws-lambda";
       packageName = "@types/aws-lambda";
-      version = "8.10.136";
+      version = "8.10.138";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@types/aws-lambda/-/aws-lambda-8.10.136.tgz";
-        sha512 = "cmmgqxdVGhxYK9lZMYYXYRJk6twBo53ivtXjIUEFZxfxe4TkZTZBK3RRWrY2HjJcUIix0mdifn15yjOAat5lTA==";
+        url = "https://registry.npmjs.org/@types/aws-lambda/-/aws-lambda-8.10.138.tgz";
+        sha512 = "71EHMl70TPWIAsFuHd85NHq6S6T2OOjiisPTrH7RgcjzpJpPh4RQJv7PvVvIxc6PIp8CLV7F9B+TdjcAES5vcA==";
       };
     };
     "@types/btoa-lite-1.0.2" = {
@@ -279,13 +306,13 @@
         sha512 = "/5hndP5dCjloafCXns6SZyESp3Ldq7YjH3zwzwczYnjxIT0Fqzk5ROSYVGfFyczIue7IUEj8hkvLbPoLQ18vQw==";
       };
     };
-    "@types/node-20.11.25" = {
+    "@types/node-20.12.13" = {
       name = "_at_types_slash_node";
       packageName = "@types/node";
-      version = "20.11.25";
+      version = "20.12.13";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@types/node/-/node-20.11.25.tgz";
-        sha512 = "TBHyJxk2b7HceLVGFcpAUjsa5zIdsPWlR6XHfyGzd0SFu+/NFgQgMAl96MSDZgQDvJAvV6BKsFOrt6zIL09JDw==";
+        url = "https://registry.npmjs.org/@types/node/-/node-20.12.13.tgz";
+        sha512 = "gBGeanV41c1L171rR7wjbMiEpEI/l5XFQdLLfhr/REwpgDy/4U8y89+i8kRiLzDyZdOkXh+cRaTetUnCYutoXA==";
       };
     };
     "aggregate-error-3.1.0" = {
@@ -468,22 +495,13 @@
         sha512 = "Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==";
       };
     };
-    "lru-cache-10.2.0" = {
+    "lru-cache-10.2.2" = {
       name = "lru-cache";
       packageName = "lru-cache";
-      version = "10.2.0";
+      version = "10.2.2";
       src = fetchurl {
-        url = "https://registry.npmjs.org/lru-cache/-/lru-cache-10.2.0.tgz";
-        sha512 = "2bIM8x+VAf6JT4bKAljS1qUWgMsqZRPGJS6FSahIMPVvctcNhyVp7AJu7quxOW9jwkryBReKZY5tY5JYv2n/7Q==";
-      };
-    };
-    "lru-cache-6.0.0" = {
-      name = "lru-cache";
-      packageName = "lru-cache";
-      version = "6.0.0";
-      src = fetchurl {
-        url = "https://registry.npmjs.org/lru-cache/-/lru-cache-6.0.0.tgz";
-        sha512 = "Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==";
+        url = "https://registry.npmjs.org/lru-cache/-/lru-cache-10.2.2.tgz";
+        sha512 = "9hp3Vp2/hFQUiIwKo8XCeFVnrg8Pk3TYNPIR7tJADKi5YfcF7vEaK7avFHTlSy3kOKYaJQaalfEo6YuXdceBOQ==";
       };
     };
     "ms-2.1.2" = {
@@ -504,13 +522,13 @@
         sha512 = "6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==";
       };
     };
-    "octokit-3.1.2" = {
+    "octokit-3.2.1" = {
       name = "octokit";
       packageName = "octokit";
-      version = "3.1.2";
+      version = "3.2.1";
       src = fetchurl {
-        url = "https://registry.npmjs.org/octokit/-/octokit-3.1.2.tgz";
-        sha512 = "MG5qmrTL5y8KYwFgE1A4JWmgfQBaIETE/lOlfwNYx1QOtCQHGVxkRJmdUJltFc1HVn73d61TlMhMyNTOtMl+ng==";
+        url = "https://registry.npmjs.org/octokit/-/octokit-3.2.1.tgz";
+        sha512 = "u+XuSejhe3NdIvty3Jod00JvTdAE/0/+XbhIDhefHbu+2OcTRHd80aCiH6TX19ZybJmwPQBKFQmHGxp0i9mJrg==";
       };
     };
     "once-1.4.0" = {
@@ -531,22 +549,22 @@
         sha512 = "rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==";
       };
     };
-    "semver-7.6.0" = {
+    "semver-7.6.2" = {
       name = "semver";
       packageName = "semver";
-      version = "7.6.0";
+      version = "7.6.2";
       src = fetchurl {
-        url = "https://registry.npmjs.org/semver/-/semver-7.6.0.tgz";
-        sha512 = "EnwXhrlwXMk9gKu5/flx5sv/an57AkRplG3hTK68W7FRDN+k+OWBj65M7719OkA82XLBxrcX0KSHj+X5COhOVg==";
+        url = "https://registry.npmjs.org/semver/-/semver-7.6.2.tgz";
+        sha512 = "FNAIBWCx9qcRhoHcgcJ0gvU7SN1lYU2ZXuSfl04bSC5OpvDHFyJCjdNHomPXxjQlCBU67YW64PzY7/VIEH7F2w==";
       };
     };
-    "simple-git-3.22.0" = {
+    "simple-git-3.24.0" = {
       name = "simple-git";
       packageName = "simple-git";
-      version = "3.22.0";
+      version = "3.24.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/simple-git/-/simple-git-3.22.0.tgz";
-        sha512 = "6JujwSs0ac82jkGjMHiCnTifvf1crOiY/+tfs/Pqih6iow7VrpNKRRNdWm6RtaXpvvv/JGNYhlUtLhGFqHF+Yw==";
+        url = "https://registry.npmjs.org/simple-git/-/simple-git-3.24.0.tgz";
+        sha512 = "QqAKee9Twv+3k8IFOFfPB2hnk6as6Y6ACUpwCtQvRYBAes23Wv3SZlHVobAzqcE8gfsisCvPw3HGW3HYM+VYYw==";
       };
     };
     "undici-types-5.26.5" = {
@@ -585,53 +603,70 @@
         sha512 = "l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==";
       };
     };
-    "yallist-4.0.0" = {
-      name = "yallist";
-      packageName = "yallist";
-      version = "4.0.0";
-      src = fetchurl {
-        url = "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz";
-        sha512 = "3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==";
-      };
-    };
   };
   args = {
     name = "_at_mattpolzin_slash_harmony";
     packageName = "@mattpolzin/harmony";
-    version = "4.1.0";
+    version = "4.2.0";
     src = ./.;
     dependencies = [
       sources."@kwsites/file-exists-1.1.1"
       sources."@kwsites/promise-deferred-1.1.1"
-      sources."@octokit/app-14.0.2"
-      sources."@octokit/auth-app-6.0.4"
-      sources."@octokit/auth-oauth-app-7.0.1"
-      sources."@octokit/auth-oauth-device-6.0.1"
-      sources."@octokit/auth-oauth-user-4.0.1"
+      (sources."@octokit/app-14.1.0"
+        // {
+          dependencies = [
+            sources."@octokit/plugin-paginate-rest-9.2.1"
+            sources."@octokit/types-12.6.0"
+          ];
+        })
+      sources."@octokit/auth-app-6.1.1"
+      sources."@octokit/auth-oauth-app-7.1.0"
+      sources."@octokit/auth-oauth-device-6.1.0"
+      sources."@octokit/auth-oauth-user-4.1.0"
       sources."@octokit/auth-token-4.0.0"
-      sources."@octokit/auth-unauthenticated-5.0.1"
-      sources."@octokit/core-5.1.0"
-      sources."@octokit/endpoint-9.0.4"
-      sources."@octokit/graphql-7.0.2"
+      (sources."@octokit/auth-unauthenticated-5.0.1"
+        // {
+          dependencies = [
+            sources."@octokit/types-12.6.0"
+          ];
+        })
+      sources."@octokit/core-5.2.0"
+      sources."@octokit/endpoint-9.0.5"
+      sources."@octokit/graphql-7.1.0"
       sources."@octokit/oauth-app-6.1.0"
       sources."@octokit/oauth-authorization-url-6.0.2"
-      sources."@octokit/oauth-methods-4.0.1"
+      sources."@octokit/oauth-methods-4.1.0"
       sources."@octokit/openapi-types-20.0.0"
       sources."@octokit/plugin-paginate-graphql-4.0.1"
-      sources."@octokit/plugin-paginate-rest-9.2.1"
-      sources."@octokit/plugin-rest-endpoint-methods-10.4.1"
-      sources."@octokit/plugin-retry-6.0.1"
-      sources."@octokit/plugin-throttling-8.2.0"
-      sources."@octokit/request-8.2.0"
-      sources."@octokit/request-error-5.0.1"
-      sources."@octokit/types-12.6.0"
-      sources."@octokit/webhooks-12.1.2"
+      sources."@octokit/plugin-paginate-rest-11.3.1"
+      sources."@octokit/plugin-rest-endpoint-methods-13.2.2"
+      (sources."@octokit/plugin-retry-6.0.1"
+        // {
+          dependencies = [
+            sources."@octokit/types-12.6.0"
+          ];
+        })
+      (sources."@octokit/plugin-throttling-8.2.0"
+        // {
+          dependencies = [
+            sources."@octokit/types-12.6.0"
+          ];
+        })
+      sources."@octokit/request-8.4.0"
+      sources."@octokit/request-error-5.1.0"
+      (sources."@octokit/types-13.5.0"
+        // {
+          dependencies = [
+            sources."@octokit/openapi-types-22.2.0"
+          ];
+        })
+      sources."@octokit/webhooks-12.2.0"
       sources."@octokit/webhooks-methods-4.1.0"
-      sources."@octokit/webhooks-types-7.3.2"
-      sources."@types/aws-lambda-8.10.136"
+      sources."@octokit/webhooks-types-7.4.0"
+      sources."@types/aws-lambda-8.10.138"
       sources."@types/btoa-lite-1.0.2"
       sources."@types/jsonwebtoken-9.0.6"
-      sources."@types/node-20.11.25"
+      sources."@types/node-20.12.13"
       sources."aggregate-error-3.1.0"
       sources."before-after-hook-2.2.3"
       sources."bottleneck-2.19.5"
@@ -657,23 +692,17 @@
       sources."lodash.isplainobject-4.0.6"
       sources."lodash.isstring-4.0.1"
       sources."lodash.once-4.1.1"
-      sources."lru-cache-10.2.0"
+      sources."lru-cache-10.2.2"
       sources."ms-2.1.3"
-      sources."octokit-3.1.2"
+      sources."octokit-3.2.1"
       sources."once-1.4.0"
       sources."safe-buffer-5.2.1"
-      (sources."semver-7.6.0"
-        // {
-          dependencies = [
-            sources."lru-cache-6.0.0"
-          ];
-        })
-      sources."simple-git-3.22.0"
+      sources."semver-7.6.2"
+      sources."simple-git-3.24.0"
       sources."undici-types-5.26.5"
       sources."universal-github-app-jwt-1.1.2"
       sources."universal-user-agent-6.0.1"
       sources."wrappy-1.0.2"
-      sources."yallist-4.0.0"
     ];
     buildInputs = globalBuildInputs;
     meta = {

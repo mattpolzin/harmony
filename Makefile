@@ -13,6 +13,14 @@ idris2-version = $(shell $(idris2) --version | sed -En 's/Idris 2, version ([^-]
 idris2-build   = $(shell $(idris2) --version | sed -En 's/Idris 2, version [^-]+(.*)/\1/p')
 idris2-minor-version = $(shell echo ${idris2-version} | sed -En 's/0\.(.*)\../\1/p')
 
+kernel = $(shell uname -s)
+
+ifeq ($(kernel),Linux)
+	ised = sed -i''
+else
+	ised = sed -I ''
+endif
+
 .PHONY: all build nix-build install package publish clean version
 
 all: build
@@ -114,10 +122,10 @@ nix-build:
 
 version:
 	@(if [[ "${v}" == '' ]]; then echo "please set the 'v' variable."; exit 1; fi)
-	sed -I '' "s/version = .*/version = ${v}/" ./harmony.ipkg
-	sed -I '' "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
-	sed -I '' "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
-	sed -I '' "s/version = \".*\";/version = \"${v}\";/" ./default.nix
+	$(ised) "s/version = .*/version = ${v}/" ./harmony.ipkg
+	$(ised) "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
+	$(ised) "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
+	$(ised) "s/version = \".*\";/version = \"${v}\";/" ./default.nix
 	@npm update
 	@$(node2nix) -- --composition node2nix.nix # -l # <- can't use -l for lockfile because lockfile version 3 not supported yet.
 	@$(nix) fmt

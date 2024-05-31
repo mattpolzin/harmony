@@ -108,6 +108,9 @@ data SettableProp : (name : String) -> (help : String) -> Type where
   DefaultRemote   : SettableProp
     "defaultRemote"
     "[string]     The name of the default Git remote to use (e.g. 'origin')."
+  MainBranch : SettableProp
+    "mainBranch"
+    "[string]     The name of the default Git base branch for new PRs."
   GithubPAT       : SettableProp
     "githubPAT"
     """
@@ -143,6 +146,7 @@ settablePropNamed : (name : String) -> Maybe (Exists (SettableProp name))
 settablePropNamed "requestTeams"     = Just $ Evidence _ RequestTeams
 settablePropNamed "commentOnRequest" = Just $ Evidence _ CommentOnRequest
 settablePropNamed "defaultRemote"    = Just $ Evidence _ DefaultRemote
+settablePropNamed "mainBranch"       = Just $ Evidence _ MainBranch
 settablePropNamed "githubPAT"        = Just $ Evidence _ GithubPAT
 settablePropNamed "requestUsers"     = Just $ Evidence _ RequestUsers
 settablePropNamed "assignTeams"      = Just $ Evidence _ AssignTeams
@@ -164,6 +168,7 @@ settableProps = [
   , (_ ** _ ** RequestUsers)
   , (_ ** _ ** CommentOnRequest)
   , (_ ** _ ** DefaultRemote)
+  , (_ ** _ ** MainBranch)
   , (_ ** _ ** GithubPAT)
   , (_ ** _ ** AssignUsers)
   , (_ ** _ ** AssignTeams)
