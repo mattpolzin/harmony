@@ -2,9 +2,9 @@
   description = "Harmony GitHub collaboration tool";
 
   inputs = {
-    nixpkgs.url = github:NixOS/nixpkgs/nixpkgs-unstable;
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
-    alejandra.url = github:kamadorueda/alejandra;
+    alejandra.url = "github:kamadorueda/alejandra";
     alejandra.inputs.nixpkgs.follows = "nixpkgs";
   };
 
@@ -26,6 +26,18 @@
         harmony = pkgs.callPackage ./default.nix {};
 
         default = self.packages.${system}.harmony;
+      }
+    );
+    devShells = forAllSystems (
+      system: let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in {
+        default = pkgs.mkShell {
+          inputsFrom = [self.packages.${system}.harmony];
+          packages = [
+            pkgs.idris2Packages.idris2Lsp
+          ];
+        };
       }
     );
     formatter = forAllSystems (system: alejandra.packages.${system}.default);
