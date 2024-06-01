@@ -126,8 +126,6 @@ namespace Reflect
       mapHom (filter (any (== myLogin) . reviewers)) history
     let (earliestOpenAuth, earliestOpenReq) =
       mapHom (head' . sort . map createdAt) (openAuthored, openRequested)
-    -- TODO: get Terminal width from somewhere to set the page width
-    --       to the min of the Terminal width or the intro length.
     renderIO $
       print (length intro)
             (length reviews)
