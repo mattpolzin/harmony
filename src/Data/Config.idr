@@ -30,6 +30,8 @@ record Ephemeral where
   filepath : String
   ||| True to use ANSI terminal colors.
   colors   : Bool
+  ||| The number of columns available in the terminal (at launch).
+  columns  : Nat
   ||| If set, a preferred editor to use for writing PR desriptions.
   editor   : Maybe String
 
@@ -212,6 +214,10 @@ config.filepath = config.ephemeral.filepath
 export
 (.colors) : Config -> Bool
 config.colors = config.ephemeral.colors
+
+export
+(.columns) : Config -> Nat
+config.columns = config.ephemeral.columns
 
 export
 (.editor) : Config -> Maybe String

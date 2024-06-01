@@ -2,6 +2,7 @@ module Help
 
 import Data.Config
 import Data.String
+import Util
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Util
@@ -45,9 +46,9 @@ shell = annotate italic . pretty
 
 subcommandHelp' : String -> Doc AnsiStyle
 subcommandHelp' n@"label" = subcommand n [argument True "<label>", argument False "..."] $
-  [ "Add one or more labels to a PR, creating a new PR if one does not exist."
+  [ reflow "Add one or more labels to a PR, creating a new PR if one does not exist."
     <+> line
-    <+> "Labels that do not exist yet will be created automatically."
+    <+> reflow "Labels that do not exist yet will be created automatically."
   ]
 subcommandHelp' n@"request" = subcommand n [argument True "<team-slug> | +<user-login>", argument False "#<label>", argument False "..."] $
   [ reflow """
@@ -58,7 +59,7 @@ subcommandHelp' n@"request" = subcommand n [argument True "<team-slug> | +<user-
       Also request reviews from any users with logins specified. You specify
       these additional users by prefixing their logins with '+'.
       """
-  , "Optionally apply any number of labels by prefixing them with '#'."
+  , reflow "Optionally apply any number of labels by prefixing them with '#'."
   ]
 subcommandHelp' n@"config" = subcommand n [argument True "<property>", argument False "<value>"] $
   [ reflow """
@@ -69,8 +70,8 @@ subcommandHelp' n@"config" = subcommand n [argument True "<property>", argument 
     <+> argument' "properties" <+> ":" <++> (align $ concatWith (\a,b => a <+> "," <+> softline <+> b) $ option <$> settablePropNames)
   ]
 subcommandHelp' n@"pr" = subcommand n [argument False "--draft", argument False "#<label>", argument False "..."] $
-  [ "Identify an existing PR or create a new one for the current branch."
-  , "Optionally apply any number of labels by prefixing them with '#'."
+  [ reflow "Identify an existing PR or create a new one for the current branch."
+  , reflow "Optionally apply any number of labels by prefixing them with '#'."
   ]
 subcommandHelp' n@"contribute" = subcommand n [argument False "-c/--checkout", argument False "-<num>", argument False "-i/--ignore {<uri>/<pr-number>}"]
   [ reflow """
@@ -89,15 +90,15 @@ subcommandHelp' n@"contribute" = subcommand n [argument False "-c/--checkout", a
       """
   ]
 subcommandHelp' n@"graph"   = subcommand n [argument False "-c/--completed", argument True "<team-slug>"]
-  ["Graph the relative review workload of the members of the given GitHub Team."]
+  [reflow "Graph the relative review workload of the members of the given GitHub Team."]
 subcommandHelp' n@"help"    = subcommand n [argument False "<subcommand>"] ["Print help"]
 subcommandHelp' n@"version" = subcommand n [] ["Print version"]
 subcommandHelp' n@"sync"    = subcommand n [] ["Synchronize local config with information from GitHub."]
 subcommandHelp' n@"branch"  = subcommand n [] ["Print the GitHub URI for the currently checked out branch."]
-subcommandHelp' n@"whoami"  = subcommand n [] ["Print information about the configured and authenticated user."]
-subcommandHelp' n@"reflect" = subcommand n [] ["Reflect on the current state of ones own PRs and review requests."]
+subcommandHelp' n@"whoami"  = subcommand n [] [reflow "Print information about the configured and authenticated user."]
+subcommandHelp' n@"reflect" = subcommand n [] [reflow "Reflect on the current state of ones own PRs and review requests."]
 subcommandHelp' n@"list"    = subcommand n [argument True "<team-slug>"] ["List the members of the given GitHub Team."]
-subcommandHelp' n@"health"  = subcommand n [] ["Graph all open PRs grouped by the month they were created."]
+subcommandHelp' n@"health"  = subcommand n [] [reflow "Graph all open PRs grouped by the month they were created."]
 subcommandHelp' n@"rq"      = subcommand n [] ["Alias for 'request' command."]
 subcommandHelp' n@"assign"  = subcommand n [] [warning "Deprecated alias for 'request' command."]
 -- TODO 5.0.0:     ^ remove deprecated command help
@@ -105,10 +106,10 @@ subcommandHelp' c           = pretty "Unreconized command: \{c}"
 
 ||| Print help for a particular subcommand.
 export
-subcommandHelp : (useDecorations : Bool) -> (subcommand : String) -> String
-subcommandHelp useDecorations subcommand =
+subcommandHelp : (useDecorations : Bool) -> (terminalColumns : Nat) -> (subcommand : String) -> String
+subcommandHelp useDecorations terminalColumns subcommand =
   let decorate = if useDecorations then id else unAnnotate
-  in  renderString . layoutPretty defaultLayoutOptions $
+  in  renderString . layoutPretty (optionsWithBestWidth terminalColumns) $
         decorate (subcommandHelp' subcommand)
 
 helpDocs : Doc AnsiStyle
@@ -153,9 +154,9 @@ helpDocs = vsep
 
 ||| The Help string for Harmony.
 export
-help : (useDecorations : Bool) -> String
-help useDecorations =
+help : (useDecorations : Bool) -> (terminalColumns : Nat) -> String
+help useDecorations terminalColumns =
   let decorate = if useDecorations then id else unAnnotate
-  in  renderString . layoutPretty defaultLayoutOptions $
+  in  renderString . layoutPretty (optionsWithBestWidth terminalColumns) $
         decorate helpDocs
 

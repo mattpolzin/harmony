@@ -187,9 +187,10 @@ preferOriginRemote names =
 createConfig : Git =>
                (envGithubPAT : Maybe String)
             -> (terminalColors : Bool)
+            -> (terminalColumns : Nat)
             -> (editor : Maybe String)
             -> Promise Config
-createConfig envGithubPAT terminalColors editor = do
+createConfig envGithubPAT terminalColors terminalColumns editor = do
   putStrLn "Creating a new configuration (storing in \{Config.filename})..."
   putStrLn ""
 
@@ -239,6 +240,7 @@ createConfig envGithubPAT terminalColors editor = do
   let ephemeral = MkEphem {
       filepath = "./\{Config.filename}"
     , colors   = terminalColors
+    , columns  = terminalColumns
     , editor
     }
   do teamSlugs  <- listTeams org
@@ -302,25 +304,27 @@ export
 covering
 loadConfig : HasIO io => 
              (terminalColors : Bool)
+          -> (terminalColumns : Nat)
           -> (editor : Maybe String)
           -> io (Either ConfigError Config)
-loadConfig terminalColors editor = let (>>=) = (>>=) @{Monad.Compose} in
+loadConfig terminalColors terminalColumns editor = let (>>=) = (>>=) @{Monad.Compose} in
   do location   <- mapFst File . maybeToEither FileNotFound <$>
                      findConfig "." (limit 10)
      configFile <- mapFst File <$> 
                      readFile location
-     pure . mapFst Parse $ parseConfig (MkEphem location terminalColors editor) configFile
+     pure . mapFst Parse $ parseConfig (MkEphem location terminalColors terminalColumns editor) configFile
 
 export
 covering
 loadOrCreateConfig : Git =>
                      (envGithubPAT : Maybe String)
                   -> (terminalColors : Bool)
+                  -> (terminalColumns : Nat)
                   -> (editor : Maybe String)
                   -> Promise Config
-loadOrCreateConfig envGithubPAT terminalColors editor = do
-  Right config <- loadConfig terminalColors editor
-    | Left (File FileNotFound) => createConfig envGithubPAT terminalColors editor
+loadOrCreateConfig envGithubPAT terminalColors terminalColumns editor = do
+  Right config <- loadConfig terminalColors terminalColumns editor
+    | Left (File FileNotFound) => createConfig envGithubPAT terminalColors terminalColumns editor
     | Left err => reject "Error loading \{Config.filename}: \{show err}."
   pure config
 
