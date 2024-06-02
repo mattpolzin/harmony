@@ -60,7 +60,7 @@ bashCompletion subcommand curWord prevWord =
   where
     configuredOpts : io (List String)
     configuredOpts =
-      do Right config <- loadConfig False minimumLayoutWidth Nothing
+      do Right config <- loadConfig False maximumLayoutWidth Nothing
            | Left _ => pure []
          pure (BashCompletion.opts subcommand curWord prevWord)
 
@@ -217,7 +217,7 @@ covering
 main : IO ()
 main =
   do terminalColors <- shouldUseColors
-     terminalColumns <- termCols
+     terminalColumns <- maybe maximumLayoutWidth id <$> termCols
      editor <- getEnv "EDITOR"
      -- drop 1 for `harmony.js`
      args <- drop 1 <$> getArgs

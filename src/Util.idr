@@ -19,10 +19,10 @@ whenNothing : Applicative f => Maybe a -> f () -> f ()
 whenNothing Nothing x = x
 whenNothing (Just _) _ = pure ()
 
-export
 minimumLayoutWidth : Nat
 minimumLayoutWidth = 40
 
+export
 maximumLayoutWidth : Nat
 maximumLayoutWidth = 80
 
