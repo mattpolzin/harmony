@@ -19,17 +19,39 @@ whenNothing : Applicative f => Maybe a -> f () -> f ()
 whenNothing Nothing x = x
 whenNothing (Just _) _ = pure ()
 
+minimumLayoutWidth : Nat
+minimumLayoutWidth = 40
+
+export
+maximumLayoutWidth : Nat
+maximumLayoutWidth = 80
+
+export
+optionsWithBestWidth : (terminalColumns : Nat) -> LayoutOptions
+optionsWithBestWidth terminalColumns =
+  let clipLower = max minimumLayoutWidth terminalColumns
+      clipped = min clipLower maximumLayoutWidth
+  in
+  MkLayoutOptions $
+    AvailablePerLine (cast clipped) 1
+
+layoutOptions : Config => LayoutOptions
+layoutOptions @{config} = optionsWithBestWidth config.columns
+
+colorize : Config => Doc AnsiStyle -> Doc AnsiStyle
+colorize @{config} = if config.colors then id else unAnnotate
+
 ||| Render with or without color based on configuration
 export
 renderString : Config => Doc AnsiStyle -> String
 renderString @{config} =
-  renderString . layoutPretty defaultLayoutOptions . if config.colors then id else unAnnotate
+  renderString . layoutPretty layoutOptions . colorize
 
 ||| Render with or without color based on configuration
 export
 renderIO : Config => HasIO io => Doc AnsiStyle -> io ()
 renderIO @{config} =
-  liftIO . putDoc . if config.colors then id else unAnnotate
+  liftIO . Terminal.renderIO . layoutPretty layoutOptions . colorize
 
 ||| Get lines from stdin until either the Fuel runs out or
 ||| two empty lines are encountered.

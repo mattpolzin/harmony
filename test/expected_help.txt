@@ -23,7 +23,8 @@ Subcommands:
       this with the '--ignore' option followed by a GitHub URI or Pull Request
       number.
   graph [-c/--completed] {<team-slug>}
-      Graph the relative review workload of the members of the given GitHub Team.
+      Graph the relative review workload of the members of the given GitHub
+      Team.
   health 
       Graph all open PRs grouped by the month they were created.
   help [<subcommand>]

@@ -11,6 +11,7 @@ import Commands
 import Config
 import FFI.Git
 import FFI.GitHub
+import FFI.Term
 import Help
 import JSON.Parser
 import System
@@ -59,7 +60,7 @@ bashCompletion subcommand curWord prevWord =
   where
     configuredOpts : io (List String)
     configuredOpts =
-      do Right config <- loadConfig False Nothing
+      do Right config <- loadConfig False maximumLayoutWidth Nothing
            | Left _ => pure []
          pure (BashCompletion.opts subcommand curWord prevWord)
 
@@ -192,16 +193,17 @@ covering
 handleArgs : Git =>
              (envGithubPAT : Maybe String)
           -> (terminalColors : Bool)
+          -> (terminalColumns : Nat)
           -> (editor : Maybe String)
           -> List String 
           -> IO ()
-handleArgs _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = bashCompletion subcommand curWord prevWord
-handleArgs _ _ _ ["--bash-completion-script"] = putStrLn BashCompletion.script
-handleArgs _ _ _ ["--zsh-completion-script"] = putStrLn ZshCompletion.script
-handleArgs envPAT terminalColors editor args = 
+handleArgs _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = bashCompletion subcommand curWord prevWord
+handleArgs _ _ _ _ ["--bash-completion-script"] = putStrLn BashCompletion.script
+handleArgs _ _ _ _ ["--zsh-completion-script"] = putStrLn ZshCompletion.script
+handleArgs envPAT terminalColors terminalColumns editor args = 
   resolve'' $
     do -- create the config file before continuing if it does not exist yet
-       config <- loadOrCreateConfig envPAT terminalColors editor
+       config <- loadOrCreateConfig envPAT terminalColors terminalColumns editor
 
        handleConfiguredArgs envPAT args
 
@@ -215,20 +217,21 @@ covering
 main : IO ()
 main =
   do terminalColors <- shouldUseColors
+     terminalColumns <- maybe maximumLayoutWidth id <$> termCols
      editor <- getEnv "EDITOR"
      -- drop 1 for `harmony.js`
      args <- drop 1 <$> getArgs
      -- short circuit for help
      when (args == [] || args == ["help"] || args == ["--help"]) $ do
-       putStrLn (help terminalColors)
+       putStrLn (help terminalColors terminalColumns)
        exitSuccess
      when (head' args == Just "help") $ do
-       putStrLn (subcommandHelp terminalColors $ fromMaybe "" . head' $ drop 1 args)
+       putStrLn (subcommandHelp terminalColors terminalColumns $ fromMaybe "" . head' $ drop 1 args)
        exitSuccess
      when (args == ["version"] || args == ["--version"]) $ do
        printVersion
        exitSuccess
      envPAT <- getEnv "GITHUB_PAT"
      _ <- git
-     handleArgs envPAT terminalColors editor args
+     handleArgs envPAT terminalColors terminalColumns editor args
 
