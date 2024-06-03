@@ -31,6 +31,13 @@ string (JString x) = Right x
 string json = Left "Expected a string but found \{show json}."
 
 export
+stringy : (desc : String) -> (String -> Maybe a) -> JSON -> Either String a
+stringy d f (JString x) = case f x of
+                            (Just y) => Right y
+                            Nothing  => Left "Expected \{d} but found \{show x}."
+stringy d f json = Left "Expected a string but found \{show json}."
+
+export
 integer : JSON -> Either String Integer
 integer (JInteger x) = Right $ cast x
 integer json = Left "Expected an integer but found \{show json}."
