@@ -6,6 +6,8 @@
 
     alejandra.url = "github:kamadorueda/alejandra";
     alejandra.inputs.nixpkgs.follows = "nixpkgs";
+
+    idris2.url = "github:mattpolzin/Idris2/nix-target-only-executable";
   };
 
   # we use Idris2 from nixpkgs unstable because it will already be built and cached.
@@ -15,6 +17,7 @@
     self,
     nixpkgs,
     alejandra,
+    idris2
   }: let
     lib = nixpkgs.lib;
     forAllSystems = lib.genAttrs lib.systems.flakeExposed;
@@ -23,7 +26,7 @@
       system: let
         pkgs = nixpkgs.legacyPackages.${system};
       in {
-        harmony = pkgs.callPackage ./default.nix {};
+        harmony = pkgs.callPackage ./default.nix { buildIdris = idris2.buildIdris.${system}; };
 
         default = self.packages.${system}.harmony;
       }

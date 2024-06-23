@@ -7,9 +7,8 @@
   installShellFiles,
   makeWrapper,
   nodejs,
-  stdenv,
+  buildIdris ? idris2Packages.buildIdris
 }: let
-  inherit (idris2Packages) buildIdris;
   libraries = map (p: p.library {});
 
   nodeDependencies = (callPackage ./node2nix.nix {inherit nodejs;}).nodeDependencies;
