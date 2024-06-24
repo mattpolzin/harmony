@@ -7,6 +7,7 @@ import Data.List.PrefixSuffix
 import Data.List1
 import Data.Promise
 import Data.String
+import Data.Theme
 import Decidable.Equality
 import FFI.Git
 import FFI.GitHub

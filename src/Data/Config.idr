@@ -4,6 +4,7 @@ import Data.Either
 import Data.List
 import Data.List.Elem
 import Data.String
+import Data.Theme
 import Data.Vect
 import JSON.Parser
 import Language.JSON.Accessors
@@ -49,22 +50,6 @@ expose (Hide x) = x
 export
 Show (Hidden a) where
   show _ = "xxxxxxxx (hidden)"
-
-public export
-data Theme = Light
-           | Dark
---            | None
-
-export
-Show Theme where
-  show Light = "light"
-  show Dark = "dark"
-
-export
-parseString : String -> Maybe Theme
-parseString "light" = Just Light
-parseString "dark" = Just Dark
-parseString _ = Nothing
 
 public export
 record Config where

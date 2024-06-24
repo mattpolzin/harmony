@@ -5,6 +5,7 @@ import Data.List
 import Data.ReviewScore
 import Data.SortedMap
 import Data.Nat
+import Theme
 
 import Data.Date
 import Data.PullRequest
@@ -15,6 +16,8 @@ import Text.PrettyPrint.Prettyprinter.Symbols
 import Text.PrettyPrint.Prettyprinter.Util
 
 %default total
+
+%hide Terminal.color
 
 interface Graphable g where
   totalWidth : g -> Nat
@@ -43,18 +46,20 @@ record PRsOnDate dateTy where
   date : dateTy
   prCount : Nat
 
+-- Make the PR count on each date graphable for the
+-- health command's graph.
 Pretty dateTy => Graphable (PRsOnDate dateTy) where
   totalWidth g = g.prCount
   label g = coloredLabel <++> countInParens
     where
       coloredLabel : Doc AnsiStyle
       coloredLabel = if g.prCount == 0
-                        then (annotate (color Green) $ pretty g.date)
+                        then (annotate (color Good) $ pretty g.date)
                         else if g.prCount < 2
                                 then pretty g.date
                                 else if g.prCount < 6
-                                    then (annotate (color Yellow) $ pretty g.date)
-                                    else (annotate (color Red) $ pretty g.date)
+                                    then (annotate (color NotGreat) $ pretty g.date)
+                                    else (annotate (color Bad) $ pretty g.date)
 
       countInParens : Doc AnsiStyle
       countInParens = if g.prCount > 4
@@ -74,9 +79,9 @@ Pretty Date where
 ||| @ bonus a bonus indicator graphed on the far right in green.
 bar : (indentation : Nat) -> (score : Nat) -> (detractor : Nat) -> (bonus : Nat) -> Doc AnsiStyle
 bar idt score detractor bonus = indent (cast idt) . hcat $
-                              [ annotate (color Red) . hcat $ replicate detractor (pretty '◦')
-                              , annotate (color Yellow) . hcat $ replicate score (pretty '·')
-                              , annotate (color Green) . hcat $ replicate bonus (pretty '▪')
+                              [ annotate (color Missed) . hcat $ replicate detractor (pretty '◦')
+                              , annotate (color Pending) . hcat $ replicate score (pretty '·')
+                              , annotate (color Completed) . hcat $ replicate bonus (pretty '▪')
                               ]
 
 graphOne : Graphable g => (highScore : Nat) -> g -> Doc AnsiStyle
@@ -137,9 +142,6 @@ healthGraph openPullRequests org repo =
               placeholder = MkPRsOnDate placeholderDate 0
           in unfoldGraph fuel (next :: xs) (Just (placeholderDate, placeholder ::: forget acc))
 
-    yellowDot : Doc AnsiStyle
-    yellowDot = annotate (color Yellow) "·"
-
     header : Doc AnsiStyle
     header = vsep $
                catMaybes [ Just $ emptyDoc
@@ -177,23 +179,23 @@ reviewsGraph closedReviews openReviews candidates completedReviews =
                       , footer
                       ]
   where
-    yellowDot : Doc AnsiStyle
-    yellowDot = annotate (color Yellow) "·"
+    pendingDot : Doc AnsiStyle
+    pendingDot = annotate (color Pending) "·"
 
-    redDot : Doc AnsiStyle
-    redDot = annotate (color Red) "◦"
+    missedDot : Doc AnsiStyle
+    missedDot = annotate (color Missed) "◦"
 
-    greenBox : Doc AnsiStyle
-    greenBox = annotate (color Green) "▪"
+    completedBox : Doc AnsiStyle
+    completedBox = annotate (color Completed) "▪"
 
     header : Doc AnsiStyle
     header = vsep $
                catMaybes [ Just $ emptyDoc
                          , Just $ pretty "Weighted review workload."
-                         , Just $ pretty "4x the number of open review requests" <++> parens yellowDot
-                         , Just $ pretty "1x the number of closed PRs with unanswered review requests" <++> parens redDot
-                         , if (null completedReviews) then Nothing else Just $ pretty "1x the number of completed reviews" <++> parens greenBox
-                         , Just $ parens $ redDot <++> pretty "overlayed on" <++> yellowDot
+                         , Just $ pretty "4x the number of open review requests" <++> parens pendingDot
+                         , Just $ pretty "1x the number of closed PRs with unanswered review requests" <++> parens missedDot
+                         , if (null completedReviews) then Nothing else Just $ pretty "1x the number of completed reviews" <++> parens completedBox
+                         , Just $ parens $ missedDot <++> pretty "overlayed on" <++> pendingDot
                          , Just $ emptyDoc
                          ]
 
