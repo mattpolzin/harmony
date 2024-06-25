@@ -207,7 +207,7 @@ health @{config} = do
 (<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
 (<||>) f g x = f x <|> g x
 
-infixr 2 <||>
+private infixr 2 <||>
 
 ||| Parse arguments for the graph command.
 export

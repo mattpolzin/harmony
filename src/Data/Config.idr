@@ -240,7 +240,7 @@ export
 Show Config where
   show config = unlines [
       "       updatedAt: \{show config.updatedAt}"
-    , "           theme: \{show config.theme}"
+    , "           theme: \{show $ maybe Dark id config.theme}"
     , "             org: \{show config.org}"
     , "            repo: \{show config.repo}"
     , "   defaultRemote: \{show config.defaultRemote}"
@@ -275,7 +275,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch
     , ("repo"            , JString repo)
     , ("defaultRemote"   , JString defaultRemote)
     , ("mainBranch"      , JString mainBranch)
-    , ("theme"           , JString $ show theme)
+    , ("theme"           , JString . show $ maybe Dark id theme)
     , ("orgMembers"      , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"       , JArray $ JString <$> sort teamSlugs)
     , ("repoLabels"      , JArray $ JString <$> sort repoLabels)
@@ -334,7 +334,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           om <- array string orgMembers
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
-                                          th <- maybe (Right Nothing) 
+                                          th <- maybe (Right $ Just Dark) 
                                                       (optional $ stringy "dark or light" parseString) 
                                                       maybeTheme
                                           pure $ MkConfig {
