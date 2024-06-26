@@ -35,6 +35,7 @@
         default = pkgs.mkShell {
           inputsFrom = [self.packages.${system}.harmony];
           packages = [
+            pkgs.idris2
             pkgs.idris2Packages.idris2Lsp
           ];
         };

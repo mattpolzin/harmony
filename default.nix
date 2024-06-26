@@ -7,10 +7,8 @@
   installShellFiles,
   makeWrapper,
   nodejs,
-  stdenv,
 }: let
   inherit (idris2Packages) buildIdris;
-  libraries = map (p: p.library {});
 
   nodeDependencies = (callPackage ./node2nix.nix {inherit nodejs;}).nodeDependencies;
   idrisAddsVersion = "0.4.1";
@@ -43,36 +41,36 @@
     hash = "sha256-ShwVAUsobrwmuYszYld1RqlRUvnrACpyyqK2JKaIWYM=";
   };
 
-  idrisAddsPkg = buildIdris {
+  idrisAdds = buildIdris {
     ipkgName = "idris-adds";
     version = idrisAddsVersion;
     src = idrisAddsSrc;
     idrisLibraries = [];
   };
-  elabUtilPkg = buildIdris {
+  elabUtil = buildIdris {
     ipkgName = "elab-util";
     version = elabUtilRev;
     src = elabUtilSrc;
     idrisLibraries = [];
   };
-  idrisJsonPkg = buildIdris {
+  idrisJson = buildIdris {
     ipkgName = "json";
     version = idrisJsonRev;
     src = idrisJsonSrc;
-    idrisLibraries = libraries [elabUtilPkg idrisParserPkg idrisParserJsonPkg];
+    idrisLibraries = [elabUtil idrisParser idrisParserJson];
   };
-  idrisParserPkg = buildIdris {
+  idrisParser = buildIdris {
     ipkgName = "parser";
     version = idrisParserRev;
     src = idrisParserSrc;
-    idrisLibraries = libraries [elabUtilPkg];
+    idrisLibraries = [elabUtil];
   };
-  idrisParserJsonPkg = buildIdris rec {
+  idrisParserJson = buildIdris rec {
     ipkgName = "parser-json";
     version = idrisParserRev;
     src = idrisParserSrc;
     sourceRoot = "${src.name}/json";
-    idrisLibraries = libraries [idrisParserPkg elabUtilPkg];
+    idrisLibraries = [idrisParser elabUtil];
   };
 
   harmonyPkg = buildIdris {
@@ -80,7 +78,7 @@
     ipkgName = "harmony";
     src = ./.;
 
-    idrisLibraries = libraries [idrisAddsPkg elabUtilPkg idrisParserPkg idrisParserJsonPkg idrisJsonPkg];
+    idrisLibraries = [idrisAdds elabUtil idrisJson idrisParserJson];
     nativeBuildInputs = [installShellFiles makeWrapper];
     buildInputs = [nodejs git];
 
