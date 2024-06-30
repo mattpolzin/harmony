@@ -85,7 +85,7 @@ record Config where
   githubPAT     : Maybe (Hidden String)
   ||| Should Harmony print with colors fit for a dark terminal
   ||| or a light terminal?
-  theme         : Maybe Theme
+  theme         : Theme
   ||| Configuration properties that are not written to a file.
   ephemeral     : Ephemeral -- not written out to file
 
@@ -240,7 +240,7 @@ export
 Show Config where
   show config = unlines [
       "       updatedAt: \{show config.updatedAt}"
-    , "           theme: \{show $ maybe Dark id config.theme}"
+    , "           theme: \{show config.theme}"
     , "             org: \{show config.org}"
     , "            repo: \{show config.repo}"
     , "   defaultRemote: \{show config.defaultRemote}"
@@ -275,7 +275,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch
     , ("repo"            , JString repo)
     , ("defaultRemote"   , JString defaultRemote)
     , ("mainBranch"      , JString mainBranch)
-    , ("theme"           , JString . show $ maybe Dark id theme)
+    , ("theme"           , JString $ show theme)
     , ("orgMembers"      , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"       , JArray $ JString <$> sort teamSlugs)
     , ("repoLabels"      , JArray $ JString <$> sort repoLabels)
@@ -335,8 +335,9 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           -- TODO 5.0.0: Make theme required part of config file (default to dark still)
-                                          th <- maybe (Right $ Just Dark) 
-                                                      (optional $ stringy "dark or light" parseString) 
+                                          --             theme lookup can be moved to the required lookupAll above.
+                                          th <- maybe (Right Dark) 
+                                                      (stringy "dark or light" parseString) 
                                                       maybeTheme
                                           pure $ MkConfig {
                                               updatedAt         = ua

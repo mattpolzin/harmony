@@ -37,7 +37,7 @@ theme : Config => {d, l : _} -> SemanticColor d l -> Doc AnsiStyle -> Doc AnsiSt
 theme @{config} = go configTheme
   where
     configTheme : Theme
-    configTheme = maybe Dark id config.theme
+    configTheme = config.theme
 
     maybeAnnotate : (Color -> AnsiStyle) -> Maybe Color -> Doc AnsiStyle -> Doc AnsiStyle
     maybeAnnotate s c = maybe id (annotate . s) c

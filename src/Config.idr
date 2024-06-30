@@ -132,7 +132,7 @@ propSetter RequestUsers     = update parseBool (\b => { requestUsers := b })
 propSetter CommentOnRequest = update parseBool (\b => { commentOnRequest := b })
 propSetter DefaultRemote    = update Just (\s => { defaultRemote := s })
 propSetter MainBranch       = update Just (\s => { mainBranch := s })
-propSetter ThemeProp        = update parseString (\t => { theme := Just t })
+propSetter ThemeProp        = update parseString (\t => { theme := t })
 propSetter GithubPAT        = update Just (\s => { githubPAT := Just $ hide s })
 propSetter AssignTeams      = update parseBool (\b => { requestTeams := b })
 propSetter AssignUsers      = update parseBool (\b => { requestUsers := b })
@@ -158,7 +158,7 @@ propGetter RequestUsers     = show . requestUsers
 propGetter CommentOnRequest = show . commentOnRequest
 propGetter DefaultRemote    = show . defaultRemote
 propGetter MainBranch       = show . mainBranch
-propGetter ThemeProp        = show . maybe Dark id . theme
+propGetter ThemeProp        = show . theme
 propGetter GithubPAT        = maybe "Not set (will use $GITHUB_PAT environment variable)" show . githubPAT
 propGetter AssignTeams      = show . requestTeams
 propGetter AssignUsers      = show . requestUsers
@@ -263,7 +263,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
        , orgMembers
        , ignoredPRs = []
        , githubPAT = hide <$> configPAT
-       , theme = Just Dark
+       , theme = Dark
        , ephemeral
        }
      ignore $ writeConfig config
