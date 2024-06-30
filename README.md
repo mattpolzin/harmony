@@ -112,7 +112,10 @@ Would you like harmony to request team reviews in addition to individuals when i
 Creating config...
 ```
 
-Once configured, Harmony supports the following commands: `config`, `branch`, `pr`, `label`, `request`, `contribute`, `whoami`, `reflect`, `list`, `graph`, `health`, and `sync`.
+Once configured, Harmony supports the following commands: `config`, `branch`, `pr`, `label`, `request` (also aliased to `rq`), `contribute`, `whoami`, `reflect`, `list`, `graph`, `health`, and `sync`.
+
+**Note on color output:**
+Harmony uses colored output for some commands. You can adjust these colors slightly with the `theme` configuration option. You can also use the `NO_COLOR` environment variable to disable all colored output. Lastly, Harmony will avoid colored output when it determines `stdout` is not a TTY device (as is the case for e.g. redirecting harmony output into a file or piping into `cat`: `harmony ... | cat`).
 
 ### Config
 Running `harmony config <property>` will read the given configuration property. `harmony config <property> <value>` will set the configuration property.
@@ -124,6 +127,7 @@ Not all configuration properties can be read/set with this command.
 - `commentOnRequest` (`true`/`false`) -- When requesting a reviewer chosen by Harmony, comment on the pull request.
 - `defaultRemote` (optional string) -- When pushing new branches, what remote destination should be used.
 - `mainBranch` (optional string) -- When creating a PR, this is the default base branch.
+- `theme` (`dark`/`light`) -- Use colors suited better for either a dark or light Terminal background.
 - `githubPAT` (optional string) -- If the `$GITHUB_PAT` environment variable is not set, this Personal Access Token is used to authenticate with GitHub.
 
 ### Branch

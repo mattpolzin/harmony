@@ -4,6 +4,7 @@ import Data.Either
 import Data.List
 import Data.List.Elem
 import Data.String
+import Data.Theme
 import Data.Vect
 import JSON.Parser
 import Language.JSON.Accessors
@@ -82,6 +83,9 @@ record Config where
   ||| either the environment variable or this config property
   ||| must be set.
   githubPAT     : Maybe (Hidden String)
+  ||| Should Harmony print with colors fit for a dark terminal
+  ||| or a light terminal?
+  theme         : Theme
   ||| Configuration properties that are not written to a file.
   ephemeral     : Ephemeral -- not written out to file
 
@@ -110,9 +114,12 @@ data SettableProp : (name : String) -> (help : String) -> Type where
   DefaultRemote   : SettableProp
     "defaultRemote"
     "[string]     The name of the default Git remote to use (e.g. 'origin')."
-  MainBranch : SettableProp
+  MainBranch      : SettableProp
     "mainBranch"
     "[string]     The name of the default Git base branch for new PRs."
+  ThemeProp       : SettableProp
+    "theme"
+    "[dark/light]"
   GithubPAT       : SettableProp
     "githubPAT"
     """
@@ -149,6 +156,7 @@ settablePropNamed "requestTeams"     = Just $ Evidence _ RequestTeams
 settablePropNamed "commentOnRequest" = Just $ Evidence _ CommentOnRequest
 settablePropNamed "defaultRemote"    = Just $ Evidence _ DefaultRemote
 settablePropNamed "mainBranch"       = Just $ Evidence _ MainBranch
+settablePropNamed "theme"            = Just $ Evidence _ ThemeProp
 settablePropNamed "githubPAT"        = Just $ Evidence _ GithubPAT
 settablePropNamed "requestUsers"     = Just $ Evidence _ RequestUsers
 settablePropNamed "assignTeams"      = Just $ Evidence _ AssignTeams
@@ -171,6 +179,7 @@ settableProps = [
   , (_ ** _ ** CommentOnRequest)
   , (_ ** _ ** DefaultRemote)
   , (_ ** _ ** MainBranch)
+  , (_ ** _ ** ThemeProp)
   , (_ ** _ ** GithubPAT)
   , (_ ** _ ** AssignUsers)
   , (_ ** _ ** AssignTeams)
@@ -231,6 +240,7 @@ export
 Show Config where
   show config = unlines [
       "       updatedAt: \{show config.updatedAt}"
+    , "           theme: \{show config.theme}"
     , "             org: \{show config.org}"
     , "            repo: \{show config.repo}"
     , "   defaultRemote: \{show config.defaultRemote}"
@@ -254,8 +264,9 @@ Show Config where
 
 export
 json : Config -> JSON
-json (MkConfig updatedAt org repo defaultRemote mainBranch requestTeams requestUsers commentOnRequest
-               teamSlugs repoLabels orgMembers ignoredPRs githubPAT _) = 
+json (MkConfig updatedAt org repo defaultRemote mainBranch
+               requestTeams requestUsers commentOnRequest teamSlugs
+               repoLabels orgMembers ignoredPRs githubPAT theme _) =
   JObject [
       ("requestTeams"    , JBool requestTeams)
     , ("requestUsers"    , JBool requestUsers)
@@ -264,6 +275,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch requestTeams requestU
     , ("repo"            , JString repo)
     , ("defaultRemote"   , JString defaultRemote)
     , ("mainBranch"      , JString mainBranch)
+    , ("theme"           , JString $ show theme)
     , ("orgMembers"      , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"       , JArray $ JString <$> sort teamSlugs)
     , ("repoLabels"      , JArray $ JString <$> sort repoLabels)
@@ -308,6 +320,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           requestUsers <- exactlyOneOf "assignUsers" "requestUsers"
                                           commentOnRequest <- exactlyOneOf "commentOnAssign" "commentOnRequest"
                                           let maybeGithubPAT = lookup "githubPAT" config
+                                          let maybeTheme = lookup "theme" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
@@ -321,6 +334,11 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           om <- array string orgMembers
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
+                                          -- TODO 5.0.0: Make theme required part of config file (default to dark still)
+                                          --             theme lookup can be moved to the required lookupAll above.
+                                          th <- maybe (Right Dark) 
+                                                      (stringy "dark or light" parseString) 
+                                                      maybeTheme
                                           pure $ MkConfig {
                                               updatedAt         = ua
                                             , org               = o
@@ -335,6 +353,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , orgMembers        = om
                                             , ignoredPRs        = ip
                                             , githubPAT         = (map Hide) gp
+                                            , theme             = th
                                             , ephemeral         = ephemeral
                                             }
       where

@@ -11,6 +11,7 @@ import Data.User
 import FFI.Git
 import FFI.GitHub
 import PullRequest
+import Theme
 import Util
 
 import Text.PrettyPrint.Prettyprinter
@@ -18,9 +19,9 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
-replicate' : Color -> Nat -> Char -> Doc AnsiStyle
+replicate' : Config => {d,l : _} -> SemanticColor d l -> Nat -> Char -> Doc AnsiStyle
 replicate' c n char =
-  annotate (color c) (pretty $ String.replicate n char)
+  theme c . pretty $ String.replicate n char
 
 namespace Reflect
   prCount : Fin 101
@@ -48,18 +49,19 @@ namespace Reflect
   intro = "Your current pull request summary (out of the past \{show prCount} PRs):"
 
   parameters (pageWidth : Nat, reviews : Nat, openReq : Nat, closedReq : Nat, closedAuth : Nat, openAuth : Nat)
-    chart : (leftPadding : Nat)
+    chart : Config =>
+            (leftPadding : Nat)
          -> Doc AnsiStyle
     chart leftPadding =
       indent (cast leftPadding) $
-             replicate' Green reviews '·'
-         <+> replicate' Red  closedReq  '◦'
-         <+> replicate' Yellow openReq    '<'
+             replicate' Completed' reviews    '·'
+         <+> replicate' Missed     closedReq  '◦'
+         <+> replicate' Pending    openReq    '<'
         <++> pretty "|"
-        <++> replicate' Yellow openAuth   '>'
-         <+> replicate' Green  closedAuth '·'
+        <++> replicate' Pending    openAuth   '>'
+         <+> replicate' Completed' closedAuth '·'
 
-    graph : Doc AnsiStyle
+    graph : Config => Doc AnsiStyle
     graph =
       let req      = openReq  + closedReq
           auth     = openAuth + closedAuth
@@ -99,7 +101,7 @@ namespace Reflect
         , annotate italic $ pretty "*review count (not PR count) of most recent \{show reviewDetailsCount} PRs."
         ]
 
-      print : Doc AnsiStyle
+      print : Config => Doc AnsiStyle
       print = vsep [
                 emptyDoc
               , graph
@@ -138,11 +140,12 @@ namespace Reflect
             earliestOpenReq
 
 namespace Me
-  print : (gitEmail : Maybe String)
+  print : Config
+       -> (gitEmail : Maybe String)
        -> (githubUser : User)
        -> (githubTeams : List String)
        -> Doc AnsiStyle
-  print gitEmail githubUser githubTeams =
+  print config gitEmail githubUser githubTeams =
     vsep [
         emptyDoc
       , email
@@ -160,19 +163,19 @@ namespace Me
       it : String -> Doc AnsiStyle
       it = annotate italic . pretty
 
-      green : String -> Doc AnsiStyle
-      green = annotate (color Green) . pretty
+      dataVal : String -> Doc AnsiStyle
+      dataVal = theme Data . pretty
 
       email : Doc AnsiStyle
       email = "Git Email:" <++> case gitEmail of
-                                     Just e => green e
+                                     Just e => dataVal e
                                      Nothing => it "Not set"
 
       fullName : Doc AnsiStyle
-      fullName = "GitHub Name:" <++> green githubUser.name
+      fullName = "GitHub Name:" <++> dataVal githubUser.name
 
       login : Doc AnsiStyle
-      login = "GitHub Login:" <++> green githubUser.login
+      login = "GitHub Login:" <++> dataVal githubUser.login
 
       teams : Doc AnsiStyle
       teams = vsep $
@@ -184,11 +187,11 @@ namespace Me
   export
   printInfoOnSelf : Config => Octokit => Git =>
                     Promise ()
-  printInfoOnSelf = do
+  printInfoOnSelf @{config} = do
     gitEmail <- handleUnsetEmail <$> userEmail
     githubUser <- getSelf
     githubTeams <- sort <$> listMyTeams
-    renderIO $ print gitEmail githubUser githubTeams
+    renderIO $ print config gitEmail githubUser githubTeams
       where
         handleUnsetEmail : String -> Maybe String
         handleUnsetEmail "" = Nothing

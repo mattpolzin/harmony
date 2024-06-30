@@ -279,13 +279,13 @@
         sha512 = "FE2V+QZ2UYlh+9wWd5BPLNXG+J/XUD/PPq0ovS+nCcGX4+3qVbi3jYOmCTW48hg9SBBLtInx9+o7fFt4H5iP0Q==";
       };
     };
-    "@types/aws-lambda-8.10.138" = {
+    "@types/aws-lambda-8.10.140" = {
       name = "_at_types_slash_aws-lambda";
       packageName = "@types/aws-lambda";
-      version = "8.10.138";
+      version = "8.10.140";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@types/aws-lambda/-/aws-lambda-8.10.138.tgz";
-        sha512 = "71EHMl70TPWIAsFuHd85NHq6S6T2OOjiisPTrH7RgcjzpJpPh4RQJv7PvVvIxc6PIp8CLV7F9B+TdjcAES5vcA==";
+        url = "https://registry.npmjs.org/@types/aws-lambda/-/aws-lambda-8.10.140.tgz";
+        sha512 = "4Dh3dk2TUcbdfHrX0Al90mNGJDvA9NBiTQPzbrjGi/dLxzKCGOYgT8YQ47jUKNFALkAJAadifq0pzyjIUlhVhg==";
       };
     };
     "@types/btoa-lite-1.0.2" = {
@@ -306,13 +306,13 @@
         sha512 = "/5hndP5dCjloafCXns6SZyESp3Ldq7YjH3zwzwczYnjxIT0Fqzk5ROSYVGfFyczIue7IUEj8hkvLbPoLQ18vQw==";
       };
     };
-    "@types/node-20.12.13" = {
+    "@types/node-20.14.9" = {
       name = "_at_types_slash_node";
       packageName = "@types/node";
-      version = "20.12.13";
+      version = "20.14.9";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@types/node/-/node-20.12.13.tgz";
-        sha512 = "gBGeanV41c1L171rR7wjbMiEpEI/l5XFQdLLfhr/REwpgDy/4U8y89+i8kRiLzDyZdOkXh+cRaTetUnCYutoXA==";
+        url = "https://registry.npmjs.org/@types/node/-/node-20.14.9.tgz";
+        sha512 = "06OCtnTXtWOZBJlRApleWndH4JsRVs1pDCc8dLSQp+7PpUpX3ePdHyeNSFTeSe7FtKyQkrlPvHwJOW3SLd8Oyg==";
       };
     };
     "aggregate-error-3.1.0" = {
@@ -369,13 +369,13 @@
         sha512 = "4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==";
       };
     };
-    "debug-4.3.4" = {
+    "debug-4.3.5" = {
       name = "debug";
       packageName = "debug";
-      version = "4.3.4";
+      version = "4.3.5";
       src = fetchurl {
-        url = "https://registry.npmjs.org/debug/-/debug-4.3.4.tgz";
-        sha512 = "PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==";
+        url = "https://registry.npmjs.org/debug/-/debug-4.3.5.tgz";
+        sha512 = "pt0bNEmneDIvdL1Xsd9oDQ/wrQRkXDT4AUWlNZNPKvW5x/jyO9VFXkJUP07vQ2upmw5PlaITaPKc31jK13V+jg==";
       };
     };
     "deprecation-2.3.1" = {
@@ -495,13 +495,13 @@
         sha512 = "Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==";
       };
     };
-    "lru-cache-10.2.2" = {
+    "lru-cache-10.3.0" = {
       name = "lru-cache";
       packageName = "lru-cache";
-      version = "10.2.2";
+      version = "10.3.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/lru-cache/-/lru-cache-10.2.2.tgz";
-        sha512 = "9hp3Vp2/hFQUiIwKo8XCeFVnrg8Pk3TYNPIR7tJADKi5YfcF7vEaK7avFHTlSy3kOKYaJQaalfEo6YuXdceBOQ==";
+        url = "https://registry.npmjs.org/lru-cache/-/lru-cache-10.3.0.tgz";
+        sha512 = "CQl19J/g+Hbjbv4Y3mFNNXFEL/5t/KCg8POCuUqd4rMKjGG+j1ybER83hxV58zL+dFI1PTkt3GNFSHRt+d8qEQ==";
       };
     };
     "ms-2.1.2" = {
@@ -558,13 +558,13 @@
         sha512 = "FNAIBWCx9qcRhoHcgcJ0gvU7SN1lYU2ZXuSfl04bSC5OpvDHFyJCjdNHomPXxjQlCBU67YW64PzY7/VIEH7F2w==";
       };
     };
-    "simple-git-3.24.0" = {
+    "simple-git-3.25.0" = {
       name = "simple-git";
       packageName = "simple-git";
-      version = "3.24.0";
+      version = "3.25.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/simple-git/-/simple-git-3.24.0.tgz";
-        sha512 = "QqAKee9Twv+3k8IFOFfPB2hnk6as6Y6ACUpwCtQvRYBAes23Wv3SZlHVobAzqcE8gfsisCvPw3HGW3HYM+VYYw==";
+        url = "https://registry.npmjs.org/simple-git/-/simple-git-3.25.0.tgz";
+        sha512 = "KIY5sBnzc4yEcJXW7Tdv4viEz8KyG+nU0hay+DWZasvdFOYKeUZ6Xc25LUHHjw0tinPT7O1eY6pzX7pRT1K8rw==";
       };
     };
     "undici-types-5.26.5" = {
@@ -607,7 +607,7 @@
   args = {
     name = "_at_mattpolzin_slash_harmony";
     packageName = "@mattpolzin/harmony";
-    version = "4.2.0";
+    version = "4.3.0";
     src = ./.;
     dependencies = [
       sources."@kwsites/file-exists-1.1.1"
@@ -663,17 +663,17 @@
       sources."@octokit/webhooks-12.2.0"
       sources."@octokit/webhooks-methods-4.1.0"
       sources."@octokit/webhooks-types-7.4.0"
-      sources."@types/aws-lambda-8.10.138"
+      sources."@types/aws-lambda-8.10.140"
       sources."@types/btoa-lite-1.0.2"
       sources."@types/jsonwebtoken-9.0.6"
-      sources."@types/node-20.12.13"
+      sources."@types/node-20.14.9"
       sources."aggregate-error-3.1.0"
       sources."before-after-hook-2.2.3"
       sources."bottleneck-2.19.5"
       sources."btoa-lite-1.0.0"
       sources."buffer-equal-constant-time-1.0.1"
       sources."clean-stack-2.2.0"
-      (sources."debug-4.3.4"
+      (sources."debug-4.3.5"
         // {
           dependencies = [
             sources."ms-2.1.2"
@@ -692,13 +692,13 @@
       sources."lodash.isplainobject-4.0.6"
       sources."lodash.isstring-4.0.1"
       sources."lodash.once-4.1.1"
-      sources."lru-cache-10.2.2"
+      sources."lru-cache-10.3.0"
       sources."ms-2.1.3"
       sources."octokit-3.2.1"
       sources."once-1.4.0"
       sources."safe-buffer-5.2.1"
       sources."semver-7.6.2"
-      sources."simple-git-3.24.0"
+      sources."simple-git-3.25.0"
       sources."undici-types-5.26.5"
       sources."universal-github-app-jwt-1.1.2"
       sources."universal-user-agent-6.0.1"

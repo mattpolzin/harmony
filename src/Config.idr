@@ -7,6 +7,7 @@ import Data.List.PrefixSuffix
 import Data.List1
 import Data.Promise
 import Data.String
+import Data.Theme
 import Decidable.Equality
 import FFI.Git
 import FFI.GitHub
@@ -131,6 +132,7 @@ propSetter RequestUsers     = update parseBool (\b => { requestUsers := b })
 propSetter CommentOnRequest = update parseBool (\b => { commentOnRequest := b })
 propSetter DefaultRemote    = update Just (\s => { defaultRemote := s })
 propSetter MainBranch       = update Just (\s => { mainBranch := s })
+propSetter ThemeProp        = update parseString (\t => { theme := t })
 propSetter GithubPAT        = update Just (\s => { githubPAT := Just $ hide s })
 propSetter AssignTeams      = update parseBool (\b => { requestTeams := b })
 propSetter AssignUsers      = update parseBool (\b => { requestUsers := b })
@@ -156,6 +158,7 @@ propGetter RequestUsers     = show . requestUsers
 propGetter CommentOnRequest = show . commentOnRequest
 propGetter DefaultRemote    = show . defaultRemote
 propGetter MainBranch       = show . mainBranch
+propGetter ThemeProp        = show . theme
 propGetter GithubPAT        = maybe "Not set (will use $GITHUB_PAT environment variable)" show . githubPAT
 propGetter AssignTeams      = show . requestTeams
 propGetter AssignUsers      = show . requestUsers
@@ -233,6 +236,13 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
   requestUsers <-
     yesNoPrompt "Would you like harmony to request reviews from individual users when it requests a teams review?"
 
+  let themeDefaultStr = enterForDefaultStr "dark"
+  putStrLn "Would you like harmony configured for a dark or light terminal background\{themeDefaultStr}?"
+  theme <- offerRetry "The theme must be either 'dark' or 'light'. Which would you prefer?" 
+                      "Could not parse the input as a valid theme; will use 'dark' for now."
+                      Dark $
+                        Theme.parseString . orIfEmpty (Just "dark") . trim <$> getLine
+
   _ <- liftIO $ octokit pat
   putStrLn "Creating config..."
   mainBranch <- getRepoDefaultBranch org repo
@@ -260,6 +270,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
        , orgMembers
        , ignoredPRs = []
        , githubPAT = hide <$> configPAT
+       , theme
        , ephemeral
        }
      ignore $ writeConfig config
@@ -268,6 +279,21 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
      either renderIO pure (checkConfigConsistency config)
      pure config
   where
+    offerRetry : HasIO io =>
+                 (fallbackDescription : String)
+              -> (failureDescription : String)
+              -> (fallback : Lazy a)
+              -> io (Maybe a)
+              -> io a
+    offerRetry fallbackDescription failureDescription fallback p = do
+      Nothing <- p
+        | Just first => pure first
+      putStrLn fallbackDescription
+      Nothing <- p
+        | Just second => pure second
+      putStrLn failureDescription
+      pure fallback
+
     orIfEmpty : Maybe String -> String -> String
     orIfEmpty Nothing  x  = x
     orIfEmpty (Just y) "" = y
