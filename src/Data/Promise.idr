@@ -28,16 +28,33 @@ reject error = MkPromise (\ok, err => err error)
 -- Hint: This is possible as because the 'a' is in a positive position, because it got twice negated.
 export
 Functor (Promise e) where
-  map f (MkPromise cmd) = MkPromise (\succ => \err => cmd (\x => succ (f x)) err)
+  map f (MkPromise cmd) = MkPromise (\ok => \err => cmd (ok . f) err)
+
+export
+mapError : (e -> e') -> Promise e a -> Promise e' a
+mapError f (MkPromise cmd) = MkPromise (\ok, err => cmd ok (err . f))
+
+export
+Bifunctor Promise where
+  bimap f g (MkPromise cmd) = MkPromise (\ok, err => cmd (ok . g) (err . f))
 
 bind : Promise e a -> (a -> Promise e b) -> Promise e b
-bind (MkPromise cmd) f = MkPromise (\succ =>
-                                      \err =>
+bind (MkPromise cmd) f = MkPromise (\succ, err =>
                                               cmd (\x =>
                                                         let (MkPromise cmd_) = (f x)
                                                         in cmd_ succ err
                                                   ) err
                                     )
+
+export
+bindError : Promise e a -> (e -> Promise e' a) -> Promise e' a
+bindError (MkPromise cmd) f = MkPromise (\ok, err => 
+                                                cmd ok (\x => 
+                                                             let (MkPromise cmd_) = f x
+                                                             in cmd_ ok err
+                                                       )
+                                        )
+
 
 -- The Applicative instance of the Promise uses the succ
 -- continuation with the value injected by the 'pure' function.

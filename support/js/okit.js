@@ -34,9 +34,9 @@ const from_comma_delimited = str => {
 const digDefaultBranch = repoJson =>
   repoJson.default_branch
 
-const okit_get_repo_default_branch = (octokit, org, repo, onSuccess, onFailure) =>
+const okit_get_repo_default_branch = (octokit, owner, repo, onSuccess, onFailure) =>
   idris__okit_unpromisify(
-    octokit.rest.repos.get({ owner: org, repo }),
+    octokit.rest.repos.get({ owner, repo }),
     r => onSuccess(digDefaultBranch(r.data)),
     onFailure
   )
@@ -45,9 +45,9 @@ const okit_get_repo_default_branch = (octokit, org, repo, onSuccess, onFailure) 
 const digLabelNames = labelsJson =>
   labelsJson.map(l => l.name)
 
-const okit_list_repo_labels = (octokit, org, repo, onSuccess, onFailure) =>
+const okit_list_repo_labels = (octokit, owner, repo, onSuccess, onFailure) =>
   idris__okit_unpromisify(
-    octokit.rest.issues.listLabelsForRepo({ owner: org, repo, per_page: 100 }),
+    octokit.rest.issues.listLabelsForRepo({ owner, repo, per_page: 100 }),
     r => onSuccess(newline_delimited(digLabelNames(r.data))),
     onFailure
 )

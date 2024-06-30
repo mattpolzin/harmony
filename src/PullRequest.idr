@@ -194,7 +194,7 @@ requestReviewers : Config => Octokit =>
                 -> Promise' ()
 requestReviewers @{config} pr teamNames forcedReviewers {dry} = do 
   (openReviewers, closedReviewers) <- listReviewers 100 {pageBreaks=4}
-  teamMembers <- join <$> traverse (listTeamMembers config.org) teamNames
+  teamMembers <- join <$> traverse (forceListTeamMembers config.org) teamNames
 
   chosenUser <- if config.requestUsers
                      then let chosenCandidates = chooseReviewers closedReviewers openReviewers teamMembers [] pr.author

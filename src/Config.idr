@@ -28,12 +28,16 @@ writeConfig config =
           Right () => pure config
           Left err => reject "Failed to write updated config file to \{config.filepath}: \{show err}."
 
+||| For non-orgs, provide a fallback
+nonOrgFallback : (Lazy a) -> Promise OrgError a -> Promise String a
+nonOrgFallback x p = bindError p (\case NotAnOrg => pure x; Msg err => reject err)
+
 export
 syncConfig : Config => Octokit => (echo : Bool) -> Promise' Config
 syncConfig @{config} echo =
- do teamSlugs  <- listTeams config.org
+ do teamSlugs  <- nonOrgFallback [] $ listTeams config.org
+    orgMembers <- nonOrgFallback [] $ listOrgMembers config.org
     labelNames <- listRepoLabels config.org config.repo
-    orgMembers <- listOrgMembers config.org
     updatedAt  <- cast {to=Data.Config.Timestamp} <$> time
     let config' = { updatedAt  := updatedAt
                   , teamSlugs  := teamSlugs
@@ -253,9 +257,9 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     , columns  = terminalColumns
     , editor
     }
-  do teamSlugs  <- listTeams org
+  do teamSlugs  <- nonOrgFallback [] $ listTeams org
+     orgMembers <- nonOrgFallback [] $ listOrgMembers org
      repoLabels <- listRepoLabels org repo
-     orgMembers <- listOrgMembers org
      let config = MkConfig {
          updatedAt
        , org
