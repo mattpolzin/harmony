@@ -334,6 +334,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           om <- array string orgMembers
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
+                                          -- TODO 5.0.0: Make theme required part of config file (default to dark still)
                                           th <- maybe (Right $ Just Dark) 
                                                       (optional $ stringy "dark or light" parseString) 
                                                       maybeTheme

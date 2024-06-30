@@ -5,7 +5,6 @@ module Data.Theme
 public export
 data Theme = Light
            | Dark
---            | None
 
 export
 Show Theme where
