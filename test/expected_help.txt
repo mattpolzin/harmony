@@ -9,7 +9,7 @@ Subcommands:
       Get or set the value of a configuration property. Not all properties can
       be set and read via this subcommand.
       properties: requestTeams, requestUsers, commentOnRequest, defaultRemote,
-                  mainBranch, githubPAT, assignUsers, assignTeams,
+                  mainBranch, theme, githubPAT, assignUsers, assignTeams,
                   commentOnAssign
   contribute [-c/--checkout] [-<num>] [-i/--ignore {<uri>/<pr-number>}]
       Contribute to an open PR. Prints a URL. Prioritizes PRs you are requested
