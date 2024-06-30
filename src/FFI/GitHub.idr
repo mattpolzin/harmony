@@ -30,6 +30,10 @@ export
 octokit : (authToken : String) -> IO Octokit
 octokit authToken = Kit <$> (primIO $ prim__octokit authToken)
 
+export
+OctokitError : Type
+OctokitError = String
+
 %foreign okit_ffi "get_repo_default_branch"
 prim__getRepoDefaultBranch : Ptr OctokitRef
                           -> (org : String)
@@ -42,7 +46,7 @@ export
 getRepoDefaultBranch : Octokit =>
                        (org : String)
                     -> (repo : String)
-                    -> Promise String
+                    -> Promise OctokitError String
 getRepoDefaultBranch @{Kit ptr} org repo = promiseIO $ prim__getRepoDefaultBranch ptr org repo
 
 %foreign okit_ffi "list_repo_labels"
@@ -57,7 +61,7 @@ export
 listRepoLabels : Octokit =>
                  (org : String)
               -> (repo : String)
-              -> Promise (List String)
+              -> Promise OctokitError (List String)
 listRepoLabels @{Kit ptr} org repo =
   lines <$> (promiseIO $ prim__listRepoLabels ptr org repo)
 
@@ -69,7 +73,7 @@ prim__listTeams : Ptr OctokitRef
                -> PrimIO ()
 
 export
-listTeams : Octokit => (org : String) -> Promise (List String)
+listTeams : Octokit => (org : String) -> Promise OctokitError (List String)
 listTeams @{Kit ptr} org = 
   lines <$> (promiseIO $ prim__listTeams ptr org)
 
@@ -80,7 +84,7 @@ prim__listMyTeams : Ptr OctokitRef
                  -> PrimIO ()
 
 export
-listMyTeams : Octokit => Promise (List String)
+listMyTeams : Octokit => Promise OctokitError (List String)
 listMyTeams @{Kit ptr} =
   lines <$> (promiseIO $ prim__listMyTeams ptr)
 
@@ -98,7 +102,7 @@ listPRsForBranch : Octokit =>
                    (owner : String) 
                 -> (repo : String) 
                 -> (branch : String) 
-                -> Promise (List PullRequest)
+                -> Promise OctokitError (List PullRequest)
 listPRsForBranch @{Kit ptr} owner repo branch = 
   either . parsePullRequestsString =<< (promiseIO $ prim__listPRsForBranch ptr owner repo branch)
 
@@ -124,7 +128,7 @@ createPR : Octokit =>
         -> (base : String) 
         -> (title : String) 
         -> (description : String) 
-        -> Promise PullRequest
+        -> Promise OctokitError PullRequest
 createPR @{Kit ptr} {isDraft} owner repo head base title description =
   either . parsePullRequestString =<< (promiseIO $ prim__createPR ptr owner repo head base title description isDraft)
 
@@ -144,7 +148,7 @@ createComment : Octokit =>
              -> (repo : String) 
              -> (issueOrPrNumber : Integer) 
              -> (message : String) 
-             -> Promise ()
+             -> Promise OctokitError ()
 createComment @{Kit ptr} owner repo issueOrPrNumber message =
   ignore . promiseIO $ prim__createComment ptr owner repo issueOrPrNumber message
 
@@ -173,7 +177,7 @@ listPullReviewers : Octokit =>
                  -> (repo : String) 
                  -> (stateFilter : Maybe GitHubPRState) 
                  -> (pageLimit : Fin 101) 
-                 -> Promise (List String)
+                 -> Promise OctokitError (List String)
 listPullReviewers @{Kit ptr} owner repo stateFilter pageLimit = 
   lines <$> (promiseIO $ prim__listPullReviewers ptr owner repo (pullRequestStateFilter stateFilter) (cast $ finToNat pageLimit))
 
@@ -195,7 +199,7 @@ listPullRequestsJsonStr : Octokit =>
                        -> (stateFilter : Maybe GitHubPRState) 
                        -> (pageLimit : Fin 101) 
                        -> {default 0 page : Nat}
-                       -> Promise String
+                       -> Promise OctokitError String
 listPullRequestsJsonStr @{Kit ptr} owner repo stateFilter pageLimit {page} = 
   let filter  = pullRequestStateFilter stateFilter
       pgLimit = cast $ finToNat pageLimit
@@ -216,7 +220,7 @@ listPullRequests : Octokit =>
                 -> (stateFilter : Maybe GitHubPRState) 
                 -> (pageLimit : Fin 101) 
                 -> {default 0 page : Nat}
-                -> Promise (List PullRequest)
+                -> Promise OctokitError (List PullRequest)
 listPullRequests @{Kit ptr} owner repo stateFilter pageLimit {page} = 
   either . parsePullRequestsString =<< listPullRequestsJsonStr owner repo stateFilter pageLimit {page}
 
@@ -250,7 +254,7 @@ addPullReviewers : Octokit =>
                 -> (pullNumber : Integer) 
                 -> (reviewers : List String) 
                 -> (teamReviewers : List String) 
-                -> Promise (List String)
+                -> Promise OctokitError (List String)
 addPullReviewers @{Kit ptr} owner repo pullNumber reviewers teamReviewers = do
   teamReviewers <- lines <$> (promiseIO $ prim__addPullReviewers ptr owner repo pullNumber "" (join "," teamReviewers))
   individualReviewers <- lines <$> (promiseIO $ prim__addPullReviewers ptr owner repo pullNumber (join "," reviewers) "")
@@ -276,7 +280,7 @@ addPullLabels : Octokit =>
              -> (repo : String)
              -> (pullNumber : Integer)
              -> (labels : List String)
-             -> Promise (List String)
+             -> Promise OctokitError (List String)
 addPullLabels @{Kit ptr} owner repo pullNumber labels =
   lines <$> (promiseIO $ prim__addLabels ptr owner repo pullNumber (join "," labels))
 
@@ -294,7 +298,7 @@ listPullReviewsJsonStr : Octokit =>
                          (owner : String) 
                       -> (repo : String) 
                       -> (pullNumber : Integer) 
-                      -> Promise String
+                      -> Promise OctokitError String
 listPullReviewsJsonStr @{Kit ptr} owner repo pullNumber =
   promiseIO $ prim__listPullReviews ptr owner repo pullNumber
 
@@ -303,7 +307,7 @@ listPullReviews : Octokit =>
                   (owner : String) 
                -> (repo : String) 
                -> (pullNumber : Integer) 
-               -> Promise (List Review)
+               -> Promise OctokitError (List Review)
 listPullReviews owner repo pullNumber =
   either . parseReviewsString =<< listPullReviewsJsonStr owner repo pullNumber
 
@@ -319,7 +323,7 @@ export
 listTeamMembers : Octokit => 
                   (org : String) 
                -> (teamSlug : String) 
-               -> Promise (List String)
+               -> Promise OctokitError (List String)
 listTeamMembers @{Kit ptr} org teamSlug = 
   lines <$> (promiseIO $ prim__listTeamMembers ptr org teamSlug)
 
@@ -331,7 +335,7 @@ prim__listOrgMembers : Ptr OctokitRef
                     -> PrimIO ()
 
 export
-listOrgMembers : Octokit => (org : String) -> Promise (List String)
+listOrgMembers : Octokit => (org : String) -> Promise OctokitError (List String)
 listOrgMembers @{Kit ptr} org =
   lines <$> (promiseIO $ prim__listOrgMembers ptr org)
 
@@ -343,7 +347,7 @@ prim__getUser : Ptr OctokitRef
              -> PrimIO ()
 
 export
-getUser : Octokit => (username : String) -> Promise User
+getUser : Octokit => (username : String) -> Promise OctokitError User
 getUser @{Kit ptr} = either . parseUserString <=< promiseIO . prim__getUser ptr
 
 %foreign okit_ffi "get_self"
@@ -353,6 +357,6 @@ prim__getSelf : Ptr OctokitRef
              -> PrimIO ()
 
 export
-getSelf : Octokit => Promise User
+getSelf : Octokit => Promise OctokitError User
 getSelf @{Kit ptr} = either . parseUserString =<< promiseIO (prim__getSelf ptr)
 

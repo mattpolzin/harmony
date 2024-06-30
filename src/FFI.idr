@@ -4,8 +4,8 @@ import Data.Promise
 
 %default total
 
-promiseIO : (primFn : (String -> PrimIO ()) -> (String -> PrimIO ()) -> PrimIO ()) -> Promise String
-promiseIO primFn = 
+promiseIO : (primFn : (String -> PrimIO ()) -> (String -> PrimIO ()) -> PrimIO ()) -> Promise String String
+promiseIO primFn =
   promisify $ \ok,notOk => primFn (\res => toPrim $ ok res) (\err => toPrim $ notOk err)
 
 node_ffi : (libName : String) -> (fnName : String) -> String
