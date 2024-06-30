@@ -236,6 +236,13 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
   requestUsers <-
     yesNoPrompt "Would you like harmony to request reviews from individual users when it requests a teams review?"
 
+  let themeDefaultStr = enterForDefaultStr "dark"
+  putStrLn "Would you like harmony configured for a dark or light terminal background\{themeDefaultStr}?"
+  theme <- offerRetry "The theme must be either 'dark' or 'light'. Which would you prefer?" 
+                      "Could not parse the input as a valid theme; will use 'dark' for now."
+                      Dark $
+                        Theme.parseString . orIfEmpty (Just "dark") . trim <$> getLine
+
   _ <- liftIO $ octokit pat
   putStrLn "Creating config..."
   mainBranch <- getRepoDefaultBranch org repo
@@ -263,7 +270,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
        , orgMembers
        , ignoredPRs = []
        , githubPAT = hide <$> configPAT
-       , theme = Dark
+       , theme
        , ephemeral
        }
      ignore $ writeConfig config
@@ -272,6 +279,21 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
      either renderIO pure (checkConfigConsistency config)
      pure config
   where
+    offerRetry : HasIO io =>
+                 (fallbackDescription : String)
+              -> (failureDescription : String)
+              -> (fallback : Lazy a)
+              -> io (Maybe a)
+              -> io a
+    offerRetry fallbackDescription failureDescription fallback p = do
+      Nothing <- p
+        | Just first => pure first
+      putStrLn fallbackDescription
+      Nothing <- p
+        | Just second => pure second
+      putStrLn failureDescription
+      pure fallback
+
     orIfEmpty : Maybe String -> String -> String
     orIfEmpty Nothing  x  = x
     orIfEmpty (Just y) "" = y
