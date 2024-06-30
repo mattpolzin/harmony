@@ -181,7 +181,7 @@ reviewsGraph @{config} closedReviews openReviews candidates completedReviews =
                       ]
   where
     pendingDot : Doc AnsiStyle
-    pendingDot = theme Pending $ pretty "·"
+    pendingDot = theme Pending' $ pretty "·"
 
     missedDot : Doc AnsiStyle
     missedDot = theme Missed $ pretty "◦"
