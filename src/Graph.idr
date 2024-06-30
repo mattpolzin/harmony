@@ -80,7 +80,7 @@ parameters (config : Config)
   bar : (indentation : Nat) -> (score : Nat) -> (detractor : Nat) -> (bonus : Nat) -> Doc AnsiStyle
   bar idt score detractor bonus = indent (cast idt) . hcat $
                                 [ theme Missed . hcat $ replicate detractor (pretty '◦')
-                                , theme Pending . hcat $ replicate score (pretty '·')
+                                , theme Pending' . hcat $ replicate score (pretty '·')
                                 , theme Completed . hcat $ replicate bonus (pretty '▪')
                                 ]
 
