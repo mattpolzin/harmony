@@ -189,8 +189,7 @@ namespace Me
   printInfoOnSelf @{config} = do
     gitEmail <- handleUnsetEmail <$> userEmail
     githubUser <- getSelf
-    githubTeams <- sort <$> (bindError listMyTeams 
-                                       (\case NotAnOrg => pure []; Msg err => reject err))
+    githubTeams <- sort <$> listMyTeams 
     renderIO $ print config gitEmail githubUser githubTeams
       where
         handleUnsetEmail : String -> Maybe String

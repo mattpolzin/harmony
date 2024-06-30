@@ -137,9 +137,9 @@ prim__listMyTeams : Ptr OctokitRef
                  -> PrimIO ()
 
 export
-listMyTeams : Octokit => Promise OrgError (List String)
+listMyTeams : Octokit => Promise String (List String)
 listMyTeams @{Kit ptr} =
-  lines <$> (mapOrgError . promiseIO $ prim__listMyTeams ptr)
+  lines <$> (ignoreStatus . promiseIO $ prim__listMyTeams ptr)
 
 %foreign okit_ffi "list_pull_requests_for_branch"
 prim__listPRsForBranch : Ptr OctokitRef 
@@ -310,7 +310,7 @@ addPullReviewers : Octokit =>
                 -> Promise String (List String)
 addPullReviewers @{Kit ptr} owner repo pullNumber reviewers teamReviewers = do
   teamReviewers <- lines <$> (ignoreStatus . promiseIO $ prim__addPullReviewers ptr owner repo pullNumber "" (join "," teamReviewers))
-  individualReviewers <- lines <$> (promiseIO $ prim__addPullReviewers ptr owner repo pullNumber (join "," reviewers) "")
+  individualReviewers <- lines <$> (ignoreStatus . promiseIO $ prim__addPullReviewers ptr owner repo pullNumber (join "," reviewers) "")
   pure $ teamReviewers ++ individualReviewers
 
 %foreign okit_ffi "add_labels"
@@ -388,9 +388,8 @@ forceListTeamMembers : Octokit =>
 forceListTeamMembers = mapError errString .: listTeamMembers
   where
     errString : OrgError -> String
-    errString NotAnOrg = "You can only request team reviews for repositories belonging to GitHub organizations"
+    errString NotAnOrg = "You can only use teams with repositories belonging to GitHub organizations"
     errString (Msg str) = str
-
 
 %foreign okit_ffi "list_org_members"
 prim__listOrgMembers : Ptr OctokitRef 
