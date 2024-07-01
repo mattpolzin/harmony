@@ -230,6 +230,8 @@ Running `harmony reflect` will show a summary of your review requests and author
 ![Reflect Screenshot](./docs/images/reflect.png)
 
 ### List
+Running `harmony list` will list all the teams for the configured GitHub organization.
+
 Running `harmony list <team>` will list the members of the given GitHub Team.
 
 ### Graph
