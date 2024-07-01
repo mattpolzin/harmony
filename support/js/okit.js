@@ -5,7 +5,7 @@ const okit_octokit = authToken =>
   new Octokit({ auth: authToken })
 
 // Note that every Octokit FFI function uses idris__okit_stringify_error
-// which results in onFailure being called a JSON string of the following structure:
+// which results in onFailure being called with a JSON string of the following structure:
 // { "status": <http status code>, "error": <error string> }
 const idris__okit_unpromisify = (promise, onSuccess, onFailure) =>
   promise.then(r => onSuccess(r)(), e => idris__okit_stringify_error(onFailure)(e)())
