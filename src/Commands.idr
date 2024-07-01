@@ -151,6 +151,14 @@ request args {dry} = do
           (users, labels) = mapHom (map $ drop 1) (userArgs, labelArgs)
       in  (users, teams, labels)
 
+||| List teams for the configured org.
+export
+listOrgTeams : Config => Octokit =>
+       Promise ()
+listOrgTeams @{config} =
+  do teamNames <- sort <$> listTeams config.org
+     renderIO . vsep $ annotate italic . pretty <$> teamNames
+
 ||| List members of a given team when the user executes
 ||| `harmony list <team>`.
 export
