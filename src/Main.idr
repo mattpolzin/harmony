@@ -64,7 +64,7 @@ bashCompletion subcommand curWord prevWord =
            | Left _ => pure []
          pure (BashCompletion.opts subcommand curWord prevWord)
 
-resolve'' : Promise () -> IO ()
+resolve'' : Promise' () -> IO ()
 resolve'' = resolve' pure exitError
 
 
@@ -72,7 +72,7 @@ resolve'' = resolve' pure exitError
 ||| authentication.
 handleAuthenticatedArgs : Config => Git => Octokit => 
                           List String 
-                       -> Promise ()
+                       -> Promise' ()
 
 -- internal-use commands for forking process:
 handleAuthenticatedArgs @{config} ["reviews", "--json", prNumber] =
@@ -161,7 +161,7 @@ handleAuthenticatedArgs args =
 handleConfiguredArgs : Config => Git =>
                        (envGithubPAT : Maybe String)
                     -> List String
-                    -> Promise ()
+                    -> Promise' ()
 handleConfiguredArgs _ ["config"] =
   reject $ "The config command expects one or two arguments. "
         ++ "Specify a property to read it out or specify both a property and a value to set it to."

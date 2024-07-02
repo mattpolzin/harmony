@@ -13,7 +13,7 @@ export
 addLabels : Config => Octokit =>
             PullRequest
         -> (labels : List String)
-        -> Promise (List String)
+        -> Promise' (List String)
 addLabels @{config} pr labels =
   addPullLabels config.org config.repo pr.number labels
 

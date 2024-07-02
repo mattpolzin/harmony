@@ -21,19 +21,23 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
-writeConfig : Config -> Promise Config
+writeConfig : Config -> Promise' Config
 writeConfig config =
   do res <- writeFile config.filepath (show $ json config)
      case res of
           Right () => pure config
           Left err => reject "Failed to write updated config file to \{config.filepath}: \{show err}."
 
+||| For non-orgs, provide a fallback
+nonOrgFallback : (Lazy a) -> Promise OrgError a -> Promise String a
+nonOrgFallback x p = bindError p (\case NotAnOrg => pure x; Msg err => reject err)
+
 export
-syncConfig : Config => Octokit => (echo : Bool) -> Promise Config
+syncConfig : Config => Octokit => (echo : Bool) -> Promise' Config
 syncConfig @{config} echo =
- do teamSlugs  <- listTeams config.org
+ do teamSlugs  <- nonOrgFallback [] $ listTeams config.org
+    orgMembers <- nonOrgFallback [] $ listOrgMembers config.org
     labelNames <- listRepoLabels config.org config.repo
-    orgMembers <- listOrgMembers config.org
     updatedAt  <- cast {to=Data.Config.Timestamp} <$> time
     let config' = { updatedAt  := updatedAt
                   , teamSlugs  := teamSlugs
@@ -47,7 +51,7 @@ syncConfig @{config} echo =
     pure config'
 
 export
-syncIfOld : Octokit => Config -> Promise Config
+syncIfOld : Octokit => Config -> Promise' Config
 syncIfOld config =
   if config.updatedAt < !oneDayAgo
      then do -- putStrLn "Syncing config file..."
@@ -64,7 +68,7 @@ syncIfOld config =
 ||| config file. This results in a write to the config file and
 ||| also returns the updated config.
 export
-addIgnoredPRs : Config -> List Integer -> Promise Config
+addIgnoredPRs : Config -> List Integer -> Promise' Config
 addIgnoredPRs config is =
   writeConfig $
     { ignoredPRs := (nub $ config.ignoredPRs ++ is) } config
@@ -144,7 +148,7 @@ export
 setConfig : Config =>
             (prop : String)
          -> (value : String)
-         -> Promise Config
+         -> Promise' Config
 setConfig @{config} prop value with (settablePropNamed prop)
   _ | Nothing = reject "\{prop} cannot be set via `config` command."
   _ | Just (Evidence _ p) with ((propSetter p) config value)
@@ -167,7 +171,7 @@ propGetter CommentOnAssign  = show . commentOnRequest
 export
 getConfig : Config =>
             (prop : String)
-         -> Promise String
+         -> Promise' String
 getConfig @{config} prop with (settablePropNamed prop)
   getConfig @{config} prop | Nothing = reject "\{prop} cannot get read via `config` command."
   getConfig @{config} prop | (Just (Evidence _ p)) = pure $ (propGetter p) config
@@ -192,7 +196,7 @@ createConfig : Git =>
             -> (terminalColors : Bool)
             -> (terminalColumns : Nat)
             -> (editor : Maybe String)
-            -> Promise Config
+            -> Promise' Config
 createConfig envGithubPAT terminalColors terminalColumns editor = do
   putStrLn "Creating a new configuration (storing in \{Config.filename})..."
   putStrLn ""
@@ -253,9 +257,9 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     , columns  = terminalColumns
     , editor
     }
-  do teamSlugs  <- listTeams org
+  do teamSlugs  <- nonOrgFallback [] $ listTeams org
+     orgMembers <- nonOrgFallback [] $ listOrgMembers org
      repoLabels <- listRepoLabels org repo
-     orgMembers <- listOrgMembers org
      let config = MkConfig {
          updatedAt
        , org
@@ -347,7 +351,7 @@ loadOrCreateConfig : Git =>
                   -> (terminalColors : Bool)
                   -> (terminalColumns : Nat)
                   -> (editor : Maybe String)
-                  -> Promise Config
+                  -> Promise' Config
 loadOrCreateConfig envGithubPAT terminalColors terminalColumns editor = do
   Right config <- loadConfig terminalColors terminalColumns editor
     | Left (File FileNotFound) => createConfig envGithubPAT terminalColors terminalColumns editor

@@ -115,7 +115,7 @@ namespace Reflect
   ||| have waiting for review, how many have been closed recently, etc.
   export
   reflectOnSelf : Config => Octokit =>
-                  Promise ()
+                  Promise' ()
   reflectOnSelf = do
     prs     <- listPartitionedPRs prCount {pageBreaks=4}
     myLogin <- login <$> getSelf
@@ -181,16 +181,15 @@ namespace Me
       teams = vsep $
                 ul "GitHub Teams:" :: (map it githubTeams)
 
-
   ||| Print information about the currently authenticated and configured user.
   ||| This includes information that can be retrieved from Git as well as GitHub.
   export
   printInfoOnSelf : Config => Octokit => Git =>
-                    Promise ()
+                    Promise' ()
   printInfoOnSelf @{config} = do
     gitEmail <- handleUnsetEmail <$> userEmail
     githubUser <- getSelf
-    githubTeams <- sort <$> listMyTeams
+    githubTeams <- sort <$> listMyTeams 
     renderIO $ print config gitEmail githubUser githubTeams
       where
         handleUnsetEmail : String -> Maybe String

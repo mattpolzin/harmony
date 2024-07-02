@@ -69,7 +69,7 @@ partition = uncurry MkPRHistory . partition ((== Open) . (.state))
 
 ||| Create a fork of this program that retrieves the given page of PRs
 ||| and outputs the result as JSON.
-forkedPRs : (filter : Maybe GitHubPRState) -> (perPage : Nat) -> (currentPageIdx : Nat) -> (currentPageSize : Nat) -> (x : ()) -> Promise Future
+forkedPRs : (filter : Maybe GitHubPRState) -> (perPage : Nat) -> (currentPageIdx : Nat) -> (currentPageSize : Nat) -> (x : ()) -> Promise' Future
 forkedPRs filter perPage page _ _ = fork "pulls --json \{filterString} \{show perPage} \{show page}"
   where
     filterString : String
@@ -79,7 +79,7 @@ forkedPRs filter perPage page _ _ = fork "pulls --json \{filterString} \{show pe
                         Just Closed => "closed"
 
 ||| Grab all of the given pages of PRs and create a list of PRs from them.
-list' : (filter : Maybe GitHubPRState) -> Pagination _ _ _ () -> Promise (List PullRequest)
+list' : (filter : Maybe GitHubPRState) -> Pagination _ _ _ () -> Promise' (List PullRequest)
 list' filter pgs = do
   prJsons <- promiseAll =<< traverse' (forkedPRs filter)  pgs
   pulls   <- either $ traverse (array parsePR) prJsons
@@ -93,7 +93,7 @@ export
 listOpenPRs : Config => Octokit =>
               {default 0 pageBreaks : Nat}
            -> (prCount : Fin 101)
-           -> Promise (List PullRequest)
+           -> Promise' (List PullRequest)
 listOpenPRs @{config} {pageBreaks} prCount with ((finToNat prCount) `isGT` 0, pageBreaks `isGT` 0)
   _ | (No _, _) = pure empty
   _ | (_, No _) = listPullRequests config.org config.repo (Just Open) prCount
@@ -102,7 +102,7 @@ listOpenPRs @{config} {pageBreaks} prCount with ((finToNat prCount) `isGT` 0, pa
     _ | (Yes prf'') = list' (Just Open) (metaPages' (finToNat prCount) (S pageBreaks))
 
 ||| Grab all of the given pages of PRs and create a history from them.
-partition' : Pagination _ _ _ () -> Promise PRHistory
+partition' : Pagination _ _ _ () -> Promise' PRHistory
 partition' = map partition . (list' Nothing)
 
 ||| Get the most recent PRs by creation date and partition them
@@ -114,7 +114,7 @@ export
 listPartitionedPRs : Config => Octokit =>
                      {default 0 pageBreaks : Nat}
                   -> (prCount : Fin 101)
-                  -> Promise PRHistory
+                  -> Promise' PRHistory
 listPartitionedPRs @{config} {pageBreaks} prCount with ((finToNat prCount) `isGT` 0, pageBreaks `isGT` 0)
   _ | (No _, _) = pure empty
   _ | (_, No _) = partition <$> listPullRequests config.org config.repo Nothing prCount
@@ -130,20 +130,20 @@ export
 listReviewers : Config => Octokit =>
                 {default 0 pageBreaks : Nat}
              -> (prCount : Fin 101)
-             -> Promise (List String, List String)
+             -> Promise' (List String, List String)
 listReviewers = map (.allReviewers) . (listPartitionedPRs {pageBreaks})
 
 ||| Get all of the reviews on the given PRs.
 reviewsForPrs : Config => Octokit =>
                 List PullRequest
-             -> Promise (List Review)
+             -> Promise' (List Review)
 reviewsForPrs prs = do
     reviewsJson <- promiseAll =<< traverse forkedReviews prs
     -- ^ list of JSON Arrays
     reviews <- either $ traverse (array parseReview) reviewsJson
     pure $ join reviews
   where
-    forkedReviews : PullRequest -> Promise Future
+    forkedReviews : PullRequest -> Promise' Future
     forkedReviews = fork . ("reviews --json " ++) . show . number
 
 ||| Get the reviews on the given PRs by the given user.
@@ -151,7 +151,7 @@ export
 reviewsByUser : Config => Octokit =>
                 (author : String)
              -> List PullRequest
-             -> Promise (List Review)
+             -> Promise' (List Review)
 reviewsByUser author prs = do
   let filteredPrs = filter (\pr => not $ isAuthor author pr || isRequestedReviewer author pr) prs
   -- ^ we know we aren't looking for reviews on the author's PRs.
@@ -162,7 +162,7 @@ reviewsByUser author prs = do
 export
 reviewsByEachUser : Config => Octokit =>
                     List PullRequest
-                 -> Promise (SortedMap String (List Review))
+                 -> Promise' (SortedMap String (List Review))
 reviewsByEachUser prs = do
   reviews <- reviewsForPrs prs
   let groupedReviews = groupAllWith (.author) reviews
@@ -177,7 +177,7 @@ reviewsByEachUser prs = do
 export
 countReviewsByEachUser : Config => Octokit =>
                          List PullRequest
-                      -> Promise (SortedMap String Nat)
+                      -> Promise' (SortedMap String Nat)
 countReviewsByEachUser = pure . (map length) <=< reviewsByEachUser
 
 ||| Request reviews.
@@ -191,10 +191,10 @@ requestReviewers : Config => Octokit =>
                 -> (teamNames : List String) 
                 -> (forcedReviewers : List String) 
                 -> {default False dry: Bool} 
-                -> Promise ()
+                -> Promise' ()
 requestReviewers @{config} pr teamNames forcedReviewers {dry} = do 
   (openReviewers, closedReviewers) <- listReviewers 100 {pageBreaks=4}
-  teamMembers <- join <$> traverse (listTeamMembers config.org) teamNames
+  teamMembers <- join <$> traverse (forceListTeamMembers config.org) teamNames
 
   chosenUser <- if config.requestUsers
                      then let chosenCandidates = chooseReviewers closedReviewers openReviewers teamMembers [] pr.author
@@ -243,7 +243,7 @@ export
 identifyOrCreatePR : Config => Git => Octokit => 
                      {default False isDraft : Bool}
                   -> (branch : String) 
-                  -> Promise (IdentifiedOrCreated, PullRequest)
+                  -> Promise' (IdentifiedOrCreated, PullRequest)
 identifyOrCreatePR @{config} {isDraft} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
     | [] => (Created,) <$> createPR
@@ -274,7 +274,7 @@ identifyOrCreatePR @{config} {isDraft} branch = do
           ignore $ removeFile "pr_description.tmp.md"
         pure description
 
-      continueGivenUncommittedChanges : Promise Bool
+      continueGivenUncommittedChanges : Promise' Bool
       continueGivenUncommittedChanges = do
         case !uncommittedChanges of
              Just files => do
@@ -283,7 +283,7 @@ identifyOrCreatePR @{config} {isDraft} branch = do
                yesNoPrompt "Would you like to continue creating a Pull Request anyway?"
              Nothing => pure True
 
-      continueGivenStagedChanges : Promise Bool
+      continueGivenStagedChanges : Promise' Bool
       continueGivenStagedChanges = do
         case !stagedChanges of
              Just files => do
@@ -292,7 +292,7 @@ identifyOrCreatePR @{config} {isDraft} branch = do
                yesNoPrompt "Would you like to continue creating a Pull Request anyway?"
              Nothing => pure True
 
-      createPR : Promise PullRequest
+      createPR : Promise' PullRequest
       createPR = do
         -- create a remote tracking branch if needed
         whenNothing !remoteTrackingBranch $ do

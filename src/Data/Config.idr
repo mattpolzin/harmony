@@ -241,7 +241,7 @@ Show Config where
   show config = unlines [
       "       updatedAt: \{show config.updatedAt}"
     , "           theme: \{show config.theme}"
-    , "             org: \{show config.org}"
+    , "     org or user: \{show config.org}"
     , "            repo: \{show config.repo}"
     , "   defaultRemote: \{show config.defaultRemote}"
     , "      mainBranch: \{show config.mainBranch}"
