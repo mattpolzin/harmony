@@ -31,21 +31,21 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 export
 sync : Config => Octokit =>
-       Promise ()
+       Promise' ()
 sync = ignore $ syncConfig True
 
 ||| Provide information about who the current user is when
 ||| they execute `harmony whoami`.
 export
 whoami : Config => Git => Octokit =>
-         Promise ()
+         Promise' ()
 whoami = printInfoOnSelf
 
 ||| Provide information on the curent user's recent work and currrent
 ||| workflow when they execute `harmony relfect`.
 export
 reflect : Config => Octokit =>
-          Promise ()
+          Promise' ()
 reflect = reflectOnSelf
 
 ||| In order to support tab completion of multi-word labels, spaces have been turned into
@@ -92,7 +92,7 @@ namespace TestUnslugifyLabel
 export
 label : Config => Git => Octokit =>
         (labels : List String)
-     -> Promise ()
+     -> Promise' ()
 label @{config} labels =
   do (_, openPr) <- identifyOrCreatePR !currentBranch
      let finalLabels = unslugifyLabel config.repoLabels <$> labels
@@ -116,7 +116,7 @@ export
 pr : Config => Git => Octokit =>
      {default False isDraft : Bool}
   -> (labelArgs : List String)
-  -> Promise ()
+  -> Promise' ()
 pr {isDraft} labelSlugs =
   if all isHashPrefix labelSlugs
      then do (actionTaken, pr) <- identifyOrCreatePR {isDraft} !currentBranch
@@ -133,7 +133,7 @@ export
 request : Config => Git => Octokit => 
          (requestArgs : List String) 
       -> {default False dry : Bool} 
-      -> Promise ()
+      -> Promise' ()
 request args {dry} = do
   let (forcedReviewers, teamNames, labelSlugs) = partitionedArgs
   if (null forcedReviewers && null teamNames)
@@ -156,14 +156,14 @@ request args {dry} = do
 export
 list : Config => Octokit =>
        (team : String) 
-    -> Promise ()
+    -> Promise' ()
 list @{config} team =
-  do teamMemberLogins <- sort <$> listTeamMembers config.org team
+  do teamMemberLogins <- sort <$> forceListTeamMembers config.org team
      teamMembersJson <- promiseAll =<< traverse forkedUser teamMemberLogins
      teamMembers <- traverse (either . parseUser) teamMembersJson
      renderIO . vsep $ putNameLn <$> teamMembers
   where
-    forkedUser : (login : String) -> Promise Future
+    forkedUser : (login : String) -> Promise' Future
     forkedUser = fork . ("user --json " ++)
 
     putNameLn : User -> Doc AnsiStyle
@@ -183,12 +183,12 @@ teamNameArg _ = Nothing
 export
 graph : Config => Octokit =>
         List GraphArg
-     -> Promise ()
+     -> Promise' ()
 graph @{config} args = do
   let includeCompletedReviews = find (\case IncludeCompletedReviews => True; _ => False) args
   let Just teamName = head' $ mapMaybe teamNameArg args
     | Nothing => reject "The graph command expects the name of a GitHub Team as an argument."
-  teamMemberLogins <- listTeamMembers config.org teamName
+  teamMemberLogins <- forceListTeamMembers config.org teamName
   prs <- listPartitionedPRs 100 {pageBreaks=4}
   let (openReviewers, closedReviewers) = prs.allReviewers
   completedReviews <- 
@@ -199,7 +199,7 @@ graph @{config} args = do
 
 export
 health : Config => Octokit =>
-         Promise ()
+         Promise' ()
 health @{config} = do
   prs <- listOpenPRs {pageBreaks = 4} 100
   renderIO $ healthGraph prs config.org config.repo
@@ -297,7 +297,7 @@ parseContributeArgs args =
 export
 contribute : Config => Git => Octokit =>
              (args : List ContributeArg)
-          -> Promise ()
+          -> Promise' ()
 contribute @{config} args = do
   openPrs <- listPullRequests config.org config.repo (Just Open) 100
   let nonDraftPrs = filter (not . isDraft) openPrs
@@ -330,7 +330,7 @@ contribute @{config} args = do
 ||| Print the GitHub URI for the current branch when the user
 ||| executes `harmony branch`.
 export
-branch : Config => Git => Promise ()
+branch : Config => Git => Promise' ()
 branch @{config} = do
   branch <- currentBranch
   let org = config.org

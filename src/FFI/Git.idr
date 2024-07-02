@@ -28,7 +28,7 @@ prim__currentBranch : Ptr GitRef
                    -> PrimIO ()
 
 export
-currentBranch : Git => Promise String
+currentBranch : Git => Promise' String
 currentBranch @{G ptr} = promiseIO $ prim__currentBranch ptr
 
 %foreign git_ffi "checkout_branch"
@@ -39,7 +39,7 @@ prim__checkoutBranch : Ptr GitRef
                     -> PrimIO ()
 
 export
-checkoutBranch : Git => (branch : String) -> Promise ()
+checkoutBranch : Git => (branch : String) -> Promise' ()
 checkoutBranch @{G ptr} branch = 
   ignore . promiseIO $ prim__checkoutBranch ptr branch
 
@@ -52,7 +52,7 @@ prim__pushNewBranch : Ptr GitRef
                    -> PrimIO ()
 
 export
-pushNewBranch : Git => (remoteName : String) -> (branch : String) -> Promise ()
+pushNewBranch : Git => (remoteName : String) -> (branch : String) -> Promise' ()
 pushNewBranch @{G ptr} remoteName branch =
   ignore . promiseIO $ prim__pushNewBranch ptr remoteName branch
 
@@ -63,7 +63,7 @@ prim__push : Ptr GitRef
           -> PrimIO ()
 
 export
-push : Git => Promise ()
+push : Git => Promise' ()
 push @{G ptr} = ignore . promiseIO $ prim__push ptr
 
 %foreign git_ffi "list_remotes"
@@ -73,7 +73,7 @@ prim__listRemotes : Ptr GitRef
                  -> PrimIO ()
 
 export
-listRemotes : Git => Promise (List String)
+listRemotes : Git => Promise' (List String)
 listRemotes @{G ptr} = lines <$> (promiseIO $ prim__listRemotes ptr)
 
 %foreign git_ffi "remote_uri"
@@ -88,7 +88,7 @@ prim__remoteURI : Ptr GitRef
 |||   "git@github.com:org/reponame.git"
 |||   "https://github.com/org/reponame.git"
 export
-remoteURI : Git => (remoteName : String) -> Promise String
+remoteURI : Git => (remoteName : String) -> Promise' String
 remoteURI @{G ptr} remoteName = promiseIO $ prim__remoteURI ptr remoteName
 
 %foreign git_ffi "remote_tracking_branch"
@@ -98,7 +98,7 @@ prim__remoteTrackingBranch : Ptr GitRef
                           -> PrimIO ()
 
 export
-remoteTrackingBranch : Git => Promise (Maybe String)
+remoteTrackingBranch : Git => Promise' (Maybe String)
 remoteTrackingBranch @{G ptr} = do
   str <- promiseIO $ prim__remoteTrackingBranch ptr
   pure $
@@ -115,7 +115,7 @@ prim__uncommittedChanges : Ptr GitRef
 ||| Get the Git output for filenames with uncommitted changes. If there
 ||| are no files with uncommitted changes, returns @Nothing@.
 export
-uncommittedChanges : Git => Promise (Maybe String)
+uncommittedChanges : Git => Promise' (Maybe String)
 uncommittedChanges @{G ptr} = do
   str <- promiseIO $ prim__uncommittedChanges ptr
   pure $
@@ -132,7 +132,7 @@ prim__stagedChanges : Ptr GitRef
 ||| Get the Git output for filenames with staged changes. If there
 ||| are no files with staged changes, returns @Nothing@.
 export
-stagedChanges : Git => Promise (Maybe String)
+stagedChanges : Git => Promise' (Maybe String)
 stagedChanges @{G ptr} = do
   str <- promiseIO $ prim__stagedChanges ptr
   pure $
@@ -150,7 +150,7 @@ prim__unpushedCommits : Ptr GitRef
 ||| commit including the ref, author, and commit message). If there
 ||| are no unpushed commits, returns @Nothing@.
 export
-unpushedCommits : Git => Promise (Maybe String)
+unpushedCommits : Git => Promise' (Maybe String)
 unpushedCommits @{G ptr} = do
   str <- promiseIO $ prim__unpushedCommits ptr
   pure $
@@ -165,7 +165,7 @@ prim__userEmail : Ptr GitRef
                -> PrimIO ()
 
 export
-userEmail : Git => Promise String
+userEmail : Git => Promise' String
 userEmail @{G ptr} = promiseIO $ prim__userEmail ptr
 
 %foreign git_ffi "root_dir"
@@ -177,6 +177,6 @@ prim__rootDir : Ptr GitRef
 ||| Get the absolute path of the Git repository's root directory
 ||| (the location of the `.git` folder).
 export
-rootDir : Git => Promise String
+rootDir : Git => Promise' String
 rootDir @{G ptr} = promiseIO $ prim__rootDir ptr
 

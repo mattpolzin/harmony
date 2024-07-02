@@ -86,7 +86,7 @@ yesNoPrompt question = do
 ||| Get an absolute path for the given directory or file assuming the
 ||| given path is relative to the root of the Git repository.
 export
-relativeToRoot : Git => String -> Promise String
+relativeToRoot : Git => String -> Promise' String
 relativeToRoot path = rootDir <&> (++ "/\{path}")
 
 ||| If possible, extract a Jira ticket reference from the given string.

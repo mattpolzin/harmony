@@ -50,7 +50,7 @@ prim__awaitStringify : Future -> (onSuccess : String -> PrimIO ()) -> (onError :
 ||| and then processes the result (an array of results) as a list
 ||| of JSON objects.
 export
-promiseAll : Foldable t => t Future -> Promise (List JSON)
+promiseAll : Foldable t => t Future -> Promise' (List JSON)
 promiseAll xs =
   do f <- all xs
      str <- promisify $ \ok,err => prim__awaitStringify f (\x => toPrim $ ok x) (\y => toPrim $ err y)
