@@ -122,7 +122,7 @@ handleAuthenticatedArgs ("contribute" :: args) =
        Right args => Commands.contribute args
        Left err   => exitError err
 handleAuthenticatedArgs ["list"] =
-  reject "The list command expects the name of a GitHub Team as an argument."
+  Commands.listOrgTeams
 handleAuthenticatedArgs @{config} ["list", teamName] =
   Commands.list teamName
 handleAuthenticatedArgs @{config} ("graph" :: args) =

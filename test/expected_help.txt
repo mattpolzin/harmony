@@ -32,8 +32,8 @@ Subcommands:
   label {<label>} [...]
       Add one or more labels to a PR, creating a new PR if one does not exist.
       Labels that do not exist yet will be created automatically.
-  list {<team-slug>}
-      List the members of the given GitHub Team.
+  list [<team-slug>]
+      List all teams or the members of the given GitHub Team.
   pr [--draft] [#<label>] [...]
       Identify an existing PR or create a new one for the current branch.
 
