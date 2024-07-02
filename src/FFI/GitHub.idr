@@ -130,6 +130,16 @@ listTeams : Octokit => (org : String) -> Promise OrgError (List String)
 listTeams @{Kit ptr} org = 
   lines <$> (mapOrgError . promiseIO $ prim__listTeams ptr org)
 
+export
+forceListTeams : Octokit =>
+                 (org : String)
+              -> Promise' (List String)
+forceListTeams = mapError errString . listTeams
+  where
+    errString : OrgError -> String
+    errString NotAnOrg = "You can only list teams for repositories belonging to GitHub organizations"
+    errString (Msg str) = str
+
 %foreign okit_ffi "list_my_teams"
 prim__listMyTeams : Ptr OctokitRef
                  -> (onSuccess : String -> PrimIO ())

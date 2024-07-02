@@ -154,9 +154,9 @@ request args {dry} = do
 ||| List teams for the configured org.
 export
 listOrgTeams : Config => Octokit =>
-       Promise ()
+       Promise' ()
 listOrgTeams @{config} =
-  do teamNames <- sort <$> listTeams config.org
+  do teamNames <- sort <$> forceListTeams config.org
      renderIO . vsep $ annotate italic . pretty <$> teamNames
 
 ||| List members of a given team when the user executes
