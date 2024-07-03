@@ -239,7 +239,7 @@ parseGraphArgs args =
 
 data IgnoreOpt = PRNum Nat
 
-data ContributeArg = Checkout | Ignore IgnoreOpt | Skip Nat
+data ContributeArg = List | Checkout | Ignore IgnoreOpt | Skip Nat
 
 skipArg : ContributeArg -> Maybe Nat
 skipArg (Skip n) = Just n
@@ -252,7 +252,7 @@ ignorePRNums (_ :: xs) = ignorePRNums xs
 
 contributeUsageError : String
 contributeUsageError =
-  "contribute's arguments must be -<num> to skip num PRs, --ignore (-i) <uri>/<pr-number>, or --checkout (-c) to checkout the branch needing review."
+  "contribute's arguments must be -<num> to skip num PRs, --ignore (-i) <uri>/<pr-number>, --list to list PRs instead of picking the first one, or --checkout (-c) to checkout the branch needing review."
 
 ||| Parse arguments to the contribute subcommand.
 export
@@ -261,9 +261,14 @@ parseContributeArgs [] = Right []
 parseContributeArgs args =
   let (ignoreArgs, rest) = recombineIgnoreArgs args
       ignoreArgs' = Ignore <$> ignoreArgs
-      rest' = (traverse (parseSkipArg <||> parseCheckoutFlag) rest)
+      rest' = (traverse (parseListFlag <||> parseSkipArg <||> parseCheckoutFlag) rest)
       in  maybeToEither contributeUsageError ((ignoreArgs' ++) <$> rest')
   where
+    parseListFlag : String -> Maybe ContributeArg
+    parseListFlag "-l" = Just List
+    parseListFlag "--list" = Just List
+    parseListFlag _ = Nothing
+
     parseCheckoutFlag : String -> Maybe ContributeArg
     parseCheckoutFlag "-c" = Just Checkout
     parseCheckoutFlag "--checkout" = Just Checkout
@@ -321,19 +326,33 @@ contribute @{config} args = do
   let notIgnored = filter (isNotIgnored config') notMine
   let parted = partition (isRequestedReviewer myLogin) notIgnored
   let (requestedOfMe, others) = (mapHom $ sortBy (compare `on` .createdAt)) parted
-  let pr = head' . drop skip $ requestedOfMe ++ others
-  case pr of
-       Nothing => reject "No open PRs to review!"
-       Just pr => do
-         whenJust (checkout $> pr.headRef) $ \branch => do
-           checkoutBranch branch
-         putStrLn  (pr.webURI @{config'})
+  let list = find (\case List => True; _ => False) args
+  case list of
+       Nothing  => pickOne config' skip checkout requestedOfMe others
+       (Just _) => listSome skip requestedOfMe
 
   where
+
     isNotIgnored : Config -> PullRequest -> Bool
     isNotIgnored config pr =
       isNothing $
         find (== pr.number) config.ignoredPRs
+
+    pickOne : Config -> Nat -> Maybe ContributeArg -> List PullRequest -> List PullRequest -> Promise' ()
+    pickOne config' skip checkout requestedOfMe others =
+      let pr = head' . drop skip $ requestedOfMe ++ others
+      in case pr of
+           Nothing => reject "No open PRs to review!"
+           Just pr => do
+             whenJust (checkout $> pr.headRef) $ \branch => do
+               checkoutBranch branch
+             putStrLn  (pr.webURI @{config'})
+
+    listSome : Nat -> List PullRequest -> Promise' ()
+    listSome skip requestedOfMe = do
+      let descriptions = (.description) <$> requestedOfMe
+      for_ descriptions $ \d =>
+                               putStrLn d
 
 ||| Print the GitHub URI for the current branch when the user
 ||| executes `harmony branch`.

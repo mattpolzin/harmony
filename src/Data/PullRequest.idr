@@ -41,25 +41,27 @@ public export
 record PullRequest where
   constructor MkPullRequest
   ||| The pull request's "number" (as seen in URIs referring to the PR).
-  number    : Integer
+  number      : Integer
+  ||| The pull request's description
+  description : String
   ||| When the PR was created.
-  createdAt : Date
+  createdAt   : Date
   ||| Is the PR currently a "draft"?
-  isDraft : Bool
+  isDraft     : Bool
   ||| The `login` of the author of the pull request.
-  author    : String
+  author      : String
   ||| Open or Closed status.
-  state     : PRState
+  state       : PRState
   ||| A List of all reviewers requested on the PR.
-  reviewers : List String
+  reviewers   : List String
   ||| The branch being merged into some other branch.
-  headRef : String
+  headRef     : String
 
 %name PullRequest pr, pr1, pr2
 
 export
 Show PullRequest where
-  show (MkPullRequest number _ _ author state _ headRef) =
+  show (MkPullRequest number _ _ _ author state _ headRef) =
     "[\{show number}] (\{show state}) \{authorString} - headRef: \{headRef}"
     where
       authorString : String
@@ -91,17 +93,19 @@ export
 parsePR : JSON -> Either String PullRequest
 parsePR json =
  do pr <- object json
-    [pullNumber, authorLogin, stateStr, createdAtStr, mergedStr, isDraftStr, reviewerList, head] <- lookupAll ["pull_number", "author", "state", "created_at", "merged", "draft", "reviewers", "head_ref"] pr
-    number    <- integer pullNumber
-    author    <- string authorLogin
-    merged    <- bool mergedStr
-    isDraft   <- bool isDraftStr
-    state     <- (parseState merged) =<< string stateStr
-    createdAt <- parseDateTime =<< string createdAtStr
-    reviewers <- array string reviewerList
-    headRef   <- string head
+    [pullNumber, pullDescription, authorLogin, stateStr, createdAtStr, mergedStr, isDraftStr, reviewerList, head] <- lookupAll ["pull_number", "description", "author", "state", "created_at", "merged", "draft", "reviewers", "head_ref"] pr
+    number      <- integer pullNumber
+    description <- string pullDescription
+    author      <- string authorLogin
+    merged      <- bool mergedStr
+    isDraft     <- bool isDraftStr
+    state       <- (parseState merged) =<< string stateStr
+    createdAt   <- parseDateTime =<< string createdAtStr
+    reviewers   <- array string reviewerList
+    headRef     <- string head
     pure $ MkPullRequest {
         number
+      , description
       , createdAt
       , isDraft
       , author
