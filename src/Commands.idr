@@ -239,7 +239,7 @@ parseGraphArgs args =
 
 data IgnoreOpt = PRNum Nat
 
-data ContributeArg = Checkout | Ignore IgnoreOpt | Skip Nat
+data ContributeArg = List | Checkout | Ignore IgnoreOpt | Skip Nat
 
 skipArg : ContributeArg -> Maybe Nat
 skipArg (Skip n) = Just n
@@ -252,7 +252,7 @@ ignorePRNums (_ :: xs) = ignorePRNums xs
 
 contributeUsageError : String
 contributeUsageError =
-  "contribute's arguments must be -<num> to skip num PRs, --ignore (-i) <uri>/<pr-number>, or --checkout (-c) to checkout the branch needing review."
+  "contribute's arguments must be -<num> to skip num PRs, --ignore (-i) <uri>/<pr-number>, --list to list PRs instead of picking the first one, or --checkout (-c) to checkout the branch needing review."
 
 ||| Parse arguments to the contribute subcommand.
 export
@@ -261,9 +261,14 @@ parseContributeArgs [] = Right []
 parseContributeArgs args =
   let (ignoreArgs, rest) = recombineIgnoreArgs args
       ignoreArgs' = Ignore <$> ignoreArgs
-      rest' = (traverse (parseSkipArg <||> parseCheckoutFlag) rest)
+      rest' = (traverse (parseListFlag <||> parseSkipArg <||> parseCheckoutFlag) rest)
       in  maybeToEither contributeUsageError ((ignoreArgs' ++) <$> rest')
   where
+    parseListFlag : String -> Maybe ContributeArg
+    parseListFlag "-l" = Just List
+    parseListFlag "--list" = Just List
+    parseListFlag _ = Nothing
+
     parseCheckoutFlag : String -> Maybe ContributeArg
     parseCheckoutFlag "-c" = Just Checkout
     parseCheckoutFlag "--checkout" = Just Checkout
@@ -315,25 +320,61 @@ contribute @{config} args = do
     if (null newIgnorePRNums)
        then pure config
        else addIgnoredPRs config newIgnorePRNums
+  -- options:
   let skip = fromMaybe 0 (head' $ mapMaybe skipArg args)
   let checkout = find (\case Checkout => True; _ => False) args
+  let list = find (\case List => True; _ => False) args
+  when (isJust checkout && isJust list) $
+    reject "The --checkout and --list options are mutually exclusive"
+  -- execution:
   let notMine = filter (not . isAuthor myLogin) nonDraftPrs
   let notIgnored = filter (isNotIgnored config') notMine
   let parted = partition (isRequestedReviewer myLogin) notIgnored
   let (requestedOfMe, others) = (mapHom $ sortBy (compare `on` .createdAt)) parted
-  let pr = head' . drop skip $ requestedOfMe ++ others
-  case pr of
-       Nothing => reject "No open PRs to review!"
-       Just pr => do
-         whenJust (checkout $> pr.headRef) $ \branch => do
-           checkoutBranch branch
-         putStrLn  (pr.webURI @{config'})
+  case list of
+       Nothing  => pickOne config' skip checkout requestedOfMe others
+       (Just _) => listSome skip requestedOfMe others
 
   where
     isNotIgnored : Config -> PullRequest -> Bool
     isNotIgnored config pr =
       isNothing $
         find (== pr.number) config.ignoredPRs
+
+    pickOne : Config -> Nat -> Maybe ContributeArg -> List PullRequest -> List PullRequest -> Promise' ()
+    pickOne config' skip checkout requestedOfMe others =
+      let pr = head' . drop skip $ requestedOfMe ++ others
+      in case pr of
+           Nothing => reject "No open PRs to review!"
+           Just pr => do
+             whenJust (checkout $> pr.headRef) $ \branch => do
+               checkoutBranch branch
+             putStrLn  (pr.webURI @{config'})
+
+    printDetails : PullRequest -> Doc AnsiStyle
+    printDetails pr =
+      let branch  = annotate italic (pretty pr.headRef)
+          title   = pretty "  ├ title:  " <++> pretty pr.title
+          created = pretty "  ├ created:" <++> pretty (show pr.createdAt)
+          number  = pretty "  ├ number: " <++> annotate (color Green) (pretty pr.number)
+          link    = pretty "  └ url:    " <++> annotate (color Blue) (pretty pr.webURI)
+      in vsep [branch, title, created, number, link]
+
+    goListSome : Bool -> List PullRequest -> Promise' ()
+    goListSome direct prs = do
+      let (pr :: rest) = prs
+        | [] => pure ()
+      let first = printDetails pr
+      renderIO $
+        indent (if direct then 0 else 2) $
+          foldl (\acc, next => vsep [acc, emptyDoc, printDetails next]) first rest
+
+    listSome : Nat -> List PullRequest -> List PullRequest -> Promise' ()
+    listSome skip requestedOfMe others = do
+      goListSome True (drop skip requestedOfMe)
+      putStrLn ""
+      renderIO $ annotate bold "Your review not requested:"
+      goListSome False (take 5 others)
 
 ||| Print the GitHub URI for the current branch when the user
 ||| executes `harmony branch`.
