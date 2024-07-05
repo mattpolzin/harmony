@@ -161,17 +161,6 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     want to set a PAT via the GITHUB_PAT environment variable.
     """
 
-  -- TODO 5.0.0: remove deprecated aliases below
-  AssignTeams : SettableProp 
-    "assignTeams"
-    "[true/false] Deprecated alias for the 'requestTeams' config option."
-  AssignUsers : SettableProp
-    "assignUsers"
-    "[true/false] Deprecated alias for the 'requestUsers' config option."
-  CommentOnAssign : SettableProp
-    "commentOnAssign"
-    "[true/false] Deprecated alias for the 'commentOnRequest' config option."
-
 public export
 SomeSettableProp : Type
 SomeSettableProp = (n ** h ** SettableProp n h)
@@ -193,9 +182,6 @@ settablePropNamed "mainBranch"       = Just $ Evidence _ MainBranch
 settablePropNamed "theme"            = Just $ Evidence _ ThemeProp
 settablePropNamed "githubPAT"        = Just $ Evidence _ GithubPAT
 settablePropNamed "requestUsers"     = Just $ Evidence _ RequestUsers
-settablePropNamed "assignTeams"      = Just $ Evidence _ AssignTeams
-settablePropNamed "assignUsers"      = Just $ Evidence _ AssignUsers
-settablePropNamed "commentOnAssign"  = Just $ Evidence _ CommentOnAssign
 settablePropNamed _ = Nothing
 
 namespace SettablePropNamedProperties
@@ -215,9 +201,6 @@ settableProps = [
   , (_ ** _ ** MainBranch)
   , (_ ** _ ** ThemeProp)
   , (_ ** _ ** GithubPAT)
-  , (_ ** _ ** AssignUsers)
-  , (_ ** _ ** AssignTeams)
-  , (_ ** _ ** CommentOnAssign)
   ]
 
 namespace SettablePropsProperties
@@ -336,6 +319,9 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , defaultRemote
                                             , repoLabels
                                             , ignoredPRs
+                                            , requestTeams
+                                            , requestUsers
+                                            , commentOnRequest
                                             ] <-
                                             lookupAll [
                                                 "updatedAt"
@@ -347,12 +333,10 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               , "defaultRemote"
                                               , "repoLabels"
                                               , "ignoredPRs"
+                                              , "requestTeams"
+                                              , "requestUsers"
+                                              , "commentOnRequest"
                                               ] config
-                                          -- TODO 5.0.0: Stop supporting the old aliases "assign..." and move the 
-                                          --             new "request..." versions into the required lookup above.
-                                          requestTeams <- exactlyOneOf "assignTeams" "requestTeams"
-                                          requestUsers <- exactlyOneOf "assignUsers" "requestUsers"
-                                          commentOnRequest <- exactlyOneOf "commentOnAssign" "commentOnRequest"
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           let maybeTheme = lookup "theme" config
                                           ua <- cast <$> integer updatedAt
@@ -369,7 +353,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           om <- array string orgMembers
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
-                                          -- TODO 5.0.0: Make theme required part of config file (default to dark still)
+                                          -- TODO 6.0.0: Make theme required part of config file (default to dark still)
                                           --             theme lookup can be moved to the required lookupAll above.
                                           th <- maybe (Right Dark) 
                                                       (stringy "dark or light" parseString) 

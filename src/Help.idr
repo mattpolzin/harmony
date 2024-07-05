@@ -105,8 +105,6 @@ subcommandHelp' n@"reflect" = subcommand n [] [reflow "Reflect on the current st
 subcommandHelp' n@"list"    = subcommand n [argument False "<team-slug>"] ["List all teams or the members of the given GitHub Team."]
 subcommandHelp' n@"health"  = subcommand n [] [reflow "Graph all open PRs grouped by the month they were created."]
 subcommandHelp' n@"rq"      = subcommand n [] ["Alias for 'request' command."]
-subcommandHelp' n@"assign"  = subcommand n [] [warning "Deprecated alias for 'request' command."]
--- TODO 5.0.0:     ^ remove deprecated command help
 subcommandHelp' c           = pretty "Unreconized command: \{c}"
 
 ||| Print help for a particular subcommand.
@@ -121,9 +119,7 @@ helpDocs : Doc AnsiStyle
 helpDocs = vsep
   [ "harmony" <++> subcommand' "<subcommand>"
   , heading "Subcommands" $ vsep
-      [ subcommandHelp' "assign"
-      -- TODO 5.0.0: ^ remove deprecated command help
-      , subcommandHelp' "branch"
+      [ subcommandHelp' "branch"
       , subcommandHelp' "config"
       , subcommandHelp' "contribute"
       , subcommandHelp' "graph"

@@ -138,9 +138,6 @@ propSetter DefaultRemote    = update Just (\s => { defaultRemote := s })
 propSetter MainBranch       = update Just (\s => { mainBranch := s })
 propSetter ThemeProp        = update parseString (\t => { theme := t })
 propSetter GithubPAT        = update Just (\s => { githubPAT := Just $ hide s })
-propSetter AssignTeams      = update parseBool (\b => { requestTeams := b })
-propSetter AssignUsers      = update parseBool (\b => { requestUsers := b })
-propSetter CommentOnAssign  = update parseCommentConfig (\b => { commentOnRequest := b })
 
 ||| Attempt to set a property and value given String representations.
 ||| After setting, write the config and return the updated result.
@@ -164,9 +161,6 @@ propGetter DefaultRemote    = show . defaultRemote
 propGetter MainBranch       = show . mainBranch
 propGetter ThemeProp        = show . theme
 propGetter GithubPAT        = maybe "Not set (will use $GITHUB_PAT environment variable)" show . githubPAT
-propGetter AssignTeams      = show . requestTeams
-propGetter AssignUsers      = show . requestUsers
-propGetter CommentOnAssign  = show . commentOnRequest
 
 export
 getConfig : Config =>
