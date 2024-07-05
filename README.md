@@ -124,7 +124,7 @@ Not all configuration properties can be read/set with this command.
 #### Properties
 - `requestTeams` (`true`/`false`) -- When picking a reviewer from a team, request the team as a reviewer as well.
 - `requestUsers` (`true`/`false`) -- When requesting a team as a reviewer, pick a user to review as well.
-- `commentOnRequest` (`true`/`false`) -- When requesting a reviewer chosen by Harmony, comment on the pull request.
+- `commentOnRequest` (`none`/`name`/`at-mention`) -- When requesting a reviewer chosen by Harmony, comment on the pull request or not.
 - `defaultRemote` (optional string) -- When pushing new branches, what remote destination should be used.
 - `mainBranch` (optional string) -- When creating a PR, this is the default base branch.
 - `theme` (`dark`/`light`) -- Use colors suited better for either a dark or light Terminal background.
@@ -194,6 +194,8 @@ You can also more permanently ignore a particular PR (perhaps it has gone stagna
 You can simultaneously get the URI for a PR to review and checkout the branch needing review by passing the `--checkout` or `-c` option to the `contribute` command.
 
 Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony contribute)` to open a web browser to the PR that Harmony is suggesting.
+
+You can also run `harmony contribute --list` if you want to list out a few PRs to consider reviewing them instead of choosing just one PR to look into and printing that PRs URI.
 
 #### Examples
 Retrieve a URI for the oldest unreviewed and open PR (prioritizing PRs for which you are a requested reviewer):
