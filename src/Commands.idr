@@ -320,19 +320,22 @@ contribute @{config} args = do
     if (null newIgnorePRNums)
        then pure config
        else addIgnoredPRs config newIgnorePRNums
+  -- options:
   let skip = fromMaybe 0 (head' $ mapMaybe skipArg args)
   let checkout = find (\case Checkout => True; _ => False) args
+  let list = find (\case List => True; _ => False) args
+  when (isJust checkout && isJust list) $
+    reject "The --checkout and --list options are mutually exclusive"
+  -- execution:
   let notMine = filter (not . isAuthor myLogin) nonDraftPrs
   let notIgnored = filter (isNotIgnored config') notMine
   let parted = partition (isRequestedReviewer myLogin) notIgnored
   let (requestedOfMe, others) = (mapHom $ sortBy (compare `on` .createdAt)) parted
-  let list = find (\case List => True; _ => False) args
   case list of
        Nothing  => pickOne config' skip checkout requestedOfMe others
        (Just _) => listSome skip requestedOfMe others
 
   where
-
     isNotIgnored : Config -> PullRequest -> Bool
     isNotIgnored config pr =
       isNothing $

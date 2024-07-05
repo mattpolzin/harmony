@@ -73,7 +73,7 @@ subcommandHelp' n@"pr" = subcommand n [argument False "--draft", argument False 
   [ reflow "Identify an existing PR or create a new one for the current branch."
   , reflow "Optionally apply any number of labels by prefixing them with '#'."
   ]
-subcommandHelp' n@"contribute" = subcommand n [argument False "-c/--checkout", argument False "-<num>", argument False "-l/--list", argument False "-i/--ignore {<uri>/<pr-number>}"]
+subcommandHelp' n@"contribute" = subcommand n [argument False "-c/--checkout | -l/--list", argument False "-<num>", argument False "-i/--ignore {<uri>/<pr-number>}"]
   [ reflow """
       Contribute to an open PR. Prints a URL. Prioritizes PRs you are
       requested to review but will also return other PRs.
