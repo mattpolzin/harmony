@@ -11,7 +11,7 @@ Subcommands:
       properties: requestTeams, requestUsers, commentOnRequest, defaultRemote,
                   mainBranch, theme, githubPAT, assignUsers, assignTeams,
                   commentOnAssign
-  contribute [-c/--checkout] [-<num>] [-i/--ignore {<uri>/<pr-number>}]
+  contribute [-c/--checkout | -l/--list] [-<num>] [-i/--ignore {<uri>/<pr-number>}]
       Contribute to an open PR. Prints a URL. Prioritizes PRs you are requested
       to review but will also return other PRs.
 
@@ -22,6 +22,10 @@ Subcommands:
       machine) if you would like to more permanently skip a potential PR. Do
       this with the '--ignore' option followed by a GitHub URI or Pull Request
       number.
+
+      Use --list to list multiple PRs instead of just one. This option supports
+      skipping PRs but does not support the checkout option because there is no
+      single PR that should be checked out.
   graph [-c/--completed] {<team-slug>}
       Graph the relative review workload of the members of the given GitHub
       Team.

@@ -82,7 +82,8 @@ const digPr = pr => {
       draft: pr.draft,
       merged: pr.merged_at !== null,
       reviewers: pr.requested_reviewers.map(u => u.login),
-      head_ref: pr.head.ref
+      head_ref: pr.head.ref,
+      title: pr.title
     }
   }
 const digPrs = prJson =>
@@ -129,7 +130,7 @@ const okit_list_reviewers = (octokit, owner, repo, state, per_page, onSuccess, o
   )
 
 // list PRs
-// Executes callback with [{ "pull_number": Int, "author": String, "state": String, "merged": Boolean, "reviewers": [String] }]
+// Executes callback with [{ "pull_number": Int, "author": String, "state": String, "merged": Boolean, "reviewers": [String], "title": String }]
 const okit_list_pull_requests = (octokit, owner, repo, state, per_page, page, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.pulls.list({ owner, repo, state, per_page, page }),
