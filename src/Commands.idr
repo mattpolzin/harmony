@@ -348,11 +348,22 @@ contribute @{config} args = do
                checkoutBranch branch
              putStrLn  (pr.webURI @{config'})
 
+    printDetails : PullRequest -> Doc AnsiStyle
+    printDetails pr =
+      let branch  = annotate italic (pretty pr.headRef)
+          title   = pretty "  ├ title:  " <++> pretty pr.title
+          created = pretty "  ├ created:" <++> pretty (show pr.createdAt)
+          number  = pretty "  ├ number: " <++> annotate (color Green) (pretty pr.number)
+          link    = pretty "  └ url:    " <++> annotate (color Blue) (pretty pr.webURI)
+      in vsep [branch, title, created, number, link]
+
     listSome : Nat -> List PullRequest -> Promise' ()
     listSome skip requestedOfMe = do
-      let descriptions = (.description) <$> requestedOfMe
-      for_ descriptions $ \d =>
-                               putStrLn d
+      let (pr :: rest) = drop skip $ requestedOfMe
+        | [] => pure ()
+      let first = printDetails pr
+      renderIO $ 
+        foldl (\acc, elem => vsep [acc, emptyDoc, printDetails elem]) first rest
 
 ||| Print the GitHub URI for the current branch when the user
 ||| executes `harmony branch`.

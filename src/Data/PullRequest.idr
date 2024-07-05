@@ -42,8 +42,8 @@ record PullRequest where
   constructor MkPullRequest
   ||| The pull request's "number" (as seen in URIs referring to the PR).
   number      : Integer
-  ||| The pull request's description
-  description : String
+  ||| The pull request's title
+  title : String
   ||| When the PR was created.
   createdAt   : Date
   ||| Is the PR currently a "draft"?
@@ -93,9 +93,9 @@ export
 parsePR : JSON -> Either String PullRequest
 parsePR json =
  do pr <- object json
-    [pullNumber, pullDescription, authorLogin, stateStr, createdAtStr, mergedStr, isDraftStr, reviewerList, head] <- lookupAll ["pull_number", "description", "author", "state", "created_at", "merged", "draft", "reviewers", "head_ref"] pr
+    [pullNumber, pullTitle, authorLogin, stateStr, createdAtStr, mergedStr, isDraftStr, reviewerList, head] <- lookupAll ["pull_number", "title", "author", "state", "created_at", "merged", "draft", "reviewers", "head_ref"] pr
     number      <- integer pullNumber
-    description <- string pullDescription
+    title <- string pullTitle
     author      <- string authorLogin
     merged      <- bool mergedStr
     isDraft     <- bool isDraftStr
@@ -105,7 +105,7 @@ parsePR json =
     headRef     <- string head
     pure $ MkPullRequest {
         number
-      , description
+      , title
       , createdAt
       , isDraft
       , author
