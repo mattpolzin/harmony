@@ -52,6 +52,40 @@ Show (Hidden a) where
   show _ = "xxxxxxxx (hidden)"
 
 public export
+data CommentStrategy = None | Name | AtMention
+
+export
+Show CommentStrategy where
+  show None = "none"
+  show Name = "name"
+  show AtMention = "at-mention"
+
+export
+parseCommentConfig : String -> Maybe CommentStrategy
+parseCommentConfig "none" = Just None
+parseCommentConfig "name" = Just Name
+parseCommentConfig "at-mention" = Just AtMention
+parseCommentConfig "atmention" = Just AtMention
+parseCommentConfig _ = Nothing
+
+commentConfig : JSON -> Either String CommentStrategy
+commentConfig = (map toLower . string)  >=> (maybeToEither "" . parseCommentConfig)
+  where
+    err : String
+    err = "Expected the commentOnRequest setting to be 'none', 'name', or 'at-mention'"
+
+-- TODO 6.0.0: remove support for boolean comment config
+boolToCommentConfig : Bool -> CommentStrategy
+boolToCommentConfig False = None
+boolToCommentConfig True = AtMention
+
+Alternative (Either String) where
+  empty = Left "empty"
+
+  (Right x) <|> _ = Right x
+  (Left x) <|> b = b
+
+public export
 record Config where
   constructor MkConfig
   ||| Timestamp when the config was last syncronized with GitHub.
@@ -67,7 +101,7 @@ record Config where
   ||| True to request review from users as well as teams on PRs.
   requestUsers   : Bool
   ||| True to comment on PRs after requesting review from users.
-  commentOnRequest : Bool
+  commentOnRequest : CommentStrategy
   ||| Local cache of GitHub teams within the configured org.
   teamSlugs     : List String
   ||| Local cache of GitHub labels for the configured repo.
@@ -110,7 +144,7 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     """
   CommentOnRequest : SettableProp
     "commentOnRequest"
-    "[true/false] Determines whether to comment on PR indicating that Harmony chose a reviewer."
+    "[none/name/at-mention] Determines whether- and how to comment on PR indicating that Harmony chose a reviewer."
   DefaultRemote   : SettableProp
     "defaultRemote"
     "[string]     The name of the default Git remote to use (e.g. 'origin')."
@@ -270,7 +304,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch
   JObject [
       ("requestTeams"    , JBool requestTeams)
     , ("requestUsers"    , JBool requestUsers)
-    , ("commentOnRequest", JBool commentOnRequest)
+    , ("commentOnRequest", JString $ show commentOnRequest)
     , ("org"             , JString org)
     , ("repo"            , JString repo)
     , ("defaultRemote"   , JString defaultRemote)
@@ -328,7 +362,8 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           mb <- string mainBranch
                                           at <- bool requestTeams
                                           au <- bool requestUsers
-                                          ca <- bool commentOnRequest
+                                          ca <- (commentConfig commentOnRequest
+                                                  <|> (boolToCommentConfig <$> bool commentOnRequest)) 
                                           ts <- array string teamSlugs
                                           rl <- array string repoLabels
                                           om <- array string orgMembers

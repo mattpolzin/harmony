@@ -14,6 +14,7 @@ import Data.Review
 import Data.SortedMap
 import Data.String
 import Data.String.Extra
+import Data.User
 import FFI.Concurrency
 import FFI.Git
 import FFI.GitHub
@@ -203,11 +204,14 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} = do
 
   let users = (toList chosenUser) ++ forcedReviewers
   let teams = if config.requestTeams then teamNames else []
-  when (not dry) $
-    do ignore $ addPullReviewers config.org config.repo pr.number users teams
-       when config.commentOnRequest $
-         whenJust chosenUser $ \cu =>
-           createComment config.org config.repo pr.number (prComment cu)
+  when (not dry) $ do
+    ignore $ addPullReviewers config.org config.repo pr.number users teams
+    whenJust chosenUser $ \cu =>
+      case config.commentOnRequest of
+           None => pure ()
+           AtMention => createComment config.org config.repo pr.number (mentionPrComment cu)
+           Name      => do user <- getUser cu
+                           createComment config.org config.repo pr.number (namePrComment user)
   if null users && config.requestUsers
     then putStrLn . renderString $ vsep [
                     annotate (color Yellow) $ pretty "Could not pick a user from the given Team "
@@ -235,9 +239,15 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} = do
     teamNotice names  = " and teams \{csv names}"
 
     prComment : String -> String
-    prComment chosenUser = """
-    :musical_note: Harmoniously requested review from @\{chosenUser}.
+    prComment userString = """
+    :musical_note: Harmoniously requested review from \{userString}.
     """
+
+    mentionPrComment : String -> String
+    mentionPrComment chosenUser = prComment "@\{chosenUser}"
+
+    namePrComment : User -> String
+    namePrComment chosenUser = prComment "\{chosenUser.name}"
 
 export
 identifyOrCreatePR : Config => Git => Octokit => 
