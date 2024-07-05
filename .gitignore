@@ -6,6 +6,7 @@ node_modules/
 harmony-npm/
 
 config.json
+harmony.json
 harmony
 harmony-npm.tar.gz
 
