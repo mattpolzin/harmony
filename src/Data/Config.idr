@@ -144,7 +144,7 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     """
   CommentOnRequest : SettableProp
     "commentOnRequest"
-    "[true/false] Determines whether to comment on PR indicating that Harmony chose a reviewer."
+    "[none/name/at-mention] Determines whether- and how to comment on PR indicating that Harmony chose a reviewer."
   DefaultRemote   : SettableProp
     "defaultRemote"
     "[string]     The name of the default Git remote to use (e.g. 'origin')."

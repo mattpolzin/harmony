@@ -133,7 +133,7 @@ update f g c = map (flip g c) . f
 propSetter : SettableProp n h -> (Config -> String -> Maybe Config)
 propSetter RequestTeams     = update parseBool (\b => { requestTeams := b })
 propSetter RequestUsers     = update parseBool (\b => { requestUsers := b })
-propSetter CommentOnRequest = update parseCommentConfig (\b => { commentOnRequest := b })
+propSetter CommentOnRequest = update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
 propSetter DefaultRemote    = update Just (\s => { defaultRemote := s })
 propSetter MainBranch       = update Just (\s => { mainBranch := s })
 propSetter ThemeProp        = update parseString (\t => { theme := t })
