@@ -73,7 +73,7 @@ subcommandHelp' n@"pr" = subcommand n [argument False "--draft", argument False 
   [ reflow "Identify an existing PR or create a new one for the current branch."
   , reflow "Optionally apply any number of labels by prefixing them with '#'."
   ]
-subcommandHelp' n@"contribute" = subcommand n [argument False "-c/--checkout", argument False "-<num>", argument False "-i/--ignore {<uri>/<pr-number>}"]
+subcommandHelp' n@"contribute" = subcommand n [argument False "-c/--checkout", argument False "-<num>", argument False "-l/--list", argument False "-i/--ignore {<uri>/<pr-number>}"]
   [ reflow """
       Contribute to an open PR. Prints a URL. Prioritizes PRs you are
       requested to review but will also return other PRs.
@@ -87,6 +87,11 @@ subcommandHelp' n@"contribute" = subcommand n [argument False "-c/--checkout", a
       this machine) if you would like to more permanently skip a potential
       PR. Do this with the '--ignore' option followed by a GitHub URI or
       Pull Request number.
+      """
+  , reflow """
+      Use --list to list multiple PRs instead of just one. This option 
+      supports skipping PRs but does not support the checkout option because
+      there is no single PR that should be checked out.
       """
   ]
 subcommandHelp' n@"graph"   = subcommand n [argument False "-c/--completed", argument True "<team-slug>"]

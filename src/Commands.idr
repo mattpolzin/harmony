@@ -329,7 +329,7 @@ contribute @{config} args = do
   let list = find (\case List => True; _ => False) args
   case list of
        Nothing  => pickOne config' skip checkout requestedOfMe others
-       (Just _) => listSome skip requestedOfMe
+       (Just _) => listSome skip requestedOfMe others
 
   where
 
@@ -357,13 +357,21 @@ contribute @{config} args = do
           link    = pretty "  └ url:    " <++> annotate (color Blue) (pretty pr.webURI)
       in vsep [branch, title, created, number, link]
 
-    listSome : Nat -> List PullRequest -> Promise' ()
-    listSome skip requestedOfMe = do
-      let (pr :: rest) = drop skip $ requestedOfMe
+    goListSome : Bool -> List PullRequest -> Promise' ()
+    goListSome direct prs = do
+      let (pr :: rest) = prs
         | [] => pure ()
       let first = printDetails pr
-      renderIO $ 
-        foldl (\acc, elem => vsep [acc, emptyDoc, printDetails elem]) first rest
+      renderIO $
+        indent (if direct then 0 else 2) $
+          foldl (\acc, next => vsep [acc, emptyDoc, printDetails next]) first rest
+
+    listSome : Nat -> List PullRequest -> List PullRequest -> Promise' ()
+    listSome skip requestedOfMe others = do
+      goListSome True (drop skip requestedOfMe)
+      putStrLn ""
+      renderIO $ annotate bold "Your review not requested:"
+      goListSome False (take 5 others)
 
 ||| Print the GitHub URI for the current branch when the user
 ||| executes `harmony branch`.
