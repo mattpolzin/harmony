@@ -133,14 +133,14 @@ update f g c = map (flip g c) . f
 propSetter : SettableProp n h -> (Config -> String -> Maybe Config)
 propSetter RequestTeams     = update parseBool (\b => { requestTeams := b })
 propSetter RequestUsers     = update parseBool (\b => { requestUsers := b })
-propSetter CommentOnRequest = update parseBool (\b => { commentOnRequest := b })
+propSetter CommentOnRequest = update parseCommentConfig (\b => { commentOnRequest := b })
 propSetter DefaultRemote    = update Just (\s => { defaultRemote := s })
 propSetter MainBranch       = update Just (\s => { mainBranch := s })
 propSetter ThemeProp        = update parseString (\t => { theme := t })
 propSetter GithubPAT        = update Just (\s => { githubPAT := Just $ hide s })
 propSetter AssignTeams      = update parseBool (\b => { requestTeams := b })
 propSetter AssignUsers      = update parseBool (\b => { requestUsers := b })
-propSetter CommentOnAssign  = update parseBool (\b => { commentOnRequest := b })
+propSetter CommentOnAssign  = update parseCommentConfig (\b => { commentOnRequest := b })
 
 ||| Attempt to set a property and value given String representations.
 ||| After setting, write the config and return the updated result.
@@ -231,8 +231,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
   putStrLn "What GitHub remote repo would you like to use harmony for\{remoteDefaultStr}?"
   defaultRemote <- orIfEmpty (Just remoteGuess) . trim <$> getLine
   
-  commentOnRequest <-
-    yesNoPrompt "Would you like harmony to comment when it requests reviewers?"
+  commentOnRequest <- commentConfigPrompt 
 
   requestTeams <-
     yesNoPrompt "Would you like harmony to request reviews from teams when it requests reviewers?"
@@ -240,12 +239,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
   requestUsers <-
     yesNoPrompt "Would you like harmony to request reviews from individual users when it requests a teams review?"
 
-  let themeDefaultStr = enterForDefaultStr "dark"
-  putStrLn "Would you like harmony configured for a dark or light terminal background\{themeDefaultStr}?"
-  theme <- offerRetry "The theme must be either 'dark' or 'light'. Which would you prefer?" 
-                      "Could not parse the input as a valid theme; will use 'dark' for now."
-                      Dark $
-                        Theme.parseString . orIfEmpty (Just "dark") . trim <$> getLine
+  theme <- themePrompt
 
   _ <- liftIO $ octokit pat
   putStrLn "Creating config..."
@@ -314,6 +308,24 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
 
     defaultStr : (GitRemote -> String) -> Maybe GitRemote -> String
     defaultStr f = fromMaybe "" . map (enterForDefaultStr . f)
+
+    commentConfigPrompt : HasIO io => io CommentStrategy
+    commentConfigPrompt = do
+      let defaultStr = enterForDefaultStr "name" 
+      putStrLn "What kind of comment would you like Harmony to leave when it requests reviewers? [none/name/at-mention]\{defaultStr}"
+      offerRetry "The comment strategy must be 'none', 'name', or 'at-mention'. Which would you prefer?" 
+                 "Could not parse the input as a valid option; will use 'name' for now."
+                      Name $
+                        parseCommentConfig . orIfEmpty (Just "name") . trim <$> getLine
+
+    themePrompt : HasIO io => io Theme
+    themePrompt = do
+      let defaultStr = enterForDefaultStr "dark"
+      putStrLn "Would you like harmony configured for a 'dark' or 'light' terminal background\{defaultStr}?"
+      offerRetry "The theme must be either 'dark' or 'light'. Which would you prefer?" 
+                 "Could not parse the input as a valid theme; will use 'dark' for now."
+                 Dark $
+                   Theme.parseString . orIfEmpty (Just "dark") . trim <$> getLine
 
 data ConfigError = File FileError
                  | Parse String
