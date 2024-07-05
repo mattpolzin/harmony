@@ -144,6 +144,17 @@ You can also specify any number of labels to apply by prefixing them with '#'. F
 
 Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony pr)` to open a web browser to an existing PR for the current branch.
 
+#### Examples
+Create a draft pull request for the current branch:
+```shell
+harmony pr --draft
+```
+
+Create a PR for the current branch and add the `urgent` label:
+```shell
+harmony pr #urgent
+```
+
 ### Label
 Running `harmony label {<label>} [...]` will help you create a PR if one does not exist yet and then it will apply the given labels to the PR. This is essentially an alias for the `harmony pr` command but without support for creating draft PRs.
 
