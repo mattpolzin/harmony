@@ -306,13 +306,13 @@
         sha512 = "/5hndP5dCjloafCXns6SZyESp3Ldq7YjH3zwzwczYnjxIT0Fqzk5ROSYVGfFyczIue7IUEj8hkvLbPoLQ18vQw==";
       };
     };
-    "@types/node-20.14.9" = {
+    "@types/node-20.14.10" = {
       name = "_at_types_slash_node";
       packageName = "@types/node";
-      version = "20.14.9";
+      version = "20.14.10";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@types/node/-/node-20.14.9.tgz";
-        sha512 = "06OCtnTXtWOZBJlRApleWndH4JsRVs1pDCc8dLSQp+7PpUpX3ePdHyeNSFTeSe7FtKyQkrlPvHwJOW3SLd8Oyg==";
+        url = "https://registry.npmjs.org/@types/node/-/node-20.14.10.tgz";
+        sha512 = "MdiXf+nDuMvY0gJKxyfZ7/6UFsETO7mGKF54MVD/ekJS6HdFtpZFBgrh6Pseu64XTb2MLyFPlbW6hj8HYRQNOQ==";
       };
     };
     "aggregate-error-3.1.0" = {
@@ -607,7 +607,7 @@
   args = {
     name = "_at_mattpolzin_slash_harmony";
     packageName = "@mattpolzin/harmony";
-    version = "4.4.0";
+    version = "5.0.0";
     src = ./.;
     dependencies = [
       sources."@kwsites/file-exists-1.1.1"
@@ -666,7 +666,7 @@
       sources."@types/aws-lambda-8.10.140"
       sources."@types/btoa-lite-1.0.2"
       sources."@types/jsonwebtoken-9.0.6"
-      sources."@types/node-20.14.9"
+      sources."@types/node-20.14.10"
       sources."aggregate-error-3.1.0"
       sources."before-after-hook-2.2.3"
       sources."bottleneck-2.19.5"
