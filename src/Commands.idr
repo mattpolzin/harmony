@@ -372,9 +372,10 @@ contribute @{config} args = do
     listSome : Nat -> List PullRequest -> List PullRequest -> Promise' ()
     listSome skip requestedOfMe others = do
       goListSome True (drop skip requestedOfMe)
-      putStrLn ""
-      renderIO $ annotate bold "Your review not requested:"
-      goListSome False (take 5 others)
+      when (not $ null others) $ do
+        putStrLn ""
+        renderIO $ annotate bold "Your review not requested:"
+        goListSome False (take 5 others)
 
 ||| Print the GitHub URI for the current branch when the user
 ||| executes `harmony branch`.
