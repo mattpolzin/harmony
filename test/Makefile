@@ -4,6 +4,8 @@ harmony ?= $(shell realpath "${PWD}/../harmony")
 
 .PHONY: test clean
 
+INTERACTIVE ?= "--interactive"
+
 export harmony
 test:
 	idris2 --build harmony-tests.ipkg && \

@@ -96,7 +96,7 @@
 
     installCheckPhase = ''
       export harmony=$out/bin/harmony
-      make test
+      INTERACTIVE="" make test
     '';
 
     meta = with lib; {

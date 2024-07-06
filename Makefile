@@ -147,8 +147,6 @@ publish : package
 install: harmony
 	npm install --global
 
-INTERACTIVE ?= "--interactive"
-
 test:
 	$(MAKE) -C test test
 

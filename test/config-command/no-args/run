@@ -1,0 +1,5 @@
+source ../../setup.sh
+
+set +e
+
+$harmony config 2>&1

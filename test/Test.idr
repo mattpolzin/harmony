@@ -15,8 +15,12 @@ misc = mkTests
   [ "help-command"
   ]
 
+configTests : IO TestPool
+configTests = testsInDir "config-command" "Config Command"
+
 main : IO ()
 main = runner
   [ misc
+  , !configTests
   ]
 
