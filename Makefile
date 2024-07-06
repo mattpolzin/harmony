@@ -149,10 +149,8 @@ install: harmony
 
 INTERACTIVE ?= "--interactive"
 
-test: harmony
-	cd test && \
-	  idris2 --build harmony-tests.ipkg && \
-	  ./build/exec/test runtests $(INTERACTIVE)
+test:
+	$(MAKE) -C test test
 
 clean:
 	rm -rf ./depends
@@ -161,4 +159,4 @@ clean:
 	rm -rf ./harmony-npm
 	rm -f ./harmony
 	rm -f ./harmony-npm.tar.gz
-	rm -rf ./test/build
+	$(MAKE) -C test clean

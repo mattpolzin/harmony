@@ -94,6 +94,11 @@
         --zsh <($out/bin/harmony --zsh-completion-script) \
     '';
 
+    installCheckPhase = ''
+      export harmony=$out/bin/harmony
+      make test
+    '';
+
     meta = with lib; {
       description = "Harmony GitHub collaboration tool";
       homepage = "https://github.com/mattpolzin/harmony";
