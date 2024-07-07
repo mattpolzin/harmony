@@ -1,7 +1,7 @@
 . ../../setup.sh
 
-keys="requestTeams
-requestUsers
+keys="requestUsers
+requestTeams
 commentOnRequest
 defaultRemote
 mainBranch
