@@ -1,4 +1,5 @@
 . ../../setup.sh
+. ../setup.sh
 
 keys="requestUsers
 requestTeams
@@ -9,3 +10,5 @@ theme
 githubPAT"
 
 echo $keys | xargs -n1 ${harmony} config
+
+. ../cleanup.sh
