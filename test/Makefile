@@ -13,9 +13,7 @@ build/exec/test: $(IDR_SOURCES)
 
 export harmony
 test: build/exec/test
-	cp config-command/harmony.json harmony.json.bak && \
-	  build/exec/test runtests $(INTERACTIVE) && \
-	  mv harmony.json.bak config-command/harmony.json
+	build/exec/test runtests $(INTERACTIVE)
 
 clean:
 	rm -rf ./test/build
