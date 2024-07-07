@@ -9,6 +9,9 @@ on:
   schedule:
     - cron: '0 1 * * *'
 
+defaults:
+  run:
+    shell: bash
 
 jobs:
   stable-idris:
