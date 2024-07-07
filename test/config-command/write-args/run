@@ -1,0 +1,25 @@
+. ../../setup.sh
+. ../setup.sh
+
+${harmony} config requestUsers yes
+${harmony} config requestUsers
+
+${harmony} config requestTeams no
+${harmony} config requestTeams
+
+${harmony} config commentOnRequest name
+${harmony} config commentOnRequest
+
+${harmony} config defaultRemote upstream
+${harmony} config defaultRemote
+
+${harmony} config mainBranch root
+${harmony} config mainBranch
+
+${harmony} config theme light
+${harmony} config theme
+
+${harmony} config githubPAT 1234ABCD
+${harmony} config githubPAT
+
+. ../cleanup.sh

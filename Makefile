@@ -21,7 +21,7 @@ else
 	ised = sed -I ''
 endif
 
-.PHONY: all build nix-build install package publish clean version
+.PHONY: all build test nix-build install package publish clean version
 
 all: build
 
@@ -147,6 +147,9 @@ publish : package
 install: harmony
 	npm install --global
 
+test:
+	$(MAKE) -C test test
+
 clean:
 	rm -rf ./depends
 	rm -rf ./build
@@ -154,3 +157,4 @@ clean:
 	rm -rf ./harmony-npm
 	rm -f ./harmony
 	rm -f ./harmony-npm.tar.gz
+	$(MAKE) -C test clean

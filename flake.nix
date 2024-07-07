@@ -28,6 +28,13 @@
         default = self.packages.${system}.harmony;
       }
     );
+    checks = forAllSystems (
+      system: let
+        harmony = self.packages.${system}.harmony;
+      in {
+        tests = harmony.overrideAttrs { doInstallCheck = true; };
+      }
+    );
     devShells = forAllSystems (
       system: let
         pkgs = nixpkgs.legacyPackages.${system};

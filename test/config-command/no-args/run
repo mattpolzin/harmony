@@ -1,0 +1,8 @@
+. ../../setup.sh
+. ../setup.sh
+
+set +e
+
+$harmony config 2>&1
+
+. ../cleanup.sh

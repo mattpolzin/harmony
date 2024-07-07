@@ -14,3 +14,5 @@ harmony-npm.tar.gz
 *.idr~
 
 result
+
+test/**/output

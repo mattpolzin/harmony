@@ -9,7 +9,6 @@ on:
   schedule:
     - cron: '0 1 * * *'
 
-
 jobs:
   stable-idris:
     runs-on: ubuntu-latest
@@ -28,12 +27,9 @@ jobs:
           idris2 --version
           echo ''
           make
-      - name: Check Executable
-        run: |
-          ./harmony help > output.txt
-          git diff --no-index -- test/expected_help.txt output.txt
-#      - name: Test
-#        run: make test
+      - name: Test
+        shell: bash
+        run: INTERACTIVE='' make test
 
   nightly-idris:
     runs-on: ubuntu-latest
@@ -52,10 +48,7 @@ jobs:
           idris2 --version
           echo ''
           make
-      - name: Check Executable
-        run: |
-          ./harmony help > output.txt
-          git diff --no-index -- test/expected_help.txt output.txt
-#      - name: Test
-#        run: make test
+      - name: Test
+        shell: bash
+        run: INTERACTIVE='' make test
 

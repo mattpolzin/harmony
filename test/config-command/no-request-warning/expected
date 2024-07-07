@@ -1,0 +1,2 @@
+`requestUsers` and `requestTeams` are both False. This means `harmony request` commands will only ever request reviews from users that are specified with the `+<userlogin>` syntax. More commonly, you want Harmony to at least request review for either a team or a user from a team when you say `harmony request teamname`; It's suggested to either `harmony config requestUsers true` or `harmony config requestTeams true` (or both).
+

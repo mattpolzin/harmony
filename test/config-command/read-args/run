@@ -1,0 +1,14 @@
+. ../../setup.sh
+. ../setup.sh
+
+keys="requestUsers
+requestTeams
+commentOnRequest
+defaultRemote
+mainBranch
+theme
+githubPAT"
+
+echo $keys | xargs -n1 ${harmony} config
+
+. ../cleanup.sh
