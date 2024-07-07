@@ -1,0 +1,7 @@
+requestTeams: True
+requestUsers: False
+commentOnRequest: at-mention
+defaultRemote: "origin"
+mainBranch: "main"
+theme: dark
+githubPAT: Not set (will use $GITHUB_PAT environment variable)

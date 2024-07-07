@@ -1,0 +1,8 @@
+source ../../setup.sh
+
+keys=(requestTeams requestUsers commentOnRequest defaultRemote mainBranch theme githubPAT)
+
+for key in ${keys[@]}; do
+  out="$(${harmony} config ${key})"
+  echo "${key}: ${out}"
+done
