@@ -1,6 +1,12 @@
-source ../../setup.sh
+. ../../setup.sh
 
-keys=(requestTeams requestUsers commentOnRequest defaultRemote mainBranch theme githubPAT)
+keys="requestTeams
+requestUsers
+commentOnRequest
+defaultRemote
+mainBranch
+theme
+githubPAT"
 
 for key in ${keys[@]}; do
   out="$(${harmony} config ${key})"

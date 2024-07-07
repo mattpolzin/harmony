@@ -1,4 +1,4 @@
-source ../../setup.sh
+. ../../setup.sh
 
 set +e
 
