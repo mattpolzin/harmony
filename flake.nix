@@ -32,7 +32,7 @@
       system: let
         harmony = self.packages.${system}.harmony;
       in {
-        tests = harmony.overrideAttrs { doInstallCheck = true; };
+        tests = harmony.overrideAttrs {doInstallCheck = true;};
       }
     );
     devShells = forAllSystems (

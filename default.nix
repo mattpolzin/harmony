@@ -88,7 +88,9 @@
       wrapProgram $out/bin/harmony \
         --prefix PATH : ${lib.makeBinPath [nodeDependencies git "$out"]} \
         --prefix NODE_PATH : ${nodeDependencies}/lib/node_modules
+    '';
 
+    postFixup = ''
       installShellCompletion --cmd harmony \
         --bash <($out/bin/harmony --bash-completion-script) \
         --zsh <($out/bin/harmony --zsh-completion-script) \
