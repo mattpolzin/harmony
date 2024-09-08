@@ -6,8 +6,9 @@
   nix-gitignore,
   stdenv,
   lib,
-  globalBuildInputs ? [],
-}: let
+  globalBuildInputs ? [ ],
+}:
+let
   sources = {
     "@kwsites/file-exists-1.1.1" = {
       name = "_at_kwsites_slash_file-exists";
@@ -612,24 +613,28 @@
     dependencies = [
       sources."@kwsites/file-exists-1.1.1"
       sources."@kwsites/promise-deferred-1.1.1"
-      (sources."@octokit/app-14.1.0"
+      (
+        sources."@octokit/app-14.1.0"
         // {
           dependencies = [
             sources."@octokit/plugin-paginate-rest-9.2.1"
             sources."@octokit/types-12.6.0"
           ];
-        })
+        }
+      )
       sources."@octokit/auth-app-6.1.1"
       sources."@octokit/auth-oauth-app-7.1.0"
       sources."@octokit/auth-oauth-device-6.1.0"
       sources."@octokit/auth-oauth-user-4.1.0"
       sources."@octokit/auth-token-4.0.0"
-      (sources."@octokit/auth-unauthenticated-5.0.1"
+      (
+        sources."@octokit/auth-unauthenticated-5.0.1"
         // {
           dependencies = [
             sources."@octokit/types-12.6.0"
           ];
-        })
+        }
+      )
       sources."@octokit/core-5.2.0"
       sources."@octokit/endpoint-9.0.5"
       sources."@octokit/graphql-7.1.0"
@@ -640,26 +645,32 @@
       sources."@octokit/plugin-paginate-graphql-4.0.1"
       sources."@octokit/plugin-paginate-rest-11.3.1"
       sources."@octokit/plugin-rest-endpoint-methods-13.2.2"
-      (sources."@octokit/plugin-retry-6.0.1"
+      (
+        sources."@octokit/plugin-retry-6.0.1"
         // {
           dependencies = [
             sources."@octokit/types-12.6.0"
           ];
-        })
-      (sources."@octokit/plugin-throttling-8.2.0"
+        }
+      )
+      (
+        sources."@octokit/plugin-throttling-8.2.0"
         // {
           dependencies = [
             sources."@octokit/types-12.6.0"
           ];
-        })
+        }
+      )
       sources."@octokit/request-8.4.0"
       sources."@octokit/request-error-5.1.0"
-      (sources."@octokit/types-13.5.0"
+      (
+        sources."@octokit/types-13.5.0"
         // {
           dependencies = [
             sources."@octokit/openapi-types-22.2.0"
           ];
-        })
+        }
+      )
       sources."@octokit/webhooks-12.2.0"
       sources."@octokit/webhooks-methods-4.1.0"
       sources."@octokit/webhooks-types-7.4.0"
@@ -673,12 +684,14 @@
       sources."btoa-lite-1.0.0"
       sources."buffer-equal-constant-time-1.0.1"
       sources."clean-stack-2.2.0"
-      (sources."debug-4.3.5"
+      (
+        sources."debug-4.3.5"
         // {
           dependencies = [
             sources."ms-2.1.2"
           ];
-        })
+        }
+      )
       sources."deprecation-2.3.1"
       sources."ecdsa-sig-formatter-1.0.11"
       sources."indent-string-4.0.0"
@@ -714,24 +727,25 @@
     bypassCache = true;
     reconstructLock = true;
   };
-in {
+in
+{
   args = args;
   sources = sources;
   tarball = nodeEnv.buildNodeSourceDist args;
   package = nodeEnv.buildNodePackage args;
   shell = nodeEnv.buildNodeShell args;
-  nodeDependencies = nodeEnv.buildNodeDependencies (lib.overrideExisting args {
-    src = stdenv.mkDerivation {
-      name = args.name + "-package-json";
-      src =
-        nix-gitignore.gitignoreSourcePure [
+  nodeDependencies = nodeEnv.buildNodeDependencies (
+    lib.overrideExisting args {
+      src = stdenv.mkDerivation {
+        name = args.name + "-package-json";
+        src = nix-gitignore.gitignoreSourcePure [
           "*"
           "!package.json"
           "!package-lock.json"
-        ]
-        args.src;
-      dontBuild = true;
-      installPhase = "mkdir -p $out; cp -r ./* $out;";
-    };
-  });
+        ] args.src;
+        dontBuild = true;
+        installPhase = "mkdir -p $out; cp -r ./* $out;";
+      };
+    }
+  );
 }
