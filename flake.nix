@@ -3,6 +3,8 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+
+    packageset.url = "github:mattpolzin/nix-idris2-packages";
   };
 
   # we use Idris2 from nixpkgs unstable because it will already be built and cached.
@@ -12,6 +14,7 @@
     {
       self,
       nixpkgs,
+      packageset,
     }:
     let
       lib = nixpkgs.lib;
@@ -22,9 +25,11 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          idris2Packages = packageset.idris2Packages.${system};
+          inherit (packageset.packages.${system}) buildIdris;
         in
         {
-          harmony = pkgs.callPackage ./default.nix { };
+          harmony = pkgs.callPackage ./default.nix { inherit buildIdris idris2Packages; };
 
           default = self.packages.${system}.harmony;
         }
@@ -42,13 +47,14 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          inherit (packageset.packages.${system}) idris2 idris2Lsp;
         in
         {
           default = pkgs.mkShell {
             inputsFrom = [ self.packages.${system}.harmony ];
             packages = [
-              pkgs.idris2
-              pkgs.idris2Packages.idris2Lsp
+              idris2
+              idris2Lsp
             ];
           };
         }
