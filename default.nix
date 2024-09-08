@@ -7,10 +7,11 @@
   installShellFiles,
   makeWrapper,
   nodejs,
-}: let
+}:
+let
   inherit (idris2Packages) buildIdris;
 
-  nodeDependencies = (callPackage ./node2nix.nix {inherit nodejs;}).nodeDependencies;
+  nodeDependencies = (callPackage ./node2nix.nix { inherit nodejs; }).nodeDependencies;
   idrisAddsVersion = "0.4.1";
   elabUtilRev = "2fc2d188640ce6822b5e250db73b62f5a952ca4d";
   idrisJsonRev = "2e54a37ed3c35c2d12c8927c923ad253355812a8";
@@ -45,32 +46,39 @@
     ipkgName = "idris-adds";
     version = idrisAddsVersion;
     src = idrisAddsSrc;
-    idrisLibraries = [];
+    idrisLibraries = [ ];
   };
   elabUtil = buildIdris {
     ipkgName = "elab-util";
     version = elabUtilRev;
     src = elabUtilSrc;
-    idrisLibraries = [];
+    idrisLibraries = [ ];
   };
   idrisJson = buildIdris {
     ipkgName = "json";
     version = idrisJsonRev;
     src = idrisJsonSrc;
-    idrisLibraries = [elabUtil idrisParser idrisParserJson];
+    idrisLibraries = [
+      elabUtil
+      idrisParser
+      idrisParserJson
+    ];
   };
   idrisParser = buildIdris {
     ipkgName = "parser";
     version = idrisParserRev;
     src = idrisParserSrc;
-    idrisLibraries = [elabUtil];
+    idrisLibraries = [ elabUtil ];
   };
   idrisParserJson = buildIdris rec {
     ipkgName = "parser-json";
     version = idrisParserRev;
     src = idrisParserSrc;
     sourceRoot = "${src.name}/json";
-    idrisLibraries = [idrisParser elabUtil];
+    idrisLibraries = [
+      idrisParser
+      elabUtil
+    ];
   };
 
   harmonyPkg = buildIdris {
@@ -78,15 +86,32 @@
     ipkgName = "harmony";
     src = ./.;
 
-    idrisLibraries = [idrisAdds elabUtil idrisJson idrisParserJson];
-    nativeBuildInputs = [installShellFiles makeWrapper];
-    buildInputs = [nodejs git];
+    idrisLibraries = [
+      idrisAdds
+      elabUtil
+      idrisJson
+      idrisParserJson
+    ];
+    nativeBuildInputs = [
+      installShellFiles
+      makeWrapper
+    ];
+    buildInputs = [
+      nodejs
+      git
+    ];
 
     IDRIS2_DATA = "./support";
 
     postInstall = ''
       wrapProgram $out/bin/harmony \
-        --prefix PATH : ${lib.makeBinPath [nodeDependencies git "$out"]} \
+        --prefix PATH : ${
+          lib.makeBinPath [
+            nodeDependencies
+            git
+            "$out"
+          ]
+        } \
         --prefix NODE_PATH : ${nodeDependencies}/lib/node_modules
     '';
 
@@ -109,4 +134,4 @@
     };
   };
 in
-  harmonyPkg.executable
+harmonyPkg.executable
