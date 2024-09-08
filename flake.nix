@@ -61,4 +61,11 @@
       );
       formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-rfc-style);
     };
+
+  nixConfig = {
+    extra-substituters = [
+      "https://gh-nix-idris2-packages.cachix.org"
+      "https://gh-harmony.cachix.org"
+    ];
+  };
 }

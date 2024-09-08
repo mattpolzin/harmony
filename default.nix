@@ -11,14 +11,15 @@
 }:
 let
   nodeDependencies = (callPackage ./node2nix.nix { inherit nodejs; }).nodeDependencies;
+  idrisAddsVersion = "0.4.1";
 
   idrisAdds = buildIdris {
     ipkgName = "idris-adds";
-    version = "0.4.1";
+    version = idrisAddsVersion;
     src = fetchFromGitHub {
       owner = "mattpolzin";
       repo = "idris-adds";
-      rev = "0.4.1";
+      rev = idrisAddsVersion;
       hash = "sha256-WEr6oRZ8+50G1qv7Kv62M4DRsgAa6x1BCODC1vDOQUY=";
     };
     idrisLibraries = [ ];
