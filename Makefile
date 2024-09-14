@@ -125,7 +125,6 @@ version:
 	$(ised) "s/version = .*/version = ${v}/" ./harmony.ipkg
 	$(ised) "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
 	$(ised) "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
-	$(ised) "s/version = \".*\";/version = \"${v}\";/" ./default.nix
 	@npm update
 	@$(node2nix) -- --composition node2nix.nix # -l # <- can't use -l for lockfile because lockfile version 3 not supported yet.
 	@$(nix) fmt
