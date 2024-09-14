@@ -26,10 +26,10 @@
         let
           pkgs = nixpkgs.legacyPackages.${system};
           idris2Packages = packageset.idris2Packages.${system};
-          inherit (packageset.packages.${system}) buildIdris;
+          buildIdris = packageset.packages.${system}.buildIdris';
         in
         {
-          harmony = pkgs.callPackage ./default.nix { inherit buildIdris idris2Packages; };
+          harmony = pkgs.callPackage ./default.nix { inherit buildIdris; };
 
           default = self.packages.${system}.harmony;
         }
