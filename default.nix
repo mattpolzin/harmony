@@ -70,5 +70,6 @@ buildIdris {
     homepage = "https://github.com/mattpolzin/harmony";
     license = licenses.mit;
     mainProgram = "harmony";
+    platforms = platforms.all;
   };
 }
