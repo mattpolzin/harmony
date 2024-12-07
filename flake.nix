@@ -25,8 +25,7 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          idris2Packages = packageset.idris2Packages.${system};
-          buildIdris = packageset.packages.${system}.buildIdris';
+          buildIdris = packageset.buildIdris'.${system};
         in
         {
           harmony = pkgs.callPackage ./default.nix { inherit buildIdris; };
