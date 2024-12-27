@@ -12,7 +12,7 @@ ifeq ($(idris2-version)$(idris2-build),0.7.0)
   idris-elab-util-hash    = 2fc2d188640ce6822b5e250db73b62f5a952ca4d
 else
   # breaking change between versions 0.7.0 and 0.8.0 of Idris2:
-  idris-elab-util-hash    = ddccca64cd1296d6ad72ed544c54afb77eeef1c1
+  idris-elab-util-hash    = dc875d4a8a2aa3bf0a767fb586a4d9150d83363d
 endif
 idris-parser-version = 0.1.0
 idris-parser-hash    = 0fde36cf11c12a61edcfe09d585c5a60426bc706
