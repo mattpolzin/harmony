@@ -115,13 +115,11 @@ build: ./node_modules/ depends/idris-adds-${idris-adds-version} depends/json-${i
 harmony: build
 
 nix ?= nix
-node2nix ?= $(nix) run nixpkgs\#node2nix
 
 # This executes a Nix build. Call as `make nix-build` from CLI, not
 # from a Nix file.
 nix-build:
 	${MAKE} clean
-	$(node2nix) -- --composition node2nix.nix # -l # <- can't use -l for lockfile because lockfile version 3 not supported yet.
 	$(nix) build .
 
 version:
@@ -130,7 +128,6 @@ version:
 	$(ised) "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
 	$(ised) "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
 	@npm update
-	@$(node2nix) -- --composition node2nix.nix # -l # <- can't use -l for lockfile because lockfile version 3 not supported yet.
 	@$(nix) fmt
 
 package: build
