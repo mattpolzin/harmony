@@ -1,5 +1,4 @@
 {
-  callPackage,
   fetchFromGitHub,
   git,
   buildIdris,
@@ -7,9 +6,9 @@
   installShellFiles,
   makeBinaryWrapper,
   nodejs,
+  buildNpmPackage,
 }:
 let
-  nodeDependencies = (callPackage ./node2nix.nix { inherit nodejs; }).nodeDependencies;
   idrisAddsVersion = "0.4.1";
 
   idrisAdds = buildIdris {
@@ -20,6 +19,20 @@ let
       rev = idrisAddsVersion;
       hash = "sha256-WEr6oRZ8+50G1qv7Kv62M4DRsgAa6x1BCODC1vDOQUY=";
     };
+  };
+
+  nodeDependencies  = buildNpmPackage {
+    name = "harmony-npm-deps";
+    src = ./.;
+    npmDepsHash = "sha256-GRnI5EBmGnkXIsY3SK9Ma0uVias03GvqpMqdZOqfqqQ=";
+    dontNpmBuild = true;
+    dontBuild = true;
+
+    postInstall = ''
+      rm -rf $out/bin
+      mv $out/lib/node_modules/@mattpolzin/harmony/node_modules $out/node_modules
+      rm -rf $out/lib
+    '';
   };
 in
 buildIdris {
@@ -46,12 +59,11 @@ buildIdris {
     wrapProgram $out/bin/harmony \
       --prefix PATH : ${
         lib.makeBinPath [
-          nodeDependencies
           git
           "$out"
         ]
       } \
-      --prefix NODE_PATH : ${nodeDependencies}/lib/node_modules
+      --prefix NODE_PATH : ${nodeDependencies}/node_modules
   '';
 
   postFixup = ''
