@@ -72,6 +72,7 @@ subcommandHelp' n@"config" = subcommand n [argument True "<property>", argument 
 subcommandHelp' n@"pr" = subcommand n [argument False "--draft", argument False "#<label>", argument False "..."] $
   [ reflow "Identify an existing PR or create a new one for the current branch."
   , reflow "Optionally apply any number of labels by prefixing them with '#'."
+  , reflow "Optionally mark a new or existing PR as a draft with the --draft flag."
   ]
 subcommandHelp' n@"contribute" = subcommand n [argument False "-c/--checkout | -l/--list", argument False "-<num>", argument False "-i/--ignore {<uri>/<pr-number>}"]
   [ reflow """
