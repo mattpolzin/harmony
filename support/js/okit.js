@@ -1,5 +1,6 @@
 
 const { Octokit } = require('octokit')
+const { GraphqlResponseError } = require('@octokit/graphql')
 
 const okit_octokit = authToken =>
   new Octokit({ auth: authToken })
@@ -11,15 +12,23 @@ const idris__okit_unpromisify = (promise, onSuccess, onFailure) =>
   promise.then(r => onSuccess(r)(), e => idris__okit_stringify_error(onFailure)(e)())
 
 const idris__okit_stringify_error = (fn) => (err) => {
-  const status = err.response.status;
-  const url = err.response.url
-  const msg = err.response.data.message
-  const details =
-    Array.isArray(err.response.data.errors)
-    ? '\n - ' + err.response.data.errors.map(e => e.message).join('\n - ')
-    : ''
-  const json = { status: status, error: 'GitHub Error: ' + msg + ' (' + url + ')' + details }
-  return fn(JSON.stringify(json))
+  if (err instanceof GraphqlResponseError) {
+    const status = err.headers.status || 422
+    const query = err.request.query
+    const msg = err.message
+    const json = { status,  error: 'Github Error: ' + msg + ' (' + query + ')' }
+    return fn(JSON.stringify(json))
+  } else {
+    const status = err.response.status;
+    const url = err.response.url
+    const msg = err.response.data.message
+    const details =
+      Array.isArray(err.response.data.errors)
+      ? '\n - ' + err.response.data.errors.map(e => e.message).join('\n - ')
+      : ''
+    const json = { status, error: 'GitHub Error: ' + msg + ' (' + url + ')' + details }
+    return fn(JSON.stringify(json))
+  }
 }
 
 const newline_delimited = array =>
@@ -107,6 +116,52 @@ const okit_create_pr = (octokit, owner, repo, head, base, title, body, isDraft, 
     onFailure
   )
 
+// Get GraphQL PR Data
+const digGraphQlPr = pr => {
+    return {
+      graphql_id: pr.id,
+      pull_number: pr.number,
+      author: pr.author.login,
+      state: pr.state.toLowerCase(),
+      created_at: pr.createdAt,
+      draft: pr.isDraft,
+      merged: pr.merged,
+      reviewers: pr.reviewRequests.nodes.map(rr => rr.requestedReviewer.login),
+      head_ref: pr.headRefName,
+      title: pr.title
+    }
+  }
+
+const graphql_pr_selections = `
+            id
+            number
+            author { ... on Actor { login } }
+            state
+            createdAt
+            isDraft
+            merged
+            reviewRequests(first: 100) { nodes { requestedReviewer { ... on Actor { login } ... on Team { slug } } } }
+            headRefName
+            title
+`
+
+const okit_get_pr_graphql_id = (octokit, owner, repo, pull_number, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.graphql({
+      query: `query getPr($owner: String!, $repo: String!, $pull_number: Int!) {
+        repository(owner: $owner, name: $repo) {
+          pullRequest(number: $pull_number) {
+            ${graphql_pr_selections}
+          }
+        }
+      }`,
+      owner,
+      repo,
+      pull_number: Number(pull_number)
+    }),
+    r => onSuccess(digGraphQlPr(r.repository.pullRequest).graphql_id),
+    onFailure
+  )
 
 // Create PR -OR- Issue Comment
 // Executes callback with "" (empty string)
@@ -141,11 +196,30 @@ const okit_list_pull_requests = (octokit, owner, repo, state, per_page, page, on
 // add PR reviewers
 // @param reviewers String A comma separated list of reviewer logins.
 // @param teamReviewers String A comma separated list of team slugs.
-// Executes callback with [String] (logins for all reviewers).
+// Executes callback with [String] (array of logins for all reviewers).
 const okit_add_reviewers = (octokit, owner, repo, pull_number, reviewers, team_reviewers, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.pulls.requestReviewers({ owner, repo, pull_number: Number(pull_number), reviewers: from_comma_delimited(reviewers), team_reviewers: from_comma_delimited(team_reviewers) }),
     r => onSuccess(newline_delimited(digReviewers([r.data]))),
+    onFailure
+  )
+
+// set PR to draft
+// @param opaque_pr_graphql_id String The GraphQL Id for the Pull Request
+// Executes callback with [{ "graphql_id": String, "pull_number": Int, "author": String, "state": String, "merged": Boolean, "reviewers": [String], "title": String }]
+const okit_mark_pr_draft = (octokit, opaque_pr_graphql_id, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.graphql({
+      query: `mutation convertToDraft($opaque_pr_graphql_id: ID!) {
+        convertPullRequestToDraft(input: {pullRequestId: $opaque_pr_graphql_id}) {
+          pullRequest  {
+            ${graphql_pr_selections}
+          }
+        }
+      }`,
+      opaque_pr_graphql_id
+    }),
+    r => onSuccess(JSON.stringify(digGraphQlPr(r.convertPullRequestToDraft.pullRequest))),
     onFailure
   )
 

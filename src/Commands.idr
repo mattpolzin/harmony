@@ -125,6 +125,12 @@ pr {isDraft} labelSlugs =
                   Created    => pure ()
              when (not $ null labelSlugs) $
                label labelSlugs
+             when (isDraft && not pr.isDraft) $ do
+               putStrLn ""
+               True <- yesNoPrompt {defaultAnswer = False} "Are you sure you want to convert the existing PR for the current branch to a draft?"
+                 | False => putStrLn "No worries, the PR won't be converted to a draft."
+               ignore $ convertPRToDraft pr
+               putStrLn "The PR for the current branch has been converted to a draft."
      else reject "The pr command only accepts labels prefixed with '#' and the --draft flag."
 
 ||| Request review from the given teams & users as reviewers when the user executes

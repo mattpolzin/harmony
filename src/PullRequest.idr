@@ -250,6 +250,14 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} = do
     namePrComment chosenUser = prComment "\{chosenUser.name}"
 
 export
+convertPRToDraft : Config => Git => Octokit =>
+                   PullRequest
+                -> Promise' PullRequest
+convertPRToDraft @{config} pr = do
+  prId <- getPullRequestGraphQlId config.org config.repo pr.number
+  markPullRequestDraft prId
+
+export
 identifyOrCreatePR : Config => Git => Octokit => 
                      {default False isDraft : Bool}
                   -> (branch : String) 
@@ -258,9 +266,6 @@ identifyOrCreatePR @{config} {isDraft} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
     | [] => (Created,) <$> createPR
     | _  => reject "Multiple PRs for the current brach. Harmony only handles 1 PR per branch currently."
-  when (isDraft && not openPr.isDraft) $
---     putStrLn "Are you sure you want to convert the existing PR for this branch to a draft?"
-    reject "There is already a PR for the current branch and Harmony does not currently support converting existing PRs to drafts."
   pure (Identified, openPr)
     where
       inlineDescription : HasIO io => io String
