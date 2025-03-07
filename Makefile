@@ -131,8 +131,8 @@ version:
 	@$(nix) fmt
 
 package: build
-	./version-check.sh
-	./todo-check.sh
+	bash ./version-check.sh
+	bash ./todo-check.sh
 	# leave ./harmony in place
 	rm -rf ./harmony-npm
 	mkdir harmony-npm
