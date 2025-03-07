@@ -23,6 +23,9 @@ data OctokitRef : Type
 export
 data Octokit = Kit (Ptr OctokitRef)
 
+export
+data OctokitGraphQlId = GQLId String
+
 %foreign okit_ffi "octokit"
 prim__octokit : (authToken : String) -> PrimIO (Ptr OctokitRef)
 
@@ -286,6 +289,53 @@ listPullRequests : Octokit =>
                 -> Promise String (List PullRequest)
 listPullRequests @{Kit ptr} owner repo stateFilter pageLimit {page} = 
   either . parsePullRequestsString =<< listPullRequestsJsonStr owner repo stateFilter pageLimit {page}
+
+%foreign okit_ffi "get_pr_graphql_id"
+prim__getPullRequestGraphQlId : Ptr OctokitRef 
+                             -> (owner : String) 
+                             -> (repo : String) 
+                             -> (pullNumber : Integer) 
+                             -> (onSuccess : String -> PrimIO ()) 
+                             -> (onFailure : String -> PrimIO ())
+                             -> PrimIO ()
+
+export
+getPullRequestGraphQlIdStr : Octokit =>
+                             (owner : String) 
+                          -> (repo : String) 
+                          -> (pullNumber : Integer) 
+                          -> Promise String String
+getPullRequestGraphQlIdStr @{Kit ptr} owner repo pullNumber = 
+  ignoreStatus . promiseIO $ prim__getPullRequestGraphQlId ptr owner repo pullNumber
+
+||| Get a Pull Request GraphQL Id.
+||| This is an opaque value only needed by select Harmony FFI functions
+||| currently.
+export
+getPullRequestGraphQlId : Octokit =>
+                           (owner : String) 
+                        -> (repo : String) 
+                        -> (pullNumber : Integer) 
+                        -> Promise String OctokitGraphQlId 
+getPullRequestGraphQlId @{Kit ptr} owner repo pullNumber = 
+  mapSnd GQLId . ignoreStatus . promiseIO $ prim__getPullRequestGraphQlId ptr owner repo pullNumber
+
+%foreign okit_ffi "mark_pr_draft"
+prim__markPullRequestDraft : Ptr OctokitRef 
+                      -> (opaqueGraphQlId : String) 
+                      -> (onSuccess : String -> PrimIO ()) 
+                      -> (onFailure : String -> PrimIO ()) 
+                      -> PrimIO ()
+
+||| Mark a Pull Request as a draft
+||| This function needs a GraphQL Id instead of a pull number.
+||| See `getPullRequestGraphQlId`.
+export
+markPullRequestDraft : Octokit => 
+                       (graphQlId : OctokitGraphQlId) 
+                    -> Promise String PullRequest
+markPullRequestDraft @{Kit ptr} (GQLId id) = do
+  either . parsePullRequestString =<< (ignoreStatus . promiseIO $ prim__markPullRequestDraft ptr id)
 
 -- reviewers and teamReviewers should be comma separated values encoded in a string.
 %foreign okit_ffi "add_reviewers"

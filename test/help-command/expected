@@ -39,6 +39,8 @@ Subcommands:
       Identify an existing PR or create a new one for the current branch.
 
       Optionally apply any number of labels by prefixing them with '#'.
+
+      Optionally mark a new or existing PR as a draft with the --draft flag.
   reflect 
       Reflect on the current state of ones own PRs and review requests.
   request {<team-slug> | +<user-login>} [#<label>] [...]
