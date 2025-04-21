@@ -1,7 +1,8 @@
-module Help
+module Commands.Help
 
 import Data.Config
 import Data.String
+
 import Util
 
 import Text.PrettyPrint.Prettyprinter

@@ -1,5 +1,8 @@
 module Main
 
+import Commands
+import Commands.Help
+
 import Data.Config
 import Data.Promise
 import Data.PullRequest
@@ -7,12 +10,10 @@ import Data.String
 import Data.User
 
 import AppVersion
-import Commands
 import Config
 import FFI.Git
 import FFI.GitHub
 import FFI.Term
-import Help
 import JSON.Parser
 import System
 import System.File
