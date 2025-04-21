@@ -1,4 +1,6 @@
-module PullRequest
+module Commands.PullRequest
+
+import Commands.Reviewer
 
 import Data.Config
 import Data.Either
@@ -15,12 +17,12 @@ import Data.SortedMap
 import Data.String
 import Data.String.Extra
 import Data.User
+
 import FFI.Concurrency
 import FFI.Git
 import FFI.GitHub
 import JSON.Parser
 import Language.JSON.Accessors
-import Reviewer
 import System
 import System.File
 import Util

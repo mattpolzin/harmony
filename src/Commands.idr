@@ -1,5 +1,11 @@
 module Commands
 
+import Commands.Graph
+import Commands.Label
+import Commands.PullRequest
+import Commands.Reviewer
+import Commands.User
+
 import Data.Config
 import Data.Date
 import Data.Either
@@ -16,11 +22,6 @@ import Config
 import FFI.Concurrency
 import FFI.Git
 import FFI.GitHub
-import Graph
-import Label
-import PullRequest
-import Reviewer
-import User
 import Util
 
 import JSON.Parser

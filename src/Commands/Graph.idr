@@ -1,15 +1,15 @@
-module Graph
+module Commands.Graph
 
 import Data.Config
+import Data.Date
 import Data.Fuel
 import Data.List
+import Data.Nat
+import Data.PullRequest
 import Data.ReviewScore
 import Data.SortedMap
-import Data.Nat
-import Theme
 
-import Data.Date
-import Data.PullRequest
+import Theme
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal

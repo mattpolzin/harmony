@@ -1,10 +1,11 @@
-module Reviewer
+module Commands.Reviewer
 
 import Data.List
 import Data.List1
 import Data.Nat
 import Data.String
 import Data.ReviewScore
+
 import System.Random
 import Util
 

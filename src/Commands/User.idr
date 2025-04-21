@@ -1,4 +1,6 @@
-module User
+module Commands.User
+
+import Commands.PullRequest
 
 import Data.Config
 import Data.Date
@@ -8,9 +10,9 @@ import Data.PullRequest
 import Data.Review
 import Data.String
 import Data.User
+
 import FFI.Git
 import FFI.GitHub
-import PullRequest
 import Theme
 import Util
 

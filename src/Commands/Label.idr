@@ -1,8 +1,9 @@
-module Label
+module Commands.Label
 
 import Data.Config
 import Data.Promise
 import Data.PullRequest
+
 import FFI.GitHub
 
 ||| Add labels to a Pull Request.
