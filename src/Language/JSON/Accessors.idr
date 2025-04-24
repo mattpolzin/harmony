@@ -4,31 +4,26 @@ import Data.Either
 import Data.List
 import Data.Vect
 import JSON.Parser
+import JSON.Encoder
 
 %default total
 
-export
-lookupAll : Vect n String -> List (String, JSON) -> Either String (Vect n JSON)
-lookupAll [] dict            = Right []
-lookupAll (key :: keys) dict = [| lookup' key dict :: lookupAll keys dict |]
-  where
-    lookup' : String -> List (String, a) -> Either String a
-    lookup' key = maybeToEither "Missing required key: \{key}." . lookup key
-
-export
-optional : (JSON -> Either String a) -> JSON -> Either String (Maybe a)
-optional f JNull = Right Nothing
-optional f json = Just <$> (f json)
+access : Show v => (tyName : String) -> (v -> Maybe ty) -> v -> Either String ty
+access tyName f x = 
+  maybeToEither "Expected a \{tyName} but found \{show x}." $
+    f x
 
 export
 bool : JSON -> Either String Bool
-bool (JBool x) = Right x
-bool json = Left "Expected a bool but found \{show json}."
+bool = access "bool" getBoolean
+
+export
+integer : JSON -> Either String Integer
+integer = access "integer" getInteger
 
 export
 string : JSON -> Either String String
-string (JString x) = Right x
-string json = Left "Expected a string but found \{show json}."
+string = access "string" getString
 
 export
 stringy : (desc : String) -> (String -> Maybe a) -> JSON -> Either String a
@@ -38,9 +33,9 @@ stringy d f (JString x) = case f x of
 stringy d f json = Left "Expected a string but found \{show json}."
 
 export
-integer : JSON -> Either String Integer
-integer (JInteger x) = Right $ cast x
-integer json = Left "Expected an integer but found \{show json}."
+optional : (JSON -> Either String a) -> JSON -> Either String (Maybe a)
+optional f JNull = Right Nothing
+optional f json = Just <$> (f json)
 
 export
 array : (JSON -> Either String a) -> JSON -> Either String (List a)
@@ -52,3 +47,10 @@ object : JSON -> Either String (List (String, JSON))
 object (JObject xs) = Right xs
 object json = Left "Expected an object but found \{show json}."
 
+export
+lookupAll : Vect n String -> List (String, JSON) -> Either String (Vect n JSON)
+lookupAll [] dict            = Right []
+lookupAll (key :: keys) dict = [| lookup' key dict :: lookupAll keys dict |]
+  where
+    lookup' : String -> List (String, a) -> Either String a
+    lookup' key = maybeToEither "Missing required key: \{key}." . lookup key
