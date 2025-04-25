@@ -50,7 +50,7 @@ namespace Reflect
   intro : String
   intro = "Your current pull request summary (out of the past \{show prCount} PRs):"
 
-  parameters (pageWidth : Nat, reviews : Nat, openReq : Nat, closedReq : Nat, closedAuth : Nat, openAuth : Nat)
+  parameters (pageWidth, reviews, openReq, closedReq, closedAuth, openAuth : Nat)
     chart : Config =>
             (leftPadding : Nat)
          -> Doc AnsiStyle
@@ -75,7 +75,7 @@ namespace Reflect
           padChart = (cast centerOffset) + (left `minus` (req + reviews))
       in  vsep [header padTitle, chart padChart]
 
-    parameters (mostRecentReview : Maybe Date, earliestOpenAuth : Maybe Date, earliestOpenReq : Maybe Date)
+    parameters (mostRecentReview, earliestOpenAuth, earliestOpenReq : Maybe Date)
       details : Doc AnsiStyle
       details =
         vsep [
