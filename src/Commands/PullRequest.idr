@@ -36,6 +36,10 @@ public export
 data IdentifiedOrCreated = Identified | Created
 
 public export
+data CreatePRResult = Actual IdentifiedOrCreated PullRequest
+                    | Hypothetical String
+
+public export
 record PRHistory where
   constructor MkPRHistory
   openPRs   : List PullRequest
@@ -263,13 +267,26 @@ export
 identifyOrCreatePR : Config => Git => Octokit => 
                      {default False isDraft : Bool}
                   -> (branch : String) 
-                  -> Promise' (IdentifiedOrCreated, PullRequest)
+                  -> Promise' CreatePRResult
 identifyOrCreatePR @{config} {isDraft} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
-    | [] => (Created,) <$> createPR
+    | [] => case !(isTTY stdout) of
+               True  => Actual Created <$> createPR
+               False => pure (Hypothetical prCreationUrl)
     | _  => reject "Multiple PRs for the current brach. Harmony only handles 1 PR per branch currently."
-  pure (Identified, openPr)
+  pure (Actual Identified openPr)
     where
+      prCreationUrl : String
+      prCreationUrl =
+        let repo = config.repo
+            org  = config.org
+        in  "https://github.com/\{org}/\{repo}/compare/\{branch}?expand=1"
+        -- NOTE: I would love to be able to create the above 
+        --       URL such that the page opens with "draft" 
+        --       as the default if the PR was requested to 
+        --       be a draft via the CLI but I have not found 
+        --       a way to do that yet.
+
       inlineDescription : HasIO io => io String
       inlineDescription = do
         putStrLn "What would you like the description to be (two blank lines to finish)?"
