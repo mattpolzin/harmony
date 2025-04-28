@@ -56,7 +56,8 @@ label : Config => Git => Octokit =>
         (labels : List String)
      -> Promise' ()
 label @{config} labels =
-  do (_, openPr) <- identifyOrCreatePR !currentBranch
+  do Actual _ openPr <- identifyOrCreatePR !currentBranch
+       | Hypothetical _ => reject "You cannot label a PR that has not been created yet and you cannot create the PR in this non-TTY shell"
      let finalLabels = unslugifyLabel config.repoLabels <$> labels
      allLabels <- addLabels openPr finalLabels
      renderIO $ vsep
@@ -81,7 +82,8 @@ pr : Config => Git => Octokit =>
   -> Promise' ()
 pr {isDraft} labelSlugs =
   if all isHashPrefix labelSlugs
-     then do (actionTaken, pr) <- identifyOrCreatePR {isDraft} !currentBranch
+     then do Actual actionTaken pr <- identifyOrCreatePR {isDraft} !currentBranch
+               | Hypothetical url => putStrLn url
              case actionTaken of
                   Identified => putStrLn pr.webURI
                   Created    => pure ()
@@ -106,7 +108,8 @@ request args {dry} = do
   let (forcedReviewers, teamNames, labelSlugs) = partitionedArgs
   if (null forcedReviewers && null teamNames)
      then reject "The request command expects one or more names of GitHub Teams or Users as arguments."
-     else do (_, openPr) <- identifyOrCreatePR !currentBranch
+     else do Actual _ openPr <- identifyOrCreatePR !currentBranch
+               | Hypothetical _ => reject "You cannot request review on a PR that has not been created yet and you cannot create the PR in this non-TTY shell"
              requestReviewers openPr teamNames forcedReviewers {dry}
              when (not (null labelSlugs || dry)) $
                label labelSlugs
