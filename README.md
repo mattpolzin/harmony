@@ -142,6 +142,8 @@ If you need to create a PR still, you will be prompted for a branch to open the 
 
 You can also specify any number of labels to apply by prefixing them with '#'. For example, `harmony pr #backport #bugfix` would create a PR and apply the `backport` and `bugfix` labels.
 
+If you are using harmony from a script or some other environment without TTY support, harmony will print a GitHub URL that can be used to create the PR. This mode of operation will ignore the `--draft` and `#label` options.
+
 Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony pr)` to open a web browser to an existing PR for the current branch.
 
 #### Examples
