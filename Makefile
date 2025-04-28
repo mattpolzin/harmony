@@ -128,7 +128,7 @@ version:
 	$(ised) "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
 	$(ised) "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
 	@npm update
-	@$(nix) fmt
+	@find . -name '*.nix' | xargs $(nix) fmt
 
 package: build
 	bash ./version-check.sh

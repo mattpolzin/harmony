@@ -21,7 +21,7 @@ let
     };
   };
 
-  nodeDependencies  = buildNpmPackage {
+  nodeDependencies = buildNpmPackage {
     name = "harmony-npm-deps";
     src = ./.;
     npmDepsHash = "sha256-GRnI5EBmGnkXIsY3SK9Ma0uVias03GvqpMqdZOqfqqQ=";
