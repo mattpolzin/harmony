@@ -71,16 +71,67 @@ label @{config} labels =
     putLabels : List String -> Doc AnsiStyle
     putLabels = hcat . intersperse (pretty ", ") . map putLabel
 
+prUsageError  : String
+prUsageError = 
+  "pr's arguments must be #<label>, --into <branch-name>, or --draft to create a draft PR."
+
+data IntoOpt = Branch String
+
+data PrArg = Draft | Into IntoOpt | Label String
+
+(<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
+(<||>) f g x = f x <|> g x
+
+private infixr 2 <||>
+
+||| Parse arguments to the pr subcommand.
+export
+parsePrArgs : List String -> Either String (List PrArg)
+parsePrArgs [] = Right []
+parsePrArgs args =
+  let (intoArgs, rest) = recombineIntoArgs args
+      intoArgs' = Into <$> intoArgs
+      rest' = (traverse (parseDraftFlag <||> parseLabelArg) rest)
+      in  maybeToEither prUsageError ((intoArgs' ++) <$> rest')
+  where
+    parseDraftFlag : String -> Maybe PrArg
+    parseDraftFlag "--draft" = Just Draft
+    parseDraftFlag _ = Nothing
+
+    parseLabelArg : String -> Maybe PrArg
+    parseLabelArg labelArg =
+      case unpack labelArg of
+           ('#' :: label) => Just . Label $ pack label
+           _              => Nothing
+
+    -- expect a String
+    parseIntoOpt : String -> Maybe IntoOpt
+    parseIntoOpt = Just . Branch
+
+    -- the --into option takes the next argument as its input so we will
+    -- take two consecutive list elements and combine them for that option.
+    -- The options will be returned separately and the rest will be left for
+    -- later.
+    recombineIntoArgs : List String -> (List IntoOpt, List String)
+    recombineIntoArgs [] = ([], [])
+    recombineIntoArgs ("--into" :: []) = ([], ["--into"])
+    recombineIntoArgs ("--into" :: (x :: xs)) =
+      case parseIntoOpt x of
+           Just opt => mapFst (opt ::) (recombineIntoArgs xs)
+           Nothing  => mapSnd (\xs' => "--into" :: x :: xs') (recombineIntoArgs xs)
+    recombineIntoArgs (x :: xs) = mapSnd (x ::) (recombineIntoArgs xs)
+
 ||| Print the URI for the current branch's PR or create a new PR if one
 ||| does not exist when the user executes `harmony pr`. Supports creation
 ||| of draft PRs (default False) and can accept any number of labels to apply
 ||| to the new or current PR.
 export
 pr : Config => Git => Octokit =>
-     {default False isDraft : Bool}
-  -> (labelArgs : List String)
+     (args : List PrArg)
   -> Promise' ()
-pr {isDraft} labelSlugs =
+pr args =
+  -- TODO: Add support for `into` option below
+      ^ TODO!!
   if all isHashPrefix labelSlugs
      then do Actual actionTaken pr <- identifyOrCreatePR {isDraft} !currentBranch
                | Hypothetical url => putStrLn url
@@ -95,7 +146,14 @@ pr {isDraft} labelSlugs =
                  | False => putStrLn "No worries, the PR won't be converted to a draft."
                ignore $ convertPRToDraft pr
                putStrLn "The PR for the current branch has been converted to a draft."
-     else reject "The pr command only accepts labels prefixed with '#' and the --draft flag."
+     else reject "The pr command only accepts labels prefixed with '#', the --into option, and the --draft flag."
+
+  where
+    isDraft : Bool
+    isDraft = isJust $ find (\case Draft => True; _ => False) args
+
+    labelSlugs : List String
+    labelSlugs = foldr (\case (Label l) => (l ::); _ => id) [] args
 
 ||| Request review from the given teams & users as reviewers when the user executes
 ||| `harmony request ...`.
@@ -182,11 +240,6 @@ health : Config => Octokit =>
 health @{config} = do
   prs <- listOpenPRs {pageBreaks = 4} 100
   renderIO $ healthGraph prs config.org config.repo
-
-(<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
-(<||>) f g x = f x <|> g x
-
-private infixr 2 <||>
 
 ||| Parse arguments for the graph command.
 export

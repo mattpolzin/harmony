@@ -112,10 +112,10 @@ handleAuthenticatedArgs ("health" :: _ :: _) =
   reject "The health command does not take any arguments."
 handleAuthenticatedArgs ["health"] =
   Commands.health
-handleAuthenticatedArgs ("pr" :: "--draft" :: args) =
-  Commands.pr {isDraft=True} args
 handleAuthenticatedArgs ("pr" :: args) =
-  Commands.pr {isDraft=False} args
+  case (parsePrArgs args) of
+       Right args => Commands.pr args
+       Left err   => exitError err
 handleAuthenticatedArgs ["reflect"] =
   Commands.reflect
 handleAuthenticatedArgs ("contribute" :: args) =
