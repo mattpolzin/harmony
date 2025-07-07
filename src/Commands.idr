@@ -117,7 +117,12 @@ parsePrArgs args =
     -- later.
     recombineIntoArgs : List String -> (List IntoOpt, List String)
     recombineIntoArgs [] = ([], [])
+    recombineIntoArgs ("-i" :: []) = ([], ["-i"])
     recombineIntoArgs ("--into" :: []) = ([], ["--into"])
+    recombineIntoArgs ("-i" :: (x :: xs)) =
+      case parseIntoOpt x of
+           Just opt => mapFst (opt ::) (recombineIntoArgs xs)
+           Nothing  => mapSnd (\xs' => "-i" :: x :: xs') (recombineIntoArgs xs)
     recombineIntoArgs ("--into" :: (x :: xs)) =
       case parseIntoOpt x of
            Just opt => mapFst (opt ::) (recombineIntoArgs xs)
