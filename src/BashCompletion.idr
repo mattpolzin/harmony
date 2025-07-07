@@ -4,6 +4,9 @@ import Data.Config
 import Data.List
 import Data.Maybe
 import Data.String
+import Data.Promise
+
+import FFI.Git
 
 %default total
 
@@ -92,14 +95,19 @@ cmdOpts "version" _ _ = Just []
 cmdOpts "help" "--" "help" = Just allRootCmds
 cmdOpts "help" partialArg "help" =
   Just $ filter (isPrefixOf partialArg) allRootCmds 
-cmdOpts "pr" "-"  "pr" = Just ["--draft"]
-cmdOpts "pr" "--" "pr" = Just ["--draft"]
+cmdOpts "pr" "-"  "pr" = Just ["--draft", "--into"]
+cmdOpts "pr" "--" "pr" = Just ["--draft", "--into"]
+cmdOpts "pr" partialBranch "--into" = Nothing -- <- allows us to fall through to handle with config below.
 cmdOpts "pr" partialArg "pr" =
-  if partialArg `isPrefixOf` "--draft"
-     then Just ["--draft"]
-     else if isHashPrefix partialArg
-         then Nothing -- <- allows us to fall through to handle with config below.
-         else Just []
+  if partialArg `isPrefixOf` "--"
+     then Just ["--draft", "--into"]
+     else if partialArg `isPrefixOf` "--draft"
+             then Just ["--draft"]
+             else if partialArg `isPrefixOf` "--into"
+                  then Just ["--into"]
+                  else if isHashPrefix partialArg
+                      then Nothing -- <- allows us to fall through to handle with config below.
+                      else Just []
 cmdOpts "contribute" "-"  _ = Just ["--checkout", "-c", "--list", "-l", "--ignore", "-i"]
 cmdOpts "contribute" "--" _ = Just ["--checkout", "-c", "--list", "-l", "--ignore", "-i"]
 cmdOpts "contribute" partialArg _  =
@@ -120,6 +128,21 @@ cmdOpts "graph" partialArg _ =
 -- anything else requires configuration being loaded
 cmdOpts _ _ _ = Nothing
 
+optsForPrIntoOption : HasIO io => (partialBranch : String) -> io (Maybe (List String))
+optsForPrIntoOption partialBranch = do
+  _ <- git
+  allBranches <- listBranchesSync
+  let matches = case partialBranch of
+                     "--" => allBranches
+                     _ => List.filter (isPrefixOf partialBranch) allBranches
+  pure $ Just matches
+
+export
+ffiOpts : HasIO io => (subcommand : String) -> (curWord : String) -> (prevWord : String) -> io (Maybe (List String))
+-- pr command (handled partially above, but when head references are specified, handled here)
+ffiOpts "pr" partialBranch "-i"     = optsForPrIntoOption partialBranch
+ffiOpts "pr" partialBranch "--into" = optsForPrIntoOption partialBranch
+ffiOpts _ _ _ = pure Nothing
 
 optsForRequestCmd : Config => String -> List String
 optsForRequestCmd @{config} partialArg =
@@ -136,7 +159,6 @@ optsForRequestCmd @{config} partialArg =
         else if isHashPrefix partialArg
                then hashify . slugify <$> config.repoLabels
                else config.teamSlugs
-
 
 export
 opts : Config => (subcommand : String) -> (curWord : String) -> (prevWord : String) -> List String

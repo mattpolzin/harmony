@@ -286,11 +286,6 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
       putStrLn failureDescription
       pure fallback
 
-    orIfEmpty : Maybe String -> String -> String
-    orIfEmpty Nothing  x  = x
-    orIfEmpty (Just y) "" = y
-    orIfEmpty (Just _) x  = x
-
     org : Maybe GitRemote -> Maybe String
     org = map (.org)
 

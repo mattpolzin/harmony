@@ -56,12 +56,14 @@ record PullRequest where
   reviewers   : List String
   ||| The branch being merged into some other branch.
   headRef     : String
+  ||| The branch being merged into.
+  baseRef     : String
 
 %name PullRequest pr, pr1, pr2
 
 export
 Show PullRequest where
-  show (MkPullRequest number _ _ _ author state _ headRef) =
+  show (MkPullRequest number _ _ _ author state _ headRef _) =
     "[\{show number}] (\{show state}) \{authorString} - headRef: \{headRef}"
     where
       authorString : String
@@ -93,7 +95,7 @@ export
 parsePR : JSON -> Either String PullRequest
 parsePR json =
  do pr <- object json
-    [pullNumber, pullTitle, authorLogin, stateStr, createdAtStr, mergedStr, isDraftStr, reviewerList, head] <- lookupAll ["pull_number", "title", "author", "state", "created_at", "merged", "draft", "reviewers", "head_ref"] pr
+    [pullNumber, pullTitle, authorLogin, stateStr, createdAtStr, mergedStr, isDraftStr, reviewerList, head, base] <- lookupAll ["pull_number", "title", "author", "state", "created_at", "merged", "draft", "reviewers", "head_ref", "base_ref"] pr
     number      <- integer pullNumber
     title <- string pullTitle
     author      <- string authorLogin
@@ -103,6 +105,7 @@ parsePR json =
     createdAt   <- parseDateTime =<< string createdAtStr
     reviewers   <- array string reviewerList
     headRef     <- string head
+    baseRef     <- string base
     pure $ MkPullRequest {
         number
       , title
@@ -112,6 +115,7 @@ parsePR json =
       , state
       , reviewers
       , headRef
+      , baseRef
       }
 
 ||| Parse a single user from a JSON String

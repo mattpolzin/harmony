@@ -8,6 +8,7 @@ import Commands.User
 
 import Data.Config
 import Data.Date
+import Data.DPair
 import Data.Either
 import Data.List
 import Data.List1
@@ -71,31 +72,104 @@ label @{config} labels =
     putLabels : List String -> Doc AnsiStyle
     putLabels = hcat . intersperse (pretty ", ") . map putLabel
 
+prUsageError  : String
+prUsageError = 
+  "pr's arguments must be #<label>, --into <branch-name>, or --draft to create a draft PR."
+
+data IntoOpt = Branch (Exists String.NonEmpty)
+
+data PrArg = Draft | Into IntoOpt | Label String
+
+(<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
+(<||>) f g x = f x <|> g x
+
+private infixr 2 <||>
+
+||| Parse arguments to the pr subcommand.
+export
+parsePrArgs : List String -> Either String (List PrArg)
+parsePrArgs [] = Right []
+parsePrArgs args =
+  let (intoArgs, rest) = recombineIntoArgs args
+      intoArgs' = Into <$> intoArgs
+      rest' = (traverse (parseDraftFlag <||> parseLabelArg) rest)
+      in  maybeToEither prUsageError ((intoArgs' ++) <$> rest')
+  where
+    parseDraftFlag : String -> Maybe PrArg
+    parseDraftFlag "--draft" = Just Draft
+    parseDraftFlag _ = Nothing
+
+    parseLabelArg : String -> Maybe PrArg
+    parseLabelArg labelArg =
+      case unpack labelArg of
+           ('#' :: label) => Just . Label $ pack label
+           _              => Nothing
+
+    -- expect a String
+    parseIntoOpt : String -> Maybe IntoOpt
+    parseIntoOpt str =
+      let str' = nonEmpty str
+      in Branch . Evidence str <$> str'
+
+    -- the --into option takes the next argument as its input so we will
+    -- take two consecutive list elements and combine them for that option.
+    -- The options will be returned separately and the rest will be left for
+    -- later.
+    recombineIntoArgs : List String -> (List IntoOpt, List String)
+    recombineIntoArgs [] = ([], [])
+    recombineIntoArgs ("-i" :: []) = ([], ["-i"])
+    recombineIntoArgs ("--into" :: []) = ([], ["--into"])
+    recombineIntoArgs ("-i" :: (x :: xs)) =
+      case parseIntoOpt x of
+           Just opt => mapFst (opt ::) (recombineIntoArgs xs)
+           Nothing  => mapSnd (\xs' => "-i" :: x :: xs') (recombineIntoArgs xs)
+    recombineIntoArgs ("--into" :: (x :: xs)) =
+      case parseIntoOpt x of
+           Just opt => mapFst (opt ::) (recombineIntoArgs xs)
+           Nothing  => mapSnd (\xs' => "--into" :: x :: xs') (recombineIntoArgs xs)
+    recombineIntoArgs (x :: xs) = mapSnd (x ::) (recombineIntoArgs xs)
+
 ||| Print the URI for the current branch's PR or create a new PR if one
 ||| does not exist when the user executes `harmony pr`. Supports creation
 ||| of draft PRs (default False) and can accept any number of labels to apply
 ||| to the new or current PR.
 export
 pr : Config => Git => Octokit =>
-     {default False isDraft : Bool}
-  -> (labelArgs : List String)
+     (args : List PrArg)
   -> Promise' ()
-pr {isDraft} labelSlugs =
+pr args =
+  let intoBranch = intoArg
+  in
   if all isHashPrefix labelSlugs
-     then do Actual actionTaken pr <- identifyOrCreatePR {isDraft} !currentBranch
+     then do Actual actionTaken pr <- identifyOrCreatePR {isDraft} {intoBranch} !currentBranch
                | Hypothetical url => putStrLn url
              case actionTaken of
                   Identified => putStrLn pr.webURI
                   Created    => pure ()
              when (not $ null labelSlugs) $
                label labelSlugs
+             whenJust intoBranch $ \branch =>
+               if not (branch `isSuffixOf` pr.baseRef)
+                 then reject "Setting the --into branch (base ref) for an existing PR is not supported (yet). Base ref will remain \{pr.baseRef}"
+                 else pure ()
              when (isDraft && not pr.isDraft) $ do
                putStrLn ""
                True <- yesNoPrompt {defaultAnswer = False} "Are you sure you want to convert the existing PR for the current branch to a draft?"
                  | False => putStrLn "No worries, the PR won't be converted to a draft."
                ignore $ convertPRToDraft pr
                putStrLn "The PR for the current branch has been converted to a draft."
-     else reject "The pr command only accepts labels prefixed with '#' and the --draft flag."
+     else reject "The pr command only accepts labels prefixed with '#', the --into option, and the --draft flag."
+
+  where
+    isDraft : Bool
+    isDraft = isJust $ find (\case Draft => True; _ => False) args
+
+    labelSlugs : List String
+    labelSlugs = foldr (\case (Label l) => (l ::); _ => id) [] args
+
+    intoArg : Maybe String
+    intoArg =
+      foldMap (\case (Into (Branch name)) => Just (value name.snd); _ => Nothing) args
 
 ||| Request review from the given teams & users as reviewers when the user executes
 ||| `harmony request ...`.
@@ -183,15 +257,11 @@ health @{config} = do
   prs <- listOpenPRs {pageBreaks = 4} 100
   renderIO $ healthGraph prs config.org config.repo
 
-(<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
-(<||>) f g x = f x <|> g x
-
-private infixr 2 <||>
-
 ||| Parse arguments for the graph command.
 export
 parseGraphArgs : List String -> Either String (List GraphArg)
-parseGraphArgs [] = Right []
+parseGraphArgs [] =
+  Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
 parseGraphArgs (x :: y :: z :: xs) =
   Left "graph accepts at most one team name and the --completed flag."
 parseGraphArgs args =
@@ -207,6 +277,17 @@ parseGraphArgs args =
 
     parseTeamArg : String -> Maybe GraphArg
     parseTeamArg str = Just (TeamName str)
+
+namespace TestParseGraphArgs
+
+  testJustTeamName : Commands.parseGraphArgs ["team1"] === Right [TeamName "team1"]
+  testJustTeamName = Refl
+
+  testRequiresOneArgument : Commands.parseGraphArgs [] === Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
+  testRequiresOneArgument = Refl
+
+  testAcceptsAtMostTwoArguments : Commands.parseGraphArgs ["a", "b", "c"] === Left "graph accepts at most one team name and the --completed flag."
+  testAcceptsAtMostTwoArguments = Refl
 
 data IgnoreOpt = PRNum Nat
 

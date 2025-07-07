@@ -35,12 +35,14 @@ Subcommands:
       Labels that do not exist yet will be created automatically.
   list [<team-slug>]
       List all teams or the members of the given GitHub Team.
-  pr [--draft] [#<label>] [...]
+  pr [--draft] [-i/--into {<branch-name>}] [#<label>] [...]
       Identify an existing PR or create a new one for the current branch.
 
       Optionally apply any number of labels by prefixing them with '#'.
 
       Optionally mark a new or existing PR as a draft with the --draft flag.
+
+      Optionally specify the branch to merge into with the --into option.
   reflect 
       Reflect on the current state of ones own PRs and review requests.
   request {<team-slug> | +<user-login>} [#<label>] [...]

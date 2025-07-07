@@ -49,6 +49,9 @@ printWarning warning =
       ignore $ fPutStrLn stderr warning
       ignore $ fPutStrLn stderr ""
 
+resolve'' : Promise' () -> IO ()
+resolve'' = resolve' pure exitError
+
 covering
 bashCompletion : HasIO io => 
                  (subcommand : String)
@@ -56,17 +59,20 @@ bashCompletion : HasIO io =>
               -> (prevWord : String) 
               -> io ()
 bashCompletion subcommand curWord prevWord = 
-  let completions = maybe configuredOpts pure (BashCompletion.cmdOpts subcommand curWord prevWord)
+  let trivialCompletions = BashCompletion.cmdOpts subcommand curWord prevWord
+      ffiCompletions = maybe ffiOpts (pure . Just) trivialCompletions
+      completions = ffiCompletions >>= \case Nothing => configuredOpts; Just cs => pure cs
   in  putStr $ unlines !completions
   where
+    ffiOpts : io (Maybe (List String))
+    ffiOpts =
+      BashCompletion.ffiOpts subcommand curWord prevWord
+
     configuredOpts : io (List String)
     configuredOpts =
       do Right config <- loadConfig False maximumLayoutWidth Nothing
            | Left _ => pure []
          pure (BashCompletion.opts subcommand curWord prevWord)
-
-resolve'' : Promise' () -> IO ()
-resolve'' = resolve' pure exitError
 
 
 ||| Handle commands that require both configuration and
@@ -112,10 +118,10 @@ handleAuthenticatedArgs ("health" :: _ :: _) =
   reject "The health command does not take any arguments."
 handleAuthenticatedArgs ["health"] =
   Commands.health
-handleAuthenticatedArgs ("pr" :: "--draft" :: args) =
-  Commands.pr {isDraft=True} args
 handleAuthenticatedArgs ("pr" :: args) =
-  Commands.pr {isDraft=False} args
+  case (parsePrArgs args) of
+       Right args => Commands.pr args
+       Left err   => exitError err
 handleAuthenticatedArgs ["reflect"] =
   Commands.reflect
 handleAuthenticatedArgs ("contribute" :: args) =
@@ -192,7 +198,7 @@ handleArgs : Git =>
 handleArgs _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = bashCompletion subcommand curWord prevWord
 handleArgs _ _ _ _ ["--bash-completion-script"] = putStrLn BashCompletion.script
 handleArgs _ _ _ _ ["--zsh-completion-script"] = putStrLn ZshCompletion.script
-handleArgs envPAT terminalColors terminalColumns editor args = 
+handleArgs envPAT terminalColors terminalColumns editor args =
   resolve'' $
     do -- create the config file before continuing if it does not exist yet
        config <- loadOrCreateConfig envPAT terminalColors terminalColumns editor

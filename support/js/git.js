@@ -1,5 +1,6 @@
 
 const SimpleGit = require('simple-git')
+const spawnSync = require('child_process').spawnSync
 
 const git_git = () =>
   SimpleGit()
@@ -18,6 +19,24 @@ const git_current_branch = (git, onSuccess, onFailure) =>
     idris__git_trim(onSuccess),
     onFailure
   )
+
+// all branches
+// @Returns String
+const git_list_branches = (git, onSuccess, onFailure) =>
+  idris__git_unpromisify(
+    git.raw('branch', '--list'),
+    idris__git_trim(onSuccess),
+    onFailure
+  )
+
+// all branches
+// @Returns String
+const git_list_branches_sync = (git) =>
+  spawnSync('git', ['branch', '--list'], {encoding: 'utf8'})
+    .stdout
+    .split('\n')
+    .map(line => line.replace('*', '').trim())
+    .join('\n')
 
 const git_checkout_branch = (git, branch, onSuccess, onFailure) =>
   idris__git_unpromisify(
