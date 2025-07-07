@@ -149,8 +149,8 @@ pr args =
              when (not $ null labelSlugs) $
                label labelSlugs
              whenJust intoBranch $ \branch =>
-               if branch /= pr.headRef
-                 then reject "Setting the --into branch (head ref) for an existing PR is not supported (yet)."
+               if not (branch `isSuffixOf` pr.baseRef)
+                 then reject "Setting the --into branch (base ref) for an existing PR is not supported (yet). Base ref will remain \{pr.baseRef}"
                  else pure ()
              when (isDraft && not pr.isDraft) $ do
                putStrLn ""

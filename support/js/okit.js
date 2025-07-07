@@ -92,6 +92,7 @@ const digPr = pr => {
       merged: pr.merged_at !== null,
       reviewers: pr.requested_reviewers.map(u => u.login),
       head_ref: pr.head.ref,
+      base_ref: pr.base.ref,
       title: pr.title
     }
   }
@@ -128,6 +129,7 @@ const digGraphQlPr = pr => {
       merged: pr.merged,
       reviewers: pr.reviewRequests.nodes.map(rr => rr.requestedReviewer.login),
       head_ref: pr.headRefName,
+      base_ref: pr.baseRefName,
       title: pr.title
     }
   }
@@ -142,6 +144,7 @@ const graphql_pr_selections = `
             merged
             reviewRequests(first: 100) { nodes { requestedReviewer { ... on Actor { login } ... on Team { slug } } } }
             headRefName
+            baseRefName
             title
 `
 
