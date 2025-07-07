@@ -6,11 +6,27 @@ import Data.List
 import Data.Promise
 import Data.String
 import FFI.Git
+import Data.So
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
+
+namespace String
+  public export
+  data NonEmpty : String -> Type where
+    IsNonEmpty : (cs : String) -> So (cs /= "") => NonEmpty cs
+
+  export
+  value : String.NonEmpty _ -> String
+  value (IsNonEmpty cs) = cs
+
+  export
+  nonEmpty : (cs : String) -> Maybe (NonEmpty cs)
+  nonEmpty cs with (choose (cs /= ""))
+    nonEmpty cs | (Left _) = Just (IsNonEmpty cs)
+    nonEmpty cs | (Right _) = Nothing
 
 ||| Run the given applicative when the input is @Nothing@.
 ||| The dual of @whenJust@.
@@ -68,32 +84,42 @@ getManyLines = getMoreLines []
               ("" :: rest, "") => pure (reverse rest)
               _                => getMoreLines (line :: acc) fuel
 
-||| Ask a question and receive a yes/no response with yes being the default
-||| unless you specify a `defaultAnswer` argument.
-|||
-||| You probably want your question String to end with a question mark;
-||| @yesNoPrompt@ will append "[Y/n]" to the end of your question for you.
-export
-yesNoPrompt : HasIO io => 
-              {default True defaultAnswer : Bool}
-           -> (question : String)
-           -> io Bool
-yesNoPrompt question = do
-  putStr "\{question} [\{defaultAnswerStr}] "
-  yesUnlessNo . trim <$> getLine
-    where
-      yesUnlessNo : String -> Bool
-      yesUnlessNo answer with (toLower answer)
-        _ | "n"    = False
-        _ | "no"   = False
-        _ | "y"    = True
-        _ | "yes"  = True
-        _ | _      = defaultAnswer
-      
-      defaultAnswerStr : String
-      defaultAnswerStr = case defaultAnswer of
-                              False => "y/N"
-                              True => "Y/n"
+namespace Prompting
+  ||| Ask a question and receive a yes/no response with yes being the default
+  ||| unless you specify a `defaultAnswer` argument.
+  |||
+  ||| You probably want your question String to end with a question mark;
+  ||| @yesNoPrompt@ will append "[Y/n]" to the end of your question for you.
+  export
+  yesNoPrompt : HasIO io => 
+                {default True defaultAnswer : Bool}
+             -> (question : String)
+             -> io Bool
+  yesNoPrompt question = do
+    putStr "\{question} [\{defaultAnswerStr}] "
+    yesUnlessNo . trim <$> getLine
+      where
+        yesUnlessNo : String -> Bool
+        yesUnlessNo answer with (toLower answer)
+          _ | "n"    = False
+          _ | "no"   = False
+          _ | "y"    = True
+          _ | "yes"  = True
+          _ | _      = defaultAnswer
+        
+        defaultAnswerStr : String
+        defaultAnswerStr = case defaultAnswer of
+                                False => "y/N"
+                                True => "Y/n"
+
+  ||| Provide a default value to use if the second arg is an empty string. If
+  ||| you pass Nothing as the first arg, you are choosing not to provide a
+  ||| default.
+  export
+  orIfEmpty : (fallback : Maybe String) -> (input : String) -> String
+  orIfEmpty Nothing  x  = x
+  orIfEmpty (Just y) "" = y
+  orIfEmpty (Just _) x  = x
 
 ||| Get an absolute path for the given directory or file assuming the
 ||| given path is relative to the root of the Git repository.

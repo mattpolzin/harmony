@@ -8,6 +8,7 @@ import Commands.User
 
 import Data.Config
 import Data.Date
+import Data.DPair
 import Data.Either
 import Data.List
 import Data.List1
@@ -75,7 +76,7 @@ prUsageError  : String
 prUsageError = 
   "pr's arguments must be #<label>, --into <branch-name>, or --draft to create a draft PR."
 
-data IntoOpt = Branch String
+data IntoOpt = Branch (Exists String.NonEmpty)
 
 data PrArg = Draft | Into IntoOpt | Label String
 
@@ -106,7 +107,9 @@ parsePrArgs args =
 
     -- expect a String
     parseIntoOpt : String -> Maybe IntoOpt
-    parseIntoOpt = Just . Branch
+    parseIntoOpt str =
+      let str' = nonEmpty str
+      in Branch . Evidence str <$> str'
 
     -- the --into option takes the next argument as its input so we will
     -- take two consecutive list elements and combine them for that option.
@@ -130,16 +133,20 @@ pr : Config => Git => Octokit =>
      (args : List PrArg)
   -> Promise' ()
 pr args =
-  -- TODO: Add support for `into` option below
-      ^ TODO!!
+  let intoBranch = intoArg
+  in
   if all isHashPrefix labelSlugs
-     then do Actual actionTaken pr <- identifyOrCreatePR {isDraft} !currentBranch
+     then do Actual actionTaken pr <- identifyOrCreatePR {isDraft} {intoBranch} !currentBranch
                | Hypothetical url => putStrLn url
              case actionTaken of
                   Identified => putStrLn pr.webURI
                   Created    => pure ()
              when (not $ null labelSlugs) $
                label labelSlugs
+             whenJust intoBranch $ \branch =>
+               if branch /= pr.headRef
+                 then reject "Setting the --into branch (head ref) for an existing PR is not supported (yet)."
+                 else pure ()
              when (isDraft && not pr.isDraft) $ do
                putStrLn ""
                True <- yesNoPrompt {defaultAnswer = False} "Are you sure you want to convert the existing PR for the current branch to a draft?"
@@ -154,6 +161,10 @@ pr args =
 
     labelSlugs : List String
     labelSlugs = foldr (\case (Label l) => (l ::); _ => id) [] args
+
+    intoArg : Maybe String
+    intoArg =
+      foldMap (\case (Into (Branch name)) => Just (value name.snd); _ => Nothing) args
 
 ||| Request review from the given teams & users as reviewers when the user executes
 ||| `harmony request ...`.
@@ -244,7 +255,8 @@ health @{config} = do
 ||| Parse arguments for the graph command.
 export
 parseGraphArgs : List String -> Either String (List GraphArg)
-parseGraphArgs [] = Right []
+parseGraphArgs [] =
+  Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
 parseGraphArgs (x :: y :: z :: xs) =
   Left "graph accepts at most one team name and the --completed flag."
 parseGraphArgs args =
@@ -260,6 +272,17 @@ parseGraphArgs args =
 
     parseTeamArg : String -> Maybe GraphArg
     parseTeamArg str = Just (TeamName str)
+
+namespace TestParseGraphArgs
+
+  testJustTeamName : Commands.parseGraphArgs ["team1"] === Right [TeamName "team1"]
+  testJustTeamName = Refl
+
+  testRequiresOneArgument : Commands.parseGraphArgs [] === Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
+  testRequiresOneArgument = Refl
+
+  testAcceptsAtMostTwoArguments : Commands.parseGraphArgs ["a", "b", "c"] === Left "graph accepts at most one team name and the --completed flag."
+  testAcceptsAtMostTwoArguments = Refl
 
 data IgnoreOpt = PRNum Nat
 

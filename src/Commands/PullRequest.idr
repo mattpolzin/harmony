@@ -266,9 +266,10 @@ convertPRToDraft @{config} pr = do
 export
 identifyOrCreatePR : Config => Git => Octokit => 
                      {default False isDraft : Bool}
+                  -> {default Nothing intoBranch : Maybe String}
                   -> (branch : String) 
                   -> Promise' CreatePRResult
-identifyOrCreatePR @{config} {isDraft} branch = do
+identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
     | [] => case !(isTTY stdout) of
                True  => Actual Created <$> createPR
@@ -326,6 +327,16 @@ identifyOrCreatePR @{config} {isDraft} branch = do
                yesNoPrompt "Would you like to continue creating a Pull Request anyway?"
              Nothing => pure True
 
+      getBaseBranch : Promise' String
+      getBaseBranch =
+        case intoBranch of
+             Just branch => do
+               putStrLn "Will merge into \{branch}."
+               pure branch
+             Nothing => do
+              putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
+              orIfEmpty (Just config.mainBranch) . trim <$> getLine
+
       createPR : Promise' PullRequest
       createPR = do
         -- create a remote tracking branch if needed
@@ -350,11 +361,7 @@ identifyOrCreatePR @{config} {isDraft} branch = do
 
         -- proceed to creating a PR
         putStrLn "Creating a new PR for the current branch (\{branch})."
-        putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
-        baseBranchInput <- trim <$> getLine
-        let baseBranch = case strM baseBranchInput of
-                              (StrCons c cs) => c `strCons` cs
-                              StrNil         => config.mainBranch
+        baseBranch <- getBaseBranch
         putStrLn "What would you like the title to be?"
         let titlePrefix = fromMaybe "" $ (++ " - ") <$> parseJiraPrefix branch
         putStr titlePrefix
