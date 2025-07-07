@@ -31,6 +31,24 @@ export
 currentBranch : Git => Promise' String
 currentBranch @{G ptr} = promiseIO $ prim__currentBranch ptr
 
+%foreign git_ffi "list_branches"
+prim__listBranches : Ptr GitRef
+                 -> (onSuccess : String -> PrimIO ())
+                 -> (onFailure : String -> PrimIO ())
+                 -> PrimIO ()
+
+export
+listBranches : Git => Promise' (List String)
+listBranches @{G ptr} = lines <$> (promiseIO $ prim__listBranches ptr)
+
+%foreign git_ffi "list_branches_sync"
+prim__listBranchesSync : Ptr GitRef
+                      -> PrimIO String
+
+export
+listBranchesSync : Git => HasIO io => io (List String)
+listBranchesSync @{G ptr} = lines <$> (primIO $ prim__listBranchesSync ptr)
+
 %foreign git_ffi "checkout_branch"
 prim__checkoutBranch : Ptr GitRef
                     -> (branch : String)
