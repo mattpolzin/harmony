@@ -6,4 +6,4 @@ commentOnRequest: [none/name/at-mention] Determines whether- and how to comment 
 defaultRemote:    [string]     The name of the default Git remote to use (e.g. 'origin').
 mainBranch:       [string]     The name of the default Git base branch for new PRs.
 theme:            [dark/light]
-githubPAT:        [string]     The Personal Access Token Harmony should use to authenticate with GitHub. You can leave this unset if you want to set a PAT via the GITHUB_PAT environment variable.
+githubPAT:        [string]     The Personal Access Token Harmony should use to authenticate with GitHub. You can leave this unset if you want to set a PAT via the GITHUB_PAT or GH_TOKEN environment variable.
