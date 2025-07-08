@@ -174,7 +174,7 @@ handleConfiguredArgs _ ["config", prop, value] =
 handleConfiguredArgs @{config} envPAT args = do
    -- Personal access token either comes from ENV or from config.
    Just pat <- pure $ envPAT <|> expose <$> config.githubPAT
-     | Nothing => reject $ "Either the GITHUB_PAT environment variable or githubPAT config "
+     | Nothing => reject $ "Either the GITHUB_PAT or GH_TOKEN environment variable or githubPAT config "
                         ++ "property must be set to a personal access token."
    _ <- liftIO $ octokit pat
 
@@ -229,7 +229,7 @@ main =
      when (args == ["version"] || args == ["--version"]) $ do
        printVersion
        exitSuccess
-     envPAT <- getEnv "GITHUB_PAT"
+     envPAT <- pure $ !(getEnv "GITHUB_PAT") <|> !(getEnv "GH_TOKEN")
      _ <- git
      handleArgs envPAT terminalColors terminalColumns editor args
 

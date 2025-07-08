@@ -26,7 +26,7 @@ Your Personal Access Token should have the following permissions:
 - `read:discussion`
 - `read:enterprise` (Read enterprise profile data)
 
-You can either add the PAT to your environment as the `GITHUB_PAT` variable (perhaps exporting it from your shell resource file or profile) or you can store your PAT in Harmony's config file. The first time you start Harmony, it will ask you to configure your PAT if you don't want to use the Environment variable. You only need one of (a) the ENV var and (b) the config property and the environment variable will take precedence if you have both set.
+You can either add the PAT to your environment as the `GITHUB_PAT` (or alternatively `GH_TOKEN`) variable (perhaps exporting it from your shell resource file or profile) or you can store your PAT in Harmony's config file. The first time you start Harmony, it will ask you to configure your PAT if you don't want to use the Environment variable. You only need one of (a) the ENV var and (b) the config property and the environment variable will take precedence if you have both set.
 
 ### NPM
 You can install Harmony via npm directly by running `npm install -g @mattpolzin/harmony`.
@@ -95,7 +95,7 @@ $ harmony sync
 Creating a new configuration (storing in harmony.json)...
 
 Harmony uses a GitHub Personal Access Token (PAT) to communicate with GitHub.
-You can set this via the $GITHUB_PAT environment variable or a config property.
+You can set this via the $GITHUB_PAT or $GH_TOKEN environment variables or a config property.
 If you don't set in your config now, you can set later with `harmony config githubPAT abcdefg`.
 The ENV var will always take precedence over the config property.
 
@@ -128,7 +128,7 @@ Not all configuration properties can be read/set with this command.
 - `defaultRemote` (optional string) -- When pushing new branches, what remote destination should be used.
 - `mainBranch` (optional string) -- When creating a PR, this is the default base branch.
 - `theme` (`dark`/`light`) -- Use colors suited better for either a dark or light Terminal background.
-- `githubPAT` (optional string) -- If the `$GITHUB_PAT` environment variable is not set, this Personal Access Token is used to authenticate with GitHub.
+- `githubPAT` (optional string) -- If the `$GITHUB_PAT` and `$GH_TOKEN` environment variables are not set, this Personal Access Token is used to authenticate with GitHub.
 
 ### Branch
 Running `harmony branch` will print the URI for accessing the currently checked out branch on GitHub.
