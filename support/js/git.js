@@ -5,8 +5,15 @@ const spawnSync = require('child_process').spawnSync
 const git_git = () =>
   SimpleGit()
 
+const idris__git_handle_error = (e) => {
+  if (typeof(e) == 'object') {
+    return e.message
+  }
+  return e
+}
+
 const idris__git_unpromisify = (promise, onSuccess, onFailure) =>
-  promise.then(r => onSuccess(r)(), e => onFailure(e)())
+  promise.then(r => onSuccess(r)(), e => onFailure(idris__git_handle_error(e))())
 
 // trim a result (second argument) and pass it to the given callback (first argument).
 const idris__git_trim = callback => value => callback(value.trim())
