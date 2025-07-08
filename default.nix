@@ -11,7 +11,7 @@
   zsh,
 }:
 let
-  idrisAddsVersion = "0.4.1";
+  idrisAddsVersion = "0.5.0";
 
   idrisAdds = buildIdris {
     ipkgName = "idris-adds";
@@ -19,7 +19,7 @@ let
       owner = "mattpolzin";
       repo = "idris-adds";
       rev = idrisAddsVersion;
-      hash = "sha256-WEr6oRZ8+50G1qv7Kv62M4DRsgAa6x1BCODC1vDOQUY=";
+      hash = "sha256-Ze95Bt89YuizWD8lSmkpcQST774mPYCEm/UnCBhE5I0=";
     };
   };
 

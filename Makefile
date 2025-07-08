@@ -4,7 +4,7 @@ idris2-version = $(shell $(idris2) --version | sed -En 's/Idris 2, version ([^-]
 idris2-build   = $(shell $(idris2) --version | sed -En 's/Idris 2, version [^-]+(.*)/\1/p')
 idris2-minor-version = $(shell echo ${idris2-version} | sed -En 's/0\.(.*)\../\1/p')
 
-idris-adds-version = 0.4.1
+idris-adds-version = 0.5.0
 idris-json-version = 0.5.0
 idris-json-hash    = 2e54a37ed3c35c2d12c8927c923ad253355812a8
 idris-elab-util-version = 0.6.0
@@ -12,7 +12,7 @@ ifeq ($(idris2-version)$(idris2-build),0.7.0)
   idris-elab-util-hash    = 2fc2d188640ce6822b5e250db73b62f5a952ca4d
 else
   # breaking change between versions 0.7.0 and 0.8.0 of Idris2:
-  idris-elab-util-hash    = dc875d4a8a2aa3bf0a767fb586a4d9150d83363d
+  idris-elab-util-hash    = ffbfe4f50900f45722035a16e6285f580047e846
 endif
 idris-parser-version = 0.1.0
 idris-parser-hash    = 0fde36cf11c12a61edcfe09d585c5a60426bc706
