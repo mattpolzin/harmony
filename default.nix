@@ -26,7 +26,7 @@ let
   nodeDependencies = buildNpmPackage {
     name = "harmony-npm-deps";
     src = ./.;
-    npmDepsHash = "sha256-WcGeSdi1pBj1kkujWXo/ExokMy8D/qtpPTKcfq/rqWQ=";
+    npmDepsHash = "sha256-DsOS1cOJ1tc3KEbfbJ5jQNKe2xdlCu1X5Kw+hGqCHTI=";
     dontNpmBuild = true;
     dontBuild = true;
 
