@@ -42,6 +42,9 @@ heading n section =
   let name = annotate underline $ pretty n
   in  line <+> name <+> ":" <+> line <+> indent 2 section
 
+bullet : Doc AnsiStyle -> Doc AnsiStyle
+bullet item = "-" <++> item
+
 shell : String -> Doc AnsiStyle
 shell = annotate italic . pretty
 
@@ -138,6 +141,33 @@ helpDocs = vsep
       , subcommandHelp' "version"
       , subcommandHelp' "whoami"
       ]
+  , heading "Authentication" $ vsep
+    [ reflow """
+        Authentication with GitHub uses a Personal Access Token. You can
+        configure which token to use with:
+        """
+    , ""
+    , hsep [ shell "harmony config githubPAT"
+           , annotate italic $ argument True "token"
+           ]
+    , ""
+    , hsep [ "Alternatively you can set the"
+           , argument' "GITHUB_PAT"
+           , "or"
+           , argument' "GH_TOKEN"
+           , "environment variables."
+           ]
+    , ""
+    , reflow """
+        Your Personal Access Token should have the following permissions:
+        """
+    , bullet $ hsep [argument' "repo", "(Full control of private repositories)"]
+    , bullet $ hsep [argument' "read:org", "(Read org and team membership, read org projects)"]
+    , bullet $ argument' "read:user"
+    , bullet $ argument' "user:email"
+    , bullet $ argument' "read:discussion"
+    , bullet $ hsep [argument' "read:enterprise", "(Read enterprise profile data)"]
+    ]
   , heading "Prompt Completion" $ vsep
       [ reflow """
           You can set up bash completion by adding the following to your bashrc
