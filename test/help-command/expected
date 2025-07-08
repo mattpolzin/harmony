@@ -62,6 +62,22 @@ Subcommands:
   whoami 
       Print information about the configured and authenticated user.
 
+Authentication:
+  Authentication with GitHub uses a Personal Access Token. You can configure
+  which token to use with:
+
+  harmony config githubPAT {token}
+
+  Alternatively you can set the GITHUB_PAT or GH_TOKEN environment variables.
+
+  Your Personal Access Token should have the following permissions:
+  - repo (Full control of private repositories)
+  - read:org (Read org and team membership, read org projects)
+  - read:user
+  - user:email
+  - read:discussion
+  - read:enterprise (Read enterprise profile data)
+
 Prompt Completion:
   You can set up bash completion by adding the following to your bashrc file or
   bash profile:

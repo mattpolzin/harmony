@@ -7,6 +7,8 @@
   makeBinaryWrapper,
   nodejs,
   buildNpmPackage,
+  stdenv,
+  zsh,
 }:
 let
   idrisAddsVersion = "0.4.1";
@@ -47,7 +49,7 @@ buildIdris {
   nativeBuildInputs = [
     installShellFiles
     makeBinaryWrapper
-  ];
+  ] ++ lib.optionals stdenv.isDarwin [ zsh ];
   buildInputs = [
     nodejs
     git

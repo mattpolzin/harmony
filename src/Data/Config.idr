@@ -113,9 +113,8 @@ record Config where
   ||| contribute command).
   ignoredPRs    : List Integer
   ||| A GitHub Personal Access Token. This value is only used if
-  ||| there is no $GITHUB_PAT environment variable set. One of
-  ||| either the environment variable or this config property
-  ||| must be set.
+  ||| there is no $GITHUB_PAT or $GH_TOKEN environment variable set. One of
+  ||| either the environment variable or this config property must be set.
   githubPAT     : Maybe (Hidden String)
   ||| Should Harmony print with colors fit for a dark terminal
   ||| or a light terminal?
@@ -158,7 +157,7 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     "githubPAT"
     """
     [string]     The Personal Access Token Harmony should use to authenticate with GitHub. You can leave this unset if you \
-    want to set a PAT via the GITHUB_PAT environment variable.
+    want to set a PAT via the GITHUB_PAT or GH_TOKEN environment variable.
     """
 
 public export
@@ -273,7 +272,7 @@ Show Config where
     ]
       where
         personalAccessToken : String
-        personalAccessToken = maybe "Not set (will use $GITHUB_PAT environment variable)" show config.githubPAT
+        personalAccessToken = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show config.githubPAT
 
 --
 -- JSON Serialization

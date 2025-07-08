@@ -4,4 +4,4 @@ at-mention
 "origin"
 "main"
 dark
-Not set (will use $GITHUB_PAT environment variable)
+Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)

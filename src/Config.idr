@@ -160,7 +160,7 @@ propGetter CommentOnRequest = show . commentOnRequest
 propGetter DefaultRemote    = show . defaultRemote
 propGetter MainBranch       = show . mainBranch
 propGetter ThemeProp        = show . theme
-propGetter GithubPAT        = maybe "Not set (will use $GITHUB_PAT environment variable)" show . githubPAT
+propGetter GithubPAT        = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show . githubPAT
 
 export
 getConfig : Config =>
@@ -197,7 +197,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
 
   let defaultPATString = enterForDefaultStr "unset"
   putStr $ unlines [ "Harmony uses a GitHub Personal Access Token (PAT) to communicate with GitHub."
-                   , "You can set this via the $GITHUB_PAT environment variable or a config property."
+                   , "You can set this via the $GITHUB_PAT or $GH_TOKEN environment variables or a config property."
                    , "If you don't set in your config now, you can set later with `harmony config githubPAT abcdefg`."
                    , "The ENV var will always take precedence over the config property."
                    , ""
@@ -207,7 +207,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
 
   -- Personal access token either comes from the ENV or the config property
   Just pat <- pure $ envGithubPAT <|> configPAT
-    | _ => reject $ "Either the GITHUB_PAT environment variable or githubPAT config "
+    | _ => reject $ "Either the GITHUB_PAT or GH_TOKEN environment variables or githubPAT config "
                  ++ "property must be set to a personal access token."
 
   remoteGuess <- preferOriginRemote <$> listRemotes
