@@ -101,9 +101,9 @@ parsePrArgs args =
 
     parseLabelArg : String -> Maybe PrArg
     parseLabelArg labelArg =
-      case unpack labelArg of
-           ('#' :: label) => Just . Label $ pack label
-           _              => Nothing
+      case strM labelArg of
+           (StrCons '#' label) => Just $ Label label
+           _                   => Nothing
 
     -- expect a String
     parseIntoOpt : String -> Maybe IntoOpt
@@ -129,6 +129,22 @@ parsePrArgs args =
            Nothing  => mapSnd (\xs' => "--into" :: x :: xs') (recombineIntoArgs xs)
     recombineIntoArgs (x :: xs) = mapSnd (x ::) (recombineIntoArgs xs)
 
+namespace TestParsePrArgs
+  parsesJustDraftFlag : parsePrArgs ["--draft"] === Right [Draft]
+  parsesJustDraftFlag = Refl
+
+  parsesJustLabels : parsePrArgs ["#one", "#two"] === Right [Label "one", Label "two"]
+  parsesJustLabels = Refl
+
+  parsesIntoOption : parsePrArgs ["--into", "a"] === Right [Into (Branch (Evidence "a" (IsNonEmpty "a")))]
+  parsesIntoOption = Refl
+
+  errorsForJustIntoFlag : parsePrArgs ["--into"] === Left Commands.prUsageError
+  errorsForJustIntoFlag = Refl
+
+  errorsForLabelWithoutHash : parsePrArgs ["a"] === Left Commands.prUsageError
+  errorsForLabelWithoutHash = Refl
+
 ||| Print the URI for the current branch's PR or create a new PR if one
 ||| does not exist when the user executes `harmony pr`. Supports creation
 ||| of draft PRs (default False) and can accept any number of labels to apply
@@ -137,28 +153,24 @@ export
 pr : Config => Git => Octokit =>
      (args : List PrArg)
   -> Promise' ()
-pr args =
-  let intoBranch = intoArg
-  in
-  if all isHashPrefix labelSlugs
-     then do Actual actionTaken pr <- identifyOrCreatePR {isDraft} {intoBranch} !currentBranch
-               | Hypothetical url => putStrLn url
-             case actionTaken of
-                  Identified => putStrLn pr.webURI
-                  Created    => pure ()
-             when (not $ null labelSlugs) $
-               label labelSlugs
-             whenJust intoBranch $ \branch =>
-               if not (branch `isSuffixOf` pr.baseRef)
-                 then reject "Setting the --into branch (base ref) for an existing PR is not supported (yet). Base ref will remain \{pr.baseRef}"
-                 else pure ()
-             when (isDraft && not pr.isDraft) $ do
-               putStrLn ""
-               True <- yesNoPrompt {defaultAnswer = False} "Are you sure you want to convert the existing PR for the current branch to a draft?"
-                 | False => putStrLn "No worries, the PR won't be converted to a draft."
-               ignore $ convertPRToDraft pr
-               putStrLn "The PR for the current branch has been converted to a draft."
-     else reject "The pr command only accepts labels prefixed with '#', the --into option, and the --draft flag."
+pr args = do
+  Actual actionTaken pr <- identifyOrCreatePR {isDraft} {intoBranch} !currentBranch
+    | Hypothetical url => putStrLn url
+  case actionTaken of
+       Identified => putStrLn pr.webURI
+       Created    => pure ()
+  when (not $ null labelSlugs) $
+    label labelSlugs
+  whenJust intoBranch $ \branch =>
+    if not (branch `isSuffixOf` pr.baseRef)
+      then reject "Setting the --into branch (base ref) for an existing PR is not supported (yet). Base ref will remain \{pr.baseRef}"
+      else pure ()
+  when (isDraft && not pr.isDraft) $ do
+    putStrLn ""
+    True <- yesNoPrompt {defaultAnswer = False} "Are you sure you want to convert the existing PR for the current branch to a draft?"
+      | False => putStrLn "No worries, the PR won't be converted to a draft."
+    ignore $ convertPRToDraft pr
+    putStrLn "The PR for the current branch has been converted to a draft."
 
   where
     isDraft : Bool
@@ -167,8 +179,8 @@ pr args =
     labelSlugs : List String
     labelSlugs = foldr (\case (Label l) => (l ::); _ => id) [] args
 
-    intoArg : Maybe String
-    intoArg =
+    intoBranch : Maybe String
+    intoBranch =
       foldMap (\case (Into (Branch name)) => Just (value name.snd); _ => Nothing) args
 
 ||| Request review from the given teams & users as reviewers when the user executes
@@ -231,6 +243,53 @@ teamNameArg : GraphArg -> Maybe String
 teamNameArg (TeamName n) = Just n
 teamNameArg _ = Nothing
 
+||| Parse arguments for the graph command.
+export
+parseGraphArgs : List String -> Either String (List GraphArg)
+parseGraphArgs [] =
+  Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
+parseGraphArgs (x :: y :: z :: xs) =
+  Left "graph accepts at most one team name and the --completed flag."
+parseGraphArgs args =
+  case (traverse (parseCompletedFlag <||> parseTeamArg) args) of
+       Just args => Right args
+       Nothing   =>
+         Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
+  where
+    parseCompletedFlag : String -> Maybe GraphArg
+    parseCompletedFlag "-c" = Just IncludeCompletedReviews
+    parseCompletedFlag "--completed" = Just IncludeCompletedReviews
+    parseCompletedFlag _ = Nothing
+
+    parseTeamArg : String -> Maybe GraphArg
+    parseTeamArg str = Just (TeamName str)
+
+namespace TestParseGraphArgs
+
+  testJustTeamName : parseGraphArgs ["team1"] === Right [TeamName "team1"]
+  testJustTeamName = Refl
+
+  testRequiresOneArgument : parseGraphArgs [] === Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
+  testRequiresOneArgument = Refl
+
+  testAcceptsAtMostTwoArguments : parseGraphArgs ["a", "b", "c"] === Left "graph accepts at most one team name and the --completed flag."
+  testAcceptsAtMostTwoArguments = Refl
+
+  testParsesCompleted : parseGraphArgs ["--completed"] === Right [IncludeCompletedReviews]
+  testParsesCompleted = Refl
+
+  testParsesCompletedShorthand : parseGraphArgs ["-c"] === Right [IncludeCompletedReviews]
+  testParsesCompletedShorthand = Refl
+
+  testParsesTeamArgument : parseGraphArgs ["developers"] === Right [TeamName "developers"]
+  testParsesTeamArgument = Refl
+
+  testParsesTeamArgumentAndCompletedFlag : parseGraphArgs ["developers", "--completed"] === Right [TeamName "developers", IncludeCompletedReviews]
+  testParsesTeamArgumentAndCompletedFlag = Refl
+
+  testParsesCompletedFlagAndTeamArgument : parseGraphArgs ["--completed", "developers"] === Right [IncludeCompletedReviews, TeamName "developers"]
+  testParsesCompletedFlagAndTeamArgument = Refl
+
 ||| Graph the PR review workload for each member of the given team when
 ||| the user executes `harmony graph <team>`.
 export
@@ -256,38 +315,6 @@ health : Config => Octokit =>
 health @{config} = do
   prs <- listOpenPRs {pageBreaks = 4} 100
   renderIO $ healthGraph prs config.org config.repo
-
-||| Parse arguments for the graph command.
-export
-parseGraphArgs : List String -> Either String (List GraphArg)
-parseGraphArgs [] =
-  Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
-parseGraphArgs (x :: y :: z :: xs) =
-  Left "graph accepts at most one team name and the --completed flag."
-parseGraphArgs args =
-  case (traverse (parseCompletedFlag <||> parseTeamArg) args) of
-       Just args => Right args
-       Nothing   =>
-         Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
-  where
-    parseCompletedFlag : String -> Maybe GraphArg
-    parseCompletedFlag "-c" = Just IncludeCompletedReviews
-    parseCompletedFlag "--completed" = Just IncludeCompletedReviews
-    parseCompletedFlag _ = Nothing
-
-    parseTeamArg : String -> Maybe GraphArg
-    parseTeamArg str = Just (TeamName str)
-
-namespace TestParseGraphArgs
-
-  testJustTeamName : Commands.parseGraphArgs ["team1"] === Right [TeamName "team1"]
-  testJustTeamName = Refl
-
-  testRequiresOneArgument : Commands.parseGraphArgs [] === Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
-  testRequiresOneArgument = Refl
-
-  testAcceptsAtMostTwoArguments : Commands.parseGraphArgs ["a", "b", "c"] === Left "graph accepts at most one team name and the --completed flag."
-  testAcceptsAtMostTwoArguments = Refl
 
 data IgnoreOpt = PRNum Nat
 
@@ -328,9 +355,9 @@ parseContributeArgs args =
 
     parseSkipArg : String -> Maybe ContributeArg
     parseSkipArg skipArg =
-      case unpack skipArg of
-           ('-' :: skip) => map (Skip . cast) . parsePositive $ pack skip
-           _             => Nothing
+      case strM skipArg of
+           (StrCons '-' skip) => map (Skip . cast) $ parsePositive skip
+           _                  => Nothing
 
     -- expect a Nat or else a URI here of the form: https://github.com/<org>/<repo>/pull/<pr-number>
     parseIgnoreOpt : String -> Maybe IgnoreOpt
