@@ -22,11 +22,13 @@ namespace String
   value : String.NonEmpty _ -> String
   value (IsNonEmpty cs) = cs
 
-  export
+  -- We implement this with believe_me even though it can be implemented with
+  -- `choose` because doing it this way and public exporting it allows us to
+  -- reduce expressions containing `nonEmpty` at compile time.
+  public export
   nonEmpty : (cs : String) -> Maybe (NonEmpty cs)
-  nonEmpty cs with (choose (cs /= ""))
-    nonEmpty cs | (Left _) = Just (IsNonEmpty cs)
-    nonEmpty cs | (Right _) = Nothing
+  nonEmpty "" = Nothing
+  nonEmpty cs = Just $ IsNonEmpty cs @{believe_me Oh}
 
 ||| Run the given applicative when the input is @Nothing@.
 ||| The dual of @whenJust@.
