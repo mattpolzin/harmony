@@ -8,8 +8,6 @@ import Data.String
 import FFI.Git
 import Data.So
 
-import Decidable.Equality
-
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
