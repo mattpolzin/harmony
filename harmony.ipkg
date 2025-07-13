@@ -18,6 +18,10 @@ depends = contrib
         , json >= 0.5.0
 
 modules = Main
+        , Data.Config
+        , Util
+        , Commands.Graph
+
 main = Main
 
 executable = "harmony"
