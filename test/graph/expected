@@ -1,0 +1,36 @@
+-- with completed --
+
+Weighted review workload.
+4x the number of open review requests (·)
+1x the number of closed PRs with unanswered review requests (◦)
+1x the number of completed reviews (▪)
+(◦ overlayed on ·)
+
+◦······· sam      ▪▪▪
+    ◦◦◦· gretta   
+      ◦◦ florence ▪▪
+
+Note: It is a strongly held opinion of Harmony that the above graph is not a
+measure of each developers' productivity. It is a proxy for each developers'
+existing PR review workload that may help to understand how Harmony is choosing
+reviewers or similarly help one developer decide which other developers have
+capacity to help review their work.
+
+
+-- without completed --
+
+Weighted review workload.
+4x the number of open review requests (·)
+1x the number of closed PRs with unanswered review requests (◦)
+(◦ overlayed on ·)
+
+◦······· sam      
+    ◦◦◦· gretta   
+      ◦◦ florence 
+
+Note: It is a strongly held opinion of Harmony that the above graph is not a
+measure of each developers' productivity. It is a proxy for each developers'
+existing PR review workload that may help to understand how Harmony is choosing
+reviewers or similarly help one developer decide which other developers have
+capacity to help review their work.
+

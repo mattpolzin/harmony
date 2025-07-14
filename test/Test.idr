@@ -24,13 +24,18 @@ splitOn substr str =
 req : List Requirement
 req = []
 
-mkTests : List String -> TestPool
-mkTests = MkTestPool "Misc"
-                  req
-                  Nothing
+mkTests : String -> List String -> TestPool
+mkTests name = MkTestPool name
+                          req
+                          Nothing
+
+unit : TestPool
+unit = mkTests "Unit"
+  [ "graph"
+  ]
 
 misc : TestPool
-misc = mkTests
+misc = mkTests "Misc"
   [ "help-command"
   ]
 
@@ -58,7 +63,8 @@ main : IO ()
 main = do
   markConfigsAsUpdated
   runner
-    [ misc
+    [ unit
+    , misc
     , !configTests
     ]
 

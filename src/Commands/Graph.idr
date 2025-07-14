@@ -5,22 +5,32 @@ import Data.Date
 import Data.Fuel
 import Data.List
 import Data.Nat
+import Data.String
 import Data.PullRequest
 import Data.ReviewScore
 import Data.SortedMap
 
 import Theme
 
-import Text.PrettyPrint.Prettyprinter
-import Text.PrettyPrint.Prettyprinter.Render.Terminal
-import Text.PrettyPrint.Prettyprinter.Symbols
-import Text.PrettyPrint.Prettyprinter.Util
+import public Text.PrettyPrint.Prettyprinter
+import public Text.PrettyPrint.Prettyprinter.Render.Terminal
+import public Text.PrettyPrint.Prettyprinter.Symbols
+import public Text.PrettyPrint.Prettyprinter.Util
+import public Text.PrettyPrint.Prettyprinter.Doc
 
 %default total
 
+interface HasLength s where
+  length : s -> Nat
+
+export
+HasLength String where
+  length = String.length
+
 interface Graphable g where
   totalWidth : g -> Nat
-  label : g -> Doc AnsiStyle
+  label : g -> (maxLabelLength : Nat) -> Doc AnsiStyle
+  labelLength : g -> Nat
   ||| The score represents the total positive impact.
   score : g -> Nat
   ||| The detractor is a quantity that gets overlaid on top of the score to indicate
@@ -33,12 +43,18 @@ interface Graphable g where
 data AugmentedReviewScore : login -> Type where
   Augmented : ReviewScore login -> (bonus : Nat) -> AugmentedReviewScore login
 
-Pretty login => Graphable (AugmentedReviewScore login) where
-  totalWidth (Augmented x sbonus) = x.partialScore + sbonus
-  label      (Augmented x _     ) = annotate italic $ pretty x.user
-  score      (Augmented x _     ) = x.combinedScore
-  detractor  (Augmented x _     ) = x.partialScore `minus` x.combinedScore
-  bonus      (Augmented _ sbonus) = sbonus
+countPadRight : HasLength s => (rightJustifyWithin : Nat) -> s -> Nat
+countPadRight rightJustifyWithin x =
+  let l = length x
+  in  rightJustifyWithin `minus` l
+
+HasLength login => Pretty login => Graphable (AugmentedReviewScore login) where
+  totalWidth  (Augmented x sbonus)     = x.partialScore
+  label       (Augmented x _     ) max = (annotate italic $ pretty x.user) <+> (pretty $ String.replicate (countPadRight max x.user) ' ')
+  labelLength (Augmented x _     )     = length x.user
+  score       (Augmented x _     )     = x.combinedScore
+  detractor   (Augmented x _     )     = x.partialScore `minus` x.combinedScore
+  bonus       (Augmented _ sbonus)     = sbonus
 
 record PRsOnDate dateTy where
   constructor MkPRsOnDate
@@ -48,12 +64,20 @@ record PRsOnDate dateTy where
 Pretty Date where
   pretty = pretty . showYearAndMonth
 
+export
+HasLength Date where
+  length = String.length . showYearAndMonth
+
+(.countStr) : PRsOnDate dateTy -> String
+g.countStr = "(\{show g.prCount})"
+
 parameters (config : Config)
   -- Make the PR count on each date graphable for the
   -- health command's graph.
-  Pretty dateTy => Graphable (PRsOnDate dateTy) where
+  HasLength dateTy => Pretty dateTy => Graphable (PRsOnDate dateTy) where
     totalWidth g = g.prCount
-    label g = coloredLabel <++> countInParens
+    labelLength g = length g.date + 1 + String.length g.countStr
+    label g max = coloredLabel <++> countInParens
       where
         coloredLabel : Doc AnsiStyle
         coloredLabel = if g.prCount == 0
@@ -66,7 +90,7 @@ parameters (config : Config)
 
         countInParens : Doc AnsiStyle
         countInParens = if g.prCount > 4
-                           then (annotate italic $ pretty "(\{show g.prCount})")
+                           then (annotate italic $ pretty g.countStr)
                            else pretty ""
     score g = g.prCount
     detractor _ = 0
@@ -84,19 +108,19 @@ parameters (config : Config)
                                 , theme Completed . hcat $ replicate bonus (pretty '▪')
                                 ]
 
-  graphOne : Graphable g => (highScore : Nat) -> g -> Doc AnsiStyle
-  graphOne highScore x =
+  graphOne : Graphable g => (highScore : Nat) -> (maxBonus : Nat) -> (maxLabelLength : Nat) -> g -> Doc AnsiStyle
+  graphOne highScore maxBonus maxLabelLength graph =
         -- we create a bar with the combinedScore and then fill in any
         -- remaining space with an indication of the detractor. We cap
         -- the detractor representation at the high score to make everything
         -- line up nicely. The detractor is just there to give some indication
         -- of review requests that did not count positively toward the score.
-    let idt = highScore `minus` (totalWidth x)
-        remainingSpace = highScore `minus` (score x)
-    in bar idt (score x) (min remainingSpace (detractor x)) (bonus x) <++> (label x)
+    let idt = highScore `minus` (totalWidth graph)
+        remainingSpace = highScore `minus` (score graph)
+    in bar idt (score graph) (min remainingSpace (detractor graph)) 0 <++> (label graph maxLabelLength) <++> bar 0 0 0 (bonus graph)
 
-  graph : Graphable g => (highScore : Nat) -> List g -> Doc AnsiStyle
-  graph highScore = vsep . map (graphOne highScore)
+  graph : Graphable g => (highScore : Nat) -> (maxBonus : Nat) -> (maxLabelLength : Nat) -> List g -> Doc AnsiStyle
+  graph highScore maxBonus maxLabelLength = vsep . map (graphOne highScore maxBonus maxLabelLength)
 
 ||| Produce a graph of open pull requests per month (by the month the PR was created).
 export
@@ -109,7 +133,7 @@ healthGraph @{config} openPullRequests org repo =
   let groups = groupBy ((==) `on` .month `on` .createdAt) $ sortBy (compare `on` .createdAt) openPullRequests
       max    = foldr (\xs,m => max (length xs) m) 1 groups
   in vsep [ header
-          , graph config max (unfoldGraph (limit 48) groups Nothing)
+          , graph config max 0 0 (unfoldGraph (limit 48) groups Nothing)
           , emptyDoc
           , pretty link
           , emptyDoc
@@ -158,7 +182,7 @@ healthGraph @{config} openPullRequests org repo =
 ||| @ completedReviews Optionally pass a map from login to count of completed reviews to
 |||                    graph as well.
 export
-reviewsGraph : Config => Ord login => Pretty login =>
+reviewsGraph : Config => HasLength login => Ord login => Pretty login =>
                (closedReviews : List login)
             -> (openReviews : List login)
             -> (candidates : List login)
@@ -171,12 +195,13 @@ reviewsGraph @{config} closedReviews openReviews candidates completedReviews =
              Nothing        => (flip Augmented 0) <$> scoredOptions
              Just completed => augment completed <$> scoredOptions
       maxBonus = maybe 0 id (maxValue . SortedMap.toList <$> completedReviews)
+      maxLoginLength = foldr (maximum . labelLength) 0 augmentedOptions
   in  case scoredOptions of
            [] => emptyDoc
            ((MkScore _ s c) :: _) =>
-             let highScore = c + (s `minus` c) + maxBonus
+             let highScore = c + (s `minus` c)
              in  vsep [ header 
-                      , graph config (if highScore > 0 then highScore else 1) augmentedOptions
+                      , graph config (if highScore > 0 then highScore else 1) maxBonus maxLoginLength augmentedOptions
                       , footer
                       ]
   where
