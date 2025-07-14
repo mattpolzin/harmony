@@ -102,10 +102,10 @@ depends/json-${idris-json-version}: depends/elab-util-${idris-elab-util-version}
 ./node_modules/: package.json
 	npm install
 
-./build/ttc: ./node_modules/ depends/idris-adds-${idris-adds-version} depends/json-${idris-json-version}
+./build/ttc:
 	make build
 
-build:
+build: ./node_modules/ depends/idris-adds-${idris-adds-version} depends/json-${idris-json-version}
 	IDRIS2_DATA=./support $(idris2) --build harmony.ipkg
 	@if [ ${idris2-minor-version} -gt 6 ] || [ "${idris2-build}" != '' ]; then \
 	  cp ./build/exec/harmony ./harmony; \
