@@ -25,7 +25,7 @@ else
 	ised = sed -I ''
 endif
 
-.PHONY: all build test nix-build install package publish clean version
+.PHONY: all build test nix-build install package publish clean version harmony
 
 all: build
 
@@ -102,6 +102,9 @@ depends/json-${idris-json-version}: depends/elab-util-${idris-elab-util-version}
 ./node_modules/: package.json
 	npm install
 
+./build/ttc:
+	make build
+
 build: ./node_modules/ depends/idris-adds-${idris-adds-version} depends/json-${idris-json-version}
 	IDRIS2_DATA=./support $(idris2) --build harmony.ipkg
 	@if [ ${idris2-minor-version} -gt 6 ] || [ "${idris2-build}" != '' ]; then \
@@ -147,7 +150,9 @@ publish : package
 install: harmony
 	npm install --global
 
-test:
+test: ./build/ttc
+	mkdir -p ./test/depends/harmony-0
+	cp -R ./build/ttc/* ./test/depends/harmony-0/
 	$(MAKE) -C test test
 
 clean:

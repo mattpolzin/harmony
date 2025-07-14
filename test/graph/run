@@ -1,0 +1,7 @@
+. ../setup.sh
+
+export IDRIS2_PACKAGE_PATH=$IDRIS2_PACKAGE_PATH:$(realpath ../depends):$(realpath ../../depends)
+
+idris2 -p harmony -p contrib -p json -p parser-json -p parser -p elab-util -p idris-adds --exec main Graph.idr
+
+rm -rf build
