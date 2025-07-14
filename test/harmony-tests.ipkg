@@ -14,7 +14,6 @@ authors = "Mathew Polzin"
 
 -- packages to add to search path
 depends = test
-        , harmony
 
 -- modules to install
 -- modules =
