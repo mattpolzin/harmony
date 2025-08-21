@@ -131,13 +131,14 @@ update : Functor f => (String -> f a) -> (a -> b -> b) -> b -> String -> f b
 update f g c = map (flip g c) . f
 
 propSetter : SettableProp n h -> (Config -> String -> Maybe Config)
-propSetter RequestTeams     = update parseBool (\b => { requestTeams := b })
-propSetter RequestUsers     = update parseBool (\b => { requestUsers := b })
-propSetter CommentOnRequest = update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
-propSetter DefaultRemote    = update Just (\s => { defaultRemote := s })
-propSetter MainBranch       = update Just (\s => { mainBranch := s })
-propSetter ThemeProp        = update parseString (\t => { theme := t })
-propSetter GithubPAT        = update Just (\s => { githubPAT := Just $ hide s })
+propSetter RequestTeams        = update parseBool (\b => { requestTeams := b })
+propSetter RequestUsers        = update parseBool (\b => { requestUsers := b })
+propSetter CommentOnRequest    = update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
+propSetter ParseBranchStrategy = update (parseBranchConfig . toLower) (\s => { branchParsing := s })
+propSetter DefaultRemote       = update Just (\s => { defaultRemote := s })
+propSetter MainBranch          = update Just (\s => { mainBranch := s })
+propSetter ThemeProp           = update parseString (\t => { theme := t })
+propSetter GithubPAT           = update Just (\s => { githubPAT := Just $ hide s })
 
 ||| Attempt to set a property and value given String representations.
 ||| After setting, write the config and return the updated result.
@@ -154,13 +155,14 @@ setConfig @{config} prop value with (settablePropNamed prop)
                           writeConfig config'
 
 propGetter : SettableProp n h -> (Config -> String)
-propGetter RequestTeams     = show . requestTeams
-propGetter RequestUsers     = show . requestUsers
-propGetter CommentOnRequest = show . commentOnRequest
-propGetter DefaultRemote    = show . defaultRemote
-propGetter MainBranch       = show . mainBranch
-propGetter ThemeProp        = show . theme
-propGetter GithubPAT        = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show . githubPAT
+propGetter RequestTeams        = show . requestTeams
+propGetter RequestUsers        = show . requestUsers
+propGetter CommentOnRequest    = show . commentOnRequest
+propGetter ParseBranchStrategy = show . branchParsing
+propGetter DefaultRemote       = show . defaultRemote
+propGetter MainBranch          = show . mainBranch
+propGetter ThemeProp           = show . theme
+propGetter GithubPAT           = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show . githubPAT
 
 export
 getConfig : Config =>
@@ -227,6 +229,10 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
   
   commentOnRequest <- commentConfigPrompt 
 
+  parseJiraSlugs <-
+    yesNoPrompt "Would you like harmony to parse JIRA slugs in branch names and use them as part of new PR names?"
+  let branchParsing = if parseJiraSlugs then Jira else None
+
   requestTeams <-
     yesNoPrompt "Would you like harmony to request reviews from teams when it requests reviewers?"
 
@@ -257,6 +263,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
        , requestTeams
        , requestUsers
        , commentOnRequest
+       , branchParsing
        , teamSlugs
        , repoLabels
        , orgMembers
