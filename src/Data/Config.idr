@@ -51,22 +51,23 @@ export
 Show (Hidden a) where
   show _ = "xxxxxxxx (hidden)"
 
-public export
-data CommentStrategy = None | Name | AtMention
+namespace CommentStrategy
+  public export
+  data CommentStrategy = None | Name | AtMention
 
-export
-Show CommentStrategy where
-  show None = "none"
-  show Name = "name"
-  show AtMention = "at-mention"
+  export
+  Show CommentStrategy where
+    show None = "none"
+    show Name = "name"
+    show AtMention = "at-mention"
 
-export
-parseCommentConfig : String -> Maybe CommentStrategy
-parseCommentConfig "none" = Just None
-parseCommentConfig "name" = Just Name
-parseCommentConfig "at-mention" = Just AtMention
-parseCommentConfig "atmention" = Just AtMention
-parseCommentConfig _ = Nothing
+  export
+  parseCommentConfig : String -> Maybe CommentStrategy
+  parseCommentConfig "none" = Just None
+  parseCommentConfig "name" = Just Name
+  parseCommentConfig "at-mention" = Just AtMention
+  parseCommentConfig "atmention" = Just AtMention
+  parseCommentConfig _ = Nothing
 
 commentConfig : JSON -> Either String CommentStrategy
 commentConfig = (map toLower . string)  >=> (maybeToEither "" . parseCommentConfig)
@@ -78,6 +79,27 @@ commentConfig = (map toLower . string)  >=> (maybeToEither "" . parseCommentConf
 boolToCommentConfig : Bool -> CommentStrategy
 boolToCommentConfig False = None
 boolToCommentConfig True = AtMention
+
+namespace ParseBranchStrategy
+  public export
+  data ParseBranchStrategy = None | Jira
+
+  export
+  Show ParseBranchStrategy where
+    show None = "none"
+    show Jira = "jira"
+
+  export
+  parseBranchConfig : String -> Maybe ParseBranchStrategy
+  parseBranchConfig "none" = Just None
+  parseBranchConfig "jira" = Just Jira
+  parseBranchConfig _ = Nothing
+
+branchConfig : JSON -> Either String ParseBranchStrategy
+branchConfig = (map toLower . string)  >=> (maybeToEither "" . parseBranchConfig)
+  where
+    err : String
+    err = "Expected the branchParsing setting to be 'none' or 'jira'"
 
 Alternative (Either String) where
   empty = Left "empty"
@@ -100,8 +122,12 @@ record Config where
   requestTeams   : Bool
   ||| True to request review from users as well as teams on PRs.
   requestUsers   : Bool
-  ||| True to comment on PRs after requesting review from users.
+  ||| AtMention or Name to comment on PRs after requesting
+  ||| review from users.
   commentOnRequest : CommentStrategy
+  ||| If set to Jira, attempt to extract a Jira slug from branch
+  ||| names and use that in the PR title.
+  branchParsing : ParseBranchStrategy
   ||| Local cache of GitHub teams within the configured org.
   teamSlugs     : List String
   ||| Local cache of GitHub labels for the configured repo.
@@ -144,6 +170,9 @@ data SettableProp : (name : String) -> (help : String) -> Type where
   CommentOnRequest : SettableProp
     "commentOnRequest"
     "[none/name/at-mention] Determines whether- and how to comment on PR indicating that Harmony chose a reviewer."
+  ParseBranchStrategy : SettableProp
+    "branchParsing"
+    "[none/jira] Determines whether- and how to parse branch names for a prefix to automatically add to new PR titles."
   DefaultRemote   : SettableProp
     "defaultRemote"
     "[string]     The name of the default Git remote to use (e.g. 'origin')."
@@ -176,6 +205,7 @@ export
 settablePropNamed : (name : String) -> Maybe (Exists (SettableProp name))
 settablePropNamed "requestTeams"     = Just $ Evidence _ RequestTeams
 settablePropNamed "commentOnRequest" = Just $ Evidence _ CommentOnRequest
+settablePropNamed "branchParsing"    = Just $ Evidence _ ParseBranchStrategy
 settablePropNamed "defaultRemote"    = Just $ Evidence _ DefaultRemote
 settablePropNamed "mainBranch"       = Just $ Evidence _ MainBranch
 settablePropNamed "theme"            = Just $ Evidence _ ThemeProp
@@ -196,6 +226,7 @@ settableProps = [
     (_ ** _ ** RequestTeams)
   , (_ ** _ ** RequestUsers)
   , (_ ** _ ** CommentOnRequest)
+  , (_ ** _ ** ParseBranchStrategy)
   , (_ ** _ ** DefaultRemote)
   , (_ ** _ ** MainBranch)
   , (_ ** _ ** ThemeProp)
@@ -264,6 +295,7 @@ Show Config where
     , "    requestTeams: \{show config.requestTeams}"
     , "    requestUsers: \{show config.requestUsers}"
     , "commentOnRequest: \{show config.commentOnRequest}"
+    , "   branchParsing: \{show config.branchParsing}"
     , "       teamSlugs: \{show config.teamSlugs}"
     , "      repoLabels: \{show config.repoLabels}"
     , "      orgMembers: \{show config.orgMembers}"
@@ -281,12 +313,13 @@ Show Config where
 export
 json : Config -> JSON
 json (MkConfig updatedAt org repo defaultRemote mainBranch
-               requestTeams requestUsers commentOnRequest teamSlugs
+               requestTeams requestUsers commentOnRequest branchParsing teamSlugs
                repoLabels orgMembers ignoredPRs githubPAT theme _) =
   JObject [
       ("requestTeams"    , JBool requestTeams)
     , ("requestUsers"    , JBool requestUsers)
     , ("commentOnRequest", JString $ show commentOnRequest)
+    , ("branchParsing"   , JString $ show branchParsing)
     , ("org"             , JString org)
     , ("repo"            , JString repo)
     , ("defaultRemote"   , JString defaultRemote)
@@ -338,6 +371,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               ] config
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           let maybeTheme = lookup "theme" config
+                                          let maybeBranchParsing = lookup "branchParsing" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
@@ -347,6 +381,9 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           au <- bool requestUsers
                                           ca <- (commentConfig commentOnRequest
                                                   <|> (boolToCommentConfig <$> bool commentOnRequest)) 
+                                          bp <- maybe (Right Jira) branchConfig maybeBranchParsing
+                                          -- TODO 7.0.0: Make branchParsing required part of config file (default to none)
+                                          --             branchParsing lookup can be moved to the required lookupAll above.
                                           ts <- array string teamSlugs
                                           rl <- array string repoLabels
                                           om <- array string orgMembers
@@ -368,6 +405,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , teamSlugs         = ts
                                             , repoLabels        = rl
                                             , commentOnRequest  = ca
+                                            , branchParsing     = bp
                                             , orgMembers        = om
                                             , ignoredPRs        = ip
                                             , githubPAT         = (map Hide) gp
