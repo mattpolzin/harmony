@@ -90,6 +90,12 @@ namespace ParseBranchStrategy
     show Jira = "jira"
 
   export
+  Eq ParseBranchStrategy where
+    None == None = True
+    Jira == Jira = True
+    _ == _ = False
+
+  export
   parseBranchConfig : String -> Maybe ParseBranchStrategy
   parseBranchConfig "none" = Just None
   parseBranchConfig "jira" = Just Jira

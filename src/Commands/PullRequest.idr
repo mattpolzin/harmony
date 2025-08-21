@@ -26,6 +26,7 @@ import Language.JSON.Accessors
 import System
 import System.File
 import Util
+import Util.Jira
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -337,6 +338,12 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
               putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
               orIfEmpty (Just config.mainBranch) . trim <$> getLine
 
+      parseTitlePrefix : String
+      parseTitlePrefix =
+          if config.branchParsing == Jira 
+             then fromMaybe "" $ (++ " - ") <$> parseJiraPrefix branch
+             else ""
+
       createPR : Promise' PullRequest
       createPR = do
         -- create a remote tracking branch if needed
@@ -362,15 +369,21 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         -- proceed to creating a PR
         putStrLn "Creating a new PR for the current branch (\{branch})."
         baseBranch <- getBaseBranch
+
         putStrLn "What would you like the title to be?"
-        let titlePrefix = fromMaybe "" $ (++ " - ") <$> parseJiraPrefix branch
+        let titlePrefix = parseTitlePrefix
         putStr titlePrefix
         title <- (titlePrefix ++) . trim <$> getLine
+
+        -- either get the description at the command line or open an editor
+        -- with a template if available
         templateFilePath <- relativeToRoot ".github/PULL_REQUEST_TEMPLATE.md"
         description <- case config.editor of
                             Nothing => inlineDescription
                             Just ed => either (const "") id <$> editorDescription ed templateFilePath
+
         putStrLn "Creating PR..."
         putStrLn branch
+
         GitHub.createPR {isDraft} config.org config.repo branch baseBranch title description
 
