@@ -3,6 +3,7 @@ The config command expects one or two arguments. Specify a property to read it o
 requestTeams:     [true/false] Determines whether or not to request reviews from teams when requesting individual reviewers from a team.
 requestUsers:     [true/false] Determines whether or not to request reviews from an individual user based on Harmony's heuristics when requestin review from teams. You might want to disable `requestUsers` to allow GitHub to pick users to request based on the team. This setting does not affect the ability to request reviews from individual users withe Harmony's `+<username>` syntax.
 commentOnRequest: [none/name/at-mention] Determines whether- and how to comment on PR indicating that Harmony chose a reviewer.
+branchParsing:    [none/jira]  Determines whether- and how to parse branch names for a prefix to automatically add to new PR titles.
 defaultRemote:    [string]     The name of the default Git remote to use (e.g. 'origin').
 mainBranch:       [string]     The name of the default Git base branch for new PRs.
 theme:            [dark/light]

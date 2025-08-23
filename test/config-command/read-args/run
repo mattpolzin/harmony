@@ -4,6 +4,7 @@
 keys="requestUsers
 requestTeams
 commentOnRequest
+branchParsing
 defaultRemote
 mainBranch
 theme

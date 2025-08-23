@@ -9,6 +9,13 @@ ${harmony} config requestTeams
 
 ${harmony} config commentOnRequest name
 ${harmony} config commentOnRequest
+${harmony} config commentOnRequest none
+${harmony} config commentOnRequest
+
+${harmony} config branchParsing jira
+${harmony} config branchParsing
+${harmony} config branchParsing none
+${harmony} config branchParsing
 
 ${harmony} config defaultRemote upstream
 ${harmony} config defaultRemote
