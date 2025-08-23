@@ -264,6 +264,20 @@ convertPRToDraft @{config} pr = do
   prId <- getPullRequestGraphQlId config.org config.repo pr.number
   markPullRequestDraft prId
 
+parseTitlePrefix : Config => (branch : String) -> String
+parseTitlePrefix @{config} branch =
+    if config.branchParsing == Jira 
+       then fromMaybe "" $ (++ " - ") <$> parseJiraPrefix branch
+       else ""
+
+namespace TestParseTitlePrefix
+  testJiraTurnedOff : parseTitlePrefix @{Data.Config.simpleDefaults} "ABCD-1234 - hello" === ""
+  testJiraTurnedOff = Refl
+
+  -- This one does not reduce very far, but far enough for us to know it is going to parse a Jira prefix if possible
+  testJiraTurnedOn : parseTitlePrefix @{({ branchParsing := Jira } Data.Config.simpleDefaults)} "ABCD-1234 - hello" === fromMaybe (Delay (fromString "")) (map (\arg => prim__strAppend arg " - ") (parseJiraPrefix "ABCD-1234 - hello"))
+  testJiraTurnedOn = Refl
+
 export
 identifyOrCreatePR : Config => Git => Octokit => 
                      {default False isDraft : Bool}
@@ -338,12 +352,6 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
               putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
               orIfEmpty (Just config.mainBranch) . trim <$> getLine
 
-      parseTitlePrefix : String
-      parseTitlePrefix =
-          if config.branchParsing == Jira 
-             then fromMaybe "" $ (++ " - ") <$> parseJiraPrefix branch
-             else ""
-
       createPR : Promise' PullRequest
       createPR = do
         -- create a remote tracking branch if needed
@@ -371,7 +379,7 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         baseBranch <- getBaseBranch
 
         putStrLn "What would you like the title to be?"
-        let titlePrefix = parseTitlePrefix
+        let titlePrefix = parseTitlePrefix branch
         putStr titlePrefix
         title <- (titlePrefix ++) . trim <$> getLine
 

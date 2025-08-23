@@ -436,3 +436,25 @@ export
 filename : String
 filename = "harmony.json"
 
+public export
+simpleDefaults : Config
+simpleDefaults = 
+    MkConfig {
+        updatedAt         = 0
+      , org               = "org"
+      , repo              = "repo"
+      , defaultRemote     = "origin"
+      , mainBranch        = "main"
+      , requestTeams      = True
+      , requestUsers      = True
+      , teamSlugs         = []
+      , repoLabels        = []
+      , commentOnRequest  = None
+      , branchParsing     = None
+      , orgMembers        = []
+      , ignoredPRs        = []
+      , githubPAT         = Nothing
+      , theme             = Dark
+      , ephemeral         = MkEphem "path/to/repo" False 200 Nothing
+      }
+
