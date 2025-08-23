@@ -178,7 +178,7 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     "[none/name/at-mention] Determines whether- and how to comment on PR indicating that Harmony chose a reviewer."
   ParseBranchStrategy : SettableProp
     "branchParsing"
-    "[none/jira] Determines whether- and how to parse branch names for a prefix to automatically add to new PR titles."
+    "[none/jira]  Determines whether- and how to parse branch names for a prefix to automatically add to new PR titles."
   DefaultRemote   : SettableProp
     "defaultRemote"
     "[string]     The name of the default Git remote to use (e.g. 'origin')."
