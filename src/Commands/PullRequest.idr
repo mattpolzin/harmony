@@ -271,11 +271,17 @@ parseTitlePrefix @{config} branch =
        else ""
 
 namespace TestParseTitlePrefix
-  testJiraTurnedOff : parseTitlePrefix @{Data.Config.simpleDefaults} "ABCD-1234 - hello" === ""
+  testJiraTurnedOff : parseTitlePrefix @{Data.Config.simpleDefaults}
+                                       "ABCD-1234 - hello" 
+                      === 
+                      ""
   testJiraTurnedOff = Refl
 
   -- This one does not reduce very far, but far enough for us to know it is going to parse a Jira prefix if possible
-  testJiraTurnedOn : parseTitlePrefix @{({ branchParsing := Jira } Data.Config.simpleDefaults)} "ABCD-1234 - hello" === fromMaybe (Delay (fromString "")) (map (\arg => prim__strAppend arg " - ") (parseJiraPrefix "ABCD-1234 - hello"))
+  testJiraTurnedOn : parseTitlePrefix @{({ branchParsing := Jira } Data.Config.simpleDefaults)}
+                                      "ABCD-1234 - hello" 
+                     ===
+                     fromMaybe (Delay (fromString "")) (map (\arg => prim__strAppend arg " - ") (parseJiraPrefix "ABCD-1234 - hello"))
   testJiraTurnedOn = Refl
 
 export
