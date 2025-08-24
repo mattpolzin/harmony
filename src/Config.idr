@@ -229,9 +229,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
   
   commentOnRequest <- commentConfigPrompt 
 
-  parseJiraSlugs <-
-    yesNoPrompt "Would you like harmony to parse JIRA slugs in branch names and use them as part of new PR names?"
-  let branchParsing = if parseJiraSlugs then Jira else None
+  branchParsing <- branchParsingPrompt
 
   requestTeams <-
     yesNoPrompt "Would you like harmony to request reviews from teams when it requests reviewers?"
@@ -311,8 +309,8 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
       putStrLn "What kind of comment would you like Harmony to leave when it requests reviewers? [none/name/at-mention]\{defaultStr}"
       offerRetry "The comment strategy must be 'none', 'name', or 'at-mention'. Which would you prefer?" 
                  "Could not parse the input as a valid option; will use 'name' for now."
-                      Name $
-                        parseCommentConfig . orIfEmpty (Just "name") . trim <$> getLine
+                 Name $
+                   parseCommentConfig . orIfEmpty (Just "name") . trim <$> getLine
 
     themePrompt : HasIO io => io Theme
     themePrompt = do
@@ -322,6 +320,15 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
                  "Could not parse the input as a valid theme; will use 'dark' for now."
                  Dark $
                    Theme.parseString . orIfEmpty (Just "dark") . trim <$> getLine
+
+    branchParsingPrompt : HasIO io => io ParseBranchStrategy
+    branchParsingPrompt = do
+      let defaultStr = enterForDefaultStr "none"
+      putStrLn "Would you like harmony to parse branch names for 'jira' slugs or 'github' issue numbers to use as part of new PR title or body\{defaultStr}?"
+      offerRetry "Branch parsing must be 'none', 'jira', or 'github'. Which would you prefer?" 
+                 "Could not parse the input as a valid option; will use 'none' for now."
+                 None $
+                   parseBranchConfig . orIfEmpty (Just "none") . trim <$> getLine
 
 data ConfigError = File FileError
                  | Parse String
