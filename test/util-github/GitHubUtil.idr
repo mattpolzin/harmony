@@ -20,5 +20,19 @@ main = do
   testBranchParsing "/1234"
   testBranchParsing "1234"
   putStrLn ""
+  putStrLn "-- with issue number and GH- prefix --"
+  -- shrink from front
+  testBranchParsing "feature/GH-1234/hello"
+  testBranchParsing "/GH-1234/hello"
+  testBranchParsing "GH-1234/hello"
+  -- shrink from back
+  testBranchParsing "feature/GH-1234/"
+  testBranchParsing "feature/GH-1234"
+  -- just number
+  testBranchParsing "/GH-1234/"
+  testBranchParsing "GH-1234/"
+  testBranchParsing "/GH-1234"
+  testBranchParsing "GH-1234"
+  putStrLn ""
   putStrLn "-- without issue number --"
   testBranchParsing "Jira-1234/hello"
