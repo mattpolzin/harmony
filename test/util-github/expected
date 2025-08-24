@@ -9,5 +9,17 @@ Just "1234"
 Just "1234"
 Just "1234"
 
+-- with issue number and GH- prefix --
+Just "1234"
+Just "1234"
+Just "1234"
+Just "1234"
+Just "1234"
+Just "1234"
+Just "1234"
+Just "1234"
+Just "1234"
+
 -- without issue number --
+Nothing
 Nothing
