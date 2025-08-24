@@ -8,14 +8,14 @@ export
 parseGithubIssueNumber : String -> Maybe String
 parseGithubIssueNumber = map (pack . reverse) . guardSuccess . foldl go (Start, []) . unpack
   where
-    data Part = Start | StartOver | PreSlash | Number | PostSlash | End
+    data Part = Start | StartOver | PreSlash | Number | PostSlash
 
     startOver : (Part, List Char)
     startOver = (StartOver, [])
 
     guardSuccess : (Part, List Char) -> Maybe (List Char)
     guardSuccess (PostSlash, y) = Just y
-    guardSuccess (End, y) = Just y
+    guardSuccess (Number, y) = Just y
     guardSuccess _ = Nothing
 
     go : (Part, List Char) -> Char -> (Part, List Char)
@@ -42,6 +42,5 @@ parseGithubIssueNumber = map (pack . reverse) . guardSuccess . foldl go (Start, 
                             else startOver
 
       -- once we are done, we just ignore the remaining characters.
-    go (End      , cs) c   = (End, cs)
     go (PostSlash, cs) c   = (PostSlash, cs)
 
