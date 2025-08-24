@@ -6,7 +6,7 @@ module Util.Github
 ||| you "1234"
 export
 parseGithubIssueNumber : String -> Maybe String
-parseGithubIssueNumber = map (pack . reverse) . guardSuccess . foldl go startOver . unpack
+parseGithubIssueNumber = map (pack . reverse) . guardSuccess . foldl go (Start, []) . unpack
   where
     data Part = Start | StartOver | PreSlash | Number | PostSlash | End
 
