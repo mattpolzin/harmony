@@ -26,6 +26,7 @@ import Language.JSON.Accessors
 import System
 import System.File
 import Util
+import Util.Jira
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -263,6 +264,26 @@ convertPRToDraft @{config} pr = do
   prId <- getPullRequestGraphQlId config.org config.repo pr.number
   markPullRequestDraft prId
 
+parseTitlePrefix : Config => (branch : String) -> String
+parseTitlePrefix @{config} branch =
+    if config.branchParsing == Jira 
+       then fromMaybe "" $ (++ " - ") <$> parseJiraPrefix branch
+       else ""
+
+namespace TestParseTitlePrefix
+  testJiraTurnedOff : parseTitlePrefix @{Data.Config.simpleDefaults}
+                                       "ABCD-1234 - hello" 
+                      === 
+                      ""
+  testJiraTurnedOff = Refl
+
+  -- This one does not reduce very far, but far enough for us to know it is going to parse a Jira prefix if possible
+  testJiraTurnedOn : parseTitlePrefix @{({ branchParsing := Jira } Data.Config.simpleDefaults)}
+                                      "ABCD-1234 - hello" 
+                     ===
+                     fromMaybe (Delay (fromString "")) (map (\arg => prim__strAppend arg " - ") (parseJiraPrefix "ABCD-1234 - hello"))
+  testJiraTurnedOn = Refl
+
 export
 identifyOrCreatePR : Config => Git => Octokit => 
                      {default False isDraft : Bool}
@@ -362,15 +383,21 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         -- proceed to creating a PR
         putStrLn "Creating a new PR for the current branch (\{branch})."
         baseBranch <- getBaseBranch
+
         putStrLn "What would you like the title to be?"
-        let titlePrefix = fromMaybe "" $ (++ " - ") <$> parseJiraPrefix branch
+        let titlePrefix = parseTitlePrefix branch
         putStr titlePrefix
         title <- (titlePrefix ++) . trim <$> getLine
+
+        -- either get the description at the command line or open an editor
+        -- with a template if available
         templateFilePath <- relativeToRoot ".github/PULL_REQUEST_TEMPLATE.md"
         description <- case config.editor of
                             Nothing => inlineDescription
                             Just ed => either (const "") id <$> editorDescription ed templateFilePath
+
         putStrLn "Creating PR..."
         putStrLn branch
+
         GitHub.createPR {isDraft} config.org config.repo branch baseBranch title description
 

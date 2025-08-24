@@ -16,4 +16,5 @@ test: build/exec/test
 	build/exec/test runtests $(INTERACTIVE) --only $(only)
 
 clean:
-	rm -rf ./test/build
+	rm -rf ./build
+	rm -rf ./graph/build

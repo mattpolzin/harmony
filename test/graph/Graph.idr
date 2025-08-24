@@ -17,6 +17,7 @@ config =
       , teamSlugs         = ["team1", "team2"]
       , repoLabels        = ["label1", "label2", "label3"]
       , commentOnRequest  = None
+      , branchParsing     = None
       , orgMembers        = ["sam", "gretta", "florence"]
       , ignoredPRs        = []
       , githubPAT         = Nothing
