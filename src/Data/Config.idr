@@ -26,8 +26,7 @@ Timestamp = Bits32
 public export
 record Ephemeral where
   constructor MkEphem
-  ||| The file path where the current configuration should be
-  ||| persisted.
+  ||| The file path where the current configuration should be persisted.
   filepath : String
   ||| True to use ANSI terminal colors.
   colors   : Bool
@@ -82,30 +81,33 @@ boolToCommentConfig True = AtMention
 
 namespace ParseBranchStrategy
   public export
-  data ParseBranchStrategy = None | Jira
+  data ParseBranchStrategy = None | Jira | Github
 
   export
   Show ParseBranchStrategy where
-    show None = "none"
-    show Jira = "jira"
+    show None   = "none"
+    show Jira   = "jira"
+    show Github = "github"
 
   export
   Eq ParseBranchStrategy where
-    None == None = True
-    Jira == Jira = True
+    None   == None   = True
+    Jira   == Jira   = True
+    Github == Github = True
     _ == _ = False
 
   export
   parseBranchConfig : String -> Maybe ParseBranchStrategy
-  parseBranchConfig "none" = Just None
-  parseBranchConfig "jira" = Just Jira
+  parseBranchConfig "none"   = Just None
+  parseBranchConfig "jira"   = Just Jira
+  parseBranchConfig "github" = Just Github
   parseBranchConfig _ = Nothing
 
 branchConfig : JSON -> Either String ParseBranchStrategy
 branchConfig = (map toLower . string)  >=> (maybeToEither "" . parseBranchConfig)
   where
     err : String
-    err = "Expected the branchParsing setting to be 'none' or 'jira'"
+    err = "Expected the branchParsing setting to be 'none', 'github', or 'jira'"
 
 Alternative (Either String) where
   empty = Left "empty"
@@ -128,11 +130,13 @@ record Config where
   requestTeams   : Bool
   ||| True to request review from users as well as teams on PRs.
   requestUsers   : Bool
-  ||| AtMention or Name to comment on PRs after requesting
-  ||| review from users.
+  ||| AtMention or Name to comment on PRs after requesting review from users.
   commentOnRequest : CommentStrategy
-  ||| If set to Jira, attempt to extract a Jira slug from branch
-  ||| names and use that in the PR title.
+  ||| If set to Jira, attempt to extract a Jira slug from branch names and use
+  ||| that in the PR title.
+  |||
+  ||| If set to Github, attempt to extract a Github issue number from branch
+  ||| names and use that in the PR body.
   branchParsing : ParseBranchStrategy
   ||| Local cache of GitHub teams within the configured org.
   teamSlugs     : List String
@@ -140,16 +144,15 @@ record Config where
   repoLabels    : List String
   ||| Local cache of GitHub members within the configured org.
   orgMembers    : List String
-  ||| A list of Pull Request numbers that should be ignored
-  ||| (specifically when determining the results of the
-  ||| contribute command).
+  ||| A list of Pull Request numbers that should be ignored (specifically when
+  ||| determining the results of the contribute command).
   ignoredPRs    : List Integer
-  ||| A GitHub Personal Access Token. This value is only used if
-  ||| there is no $GITHUB_PAT or $GH_TOKEN environment variable set. One of
-  ||| either the environment variable or this config property must be set.
+  ||| A GitHub Personal Access Token. This value is only used if there is no
+  ||| $GITHUB_PAT or $GH_TOKEN environment variable set. One of either the
+  ||| environment variable or this config property must be set.
   githubPAT     : Maybe (Hidden String)
-  ||| Should Harmony print with colors fit for a dark terminal
-  ||| or a light terminal?
+  ||| Should Harmony print with colors fit for a dark terminal or a light
+  ||| terminal?
   theme         : Theme
   ||| Configuration properties that are not written to a file.
   ephemeral     : Ephemeral -- not written out to file
@@ -164,21 +167,33 @@ public export
 data SettableProp : (name : String) -> (help : String) -> Type where
   RequestTeams     : SettableProp
     "requestTeams"
-    "[true/false] Determines whether or not to request reviews from teams when requesting individual reviewers from a team."
+    """
+    [true/false] Determines whether or not to request reviews from teams when \
+    requesting individual reviewers from a team.
+    """
   RequestUsers     : SettableProp
     "requestUsers"
     """
-    [true/false] Determines whether or not to request reviews from an individual user based on Harmony's heuristics when \
-    requestin review from teams. You might want to disable `requestUsers` to allow GitHub to pick users to request based on \
-    the team. This setting does not affect the ability to request reviews from individual users withe Harmony's `+<username>` \
+    [true/false] Determines whether or not to request reviews from an individual \
+    user based on Harmony's heuristics when requestin review from teams. You \
+    might want to disable `requestUsers` to allow GitHub to pick users to \
+    request based on the team. This setting does not affect the ability to \
+    request reviews from individual users withe Harmony's `+<username>` \
     syntax.
     """
   CommentOnRequest : SettableProp
     "commentOnRequest"
-    "[none/name/at-mention] Determines whether- and how to comment on PR indicating that Harmony chose a reviewer."
+    """
+    [none/name/at-mention] Determines whether- and how to comment on PR \
+    indicating that Harmony chose a reviewer.
+    """
   ParseBranchStrategy : SettableProp
     "branchParsing"
-    "[none/jira]  Determines whether- and how to parse branch names for a prefix to automatically add to new PR titles."
+    """
+    [none/jira/github] Determines whether- and how to parse branch names for a prefix \
+    to automatically add to a new PR's title or body to link the PR and \
+    issue/ticket.
+    """
   DefaultRemote   : SettableProp
     "defaultRemote"
     "[string]     The name of the default Git remote to use (e.g. 'origin')."
@@ -191,8 +206,9 @@ data SettableProp : (name : String) -> (help : String) -> Type where
   GithubPAT       : SettableProp
     "githubPAT"
     """
-    [string]     The Personal Access Token Harmony should use to authenticate with GitHub. You can leave this unset if you \
-    want to set a PAT via the GITHUB_PAT or GH_TOKEN environment variable.
+    [string]     The Personal Access Token Harmony should use to authenticate \
+    with GitHub. You can leave this unset if you want to set a PAT via the \
+    GITHUB_PAT or GH_TOKEN environment variable.
     """
 
 public export
@@ -424,10 +440,12 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
           let maybeKey1 = lookup key1 config
           let maybeKey2 = lookup key2 config
           case (maybeKey1, maybeKey2) of
-               (Nothing, Nothing) => Left "Expected config JSON to contain either the '\{key1}' key (deprecated) or the '\{key2}' key (newer)."
+               (Nothing, Nothing) => 
+                 Left "Expected config JSON to contain either the '\{key1}' key (deprecated) or the '\{key2}' key (newer)."
                (Nothing, (Just value)) => Right value
                ((Just value), Nothing) => Right value
-               ((Just _), (Just _)) => Left "Expected config JSON to contain only one of the '\{key1}' key (deprecated) or the '\{key2}' key (newer). Found values for both."
+               ((Just _), (Just _)) => 
+                 Left "Expected config JSON to contain only one of the '\{key1}' key (deprecated) or the '\{key2}' key (newer). Found values for both."
 
     parseConfigJson (JArray _) = Left "Expected config JSON to be an Object, not an array."
     parseConfigJson _          = Left "Expected config JSON to be an Object."

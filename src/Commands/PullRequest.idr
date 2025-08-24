@@ -27,6 +27,7 @@ import System
 import System.File
 import Util
 import Util.Jira
+import Util.Github
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -264,25 +265,39 @@ convertPRToDraft @{config} pr = do
   prId <- getPullRequestGraphQlId config.org config.repo pr.number
   markPullRequestDraft prId
 
-parseTitlePrefix : Config => (branch : String) -> String
-parseTitlePrefix @{config} branch =
-    if config.branchParsing == Jira 
-       then fromMaybe "" $ (++ " - ") <$> parseJiraPrefix branch
-       else ""
+parseTitleAndBodyPrefix : Config => (branch : String) -> (String, String)
+parseTitleAndBodyPrefix @{config} branch =
+    case config.branchParsing of
+         Jira   => (fromMaybe "" $ (++ " - ") <$> parseJiraSlug branch, "")
+         --         ^ Jira slugs become a title prefix
+         Github => ("", fromMaybe "" $ ("Related to #" ++) <$> parseGithubIssueNumber branch)
+         --             ^ Github issue numbers become a body prefix
+         None   => ("", "")
 
 namespace TestParseTitlePrefix
-  testJiraTurnedOff : parseTitlePrefix @{Data.Config.simpleDefaults}
+  testJiraTurnedOff : parseTitleAndBodyPrefix @{Data.Config.simpleDefaults}
                                        "ABCD-1234 - hello" 
                       === 
-                      ""
+                      ("", "")
   testJiraTurnedOff = Refl
 
   -- This one does not reduce very far, but far enough for us to know it is going to parse a Jira prefix if possible
-  testJiraTurnedOn : parseTitlePrefix @{({ branchParsing := Jira } Data.Config.simpleDefaults)}
+  testJiraTurnedOn : parseTitleAndBodyPrefix @{({ branchParsing := Jira } Data.Config.simpleDefaults)}
                                       "ABCD-1234 - hello" 
                      ===
-                     fromMaybe (Delay (fromString "")) (map (\arg => prim__strAppend arg " - ") (parseJiraPrefix "ABCD-1234 - hello"))
+                     (fromMaybe (Delay (fromString "")) 
+                                (map (\arg => prim__strAppend arg " - ") 
+                                     (parseJiraSlug "ABCD-1234 - hello")), "")
   testJiraTurnedOn = Refl
+
+  -- This one does not reduce very far, but far enough for us to know it is going to parse a Jira prefix if possible
+  testGithubTurnedOn : parseTitleAndBodyPrefix @{({ branchParsing := Github } Data.Config.simpleDefaults)}
+                                      "feature/1234/hi" 
+                     ===
+                     ("", fromMaybe (Delay (fromString "")) 
+                                    ((\arg => fromString "Related to #" ++ arg) <$>
+                                        parseGithubIssueNumber (fromString "feature/1234/hi")))
+  testGithubTurnedOn = Refl
 
 export
 identifyOrCreatePR : Config => Git => Octokit => 
@@ -309,23 +324,38 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         --       be a draft via the CLI but I have not found 
         --       a way to do that yet.
 
-      inlineDescription : HasIO io => io String
-      inlineDescription = do
+      inlineDescription : HasIO io => (bodyPrefix : String) -> io String
+      inlineDescription bodyPrefix = do
         putStrLn "What would you like the description to be (two blank lines to finish)?"
-        unlines <$> getManyLines (limit 100)
+        putStrLn bodyPrefix
+        unlines . (bodyPrefix ::) <$> getManyLines (limit 100)
 
-      prepareDescriptionFile : HasIO io => (templateFilePath : String) -> io ()
-      prepareDescriptionFile templateFilePath = do
-        when !(exists templateFilePath) $
-          ignore $ copyFile templateFilePath "pr_description.tmp.md"
+      prepareDescriptionFile : HasIO io =>
+                               (templateFilePath : String)
+                            -> (bodyPrefix : String)
+                            -> io ()
+      prepareDescriptionFile templateFilePath bodyPrefix = do
+        templateContents <-
+          case !(exists templateFilePath) of
+               False => pure ""
+               True => case !(readFilePage 0 (limit 5000) templateFilePath) of
+                            Left err => pure ""
+                            Right (_, lines) => pure $ unlines lines
+        let prefilledDescription = "\{bodyPrefix}\n\{templateContents}"
+        ignore $ writeFile "pr_description.tmp.md" prefilledDescription
 
-      editorDescription : HasIO io => (editor : String) -> (templateFilePath : String) -> io (Either FileError String)
-      editorDescription editor templateFilePath = do
-        prepareDescriptionFile templateFilePath
+      editorDescription : HasIO io => 
+                          (editor : String)
+                       -> (templateFilePath : String)
+                       -> (bodyPrefix : String)
+                       -> io (Either FileError String)
+      editorDescription editor templateFilePath bodyPrefix = do
+        prepareDescriptionFile templateFilePath bodyPrefix
         0 <- system "\{editor} pr_description.tmp.md"
           | e => pure (Left $ GenericFileError e)
         description <- assert_total $ readFile "pr_description.tmp.md" 
-        --              ^ ignore the possibility that an infinte file was produced.
+        --              ^ ignore the possibility that an infinte file was
+        --                produced.
         when !(exists "pr_description.tmp.md") $
           ignore $ removeFile "pr_description.tmp.md"
         pure description
@@ -384,8 +414,9 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         putStrLn "Creating a new PR for the current branch (\{branch})."
         baseBranch <- getBaseBranch
 
+        let (titlePrefix, bodyPrefix) = parseTitleAndBodyPrefix branch
+
         putStrLn "What would you like the title to be?"
-        let titlePrefix = parseTitlePrefix branch
         putStr titlePrefix
         title <- (titlePrefix ++) . trim <$> getLine
 
@@ -393,8 +424,9 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         -- with a template if available
         templateFilePath <- relativeToRoot ".github/PULL_REQUEST_TEMPLATE.md"
         description <- case config.editor of
-                            Nothing => inlineDescription
-                            Just ed => either (const "") id <$> editorDescription ed templateFilePath
+                            Nothing => inlineDescription bodyPrefix
+                            Just ed => either (const "") id <$>
+                                         editorDescription ed templateFilePath bodyPrefix
 
         putStrLn "Creating PR..."
         putStrLn branch

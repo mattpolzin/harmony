@@ -2,11 +2,11 @@ module Util.Jira
 
 ||| If possible, extract a Jira ticket reference from the given string.
 |||
-||| For example, in "PRJ-123 do a thing" `parseJiraPrefix` will give you
+||| For example, in "PRJ-123 do a thing" `parseJiraSlug` will give you
 ||| "PRJ-123"
 export
-parseJiraPrefix : String -> Maybe String
-parseJiraPrefix = map (pack . reverse) . guardSuccess . foldl go startOver . unpack
+parseJiraSlug : String -> Maybe String
+parseJiraSlug = map (pack . reverse) . guardSuccess . foldl go startOver . unpack
   where
     data Part = Start | Proj | Dash | Num | End
 
