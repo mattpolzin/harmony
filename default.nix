@@ -26,7 +26,7 @@ let
   nodeDependencies = buildNpmPackage {
     name = "harmony-npm-deps";
     src = ./.;
-    npmDepsHash = "sha256-YMq26dr7eGm6p+d8bsGREnoUL0kdpYhTkYbRkvUIOQU=";
+    npmDepsHash = "sha256-i2lDvXenlqSq8CmmfXehxKeDsXKSo9Eqw8BXm9aCAHc=";
     dontNpmBuild = true;
     dontBuild = true;
 
@@ -49,7 +49,8 @@ buildIdris {
   nativeBuildInputs = [
     installShellFiles
     makeBinaryWrapper
-  ] ++ lib.optionals stdenv.isDarwin [ zsh ];
+  ]
+  ++ lib.optionals stdenv.isDarwin [ zsh ];
   buildInputs = [
     nodejs
     git
