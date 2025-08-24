@@ -125,6 +125,7 @@ Not all configuration properties can be read/set with this command.
 - `requestTeams` (`true`/`false`) -- When picking a reviewer from a team, request the team as a reviewer as well.
 - `requestUsers` (`true`/`false`) -- When requesting a team as a reviewer, pick a user to review as well.
 - `commentOnRequest` (`none`/`name`/`at-mention`) -- When requesting a reviewer chosen by Harmony, comment on the pull request or not.
+- `branchParsing` (`none`/`jira`/`github`) -- Optionally extract a Jira ticket slug or GitHub issue number from the branch name and prepend it to the PR title or body to link the PR and ticket/issue.
 - `defaultRemote` (optional string) -- When pushing new branches, what remote destination should be used.
 - `mainBranch` (optional string) -- When creating a PR, this is the default base branch.
 - `theme` (`dark`/`light`) -- Use colors suited better for either a dark or light Terminal background.
