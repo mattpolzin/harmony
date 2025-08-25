@@ -340,7 +340,7 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
                False => pure ""
                True => case !(readFilePage 0 (limit 5000) templateFilePath) of
                             Left err => pure ""
-                            Right (_, lines) => pure $ unlines lines
+                            Right (_, lines) => pure $ join "" lines
         let prefilledDescription = "\{bodyPrefix}\n\{templateContents}"
         ignore $ writeFile "pr_description.tmp.md" prefilledDescription
 

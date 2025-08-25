@@ -21,7 +21,7 @@ parseGithubIssueNumber = map (pack . reverse) . guardSuccess . foldl go (Start, 
 
     goPrefix : (GHPrefix, List Char) -> Char -> (Part, List Char)
     goPrefix (G, cs) 'H'  = (Prefix H, cs)
-    goPrefix (H, cs) c    = (Prefix Dash, cs)
+    goPrefix (H, cs) '-'  = (Prefix Dash, cs)
     goPrefix (Dash, cs) c = if isDigit c
                                then (Number, c :: cs) 
                                else startOver
@@ -46,7 +46,6 @@ parseGithubIssueNumber = map (pack . reverse) . guardSuccess . foldl go (Start, 
 
       -- if you've started over, look for a slash or prefix.
     go (StartOver, cs) '/' = (PreSlash, cs) 
-    go (PreSlash, cs) 'G'  = (Prefix G, cs)
     go (StartOver, cs) _   = startOver
 
       -- if you've found integer characters, keep an eye out for a slash.
