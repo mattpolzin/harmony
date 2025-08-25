@@ -37,3 +37,5 @@ main = do
   putStrLn "-- without issue number --"
   testBranchParsing "Jira-1234/hello"
   testBranchParsing "feature1234/hello"
+  testBranchParsing "feature/GHI1234/hello"
+  testBranchParsing "featureGH-1234/hello"
