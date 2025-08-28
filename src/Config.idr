@@ -215,30 +215,39 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
   remoteGuess <- preferOriginRemote <$> listRemotes
   defaultOrgAndRepo <- (parseGitHubURI <$> remoteURI remoteGuess) <|> pure Nothing
 
+  putStrLn ""
   let orgDefaultStr = defaultStr (.org) defaultOrgAndRepo
   putStrLn "What GitHub org would you like to use harmony for\{orgDefaultStr}?"
   org  <- orIfEmpty (org defaultOrgAndRepo) . trim <$> getLine
 
+  putStrLn ""
   let repoDefaultStr = defaultStr (.repo) defaultOrgAndRepo
   putStrLn "What repository would you like to use harmony for\{repoDefaultStr}?"
   repo <- orIfEmpty (repo defaultOrgAndRepo) . trim <$> getLine
 
+  putStrLn ""
   let remoteDefaultStr = enterForDefaultStr remoteGuess
   putStrLn "What GitHub remote repo would you like to use harmony for\{remoteDefaultStr}?"
   defaultRemote <- orIfEmpty (Just remoteGuess) . trim <$> getLine
   
+  putStrLn ""
   commentOnRequest <- commentConfigPrompt 
 
+  putStrLn ""
   branchParsing <- branchParsingPrompt
 
+  putStrLn ""
   requestTeams <-
     yesNoPrompt "Would you like harmony to request reviews from teams when it requests reviewers?"
 
+  putStrLn ""
   requestUsers <-
     yesNoPrompt "Would you like harmony to request reviews from individual users when it requests a teams review?"
 
+  putStrLn ""
   theme <- themePrompt
 
+  putStrLn ""
   _ <- liftIO $ octokit pat
   putStrLn "Creating config..."
   mainBranch <- getRepoDefaultBranch org repo
