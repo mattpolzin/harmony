@@ -467,3 +467,27 @@ branch @{config} = do
   let uri = "https://github.com/\{org}/\{repo}/tree/\{branch}"
   putStrLn uri
 
+||| Quickly create a new GitHub issue and branch to go along with it.
+export
+quick : Config => Git => Promise' ()
+quick @{config} = do
+  putStrLn "What would you like the issue title to be?"
+  issueTitle <- trim <$> getLine
+
+  issueDescription <- inlineDescription issuePrompt ""
+
+  putStrLn "this is where i would create the issue..."
+  let issueNumber = "1234"
+
+  putStrLn "What would you like the branch to be named?"
+  putStr "feature/\{issueNumber}/"
+  branchSlug <- trim <$> getLine
+  
+  checkoutBranch {b=New} "feature/\{issueNumber}/\{branchSlug}"
+
+  -- TODO: create issue, accept branch slug, create branch.
+
+  where
+    issuePrompt : String
+    issuePrompt = "What would you like the issue description to be (two blank lines to finish)?"
+

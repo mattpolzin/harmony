@@ -4,6 +4,11 @@ import Data.String
 import Data.Promise
 import FFI
 
+import Language.Reflection
+import Derive.Prelude
+
+%language ElabReflection
+
 %default total
 
 git_ffi : (fnName : String) -> String
@@ -52,14 +57,21 @@ listBranchesSync @{G ptr} = lines <$> (primIO $ prim__listBranchesSync ptr)
 %foreign git_ffi "checkout_branch"
 prim__checkoutBranch : Ptr GitRef
                     -> (branch : String)
+                    -> (isNewBranch : Bool)
                     -> (onSuccess : String -> PrimIO ())
                     -> (onFailure : String -> PrimIO ())
                     -> PrimIO ()
 
+public export
+data BranchStatus = Existing | New
+
+%runElab derive `{BranchStatus} [Eq]
+
 export
-checkoutBranch : Git => (branch : String) -> Promise' ()
-checkoutBranch @{G ptr} branch = 
-  ignore . promiseIO $ prim__checkoutBranch ptr branch
+checkoutBranch : Git => {default Existing b : BranchStatus} -> (branch : String) -> Promise' ()
+checkoutBranch @{G ptr} {b=branchStatus} branch = 
+  let isNewBranch = branchStatus == New
+  in ignore . promiseIO $ prim__checkoutBranch ptr branch isNewBranch
 
 %foreign git_ffi "push_new_branch"
 prim__pushNewBranch : Ptr GitRef

@@ -45,9 +45,10 @@ const git_list_branches_sync = (git) =>
     .map(line => line.replace('*', '').trim())
     .join('\n')
 
-const git_checkout_branch = (git, branch, onSuccess, onFailure) =>
+// checkout branch
+const git_checkout_branch = (git, branch, isNewBranch, onSuccess, onFailure) =>
   idris__git_unpromisify(
-    git.raw('checkout', `${branch}`),
+    git.raw('checkout', ...[isNewBranch ? ['-b'] : [], [`${branch}`]].flat()),
     r => onSuccess(''),
     onFailure()
   )
