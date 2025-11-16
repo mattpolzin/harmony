@@ -7,9 +7,10 @@ import Commands.Reviewer
 import Commands.User
 
 import Data.Config
-import Data.Date
 import Data.DPair
+import Data.Date
 import Data.Either
+import Data.Issue
 import Data.List
 import Data.List1
 import Data.Promise
@@ -469,23 +470,23 @@ branch @{config} = do
 
 ||| Quickly create a new GitHub issue and branch to go along with it.
 export
-quick : Config => Git => Promise' ()
+quick : Config => Git => Octokit => Promise' ()
 quick @{config} = do
+  putStrLn "Creating a new GitHub issue and branch."
+  putStrLn ""
+
   putStrLn "What would you like the issue title to be?"
   issueTitle <- trim <$> getLine
 
-  issueDescription <- inlineDescription issuePrompt ""
+  issueBody <- inlineDescription issuePrompt ""
 
-  putStrLn "this is where i would create the issue..."
-  let issueNumber = "1234"
+  issue <- createIssue config.org config.repo issueTitle issueBody
 
   putStrLn "What would you like the branch to be named?"
-  putStr "feature/\{issueNumber}/"
+  putStr "feature/\{show issue.number}/"
   branchSlug <- trim <$> getLine
   
-  checkoutBranch {b=New} "feature/\{issueNumber}/\{branchSlug}"
-
-  -- TODO: create issue, accept branch slug, create branch.
+  checkoutBranch {b=New} "feature/\{show issue.number}/\{branchSlug}"
 
   where
     issuePrompt : String
