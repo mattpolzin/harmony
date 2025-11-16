@@ -99,6 +99,15 @@ const digPr = pr => {
 const digPrs = prJson =>
   prJson.map(digPr)
 
+// Create Issue
+// Executes callback with stringified JSON {"issue_number": Int}
+const okit_create_issue = (octokit, owner, repo, title, body, assignee, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.issues.create({ owner, repo, title, body, assignee }),
+    r => onSuccess(JSON.stringify(digIssue(r.data))),
+    onFailure
+  )
+
 // List PRs for a branch
 // Executes callback with stringified JSON [{"pull_number": Int, "author": String}]
 const okit_list_pull_requests_for_branch = (octokit, owner, repo, branch, onSuccess, onFailure) =>
@@ -250,6 +259,28 @@ const okit_list_pr_reviews = (octokit, owner, repo, pull_number, onSuccess, onFa
   idris__okit_unpromisify(
     octokit.rest.pulls.listReviews({ owner, repo, pull_number: Number(pull_number) }),
     r => onSuccess(JSON.stringify(digReviews(r.data))),
+    onFailure
+  )
+
+// list PRs for branch
+const digIssue = issue => {
+    return {
+      issue_number: issue.number,
+      author: issue.user.login,
+      created_at: issue.created_at,
+      title: issue.title,
+      assignee: issue.assignee ? issue.assignee.login : null
+    }
+  }
+const digIssues = issueJson =>
+  issueJson.map(digIssue)
+
+// Create Issue
+// Executes callback with stringified JSON {"issue_number": Int, "author": String, "created_at": Date, "title": String, "assignee": String?}
+const okit_create_issue = (octokit, owner, repo, title, body, assignee, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.issues.create({ owner, repo, title, body, assignee }),
+    r => onSuccess(JSON.stringify(digIssue(r.data))),
     onFailure
   )
 

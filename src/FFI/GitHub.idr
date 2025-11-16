@@ -2,6 +2,7 @@ module FFI.GitHub
 
 import Data.Promise
 import Data.PullRequest
+import Data.Issue
 import Data.Review
 import Data.String
 import Data.String.Extra
@@ -90,6 +91,11 @@ orgError (MkError (OtherStatus i) error) = Msg error
 mapOrgError : Promise String a -> Promise OrgError a
 mapOrgError = mapError (orgError . parseOctokitError)
 
+parsePrimResult : (parser : String -> Either String a)
+               -> (action : (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ())
+               -> Promise String a
+parsePrimResult parser action = either . parser =<< (ignoreStatus $ promiseIO action)
+
 %foreign okit_ffi "get_repo_default_branch"
 prim__getRepoDefaultBranch : Ptr OctokitRef
                           -> (owner : String)
@@ -170,7 +176,8 @@ listPRsForBranch : Octokit =>
                 -> (branch : String) 
                 -> Promise String (List PullRequest)
 listPRsForBranch @{Kit ptr} owner repo branch = 
-  either . parsePullRequestsString =<< (ignoreStatus . promiseIO $ prim__listPRsForBranch ptr owner repo branch)
+  parsePrimResult parsePullRequestsString $
+    prim__listPRsForBranch ptr owner repo branch
 
 %foreign okit_ffi "create_pr"
 prim__createPR : Ptr OctokitRef 
@@ -196,7 +203,31 @@ createPR : Octokit =>
         -> (description : String) 
         -> Promise String PullRequest
 createPR @{Kit ptr} {isDraft} owner repo head base title description =
-  either . parsePullRequestString =<< (ignoreStatus . promiseIO $ prim__createPR ptr owner repo head base title description isDraft)
+  parsePrimResult parsePullRequestString $
+    prim__createPR ptr owner repo head base title description isDraft
+
+%foreign okit_ffi "create_issue"
+prim__createIssue : Ptr OctokitRef 
+                 -> (owner : String) 
+                 -> (repo : String) 
+                 -> (title : String) 
+                 -> (body : String) 
+                 -> (assignee : String)
+                 -> (onSuccess : String -> PrimIO ()) 
+                 -> (onFailure : String -> PrimIO ()) 
+                 -> PrimIO ()
+
+export
+createIssue : Octokit => 
+            (owner : String) 
+         -> (repo : String) 
+         -> (title : String) 
+         -> (body : String) 
+         -> (assignee : String) 
+         -> Promise String Issue
+createIssue @{Kit ptr} owner repo title body assignee =
+  parsePrimResult parseIssueString $
+    prim__createIssue ptr owner repo title body assignee
 
 %foreign okit_ffi "create_comment"
 prim__createComment : Ptr OctokitRef 
@@ -335,7 +366,8 @@ markPullRequestDraft : Octokit =>
                        (graphQlId : OctokitGraphQlId) 
                     -> Promise String PullRequest
 markPullRequestDraft @{Kit ptr} (GQLId id) = do
-  either . parsePullRequestString =<< (ignoreStatus . promiseIO $ prim__markPullRequestDraft ptr id)
+  parsePrimResult parsePullRequestString $
+    prim__markPullRequestDraft ptr id
 
 -- reviewers and teamReviewers should be comma separated values encoded in a string.
 %foreign okit_ffi "add_reviewers"
@@ -472,7 +504,7 @@ prim__getUser : Ptr OctokitRef
 
 export
 getUser : Octokit => (username : String) -> Promise String User
-getUser @{Kit ptr} = either . parseUserString <=< ignoreStatus . promiseIO . prim__getUser ptr
+getUser @{Kit ptr} = parsePrimResult parseUserString . prim__getUser ptr
 
 %foreign okit_ffi "get_self"
 prim__getSelf : Ptr OctokitRef 
@@ -482,5 +514,5 @@ prim__getSelf : Ptr OctokitRef
 
 export
 getSelf : Octokit => Promise String User
-getSelf @{Kit ptr} = either . parseUserString =<< (ignoreStatus $ promiseIO (prim__getSelf ptr))
+getSelf @{Kit ptr} = parsePrimResult parseUserString $ prim__getSelf ptr
 
