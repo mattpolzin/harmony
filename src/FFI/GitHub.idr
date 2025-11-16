@@ -212,7 +212,6 @@ prim__createIssue : Ptr OctokitRef
                  -> (repo : String) 
                  -> (title : String) 
                  -> (body : String) 
-                 -> (assignee : String)
                  -> (onSuccess : String -> PrimIO ()) 
                  -> (onFailure : String -> PrimIO ()) 
                  -> PrimIO ()
@@ -223,11 +222,10 @@ createIssue : Octokit =>
          -> (repo : String) 
          -> (title : String) 
          -> (body : String) 
-         -> (assignee : String) 
          -> Promise String Issue
-createIssue @{Kit ptr} owner repo title body assignee =
+createIssue @{Kit ptr} owner repo title body =
   parsePrimResult parseIssueString $
-    prim__createIssue ptr owner repo title body assignee
+    prim__createIssue ptr owner repo title body
 
 %foreign okit_ffi "create_comment"
 prim__createComment : Ptr OctokitRef 
