@@ -26,6 +26,7 @@ allRootCmds = [ "request"
               , "sync"
               , "version"
               , "whoami"
+              , "quick"
               ]
 
 ||| Turn spaces into '+' so that multi-word phrases can be used with tab-completion.
@@ -84,12 +85,15 @@ cmdOpts : (subcommand : String) -> (curWord : String) -> (prevWord : String) -> 
 cmdOpts _ "--"       "harmony" = Just allRootCmds
 cmdOpts _ partialCmd "harmony" = Just $ filter (isPrefixOf partialCmd) allRootCmds
 
--- then the subcommands that take no arguments;
+-- then the root commands that take no arguments.
+-- this just stops autocomplete from populating any suggestions for these
+-- commands' arguments.
 cmdOpts "sync"    _ _ = Just []
 cmdOpts "health"  _ _ = Just []
 cmdOpts "--help"  _ _ = Just []
 cmdOpts "reflect" _ _ = Just []
 cmdOpts "version" _ _ = Just []
+cmdOpts "quick"   _ _ = Just []
 
 -- next subcommands that have options with no configuration requirement:
 cmdOpts "help" "--" "help" = Just allRootCmds
