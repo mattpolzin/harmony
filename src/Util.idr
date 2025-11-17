@@ -123,6 +123,13 @@ namespace Prompting
   orIfEmpty (Just y) "" = y
   orIfEmpty (Just _) x  = x
 
+  export
+  inlineDescription : HasIO io => (promptMsg : String) -> (bodyPrefix : String) -> io String
+  inlineDescription promptMsg bodyPrefix = do
+    putStrLn promptMsg
+    putStrLn bodyPrefix
+    unlines . (bodyPrefix ::) <$> getManyLines (limit 100)
+
 ||| Get an absolute path for the given directory or file assuming the
 ||| given path is relative to the root of the Git repository.
 export

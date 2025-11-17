@@ -5,15 +5,15 @@ const spawnSync = require('child_process').spawnSync
 const git_git = () =>
   SimpleGit()
 
-const idris__git_handle_error = (e) => {
+const idris__git_handle_error = (fn) => (e) => {
   if (typeof(e) == 'object') {
-    return e.message
+    return fn(e.message)
   }
-  return e
+  return fn(JSON.stringify(e))
 }
 
 const idris__git_unpromisify = (promise, onSuccess, onFailure) =>
-  promise.then(r => onSuccess(r)(), e => onFailure(idris__git_handle_error(e))())
+  promise.then(r => onSuccess(r)(), e => idris__git_handle_error(onFailure)(e)())
 
 // trim a result (second argument) and pass it to the given callback (first argument).
 const idris__git_trim = callback => value => callback(value.trim())
@@ -45,11 +45,12 @@ const git_list_branches_sync = (git) =>
     .map(line => line.replace('*', '').trim())
     .join('\n')
 
-const git_checkout_branch = (git, branch, onSuccess, onFailure) =>
+// checkout branch
+const git_checkout_branch = (git, branch, isNewBranch, onSuccess, onFailure) =>
   idris__git_unpromisify(
-    git.raw('checkout', `${branch}`),
+    git.raw('checkout', ...[isNewBranch ? ['-b'] : [], [`${branch}`]].flat()),
     r => onSuccess(''),
-    onFailure()
+    onFailure
   )
 
 // push the current branch, setting its upstream

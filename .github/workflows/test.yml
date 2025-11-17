@@ -10,27 +10,6 @@ on:
     - cron: '0 1 * * *'
 
 jobs:
-  stable-idris:
-    runs-on: ubuntu-latest
-    container: mattpolzin2/idris-docker:latest
-
-    steps:
-      - name: Install Dependencies
-        run: apt-get update && apt-get -y install git
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Build
-        shell: bash
-        run: |
-          echo ''
-          echo 'Building with Idris 2 version:'
-          idris2 --version
-          echo ''
-          make
-      - name: Test
-        shell: bash
-        run: INTERACTIVE='' make test
-
   nightly-idris:
     runs-on: ubuntu-latest
     container: mattpolzin2/idris-docker:nightly

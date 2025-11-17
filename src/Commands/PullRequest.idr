@@ -324,12 +324,6 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         --       be a draft via the CLI but I have not found 
         --       a way to do that yet.
 
-      inlineDescription : HasIO io => (bodyPrefix : String) -> io String
-      inlineDescription bodyPrefix = do
-        putStrLn "What would you like the description to be (two blank lines to finish)?"
-        putStrLn bodyPrefix
-        unlines . (bodyPrefix ::) <$> getManyLines (limit 100)
-
       prepareDescriptionFile : HasIO io =>
                                (templateFilePath : String)
                             -> (bodyPrefix : String)
@@ -388,6 +382,10 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
               putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
               orIfEmpty (Just config.mainBranch) . trim <$> getLine
 
+      inlineDescriptionPrompt : String
+      inlineDescriptionPrompt =
+        "What would you like the description to be (two blank lines to finish)?"
+
       createPR : Promise' PullRequest
       createPR = do
         -- create a remote tracking branch if needed
@@ -424,7 +422,7 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         -- with a template if available
         templateFilePath <- relativeToRoot ".github/PULL_REQUEST_TEMPLATE.md"
         description <- case config.editor of
-                            Nothing => inlineDescription bodyPrefix
+                            Nothing => inlineDescription inlineDescriptionPrompt bodyPrefix
                             Just ed => either (const "") id <$>
                                          editorDescription ed templateFilePath bodyPrefix
 

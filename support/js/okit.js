@@ -253,6 +253,28 @@ const okit_list_pr_reviews = (octokit, owner, repo, pull_number, onSuccess, onFa
     onFailure
   )
 
+// list PRs for branch
+const digIssue = issue => {
+    return {
+      issue_number: issue.number,
+      author: issue.user.login,
+      created_at: issue.created_at,
+      title: issue.title,
+      assignee: issue.assignee ? issue.assignee.login : null
+    }
+  }
+const digIssues = issueJson =>
+  issueJson.map(digIssue)
+
+// Create Issue
+// Executes callback with stringified JSON {"issue_number": Int, "author": String, "created_at": Date, "title": String, "assignee": String?}
+const okit_create_issue = (octokit, owner, repo, title, body, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.issues.create({ owner, repo, title, body }),
+    r => onSuccess(JSON.stringify(digIssue(r.data))),
+    onFailure
+  )
+
 // list team members
 const digUserLogins = usersJson =>
   usersJson.map(u => u.login)
