@@ -1,5 +1,27 @@
+% harmony(1) Version 5.5.0 | Harmony User's Guide
 
-# Harmony
+# NAME
+Harmony - Harmonize with coworkers around GitHub reviewing
+
+# SYNOPSIS
+`harmony branch` \
+`harmony config {property} [value]` \
+`harmony contribute [options] {uri | pr-number}` \
+`harmony graph [options] {team-slug}` \
+`harmony health` \
+`harmony help [subcommand]` \
+`harmony label {label} [...]` \
+`harmony list [team-slug]` \
+`harmony pr [options]` \
+`harmony quick` \
+`harmony reflect` \
+`harmony request {team-slug | +user-login} [options]` \
+`harmony rq {team-slug | +user-login} [options]` \
+`harmony sync` \
+`harmony version` \
+`harmony whoami`
+
+# DESCRIPTION
 Harmony is a small tool that helps teams keep GitHub reviews running smoothly. It takes the work out of picking someone from a pool of developers to review a new PR. Harmony does this by heuristically determining who on a particular GitHub Team has the least current/recent review workload.
 
 Harmony offers a heuristic for PR review requests that is different than GitHub's round robin or weighted algorithms, but Harmony can also work well even if your team uses GitHub's automatic PR review requests ([see below](#deferring-to-github)).
@@ -56,7 +78,7 @@ The build script assumes a HEAD build of Idris 2 is installed on your system. Fo
 
 Build Harmony from source with a call to `make`. Then install it globally with `make install`.
 
-#### Docker Build
+### Docker Build
 If you want to build Harmony without installing Idris 2 on your system, you can build Harmony within a Docker container and then install the resulting Javascript onto your system.
 
 First, download the latest nightly Docker image:
@@ -66,7 +88,9 @@ docker pull mattpolzin2/idris-docker:nightly
 
 Then, from a directory containing this Harmony git repository, build Harmony:
 ```shell
-docker run --rm -v "$(pwd):/build" mattpolzin2/idris-docker:nightly bash -c "apt-get update && apt-get install -y git && cd /build && make"
+docker run --rm -v "$(pwd):/build" \
+  mattpolzin2/idris-docker:nightly \
+  bash -c "apt-get update && apt-get install -y git && cd /build && make"
 ```
 
 At this point you are done with Docker. From the same directory, install Harmony globally:
@@ -117,94 +141,46 @@ Once configured, Harmony supports the following commands: `config`, `branch`, `p
 **Note on color output:**
 Harmony uses colored output for some commands. You can adjust these colors slightly with the `theme` configuration option. You can also use the `NO_COLOR` environment variable to disable all colored output. Lastly, Harmony will avoid colored output when it determines `stdout` is not a TTY device (as is the case for e.g. redirecting harmony output into a file or piping into `cat`: `harmony ... | cat`).
 
-### Config
-Running `harmony config <property>` will read the given configuration property. `harmony config <property> <value>` will set the configuration property.
+# SUBCOMMANDS
 
-Not all configuration properties can be read/set with this command.
-#### Properties
-- `requestTeams` (`true`/`false`) -- When picking a reviewer from a team, request the team as a reviewer as well.
-- `requestUsers` (`true`/`false`) -- When requesting a team as a reviewer, pick a user to review as well.
-- `commentOnRequest` (`none`/`name`/`at-mention`) -- When requesting a reviewer chosen by Harmony, comment on the pull request or not.
-- `branchParsing` (`none`/`jira`/`github`) -- Optionally extract a Jira ticket slug or GitHub issue number from the branch name and prepend it to the PR title or body to link the PR and ticket/issue.
-- `defaultRemote` (optional string) -- When pushing new branches, what remote destination should be used.
-- `mainBranch` (optional string) -- When creating a PR, this is the default base branch.
-- `theme` (`dark`/`light`) -- Use colors suited better for either a dark or light Terminal background.
-- `githubPAT` (optional string) -- If the `$GITHUB_PAT` and `$GH_TOKEN` environment variables are not set, this Personal Access Token is used to authenticate with GitHub.
-
-### Branch
-Running `harmony branch` will print the URI for accessing the currently checked out branch on GitHub.
+## `branch`
+Print the URI for accessing the currently checked out branch on GitHub.
 
 Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony branch)` to open a web browser to the current branch on GitHub.
 
-### PR
-Running `harmony pr [--draft] [#<label>, ...]` with a branch checked out will reach out to GitHub to determine if there is an open PR for that branch. If there is a PR, Harmony will print a URI that can be used to view the PR. If there is not a PR, Harmony will help you create one. New and existing PRs can be marked as drafts by specifying the `--draft` flag with the `pr` command.
+## `config {property} [value]`
+Read the given configuration property. `harmony config <property> <value>` will set the configuration property.
 
-If you need to create a PR still, you will be prompted for a branch to open the PR against (merge into, eventually), a title for the PR, and a description for the PR. If you have an `EDITOR` environment variable set, Harmony will use that editor to get the PR description from you. If you have a PR template at `.github/PULL_REQUEST_TEMPLATE.md`, Harmony will also preload that into your editor. If you do not have an `EDITOR` environment variable set, you will still be able to enter a description from the command line but PR templates are only supported when an `EDITOR` is specified.
+Not all configuration properties can be read/set with this command.
 
-You can also specify any number of labels to apply by prefixing them with '#'. For example, `harmony pr #backport #bugfix` would create a PR and apply the `backport` and `bugfix` labels.
+### Properties
 
-If you are using harmony from a script or some other environment without TTY support, harmony will print a GitHub URL that can be used to create the PR. This mode of operation will ignore the `--draft` and `#label` options.
+`requestTeams` (`true`/`false`) 
+: When picking a reviewer from a team, request the team as a reviewer as well.
 
-Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony pr)` to open a web browser to an existing PR for the current branch.
+`requestUsers` (`true`/`false`) 
+: When requesting a team as a reviewer, pick a user to review as well.
 
-#### Examples
-Create a draft pull request for the current branch:
-```shell
-harmony pr --draft
-```
+`commentOnRequest` (`none`/`name`/`at-mention`) 
+: When requesting a reviewer chosen by Harmony, comment on the pull request or not.
 
-Create a PR for the current branch and add the `urgent` label:
-```shell
-harmony pr #urgent
-```
-### Quick
-Running `harmony quick` will help you create a new GitHub issue and a branch to
-work on that issue all in one go. The branch name will be structured such that
-if you have GitHub branch parsing on then the PR you create for the branch later
-on will refer to the issue created now.
+`branchParsing` (`none`/`jira`/`github`) 
+: Optionally extract a Jira ticket slug or GitHub issue number from the branch name and prepend it to the PR title or body to link the PR and ticket/issue.
 
-### Label
-Running `harmony label {<label>} [...]` will help you create a PR if one does not exist yet and then it will apply the given labels to the PR. This is essentially an alias for the `harmony pr` command but without support for creating draft PRs.
+`defaultRemote` (optional string) 
+: When pushing new branches, what remote destination should be used.
 
-Note that labels are _not_ prefixed with '#' for this command. There is no need to differentiate labels from other kinds of arguments to `harmony label`.
+`mainBranch` (optional string) 
+: When creating a PR, this is the default base branch.
 
-### Request
-Running `harmony request {<team> | +<user>} [#<label>] [...]` will help you create a PR if one does not exist yet and then it will request reviews from teams and/or users.
+`theme` (`dark`/`light`) 
+: Use colors suited better for either a dark or light Terminal background.
 
-There is also a `harmony rq` alias for `harmony request`.
+`githubPAT` (optional string) 
+: If the `$GITHUB_PAT` and `$GH_TOKEN` environment variables are not set, this Personal Access Token is used to authenticate with GitHub.
 
-If `harmony config requestUsers` is `True` (defualt) then harmony will pick someone to review the PR (from one of the listed teams). If `harmony config requestTeams` is `True` (default) then harmony will request reviews from the teams you listed. If `harmony config commentOnRequest` is `True` then harmony will comment on the Pull Request indicating that teams & users were "harmoniously requested" -- this comment will @mention requested users so it may be useful or annoying depending on the requested user's GitHub notification settings.
-
-You can also require that specific additional users (on top of the one Harmony will pick for you) are requested to review the PR. You do this by specifying those users' logins prefixed with '+' as arguments to Harmony. This will request review from those specific additional users regardless of the `requestUsers` setting; that setting controls whether Harmony picks users from each Team you specify to review PRs.
-
-You can optionally apply any number of labels to the PR at the same time as requesting reviewers by prefixing the labels with '#'.
-
-#### Deferring to GitHub
-If your team has GitHub set up to auto-request reviews from individuals when a team is requested for review, you probably want to tell harmony not to also pick someone using its heuristics. You can run the following `config` commands to tell harmony to request a team but not also pick an individual from that team:
-```shell
-harmony config requestTeams true
-harmony config requestUsers false
-```
-This does not prevent you from requesting specific individuals with the `+<user>` syntax described above.
-
-#### Examples
-Request review from the most available reviewer from the "developers" GitHub Team:
-```shell
-harmony request developers
-```
-
-Request review from the most available reviewer from either the "frontend" or "backend" GitHub Team:
-```shell
-harmony request frontend backend
-```
-
-Request review from the most available reviewer from the "web" team and additionally request review from the users with logins "carl001" and "emmaham":
-```shell
-harmony request web +carl001 +emmaham
-```
-
-### Contribute
-Running `harmony contribute` will print the URI of the oldest non-draft PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that your review is not requested on.
+## `contribute [options] {uri | pr-number}`
+Print the URI of the oldest non-draft PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that your review is not requested on.
 
 You can skip PRs and retrieve the next-oldest one by passing a dash followed by the number to skip (e.g. `-2` to skip the two oldest waiting PRs).
 
@@ -216,7 +192,7 @@ Many operating systems have an `open` command (though the name "open" is not ubi
 
 You can also run `harmony contribute --list` if you want to list out a few PRs to consider reviewing them instead of choosing just one PR to look into and printing that PRs URI.
 
-#### Examples
+### Examples
 Retrieve a URI for the oldest unreviewed and open PR (prioritizing PRs for which you are a requested reviewer):
 ```shell
 harmony contribute
@@ -242,31 +218,106 @@ Permanently ignore a PR by its number:
 harmony contribute --ignore 1234
 ```
 
-### Who Am I
-Running `harmony whoami` will print information about the currently configured and authenticated user.
-
-### Reflect
-Running `harmony reflect` will show a summary of your review requests and authored pull requests.
-
-![Reflect Screenshot](./docs/images/reflect.png)
-
-### List
-Running `harmony list` will list all the teams for the configured GitHub organization.
-
-Running `harmony list <team>` will list the members of the given GitHub Team.
-
-### Graph
-Running `harmony graph <team>` will graph the relative review workload of each of the members of the given GitHub Team.
+## `graph [--completed] {team-slug}`
+Graph the relative review workload of each of the members of the given GitHub Team.
 
 You can optionally graph completed PR reviews with the `--completed` flag as well, though these are not considered for Harmony's weighting algorithm for review workload.
 
-### Health
-Running `harmony health` will graph all open PRs grouped by the month when each was created.
+## `health`
+Graph all open PRs grouped by the month when each was created.
 
 The idea is that a healthy repository does not have many old PRs still open because those PRs represent effort spent by developers that hasn't yet paid off.
 
 ![Health Screenshot](./docs/images/health.png)
 
-### Sync
-Running `harmony sync` will sync the locally configured team slugs and user logins that are used by auto-completion for Harmony. This sync is also performed automatically the first time you run Harmony after more than a day without the configuration being synced.
+## `help [subcommand]`
+Print help.
+
+## `label {label} [...]`
+Helps you create a PR if one does not exist yet and then it will apply the given labels to the PR. This is essentially an alias for the `harmony pr` command but without support for creating draft PRs.
+
+Note that labels are _not_ prefixed with '#' for this command. There is no need to differentiate labels from other kinds of arguments to `harmony label`.
+
+## `list [team-slug]`
+Running `harmony list` will list all the teams for the configured GitHub organization.
+
+Running `harmony list <team>` will list the members of the given GitHub Team.
+
+## `pr [--draft] [#label, ...]`
+With a branch checked out will reach out to GitHub to determine if there is an open PR for that branch. If there is a PR, Harmony will print a URI that can be used to view the PR. If there is not a PR, Harmony will help you create one. New and existing PRs can be marked as drafts by specifying the `--draft` flag with the `pr` command.
+
+If you need to create a PR still, you will be prompted for a branch to open the PR against (merge into, eventually), a title for the PR, and a description for the PR. If you have an `EDITOR` environment variable set, Harmony will use that editor to get the PR description from you. If you have a PR template at `.github/PULL_REQUEST_TEMPLATE.md`, Harmony will also preload that into your editor. If you do not have an `EDITOR` environment variable set, you will still be able to enter a description from the command line but PR templates are only supported when an `EDITOR` is specified.
+
+You can also specify any number of labels to apply by prefixing them with '#'. For example, `harmony pr #backport #bugfix` would create a PR and apply the `backport` and `bugfix` labels.
+
+If you are using harmony from a script or some other environment without TTY support, harmony will print a GitHub URL that can be used to create the PR. This mode of operation will ignore the `--draft` and `#label` options.
+
+Many operating systems have an `open` command (though the name "open" is not ubiquitous); this means you can run something like `open $(harmony pr)` to open a web browser to an existing PR for the current branch.
+
+### Examples
+Create a draft pull request for the current branch:
+```shell
+harmony pr --draft
+```
+
+Create a PR for the current branch and add the `urgent` label:
+```shell
+harmony pr #urgent
+```
+
+## `quick`
+Helps you create a new GitHub issue and a branch to
+work on that issue all in one go. The branch name will be structured such that
+if you have GitHub branch parsing on then the PR you create for the branch later
+on will refer to the issue created now.
+
+## `reflect`
+Show a summary of your review requests and authored pull requests.
+
+![Reflect Screenshot](./docs/images/reflect.png)
+
+## `request {team-slug | +user-login} [options]`
+Helps you create a PR if one does not exist yet and then it will request reviews from teams and/or users.
+
+There is also a `harmony rq` alias for `harmony request`.
+
+If `harmony config requestUsers` is `True` (defualt) then harmony will pick someone to review the PR (from one of the listed teams). If `harmony config requestTeams` is `True` (default) then harmony will request reviews from the teams you listed. If `harmony config commentOnRequest` is `True` then harmony will comment on the Pull Request indicating that teams & users were "harmoniously requested" -- this comment will @mention requested users so it may be useful or annoying depending on the requested user's GitHub notification settings.
+
+You can also require that specific additional users (on top of the one Harmony will pick for you) are requested to review the PR. You do this by specifying those users' logins prefixed with '+' as arguments to Harmony. This will request review from those specific additional users regardless of the `requestUsers` setting; that setting controls whether Harmony picks users from each Team you specify to review PRs.
+
+You can optionally apply any number of labels to the PR at the same time as requesting reviewers by prefixing the labels with '#'.
+
+### Deferring to GitHub
+If your team has GitHub set up to auto-request reviews from individuals when a team is requested for review, you probably want to tell harmony not to also pick someone using its heuristics. You can run the following `config` commands to tell harmony to request a team but not also pick an individual from that team:
+```shell
+harmony config requestTeams true
+harmony config requestUsers false
+```
+This does not prevent you from requesting specific individuals with the `+<user>` syntax described above.
+
+### Examples
+Request review from the most available reviewer from the "developers" GitHub Team:
+```shell
+harmony request developers
+```
+
+Request review from the most available reviewer from either the "frontend" or "backend" GitHub Team:
+```shell
+harmony request frontend backend
+```
+
+Request review from the most available reviewer from the "web" team and additionally request review from the users with logins "carl001" and "emmaham":
+```shell
+harmony request web +carl001 +emmaham
+```
+
+## `sync`
+Sync the locally configured team slugs and user logins that are used by auto-completion for Harmony. This sync is also performed automatically the first time you run Harmony after more than a day without the configuration being synced.
+
+## `version`
+Print Harmony's version.
+
+
+## `whoami`
+Print information about the currently configured and authenticated user.
 

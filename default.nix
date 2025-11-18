@@ -7,6 +7,7 @@
   makeBinaryWrapper,
   nodejs,
   buildNpmPackage,
+  pandoc,
   stdenv,
   zsh,
 }:
@@ -49,6 +50,7 @@ buildIdris {
   nativeBuildInputs = [
     installShellFiles
     makeBinaryWrapper
+    pandoc
   ]
   ++ lib.optionals stdenv.isDarwin [ zsh ];
   buildInputs = [
@@ -57,6 +59,12 @@ buildIdris {
   ];
 
   IDRIS2_DATA = "./support";
+
+  postBuild = ''
+    make manpage
+
+    installManPage man/harmony.1
+  '';
 
   postInstall = ''
     wrapProgram $out/bin/harmony \
@@ -72,7 +80,7 @@ buildIdris {
   postFixup = ''
     installShellCompletion --cmd harmony \
       --bash <($out/bin/harmony --bash-completion-script) \
-      --zsh <($out/bin/harmony --zsh-completion-script) \
+      --zsh <($out/bin/harmony --zsh-completion-script)
   '';
 
   installCheckPhase = ''
