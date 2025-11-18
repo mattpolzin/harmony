@@ -180,6 +180,7 @@ version:
 	$(ised) "s/version = .*/version = ${v}/" ./harmony.ipkg
 	$(ised) "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
 	$(ised) "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
+	$(ised) "s/Version [^ ]*/Version ${v}/" ./README.md
 	@npm update
 	@find . -name '*.nix' | xargs $(nix) fmt
 
