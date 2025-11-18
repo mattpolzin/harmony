@@ -16,7 +16,7 @@ else
 	ised = sed -I ''
 endif
 
-.PHONY: all deps build test nix-build install package publish clean version harmony
+.PHONY: all deps build test nix-build install package publish clean version manpage harmony
 
 all: deps build
 
@@ -182,6 +182,9 @@ version:
 	$(ised) "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
 	@npm update
 	@find . -name '*.nix' | xargs $(nix) fmt
+
+manpage:
+	pandoc --standalone --to man -o man/harmony.1 README.md
 
 package: build
 	bash ./version-check.sh
