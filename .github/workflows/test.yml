@@ -10,9 +10,14 @@ on:
     - cron: '0 1 * * *'
 
 jobs:
-  nightly-idris:
+  docker-idris:
+    strategy:
+      matrix:
+        version:
+          - 0.8.0
+          - nightly
     runs-on: ubuntu-latest
-    container: mattpolzin2/idris-docker:nightly
+    container: mattpolzin2/idris-docker:${{ matrix.version }}
 
     steps:
       - name: Install Dependencies
