@@ -179,7 +179,7 @@ Not all configuration properties can be read/set with this command.
 `githubPAT` (optional string) 
 : If the `$GITHUB_PAT` and `$GH_TOKEN` environment variables are not set, this Personal Access Token is used to authenticate with GitHub.
 
-## `contribute [options] {uri | pr-number}`
+## `contribute [options]`
 Print the URI of the oldest non-draft PR waiting for your review. If you are not requested for review on any PRs, Harmony will suggest a PR that your review is not requested on.
 
 You can skip PRs and retrieve the next-oldest one by passing a dash followed by the number to skip (e.g. `-2` to skip the two oldest waiting PRs).
