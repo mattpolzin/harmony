@@ -184,8 +184,14 @@ version:
 	@npm update
 	@find . -name '*.nix' | xargs $(nix) fmt
 
+# Remove image tags (not supported in manpages) and generate
+# manpage via pandoc
 manpage:
-	pandoc --standalone --to man -o man/harmony.1 README.md
+	sed 's#!\[.*\](.*)##' README.md | \
+    pandoc \
+    --standalone \
+    --to man \
+    -o man/harmony.1
 
 package: build
 	bash ./version-check.sh
