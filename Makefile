@@ -172,7 +172,7 @@ nix ?= nix
 # This executes a Nix build. Call as `make nix-build` from CLI, not
 # from a Nix file.
 nix-build:
-	${MAKE} clean
+	$(MAKE) clean
 	$(nix) build .
 
 version:
@@ -183,9 +183,16 @@ version:
 	$(ised) "s/Version [^ ]*/Version ${v}/" ./README.md
 	@npm update
 	@find . -name '*.nix' | xargs $(nix) fmt
+	$(MAKE) manpage
 
+# Remove image tags (not supported in manpages) and generate
+# manpage via pandoc
 manpage:
-	pandoc --standalone --to man -o man/harmony.1 README.md
+	sed 's#!\[.*\](.*)##' README.md | \
+    pandoc \
+    --standalone \
+    --to man \
+    -o man/harmony.1
 
 package: build
 	bash ./version-check.sh

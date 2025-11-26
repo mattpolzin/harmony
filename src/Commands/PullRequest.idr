@@ -324,36 +324,6 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         --       be a draft via the CLI but I have not found 
         --       a way to do that yet.
 
-      prepareDescriptionFile : HasIO io =>
-                               (templateFilePath : String)
-                            -> (bodyPrefix : String)
-                            -> io ()
-      prepareDescriptionFile templateFilePath bodyPrefix = do
-        templateContents <-
-          case !(exists templateFilePath) of
-               False => pure ""
-               True => case !(readFilePage 0 (limit 5000) templateFilePath) of
-                            Left err => pure ""
-                            Right (_, lines) => pure $ join "" lines
-        let prefilledDescription = "\{bodyPrefix}\n\{templateContents}"
-        ignore $ writeFile "pr_description.tmp.md" prefilledDescription
-
-      editorDescription : HasIO io => 
-                          (editor : String)
-                       -> (templateFilePath : String)
-                       -> (bodyPrefix : String)
-                       -> io (Either FileError String)
-      editorDescription editor templateFilePath bodyPrefix = do
-        prepareDescriptionFile templateFilePath bodyPrefix
-        0 <- system "\{editor} pr_description.tmp.md"
-          | e => pure (Left $ GenericFileError e)
-        description <- assert_total $ readFile "pr_description.tmp.md" 
-        --              ^ ignore the possibility that an infinte file was
-        --                produced.
-        when !(exists "pr_description.tmp.md") $
-          ignore $ removeFile "pr_description.tmp.md"
-        pure description
-
       continueGivenUncommittedChanges : Promise' Bool
       continueGivenUncommittedChanges = do
         case !uncommittedChanges of
@@ -424,7 +394,7 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         description <- case config.editor of
                             Nothing => inlineDescription inlineDescriptionPrompt bodyPrefix
                             Just ed => either (const "") id <$>
-                                         editorDescription ed templateFilePath bodyPrefix
+                                         editorDescription ed (Just templateFilePath) bodyPrefix
 
         putStrLn "Creating PR..."
         putStrLn branch
