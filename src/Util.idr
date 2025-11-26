@@ -8,6 +8,9 @@ import Data.String
 import FFI.Git
 import Data.So
 
+import System
+import System.File
+
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
@@ -129,6 +132,44 @@ namespace Prompting
     putStrLn promptMsg
     putStrLn bodyPrefix
     unlines . (bodyPrefix ::) <$> getManyLines (limit 100)
+
+  prepareDescriptionFile : HasIO io =>
+                           (templateFilePath : Maybe String)
+                        -> (bodyPrefix : String)
+                        -> (tmpFileName : String)
+                        -> io ()
+  prepareDescriptionFile templateFilePath bodyPrefix tmpFileName = do
+    templateContents <- maybe (pure "") readTemplate templateFilePath
+    let prefilledDescription = "\{bodyPrefix}\n\{templateContents}"
+    ignore $ writeFile tmpFileName prefilledDescription
+
+    where
+      readTemplate : String -> io String
+      readTemplate path =
+        case !(exists path) of
+             False => pure ""
+             True => case !(readFilePage 0 (limit 5000) path) of
+                          Left err => pure ""
+                          Right (_, lines) => pure $ join "" lines
+
+  ||| Get a description from the user via their preferred EDITOR
+  export
+  editorDescription : HasIO io => 
+                      (editor : String)
+                   -> (templateFilePath : Maybe String)
+                   -> (bodyPrefix : String)
+                   -> io (Either FileError String)
+  editorDescription editor templateFilePath bodyPrefix = do
+    let tmpFileName = "editor_description.tmp.md"
+    prepareDescriptionFile templateFilePath bodyPrefix tmpFileName
+    0 <- system "\{editor} \{tmpFileName}"
+      | e => pure (Left $ GenericFileError e)
+    description <- assert_total $ readFile tmpFileName 
+    --              ^ ignore the possibility that an infinte file was
+    --                produced.
+    when !(exists tmpFileName) $
+      ignore $ removeFile tmpFileName
+    pure description
 
 ||| Get an absolute path for the given directory or file assuming the
 ||| given path is relative to the root of the Git repository.

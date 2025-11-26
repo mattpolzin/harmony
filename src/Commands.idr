@@ -3,6 +3,7 @@ module Commands
 import Commands.Graph
 import Commands.Label
 import Commands.PullRequest
+import Commands.Quick
 import Commands.Reviewer
 import Commands.User
 
@@ -471,24 +472,4 @@ branch @{config} = do
 ||| Quickly create a new GitHub issue and branch to go along with it.
 export
 quick : Config => Git => Octokit => Promise' ()
-quick @{config} = do
-  putStrLn "Creating a new GitHub issue and branch."
-  putStrLn ""
-
-  putStrLn "What would you like the issue title to be?"
-  issueTitle <- trim <$> getLine
-
-  issueBody <- inlineDescription issuePrompt ""
-
-  issue <- createIssue config.org config.repo issueTitle issueBody
-
-  putStrLn "What would you like the branch to be named?"
-  putStr "feature/\{show issue.number}/"
-  branchSlug <- trim <$> getLine
-  
-  checkoutBranch {b=New} "feature/\{show issue.number}/\{branchSlug}"
-
-  where
-    issuePrompt : String
-    issuePrompt = "What would you like the issue description to be (two blank lines to finish)?"
-
+quick = quickStartNewWork
