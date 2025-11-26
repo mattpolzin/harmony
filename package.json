@@ -23,6 +23,7 @@
   "bin": {
     "harmony": "harmony"
   },
+  "man": "./man/harmony.1",
   "scripts": {},
   "author": "Mathew Polzin",
   "license": "MIT",
