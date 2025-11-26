@@ -196,6 +196,7 @@ package: build
 	cp harmony ./harmony-npm/
 	cp package.json ./harmony-npm/
 	cp README.md ./harmony-npm/
+	cp -R man ./harmony-npm/
 	tar -czvf harmony-npm.tar.gz harmony-npm
 
 publish : package
