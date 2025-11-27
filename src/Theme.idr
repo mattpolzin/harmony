@@ -12,10 +12,13 @@ record Colors where
   foreground : Maybe Color
   background : Maybe Color
 
-cs : List Color -> Colors
+cs : (colors : List Color) -> Either (length colors === 1) (length colors === 2) => Colors
 cs [foreground] = MkCs (Just foreground) Nothing
 cs [foreground, background] = MkCs (Just foreground) (Just background)
-cs _ = MkCs Nothing Nothing
+cs [] @{(Left Refl)} impossible
+cs [] @{(Right Refl)} impossible
+cs (_ :: _ :: _ :: _) @{(Left Refl)} impossible
+cs (_ :: _ :: _ :: _) @{(Right Refl)} impossible
 
 ||| The prime variants where they exist are for situations where the
 ||| character being drawn is small so a different color choice might

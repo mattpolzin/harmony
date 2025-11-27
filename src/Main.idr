@@ -110,12 +110,20 @@ handleAuthenticatedArgs @{config} ["user", "--json", username] =
 -- user-facing commands:
 handleAuthenticatedArgs ["whoami"] =
   Commands.whoami
+handleAuthenticatedArgs ("whoami" :: _ :: _) =
+  reject "The whoami command does not take any arguments."
 handleAuthenticatedArgs ["sync"] =
   Commands.sync
+handleAuthenticatedArgs ("sync" :: _ :: _) =
+  reject "The sync command does not take any arguments."
 handleAuthenticatedArgs ["branch"] =
   Commands.branch
+handleAuthenticatedArgs ("branch" :: _ :: _) =
+  reject "The branch command does not take any arguments."
 handleAuthenticatedArgs ["quick"] =
-  Commands.quick
+  Commands.quick Feature
+handleAuthenticatedArgs ["quick", "--bugfix"] =
+  Commands.quick Bugfix
 handleAuthenticatedArgs ("health" :: _ :: _) =
   reject "The health command does not take any arguments."
 handleAuthenticatedArgs ["health"] =

@@ -93,12 +93,19 @@ cmdOpts "health"  _ _ = Just []
 cmdOpts "--help"  _ _ = Just []
 cmdOpts "reflect" _ _ = Just []
 cmdOpts "version" _ _ = Just []
-cmdOpts "quick"   _ _ = Just []
 
 -- next subcommands that have options with no configuration requirement:
 cmdOpts "help" "--" "help" = Just allRootCmds
 cmdOpts "help" partialArg "help" =
   Just $ filter (isPrefixOf partialArg) allRootCmds 
+
+cmdOpts "quick" "-"  "quick" = Just ["--bugfix"]
+cmdOpts "quick" "--" "quick" = Just ["--bugfix"]
+cmdOpts "quick" partialArg "quick" =
+  if partialArg `isPrefixOf` "--"
+     then Just ["--bugfix"]
+     else Just []
+
 cmdOpts "pr" "-"  "pr" = Just ["--draft", "--into"]
 cmdOpts "pr" "--" "pr" = Just ["--draft", "--into"]
 cmdOpts "pr" partialBranch "--into" = Nothing -- <- allows us to fall through to handle with config below.
@@ -112,6 +119,7 @@ cmdOpts "pr" partialArg "pr" =
                   else if isHashPrefix partialArg
                       then Nothing -- <- allows us to fall through to handle with config below.
                       else Just []
+
 cmdOpts "contribute" "-"  _ = Just ["--checkout", "-c", "--list", "-l", "--ignore", "-i"]
 cmdOpts "contribute" "--" _ = Just ["--checkout", "-c", "--list", "-l", "--ignore", "-i"]
 cmdOpts "contribute" partialArg _  =
@@ -122,6 +130,7 @@ cmdOpts "contribute" partialArg _  =
              else if partialArg `isPrefixOf` "--list"
                      then Just ["--list"]
                      else Just []
+
 cmdOpts "graph" "--" _ = Nothing
 cmdOpts "graph" "-"  _ = Just ["--completed", "-c"]
 cmdOpts "graph" partialArg _ =
