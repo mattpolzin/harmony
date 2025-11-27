@@ -428,12 +428,16 @@ Create a PR for the current branch and add the \f[CR]urgent\f[R] label:
 .EX
 harmony pr #urgent
 .EE
-.SS \f[CR]quick\f[R]
+.SS \f[CR]quick [\-\-bugfix]\f[R]
 Helps you create a new GitHub issue and a branch to work on that issue
 all in one go.
 The branch name will be structured such that if you have GitHub branch
 parsing on then the PR you create for the branch later on will refer to
 the issue created now.
+.PP
+By default the branch created will be prefixed with \f[CR]feature\f[R]
+but if you specify the \f[CR]\-\-bugfix\f[R] flag then the branch\(cqs
+prefix will be \f[CR]bugfix\f[R].
 .SS \f[CR]reflect\f[R]
 Show a summary of your review requests and authored pull requests.
 .SS \f[CR]request {team\-slug | +user\-login} [options]\f[R]
