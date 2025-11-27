@@ -108,11 +108,11 @@ subcommandHelp' n@"quick"   = subcommand n [argument False "--bugfix"] [
     hcat [ reflow "Quickly spin up new work with a GitHub issue and associated feature branch. If you have harmony configured to parse GitHub issue numbers ("
          ,  shell "harmony config branchParsing github"
          , reflow ") then any PR created from the new branch will automatically link to the new ticket in its description."
-         , reflow """
-             By default the branch will have the 'feature' prefix. If the
-             --bugfix flag is specified, the 'bugfix' prefix will be used.
-             """
          ]
+  , reflow """
+      By default the branch will have the 'feature' prefix. If the
+      --bugfix flag is specified, the 'bugfix' prefix will be used.
+      """
   ]
 subcommandHelp' n@"sync"    = subcommand n [] ["Synchronize local config with information from GitHub."]
 subcommandHelp' n@"branch"  = subcommand n [] ["Print the GitHub URI for the currently checked out branch."]
