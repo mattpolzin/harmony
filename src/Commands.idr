@@ -3,7 +3,7 @@ module Commands
 import Commands.Graph
 import Commands.Label
 import Commands.PullRequest
-import Commands.Quick
+import public Commands.Quick
 import Commands.Reviewer
 import Commands.User
 
@@ -471,5 +471,9 @@ branch @{config} = do
 
 ||| Quickly create a new GitHub issue and branch to go along with it.
 export
-quick : Config => Git => Octokit => Promise' ()
+quick : Config =>
+        Git =>
+        Octokit =>
+        IssueCategory
+     -> Promise' ()
 quick = quickStartNewWork
