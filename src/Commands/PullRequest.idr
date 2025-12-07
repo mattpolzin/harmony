@@ -6,6 +6,7 @@ import Data.Config
 import Data.Either
 import Data.Fin.Extra
 import Data.Fuel
+import Data.Issue
 import Data.List
 import Data.List1
 import Data.Nat
@@ -265,39 +266,48 @@ convertPRToDraft @{config} pr = do
   prId <- getPullRequestGraphQlId config.org config.repo pr.number
   markPullRequestDraft prId
 
-parseTitleAndBodyPrefix : Config => (branch : String) -> (String, String)
-parseTitleAndBodyPrefix @{config} branch =
+githubTitleAndBodyPrefix : Config => Octokit => (branch: String) -> Promise' (String, String)
+githubTitleAndBodyPrefix @{config} branch =
+  case issueNumber of
+    Nothing => pure ("", "")
+    Just issue => pure $ 
+      (""
+      , !(issueDescriptionPrefix issue) ++ "\n" ++ (relatedToPrefix issue)
+      )
+
+  where
+    issueNumber : Maybe String
+    issueNumber = parseGithubIssueNumber branch
+
+    relatedToPrefix : String -> String
+    relatedToPrefix issue = "Related to #\{issue}"
+
+    issueDescriptionPrefix : String -> Promise' String
+    issueDescriptionPrefix issueNumber = do
+      issue <- getIssue config.org config.repo issueNumber
+      pure """
+        <!--
+        ## GitHub Issue
+        \{issue.body}
+        -->
+        """
+
+||| The title prefix is to be prepended to the new PR title.
+||| The body prefix is to be prepended to the new PR body.
+|||
+||| The idea in either case is to pass along the information parsed from the
+||| branch name to GitHub either via the PR's title or part of its body so that
+||| an issue referenced by the branch is tracked in relation to the new PR.
+|||
+||| If a GitHub issue is found, the body of the GitHub issue is also added
+||| (commented out) to the body prefix as additional context.
+getTitleAndBodyPrefix : Config => Octokit => (branch : String) -> Promise' (String, String)
+getTitleAndBodyPrefix @{config} branch =
     case config.branchParsing of
-         Jira   => (fromMaybe "" $ (++ " - ") <$> parseJiraSlug branch, "")
-         --         ^ Jira slugs become a title prefix
-         Github => ("", fromMaybe "" $ ("Related to #" ++) <$> parseGithubIssueNumber branch)
-         --             ^ Github issue numbers become a body prefix
-         None   => ("", "")
-
-namespace TestParseTitlePrefix
-  testJiraTurnedOff : parseTitleAndBodyPrefix @{Data.Config.simpleDefaults}
-                                       "ABCD-1234 - hello" 
-                      === 
-                      ("", "")
-  testJiraTurnedOff = Refl
-
-  -- This one does not reduce very far, but far enough for us to know it is going to parse a Jira prefix if possible
-  testJiraTurnedOn : parseTitleAndBodyPrefix @{({ branchParsing := Jira } Data.Config.simpleDefaults)}
-                                      "ABCD-1234 - hello" 
-                     ===
-                     (fromMaybe (Delay (fromString "")) 
-                                (map (\arg => prim__strAppend arg " - ") 
-                                     (parseJiraSlug "ABCD-1234 - hello")), "")
-  testJiraTurnedOn = Refl
-
-  -- This one does not reduce very far, but far enough for us to know it is going to parse a Jira prefix if possible
-  testGithubTurnedOn : parseTitleAndBodyPrefix @{({ branchParsing := Github } Data.Config.simpleDefaults)}
-                                      "feature/1234/hi" 
-                     ===
-                     ("", fromMaybe (Delay (fromString "")) 
-                                    ((\arg => fromString "Related to #" ++ arg) <$>
-                                        parseGithubIssueNumber (fromString "feature/1234/hi")))
-  testGithubTurnedOn = Refl
+         Jira   => pure (fromMaybe "" $ (++ " - ") <$> parseJiraSlug branch, "")
+         --               ^ Jira slugs become a title prefix
+         Github => githubTitleAndBodyPrefix branch
+         None   => pure ("", "")
 
 export
 identifyOrCreatePR : Config => Git => Octokit => 
@@ -382,7 +392,7 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         putStrLn "Creating a new PR for the current branch (\{branch})."
         baseBranch <- getBaseBranch
 
-        let (titlePrefix, bodyPrefix) = parseTitleAndBodyPrefix branch
+        (titlePrefix, bodyPrefix) <- getTitleAndBodyPrefix branch
 
         putStrLn "What would you like the title to be?"
         putStr titlePrefix
