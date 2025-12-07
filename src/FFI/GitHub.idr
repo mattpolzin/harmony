@@ -206,6 +206,25 @@ createPR @{Kit ptr} {isDraft} owner repo head base title description =
   parsePrimResult parsePullRequestString $
     prim__createPR ptr owner repo head base title description isDraft
 
+%foreign okit_ffi "get_issue"
+prim__getIssue : Ptr OctokitRef 
+              -> (owner : String) 
+              -> (repo : String) 
+              -> (issueNumber : String) 
+              -> (onSuccess : String -> PrimIO ()) 
+              -> (onFailure : String -> PrimIO ()) 
+              -> PrimIO ()
+
+export
+getIssue : Octokit => 
+           (owner : String) 
+        -> (repo : String) 
+        -> (issueNumber : String) 
+        -> Promise String Issue
+getIssue @{Kit ptr} owner repo issueNumber =
+  parsePrimResult parseIssueString $
+    prim__getIssue ptr owner repo issueNumber
+
 %foreign okit_ffi "create_issue"
 prim__createIssue : Ptr OctokitRef 
                  -> (owner : String) 
