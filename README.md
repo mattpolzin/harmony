@@ -6,7 +6,7 @@ Harmony - Harmonize with coworkers around GitHub reviewing
 # SYNOPSIS
 `harmony branch` \
 `harmony config {property} [value]` \
-`harmony contribute [options] {uri | pr-number}` \
+`harmony contribute [options]` \
 `harmony graph [options] {team-slug}` \
 `harmony health` \
 `harmony help [subcommand]` \
@@ -200,10 +200,10 @@ Not all configuration properties can be read/set with this command.
 ### Properties
 
 `requestTeams` (`true`/`false`) 
-: When picking a reviewer from a team, request the team as a reviewer as well.
+: When picking a team to review, request review from the whole team, not just one user on the team. If you have GitHub configured to pick a member of a team to review when the team is requested, you probably want to set this to `true` so harmony tells GitHub the team from which GitHub should then pick an individual.
 
 `requestUsers` (`true`/`false`) 
-: When requesting a team as a reviewer, pick a user to review as well.
+: When requesting a team to review, pick a user from the team to review as well. If you have GitHub configured to pick a member of a team to review when the team is requested, you probably want to set this to `false` so harmony does not also pick a user.
 
 `commentOnRequest` (`none`/`name`/`at-mention`) 
 : When requesting a reviewer chosen by Harmony, comment on the pull request or not.
