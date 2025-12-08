@@ -272,7 +272,7 @@ githubTitleAndBodyPrefix @{config} branch =
     Nothing => pure ("", "")
     Just issue => pure $ 
       (""
-      , !(issueDescriptionPrefix issue) ++ "\n" ++ (relatedToPrefix issue)
+      , !(issueDescriptionPrefix issue) ++ "\n\n" ++ (relatedToPrefix issue)
       )
 
   where
@@ -288,6 +288,8 @@ githubTitleAndBodyPrefix @{config} branch =
       pure """
         <!--
         ## GitHub Issue
+        \{issue.title}
+        --
         \{issue.body}
         -->
         """
