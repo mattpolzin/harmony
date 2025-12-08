@@ -260,6 +260,7 @@ const digIssue = issue => {
       author: issue.user.login,
       created_at: issue.created_at,
       title: issue.title,
+      body: issue.body,
       assignee: issue.assignee ? issue.assignee.login : null
     }
   }
@@ -271,6 +272,15 @@ const digIssues = issueJson =>
 const okit_create_issue = (octokit, owner, repo, title, body, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.issues.create({ owner, repo, title, body }),
+    r => onSuccess(JSON.stringify(digIssue(r.data))),
+    onFailure
+  )
+
+// Get a single Issue
+// Executes callback with stringified JSON {"issue_number": Int, "author": String, "created_at": Date, "title": String, "assignee": String?}
+const okit_get_issue = (octokit, owner, repo, issue_number, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.issues.get({ owner, repo, issue_number }),
     r => onSuccess(JSON.stringify(digIssue(r.data))),
     onFailure
   )

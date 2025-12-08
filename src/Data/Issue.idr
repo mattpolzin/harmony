@@ -17,6 +17,8 @@ record Issue where
   number    : Integer
   ||| The issue's title
   title     : String
+  ||| The issue's body
+  body      : String
   ||| When the issue was created.
   createdAt : Date
   ||| The `login` of the author of the issue.
@@ -28,7 +30,7 @@ record Issue where
 
 export
 Show Issue where
-  show (MkIssue number title _ author _) = 
+  show (MkIssue number title _ _ author _) = 
     "[\{show number}] \{authorString} - \{title}"
     where
       authorString : String
@@ -40,8 +42,8 @@ isAuthor login = (== login) . author
 
 export
 isAssignee : String -> Issue -> Bool
-isAssignee login (MkIssue number title createdAt author Nothing) = False
-isAssignee login (MkIssue number title createdAt author (Just assignee)) = login == assignee
+isAssignee login (MkIssue _ _ _ _ _ Nothing) = False
+isAssignee login (MkIssue _ _ _ _ _ (Just assignee)) = login == assignee
 
 parseDateTime : String -> Either String Date
 parseDateTime = maybeToEither "Failed to parse Date" . parseDateTimeString
@@ -50,15 +52,17 @@ export
 parseIssue : JSON -> Either String Issue
 parseIssue json =
  do issue <- object json
-    [issueNumber, issueTitle, authorLogin, createdAtStr, assigneeLogin] <- lookupAll ["issue_number", "title", "author", "created_at", "assignee"] issue
+    [issueNumber, issueTitle, issueBody, authorLogin, createdAtStr, assigneeLogin] <- lookupAll ["issue_number", "title", "body", "author", "created_at", "assignee"] issue
     number      <- integer issueNumber
     title       <- string issueTitle
+    body        <- string issueBody
     author      <- string authorLogin
     createdAt   <- parseDateTime =<< string createdAtStr
     assignee    <- optional string assigneeLogin
     pure $ MkIssue {
         number
       , title
+      , body
       , createdAt
       , author
       , assignee
