@@ -104,7 +104,9 @@ cmdOpts "quick" "--" "quick" = Just ["--bugfix"]
 cmdOpts "quick" partialArg "quick" =
   if partialArg `isPrefixOf` "--"
      then Just ["--bugfix"]
-     else Just []
+     else if partialArg `isPrefixOf` "--bugfix"
+             then Just ["--bugfix"]
+             else Just []
 
 cmdOpts "pr" "-"  "pr" = Just ["--draft", "--into"]
 cmdOpts "pr" "--" "pr" = Just ["--draft", "--into"]
