@@ -312,7 +312,7 @@ organization.
 
 Running `harmony list <team>` will list the members of the given GitHub Team.
 
-## `pr [--draft] [#label, ...]`
+## `pr [--draft] [-i/--into {<branch-name>}] [#label, ...]`
 With a branch checked out will reach out to GitHub to determine if there is an
 open PR for that branch. If there is a PR, Harmony will print a URI that can be
 used to view the PR. If there is not a PR, Harmony will help you create one. New
@@ -327,6 +327,14 @@ editor to get the PR description from you. If you have a PR template at
 editor. If you do not have an `EDITOR` environment variable set, you will still
 be able to enter a description from the command line but PR templates are only
 supported when an `EDITOR` is specified.
+
+If you are creating a new PR from a branch that refers to a GitHub issue (and
+you have GitHub branch parsing enabled in your harmony config) then harmony will
+prepend the issue information onto your new PR description in a commented out
+block for you to reference or copy into the PR description as needed.
+
+You can specify the branch to merge into via the `--into` CLI argument if you
+want to as an alternative to the interactive prompt.
 
 You can also specify any number of labels to apply by prefixing them with '#'.
 For example, `harmony pr #backport #bugfix` would create a PR and apply the
@@ -349,6 +357,12 @@ harmony pr --draft
 Create a PR for the current branch and add the `urgent` label:
 ```shell
 harmony pr #urgent
+```
+
+Create a pull request that will merge into the hypothetical pre-existing
+`release/2_0` branch:
+```shell
+harmony pr --into release/2_0
 ```
 
 ## `quick [--bugfix]`
