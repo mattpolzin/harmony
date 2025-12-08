@@ -288,6 +288,8 @@ githubTitleAndBodyPrefix @{config} branch =
       pure """
         <!--
         ## GitHub Issue
+        \{issue.title}
+        --
         \{issue.body}
         -->
         """
