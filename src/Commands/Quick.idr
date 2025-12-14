@@ -24,13 +24,18 @@ quickStartNewWork : Config =>
                     Git =>
                     Octokit =>
                     IssueCategory
+                 -> (issueTitle: Maybe String)
                  -> Promise' ()
-quickStartNewWork @{config} issueCategory = do
+quickStartNewWork @{config} issueCategory issueTitle' = do
   putStrLn "Creating a new GitHub issue and branch."
   putStrLn ""
 
-  putStrLn "What would you like the issue title to be?"
-  issueTitle <- trim <$> getLine
+  issueTitle <-
+    case issueTitle' of
+         Just title => pure title
+         Nothing    => do
+            putStrLn "What would you like the issue title to be?"
+            trim <$> getLine
 
   issueBody <- case config.editor of
                     Nothing => inlineDescription issuePrompt ""
