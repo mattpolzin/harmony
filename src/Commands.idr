@@ -478,6 +478,19 @@ parseQuickArgs [] = []
 parseQuickArgs ("--bugfix" :: xs) = ABugfix :: parseQuickArgs xs
 parseQuickArgs (titleStr :: xs) = Title titleStr :: parseQuickArgs xs
 
+namespace TestParseQuickArgs
+  testBugfix : parseQuickArgs ["--bugfix"] === [ABugfix]
+  testBugfix = Refl
+
+  testBugfixLast : parseQuickArgs ["a", "bug", "--bugfix"] === [Title "a", Title "bug", ABugfix]
+  testBugfixLast = Refl
+
+  testBugfixFirst : parseQuickArgs ["--bugfix", "a", "bug"] === [ABugfix, Title "a", Title "bug"]
+  testBugfixFirst = Refl
+
+  testBugfixMiddle : parseQuickArgs ["a", "--bugfix", "bug"] === [Title "a", ABugfix, Title "bug"]
+  testBugfixMiddle = Refl
+
 titleArg : List QuickArg -> Maybe String
 titleArg = foldl go Nothing
   where
@@ -498,6 +511,19 @@ namespace TestTitleArg
 
 issueCategory : List QuickArg -> IssueCategory
 issueCategory = maybe Feature (const Bugfix) . find (\case ABugfix => True; _ => False)
+
+namespace TestIssueCategory
+  testPicksBugfixUpLast : issueCategory [Title "hello", ABugfix] === Bugfix
+  testPicksBugfixUpLast = Refl
+
+  testPicksBugfixUpFirst : issueCategory [ABugfix, Title "hello"] === Bugfix
+  testPicksBugfixUpFirst = Refl
+
+  testNotBugfix : issueCategory [Title "hi", Title "hello"] === Feature
+  testNotBugfix = Refl
+
+  testNotBugfixSimple : issueCategory [] === Feature
+  testNotBugfixSimple = Refl
 
 ||| Quickly create a new GitHub issue and branch to go along with it.
 export
