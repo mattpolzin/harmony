@@ -43,7 +43,7 @@ Subcommands:
       Optionally mark a new or existing PR as a draft with the --draft flag.
 
       Optionally specify the branch to merge into with the --into option.
-  quick [--bugfix]
+  quick [--bugfix] [<title>] [...]
       Quickly spin up new work with a GitHub issue and associated feature
       branch. If you have harmony configured to parse GitHub issue numbers
       (harmony config branchParsing github) then any PR created from the new
@@ -51,6 +51,11 @@ Subcommands:
 
       By default the branch will have the 'feature' prefix. If the --bugfix flag
       is specified, the 'bugfix' prefix will be used.
+
+      All additional arguments other than --bugfix will be used as the issue
+      title. If you don't give any arguments then you will be prompted to enter
+      the issue title interactively. You will also be prompted for the issue
+      description.
   reflect 
       Reflect on the current state of ones own PRs and review requests.
   request {<team-slug> | +<user-login>} [#<label>] [...]
