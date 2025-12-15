@@ -268,7 +268,7 @@ const digIssues = issueJson =>
   issueJson.map(digIssue)
 
 // Create Issue
-// Executes callback with stringified JSON {"issue_number": Int, "author": String, "created_at": Date, "title": String, "assignee": String?}
+// Executes callback with stringified JSON {"issue_number": Int, "author": String, "created_at": Date, "title": String, "body": String?, "assignee": String?}
 const okit_create_issue = (octokit, owner, repo, title, body, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.issues.create({ owner, repo, title, body }),
@@ -277,7 +277,7 @@ const okit_create_issue = (octokit, owner, repo, title, body, onSuccess, onFailu
   )
 
 // Get a single Issue
-// Executes callback with stringified JSON {"issue_number": Int, "author": String, "created_at": Date, "title": String, "assignee": String?}
+// Executes callback with stringified JSON {"issue_number": Int, "author": String, "created_at": Date, "title": String, "body": String?, "assignee": String?}
 const okit_get_issue = (octokit, owner, repo, issue_number, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.issues.get({ owner, repo, issue_number }),

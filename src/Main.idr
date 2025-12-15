@@ -120,10 +120,8 @@ handleAuthenticatedArgs ["branch"] =
   Commands.branch
 handleAuthenticatedArgs ("branch" :: _ :: _) =
   reject "The branch command does not take any arguments."
-handleAuthenticatedArgs ["quick"] =
-  Commands.quick Feature
-handleAuthenticatedArgs ["quick", "--bugfix"] =
-  Commands.quick Bugfix
+handleAuthenticatedArgs ("quick" :: args) =
+  Commands.quick (parseQuickArgs args)
 handleAuthenticatedArgs ("health" :: _ :: _) =
   reject "The health command does not take any arguments."
 handleAuthenticatedArgs ["health"] =
