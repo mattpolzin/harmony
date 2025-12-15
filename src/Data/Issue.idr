@@ -55,7 +55,7 @@ parseIssue json =
     [issueNumber, issueTitle, issueBody, authorLogin, createdAtStr, assigneeLogin] <- lookupAll ["issue_number", "title", "body", "author", "created_at", "assignee"] issue
     number      <- integer issueNumber
     title       <- string issueTitle
-    body        <- string issueBody
+    body        <- maybe "" id <$> optional string issueBody
     author      <- string authorLogin
     createdAt   <- parseDateTime =<< string createdAtStr
     assignee    <- optional string assigneeLogin
