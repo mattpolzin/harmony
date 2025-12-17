@@ -2,6 +2,8 @@ module Util.Reflection
 
 import Language.Reflection
 
+%default total
+
 public export
 record Clause where
   constructor MkClause

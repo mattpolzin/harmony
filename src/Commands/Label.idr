@@ -10,6 +10,8 @@ import BashCompletion
 
 import FFI.GitHub
 
+%default total
+
 ||| In order to support tab completion of multi-word labels, spaces have been turned into
 ||| another character to "slugify" the labels. Still, it is possible the user has entered
 ||| a label that literally contains the character used during slugification, so to

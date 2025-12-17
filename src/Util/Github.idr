@@ -1,5 +1,7 @@
 module Util.Github
 
+%default total
+
 ||| If possible, extract a Github issue number from the given string.
 |||
 ||| For example, in "feature/1234/do-a-thing" `parseGithubIssueNumber` will give
