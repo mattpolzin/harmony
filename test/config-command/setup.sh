@@ -1,2 +1,2 @@
 
-cp ../harmony.json ./harmony.json
+cp ../../harmony-test.json.tmp ./harmony.json
