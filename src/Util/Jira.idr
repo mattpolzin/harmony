@@ -1,5 +1,7 @@
 module Util.Jira
 
+%default total
+
 ||| If possible, extract a Jira ticket reference from the given string.
 |||
 ||| For example, in "PRJ-123 do a thing" `parseJiraSlug` will give you

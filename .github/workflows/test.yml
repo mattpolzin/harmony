@@ -34,5 +34,10 @@ jobs:
           make
       - name: Test
         shell: bash
-        run: INTERACTIVE='' make test
+        run: |
+          # The following tests are not run in CI because they
+          # are currently only designed to run against a local
+          # checkout of the repo:
+          # - branch-command
+          INTERACTIVE='' except=branch-command make test
 

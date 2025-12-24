@@ -3,6 +3,8 @@ module ZshCompletion
 
 import BashCompletion
 
+%default total
+
 ||| Zsh completion is performed via Harmony's Bash completion support.
 ||| For details on the expected structure of bash completion calls, see
 ||| the docs for the `BashCompletion.script` function.

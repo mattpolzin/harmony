@@ -1,0 +1,14 @@
+. ../setup.sh
+. ./setup.sh
+
+git stash &>./git-out.txt
+git checkout main &>./git-out.txt
+
+$harmony branch | \
+  sed 's#https://github\.com/.*/harmony/tree/main#https://github.com/***/harmony/tree/main#'
+
+git checkout - &>./git-out.txt
+git stash pop &>./git-out.txt
+rm ./git-out.txt
+
+. ./cleanup.sh

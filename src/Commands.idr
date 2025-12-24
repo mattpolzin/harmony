@@ -26,12 +26,16 @@ import FFI.Concurrency
 import FFI.Git
 import FFI.GitHub
 import Util
+import System.Git
 
 import JSON.Parser
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
+
+-- Hide FFI Git stuff until ready to switch over to System.Git for all things
+%hide FFI.Git.currentBranch
 
 export
 sync : Config => Octokit =>

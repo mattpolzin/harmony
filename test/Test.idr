@@ -38,6 +38,7 @@ unit = mkTests "Unit"
 misc : TestPool
 misc = mkTests "Misc"
   [ "help-command"
+  , "branch-command"
   ]
 
 configTests : IO TestPool
@@ -46,23 +47,23 @@ configTests = testsInDir "config-command" "Config Command"
 ||| We want to avoid Harmony performing a sync as part of tests that read the
 ||| test configuration file so we mark the configuration file as updated.
 covering
-markConfigsAsUpdated : IO ()
-markConfigsAsUpdated = do
-  Right config <- readFile "./config-command/harmony.json"
-    | Left e => die (show e)
+createUpdatedTemporaryConfig : IO ()
+createUpdatedTemporaryConfig = do
+  Right config <- readFile "./harmony-test.json"
+    | Left e => die "Could not read harmony-test.json: \{show e}"
   let Just (before, after) = splitOn #""updatedAt":"# config
     | Nothing => die "could not update config timestamp"
   let (_, rest) = break (\c => c == ',' || c == '}') after
   let ts = show !time
   let config' = before ++ "\"updatedAt\":" ++ ts ++ rest
-  Right _ <- writeFile "./config-command/harmony.json" config'
+  Right _ <- writeFile "./harmony-test.json.tmp" config
     | Left e => die (show e)
   pure ()
 
 covering
 main : IO ()
 main = do
-  markConfigsAsUpdated
+  createUpdatedTemporaryConfig
   runner
     [ unit
     , misc

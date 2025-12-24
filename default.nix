@@ -85,7 +85,10 @@ buildIdris {
 
   installCheckPhase = ''
     export harmony=$out/bin/harmony
-    INTERACTIVE="" make test
+    # The following tests are not run in Nix checks because they are currently
+    # only designed to run with a github token in the environment:
+    # - branch-command
+    INTERACTIVE="" except=branch-command make test
   '';
 
   meta = with lib; {

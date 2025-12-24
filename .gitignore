@@ -16,3 +16,4 @@ harmony-npm.tar.gz
 result
 
 test/**/output
+test/harmony-test.json.tmp

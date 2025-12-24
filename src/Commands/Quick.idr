@@ -11,6 +11,8 @@ import Util
 
 import System.File
 
+%default total
+
 public export
 data IssueCategory = Bugfix | Feature
 
