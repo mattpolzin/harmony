@@ -48,6 +48,13 @@ particular release will build against.
 Alternatively, you can build Harmony with Docker (see 
 [Docker Build](#docker-build)).
 
+### Testing
+Tests can be run with `make test`. You'll need a few common tools in your `PATH`
+to run all the tests:
+  - `realpath`
+  - `sed`
+  - `xargs`
+
 ## Installation
 For any installation, you need to have a GitHub 
 [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token).
