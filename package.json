@@ -28,7 +28,6 @@
   "author": "Mathew Polzin",
   "license": "MIT",
   "dependencies": {
-    "octokit": "^3.1",
-    "simple-git": "^3.15"
+    "octokit": "^3.1"
   }
 }

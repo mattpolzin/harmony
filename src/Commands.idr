@@ -23,7 +23,6 @@ import Data.User
 import BashCompletion
 import Config
 import FFI.Concurrency
-import FFI.Git
 import FFI.GitHub
 import Util
 import System.Git
@@ -34,9 +33,6 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
--- Hide FFI Git stuff until ready to switch over to System.Git for all things
-%hide FFI.Git.currentBranch
-
 export
 sync : Config => Octokit =>
        Promise' ()
@@ -45,7 +41,7 @@ sync = ignore $ syncConfig True
 ||| Provide information about who the current user is when
 ||| they execute `harmony whoami`.
 export
-whoami : Config => Git => Octokit =>
+whoami : Config => Octokit =>
          Promise' ()
 whoami = printInfoOnSelf
 
@@ -59,7 +55,7 @@ reflect = reflectOnSelf
 ||| Apply the given labels to the current PR when the user executes
 ||| `harmony label <label> ...`.
 export
-label : Config => Git => Octokit =>
+label : Config => Octokit =>
         (labels : List String)
      -> Promise' ()
 label @{config} labels =
@@ -156,7 +152,7 @@ namespace TestParsePrArgs
 ||| of draft PRs (default False) and can accept any number of labels to apply
 ||| to the new or current PR.
 export
-pr : Config => Git => Octokit =>
+pr : Config => Octokit =>
      (args : List PrArg)
   -> Promise' ()
 pr args = do
@@ -192,7 +188,7 @@ pr args = do
 ||| Request review from the given teams & users as reviewers when the user executes
 ||| `harmony request ...`.
 export
-request : Config => Git => Octokit => 
+request : Config => Octokit => 
          (requestArgs : List String) 
       -> {default False dry : Bool} 
       -> Promise' ()
@@ -393,7 +389,7 @@ parseContributeArgs args =
 ||| Present the user with a PR to review when they execute
 ||| `harmony contribute`.
 export
-contribute : Config => Git => Octokit =>
+contribute : Config => Octokit =>
              (args : List ContributeArg)
           -> Promise' ()
 contribute @{config} args = do
@@ -465,7 +461,7 @@ contribute @{config} args = do
 ||| Print the GitHub URI for the current branch when the user
 ||| executes `harmony branch`.
 export
-branch : Config => Git => Promise' ()
+branch : Config => Promise' ()
 branch @{config} = do
   branch <- currentBranch
   let org = config.org
@@ -532,7 +528,6 @@ namespace TestIssueCategory
 ||| Quickly create a new GitHub issue and branch to go along with it.
 export
 quick : Config =>
-        Git =>
         Octokit =>
         (args : List QuickArg)
      -> Promise' ()

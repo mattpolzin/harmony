@@ -6,7 +6,7 @@ import Data.Maybe
 import Data.String
 import Data.Promise
 
-import FFI.Git
+import System.Git
 
 %default total
 
@@ -145,8 +145,7 @@ cmdOpts _ _ _ = Nothing
 
 optsForPrIntoOption : HasIO io => (partialBranch : String) -> io (Maybe (List String))
 optsForPrIntoOption partialBranch = do
-  _ <- git
-  allBranches <- listBranchesSync
+  allBranches <- listBranches'
   let matches = case partialBranch of
                      "--" => allBranches
                      _ => List.filter (isPrefixOf partialBranch) allBranches

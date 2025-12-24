@@ -27,7 +27,7 @@ let
   nodeDependencies = buildNpmPackage {
     name = "harmony-npm-deps";
     src = ./.;
-    npmDepsHash = "sha256-eT2dv5ixalqD7mbabN/sIg2sUNj0z0aj1K3iaObAmgs=";
+    npmDepsHash = "sha256-JRwEUo9fqn5zq3hrDLgo71LRN9Xj86Mgltj81e8wGPM=";
     dontNpmBuild = true;
     dontBuild = true;
 
@@ -88,7 +88,8 @@ buildIdris {
     # The following tests are not run in Nix checks because they are currently
     # only designed to run with a github token in the environment:
     # - branch-command
-    INTERACTIVE="" except=branch-command make test
+    # - whoami-command
+    INTERACTIVE="" except='branch-command whoami-command' make test
   '';
 
   meta = with lib; {
