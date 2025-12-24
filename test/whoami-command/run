@@ -1,0 +1,10 @@
+. ../setup.sh
+. ./setup.sh
+
+$harmony whoami | \
+  sed -n -e 's#Git Email: .*#Git Email: ***#p' \
+         -e 's#GitHub Name: .*#GitHub Name: ***#p' \
+         -e 's#GitHub Login: .*#GitHub Login: ***#p' \
+         -e 's#GitHub Teams:#GitHub Teams: ***#p'
+
+. ./cleanup.sh

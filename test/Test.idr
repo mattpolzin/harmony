@@ -39,6 +39,7 @@ misc : TestPool
 misc = mkTests "Misc"
   [ "help-command"
   , "branch-command"
+  , "whoami-command"
   ]
 
 configTests : IO TestPool
