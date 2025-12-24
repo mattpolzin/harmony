@@ -121,6 +121,24 @@ cmdOpts "pr" partialArg "pr" =
                   else if isHashPrefix partialArg
                       then Nothing -- <- allows us to fall through to handle with config below.
                       else Just []
+cmdOpts "pr" partialArg "--draft" =
+  if partialArg `isPrefixOf` "--"
+     then Just ["--into"]
+     else if partialArg `isPrefixOf` "--into"
+          then Just ["--into"]
+          else if isHashPrefix partialArg
+              then Nothing -- <- allows us to fall through to handle with config below.
+              else Just []
+cmdOpts "pr" partialArg branchName =
+  -- we ignore the branch name, but this means --into has been used and we can
+  -- avoid recommending it
+  if partialArg `isPrefixOf` "--"
+     then Just ["--draft"]
+     else if partialArg `isPrefixOf` "--draft"
+             then Just ["--draft"]
+             else if isHashPrefix partialArg
+                 then Nothing -- <- allows us to fall through to handle with config below.
+                 else Just []
 
 cmdOpts "contribute" "-"  _ = Just ["--checkout", "-c", "--list", "-l", "--ignore", "-i"]
 cmdOpts "contribute" "--" _ = Just ["--checkout", "-c", "--list", "-l", "--ignore", "-i"]
