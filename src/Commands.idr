@@ -36,6 +36,7 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 -- Hide FFI Git stuff until ready to switch over to System.Git for all things
 %hide FFI.Git.currentBranch
+%hide FFI.Git.checkoutBranch
 
 export
 sync : Config => Octokit =>

@@ -5,7 +5,17 @@ import Data.String
 
 import Util.System
 
+import Language.Reflection
+import Derive.Prelude
+
+%language ElabReflection
+
 %default total
+
+public export
+data BranchStatus = Existing | New
+
+%runElab derive `{BranchStatus} [Eq]
 
 git : HasIO io => List String -> io (String, String, Int)
 git args = assert_total $ run' ("git" :: args)
@@ -54,4 +64,13 @@ export
 listBranches' : HasIO io => io (List String)
 listBranches' = 
   parseBranchList . stdout <$> (git ["branch", "--list"])
+
+export
+checkoutBranch : {default Existing b : BranchStatus} -> (branch : String) -> Promise' ()
+checkoutBranch {b=branchStatus} branch = 
+  let constantArgs = [branch]
+      args = case branchStatus of
+                  New => ("-b" :: constantArgs)
+                  Existing => constantArgs
+  in ignore . promise $ git ("checkout" :: args)
 

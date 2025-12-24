@@ -5,10 +5,10 @@ import Data.Promise
 import Data.String
 import Data.Issue
 
-import FFI.Git
 import FFI.GitHub
 import Util
 
+import System.Git
 import System.File
 
 %default total
@@ -23,7 +23,6 @@ Show IssueCategory where
 ||| Quickly create a new GitHub issue and branch to go along with it.
 export
 quickStartNewWork : Config =>
-                    Git =>
                     Octokit =>
                     IssueCategory
                  -> (issueTitle: Maybe String)
