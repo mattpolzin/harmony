@@ -39,6 +39,7 @@ misc : TestPool
 misc = mkTests "Misc"
   [ "help-command"
   , "branch-command"
+  , "tab-completion"
   , "whoami-command"
   ]
 

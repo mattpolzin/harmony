@@ -1,0 +1,22 @@
+. ../setup.sh
+. ./setup.sh
+
+echo 'no subcommand:'
+$harmony --bash-completion -- -- harmony
+
+#
+# pr command
+#
+echo ''
+echo 'no args suggests into and draft args:'
+$harmony --bash-completion pr -- pr
+
+echo ''
+echo 'draft pr suggests into arg:'
+$harmony --bash-completion pr -- --draft
+
+echo ''
+echo 'into pr suggests draft arg:'
+$harmony --bash-completion pr -- main
+
+. ./cleanup.sh
