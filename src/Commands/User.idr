@@ -11,10 +11,11 @@ import Data.Review
 import Data.String
 import Data.User
 
-import FFI.Git
 import FFI.GitHub
 import Theme
 import Util
+
+import System.Git
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -186,7 +187,7 @@ namespace Me
   ||| Print information about the currently authenticated and configured user.
   ||| This includes information that can be retrieved from Git as well as GitHub.
   export
-  printInfoOnSelf : Config => Octokit => Git =>
+  printInfoOnSelf : Config => Octokit =>
                     Promise' ()
   printInfoOnSelf @{config} = do
     gitEmail <- handleUnsetEmail <$> userEmail

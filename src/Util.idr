@@ -5,11 +5,11 @@ import Data.Fuel
 import Data.List
 import Data.Promise
 import Data.String
-import FFI.Git
 import Data.So
 
 import System
 import System.File
+import System.Git
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -174,5 +174,5 @@ namespace Prompting
 ||| Get an absolute path for the given directory or file assuming the
 ||| given path is relative to the root of the Git repository.
 export
-relativeToRoot : Git => String -> Promise' String
+relativeToRoot : String -> Promise' String
 relativeToRoot path = rootDir <&> (++ "/\{path}")

@@ -9,11 +9,11 @@ import Data.Promise
 import Data.String
 import Data.Theme
 import Decidable.Equality
-import FFI.Git
 import FFI.GitHub
 import JSON.Parser
 import System
 import System.File
+import System.Git
 import Util
 
 import Text.PrettyPrint.Prettyprinter
@@ -187,8 +187,7 @@ preferOriginRemote names =
        Just n  => n
        Nothing => fromMaybe "origin" (head' names)
 
-createConfig : Git =>
-               (envGithubPAT : Maybe String)
+createConfig : (envGithubPAT : Maybe String)
             -> (terminalColors : Bool)
             -> (terminalColumns : Nat)
             -> (editor : Maybe String)
@@ -370,8 +369,7 @@ loadConfig terminalColors terminalColumns editor = let (>>=) = (>>=) @{Monad.Com
 
 export
 covering
-loadOrCreateConfig : Git =>
-                     (envGithubPAT : Maybe String)
+loadOrCreateConfig : (envGithubPAT : Maybe String)
                   -> (terminalColors : Bool)
                   -> (terminalColumns : Nat)
                   -> (editor : Maybe String)

@@ -20,12 +20,12 @@ import Data.String.Extra
 import Data.User
 
 import FFI.Concurrency
-import FFI.Git
 import FFI.GitHub
 import JSON.Parser
 import Language.JSON.Accessors
 import System
 import System.File
+import System.Git
 import Util
 import Util.Jira
 import Util.Github
@@ -259,7 +259,7 @@ requestReviewers @{config} pr teamNames forcedReviewers {dry} = do
     namePrComment chosenUser = prComment "\{chosenUser.name}"
 
 export
-convertPRToDraft : Config => Git => Octokit =>
+convertPRToDraft : Config => Octokit =>
                    PullRequest
                 -> Promise' PullRequest
 convertPRToDraft @{config} pr = do
@@ -312,7 +312,7 @@ getTitleAndBodyPrefix @{config} branch =
          None   => pure ("", "")
 
 export
-identifyOrCreatePR : Config => Git => Octokit => 
+identifyOrCreatePR : Config => Octokit => 
                      {default False isDraft : Bool}
                   -> {default Nothing intoBranch : Maybe String}
                   -> (branch : String) 

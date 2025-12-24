@@ -11,12 +11,12 @@ import Data.User
 
 import AppVersion
 import Config
-import FFI.Git
 import FFI.GitHub
 import FFI.Term
 import JSON.Parser
 import System
 import System.File
+import System.Git
 import Util
 
 import BashCompletion
@@ -77,7 +77,7 @@ bashCompletion subcommand curWord prevWord =
 
 ||| Handle commands that require both configuration and
 ||| authentication.
-handleAuthenticatedArgs : Config => Git => Octokit => 
+handleAuthenticatedArgs : Config => Octokit => 
                           List String 
                        -> Promise' ()
 
@@ -164,7 +164,7 @@ handleAuthenticatedArgs args =
 
 ||| Handle commands that only require configuration, or else
 ||| enforce authentication and handle commands that require auth.
-handleConfiguredArgs : Config => Git =>
+handleConfiguredArgs : Config =>
                        (envGithubPAT : Maybe String)
                     -> List String
                     -> Promise' ()
@@ -196,8 +196,7 @@ handleConfiguredArgs @{config} envPAT args = do
 -- if it doesn't exist yet so we handle it up front before loading config and then
 -- handling any other input.
 covering
-handleArgs : Git =>
-             (envGithubPAT : Maybe String)
+handleArgs : (envGithubPAT : Maybe String)
           -> (terminalColors : Bool)
           -> (terminalColumns : Nat)
           -> (editor : Maybe String)
@@ -238,6 +237,5 @@ main =
        printVersion
        exitSuccess
      envPAT <- pure $ !(getEnv "GITHUB_PAT") <|> !(getEnv "GH_TOKEN")
-     _ <- git
      handleArgs envPAT terminalColors terminalColumns editor args
 
