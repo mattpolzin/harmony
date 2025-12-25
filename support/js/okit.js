@@ -226,6 +226,25 @@ const okit_mark_pr_draft = (octokit, opaque_pr_graphql_id, onSuccess, onFailure)
     onFailure
   )
 
+// set PR to ready for review
+// @param opaque_pr_graphql_id String The GraphQL Id for the Pull Request
+// Executes callback with [{ "graphql_id": String, "pull_number": Int, "author": String, "state": String, "merged": Boolean, "reviewers": [String], "title": String }]
+const okit_mark_pr_ready = (octokit, opaque_pr_graphql_id, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.graphql({
+      query: `mutation convertToReady($opaque_pr_graphql_id: ID!) {
+        markPullRequestReadyForReview(input: {pullRequestId: $opaque_pr_graphql_id}) {
+          pullRequest  {
+            ${graphql_pr_selections}
+          }
+        }
+      }`,
+      opaque_pr_graphql_id
+    }),
+    r => onSuccess(JSON.stringify(digGraphQlPr(r.convertPullRequestToReady.pullRequest))),
+    onFailure
+  )
+
 // list PR reviews
 const digReviews = reviewsJson =>
   reviewsJson.map(review => {

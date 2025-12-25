@@ -73,10 +73,11 @@ subcommandHelp' n@"config" = subcommand n [argument True "<property>", argument 
     <+> line
     <+> argument' "properties" <+> ":" <++> (align $ concatWith (\a,b => a <+> "," <+> softline <+> b) $ option <$> settablePropNames)
   ]
-subcommandHelp' n@"pr" = subcommand n [argument False "--draft", argument False "-i/--into {<branch-name>}", argument False "#<label>", argument False "..."] $
+subcommandHelp' n@"pr" = subcommand n [argument False "--ready", argument False "--draft", argument False "-i/--into {<branch-name>}", argument False "#<label>", argument False "..."] $
   [ reflow "Identify an existing PR or create a new one for the current branch."
   , reflow "Optionally apply any number of labels by prefixing them with '#'."
   , reflow "Optionally mark a new or existing PR as a draft with the --draft flag."
+  , reflow "Optionally mark an existing PR as ready for review with the --ready flag."
   , reflow "Optionally specify the branch to merge into with the --into option."
   ]
 subcommandHelp' n@"contribute" = subcommand n [argument False "-c/--checkout | -l/--list", argument False "-<num>", argument False "-i/--ignore {<uri>/<pr-number>}"]

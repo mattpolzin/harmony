@@ -76,11 +76,11 @@ label @{config} labels =
 
 prUsageError  : String
 prUsageError = 
-  "pr's arguments must be #<label>, --into <branch-name>, or --draft to create a draft PR."
+  "pr's arguments must be #<label>, --into <branch-name>, --ready, or --draft to create a draft PR."
 
 data IntoOpt = Branch (Exists String.NonEmpty)
 
-data PrArg = Draft | Into IntoOpt | Label String
+data PrArg = Draft | Ready | Into IntoOpt | Label String
 
 (<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
 (<||>) f g x = f x <|> g x
@@ -94,12 +94,16 @@ parsePrArgs [] = Right []
 parsePrArgs args =
   let (intoArgs, rest) = recombineIntoArgs args
       intoArgs' = Into <$> intoArgs
-      rest' = (traverse (parseDraftFlag <||> parseLabelArg) rest)
+      rest' = (traverse (parseReadyFlag <||> parseDraftFlag <||> parseLabelArg) rest)
       in  maybeToEither prUsageError ((intoArgs' ++) <$> rest')
   where
     parseDraftFlag : String -> Maybe PrArg
     parseDraftFlag "--draft" = Just Draft
     parseDraftFlag _ = Nothing
+
+    parseReadyFlag : String -> Maybe PrArg
+    parseReadyFlag "--ready" = Just Ready
+    parseReadyFlag _ = Nothing
 
     parseLabelArg : String -> Maybe PrArg
     parseLabelArg labelArg =
@@ -135,6 +139,9 @@ namespace TestParsePrArgs
   parsesJustDraftFlag : parsePrArgs ["--draft"] === Right [Draft]
   parsesJustDraftFlag = Refl
 
+  parsesJustReadyFlag : parsePrArgs ["--ready"] === Right [Ready]
+  parsesJustReadyFlag = Refl
+
   parsesJustLabels : parsePrArgs ["#one", "#two"] === Right [Label "one", Label "two"]
   parsesJustLabels = Refl
 
@@ -156,7 +163,9 @@ pr : Config => Octokit =>
      (args : List PrArg)
   -> Promise' ()
 pr args = do
-  Actual actionTaken pr <- identifyOrCreatePR {isDraft} {intoBranch} !currentBranch
+  when conflictingDraftReadyArgs $
+    reject "You cannot set a PR as ready for review and mark it as a draft at the same time."
+  Actual actionTaken pr <- identifyOrCreatePR {markAsDraft} {intoBranch} !currentBranch
     | Hypothetical url => putStrLn url
   case actionTaken of
        Identified => putStrLn pr.webURI
@@ -167,16 +176,28 @@ pr args = do
     if not (branch `isSuffixOf` pr.baseRef)
       then reject "Setting the --into branch (base ref) for an existing PR is not supported (yet). Base ref will remain \{pr.baseRef}"
       else pure ()
-  when (isDraft && not pr.isDraft) $ do
+  when (markAsDraft && not pr.isDraft) $ do
     putStrLn ""
     True <- yesNoPrompt {defaultAnswer = False} "Are you sure you want to convert the existing PR for the current branch to a draft?"
       | False => putStrLn "No worries, the PR won't be converted to a draft."
     ignore $ convertPRToDraft pr
     putStrLn "The PR for the current branch has been converted to a draft."
+  when (markAsReady && pr.isDraft) $ do
+    putStrLn ""
+    True <- yesNoPrompt {defaultAnswer = False} "Are you sure you want to mark the existing PR for the current branch ready for review?"
+      | False => putStrLn "No worries, the PR won't be marked ready for review."
+    ignore $ convertPRToReady pr
+    putStrLn "The PR for the current branch has been marked ready for review."
 
   where
-    isDraft : Bool
-    isDraft = isJust $ find (\case Draft => True; _ => False) args
+    markAsDraft : Bool
+    markAsDraft = isJust $ find (\case Draft => True; _ => False) args
+
+    markAsReady : Bool
+    markAsReady = isJust $ find (\case Ready => True; _ => False) args
+
+    conflictingDraftReadyArgs : Bool
+    conflictingDraftReadyArgs = markAsDraft && markAsReady
 
     labelSlugs : List String
     labelSlugs = foldr (\case (Label l) => (l ::); _ => id) [] args

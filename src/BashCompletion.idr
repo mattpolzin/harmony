@@ -108,26 +108,28 @@ cmdOpts "quick" partialArg "quick" =
              then Just ["--bugfix"]
              else Just []
 
-cmdOpts "pr" "-"  "pr" = Just ["--draft", "--into"]
-cmdOpts "pr" "--" "pr" = Just ["--draft", "--into"]
-cmdOpts "pr" partialBranch "--into" = Nothing -- <- allows us to fall through to handle with config below.
+cmdOpts "pr" "-"  "pr" = Just ["--ready", "--draft", "--into"]
+cmdOpts "pr" "--" "pr" = Just ["--ready", "--draft", "--into"]
+cmdOpts "pr" partialBranch "--into" = Nothing -- <- falls through to handle with config below.
 cmdOpts "pr" partialArg "pr" =
   if partialArg `isPrefixOf` "--"
-     then Just ["--draft", "--into"]
-     else if partialArg `isPrefixOf` "--draft"
-             then Just ["--draft"]
-             else if partialArg `isPrefixOf` "--into"
-                  then Just ["--into"]
-                  else if isHashPrefix partialArg
-                      then Nothing -- <- allows us to fall through to handle with config below.
-                      else Just []
+     then Just ["--ready", "--draft", "--into"]
+     else if partialArg `isPrefixOf` "--ready"
+             then Just ["--ready"]
+             else if partialArg `isPrefixOf` "--draft"
+                     then Just ["--draft"]
+                     else if partialArg `isPrefixOf` "--into"
+                          then Just ["--into"]
+                          else if isHashPrefix partialArg
+                              then Nothing -- <- falls through to handle with config below.
+                              else Just []
 cmdOpts "pr" partialArg "--draft" =
   if partialArg `isPrefixOf` "--"
      then Just ["--into"]
      else if partialArg `isPrefixOf` "--into"
           then Just ["--into"]
           else if isHashPrefix partialArg
-              then Nothing -- <- allows us to fall through to handle with config below.
+              then Nothing -- <- falls through to handle with config below.
               else Just []
 cmdOpts "pr" partialArg branchName =
   -- we ignore the branch name, but this means --into has been used and we can
@@ -137,7 +139,7 @@ cmdOpts "pr" partialArg branchName =
      else if partialArg `isPrefixOf` "--draft"
              then Just ["--draft"]
              else if isHashPrefix partialArg
-                 then Nothing -- <- allows us to fall through to handle with config below.
+                 then Nothing -- <- falls through to handle with config below.
                  else Just []
 
 cmdOpts "contribute" "-"  _ = Just ["--checkout", "-c", "--list", "-l", "--ignore", "-i"]
