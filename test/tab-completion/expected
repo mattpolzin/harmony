@@ -16,7 +16,8 @@ version
 whoami
 quick
 
-no args suggests into and draft args:
+no args suggests into, ready, and draft args:
+--ready
 --draft
 --into
 

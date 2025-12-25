@@ -8,7 +8,7 @@ $harmony --bash-completion -- -- harmony
 # pr command
 #
 echo ''
-echo 'no args suggests into and draft args:'
+echo 'no args suggests into, ready, and draft args:'
 $harmony --bash-completion pr -- pr
 
 echo ''
