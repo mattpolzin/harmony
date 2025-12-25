@@ -194,7 +194,7 @@ prim__createPR : Ptr OctokitRef
 
 export
 createPR : Octokit => 
-           {default False isDraft : Bool}
+           {default False markAsDraft : Bool}
         -> (owner : String) 
         -> (repo : String) 
         -> (head : String) 
@@ -202,9 +202,9 @@ createPR : Octokit =>
         -> (title : String) 
         -> (description : String) 
         -> Promise String PullRequest
-createPR @{Kit ptr} {isDraft} owner repo head base title description =
+createPR @{Kit ptr} {markAsDraft} owner repo head base title description =
   parsePrimResult parsePullRequestString $
-    prim__createPR ptr owner repo head base title description isDraft
+    prim__createPR ptr owner repo head base title description markAsDraft
 
 %foreign okit_ffi "get_issue"
 prim__getIssue : Ptr OctokitRef 
@@ -385,6 +385,24 @@ markPullRequestDraft : Octokit =>
 markPullRequestDraft @{Kit ptr} (GQLId id) = do
   parsePrimResult parsePullRequestString $
     prim__markPullRequestDraft ptr id
+
+%foreign okit_ffi "mark_pr_ready"
+prim__markPullRequestReady : Ptr OctokitRef 
+                      -> (opaqueGraphQlId : String) 
+                      -> (onSuccess : String -> PrimIO ()) 
+                      -> (onFailure : String -> PrimIO ()) 
+                      -> PrimIO ()
+
+||| Mark a Pull Request as ready
+||| This function needs a GraphQL Id instead of a pull number.
+||| See `getPullRequestGraphQlId`.
+export
+markPullRequestReady : Octokit => 
+                       (graphQlId : OctokitGraphQlId) 
+                    -> Promise String PullRequest
+markPullRequestReady @{Kit ptr} (GQLId id) = do
+  parsePrimResult parsePullRequestString $
+    prim__markPullRequestReady ptr id
 
 -- reviewers and teamReviewers should be comma separated values encoded in a string.
 %foreign okit_ffi "add_reviewers"

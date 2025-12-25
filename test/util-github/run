@@ -2,6 +2,20 @@
 
 export IDRIS2_PACKAGE_PATH=$IDRIS2_PACKAGE_PATH:$(realpath ../depends):$(realpath ../../depends)
 
-idris2 -p harmony -p contrib -p json -p parser-json -p parser -p elab-util -p idris-adds --exec main GitHubUtil.idr
+idris2 -p harmony \
+  -p contrib \
+  -p json \
+  -p algebra \
+  -p array \
+  -p ref1 \
+  -p linear \
+  -p refined \
+  -p bytestring \
+  -p ilex-core \
+  -p parser-json \
+  -p parser \
+  -p elab-util \
+  -p idris-adds \
+  --exec main GitHubUtil.idr
 
 rm -rf build

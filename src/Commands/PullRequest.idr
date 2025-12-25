@@ -266,6 +266,14 @@ convertPRToDraft @{config} pr = do
   prId <- getPullRequestGraphQlId config.org config.repo pr.number
   markPullRequestDraft prId
 
+export
+convertPRToReady : Config => Octokit =>
+                   PullRequest
+                -> Promise' PullRequest
+convertPRToReady @{config} pr = do
+  prId <- getPullRequestGraphQlId config.org config.repo pr.number
+  markPullRequestReady prId
+
 githubTitleAndBodyPrefix : Config => Octokit => (branch: String) -> Promise' (String, String)
 githubTitleAndBodyPrefix @{config} branch =
   case issueNumber of
@@ -313,11 +321,11 @@ getTitleAndBodyPrefix @{config} branch =
 
 export
 identifyOrCreatePR : Config => Octokit => 
-                     {default False isDraft : Bool}
+                     {default False markAsDraft : Bool}
                   -> {default Nothing intoBranch : Maybe String}
                   -> (branch : String) 
                   -> Promise' CreatePRResult
-identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
+identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
     | [] => case !(isTTY stdout) of
                True  => Actual Created <$> createPR
@@ -411,5 +419,5 @@ identifyOrCreatePR @{config} {isDraft} {intoBranch} branch = do
         putStrLn "Creating PR..."
         putStrLn branch
 
-        GitHub.createPR {isDraft} config.org config.repo branch baseBranch title description
+        GitHub.createPR {markAsDraft} config.org config.repo branch baseBranch title description
 

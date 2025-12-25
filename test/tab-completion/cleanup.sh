@@ -1,0 +1,2 @@
+
+rm ./harmony.json

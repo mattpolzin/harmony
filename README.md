@@ -48,6 +48,13 @@ particular release will build against.
 Alternatively, you can build Harmony with Docker (see 
 [Docker Build](#docker-build)).
 
+### Testing
+Tests can be run with `make test`. You'll need a few common tools in your `PATH`
+to run all the tests:
+  - `realpath`
+  - `sed`
+  - `xargs`
+
 ## Installation
 For any installation, you need to have a GitHub 
 [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token).
@@ -312,12 +319,13 @@ organization.
 
 Running `harmony list <team>` will list the members of the given GitHub Team.
 
-## `pr [--draft] [-i/--into {<branch-name>}] [#label, ...]`
+## `pr [--draft | --ready] [-i/--into {<branch-name>}] [#label, ...]`
 With a branch checked out will reach out to GitHub to determine if there is an
 open PR for that branch. If there is a PR, Harmony will print a URI that can be
 used to view the PR. If there is not a PR, Harmony will help you create one. New
 and existing PRs can be marked as drafts by specifying the `--draft` flag with
-the `pr` command.
+the `pr` command or they can be marked as ready for review with the `--ready`
+flag. The default behavior for new PRs is to mark them ready.
 
 If you need to create a PR still, you will be prompted for a branch to open the
 PR against (merge into, eventually), a title for the PR, and a description for

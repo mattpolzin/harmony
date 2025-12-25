@@ -1,0 +1,28 @@
+no subcommand:
+request
+rq
+branch
+config
+contribute
+graph
+health
+help
+label
+list
+pr
+reflect
+sync
+version
+whoami
+quick
+
+no args suggests into, ready, and draft args:
+--ready
+--draft
+--into
+
+draft pr suggests into arg:
+--into
+
+into pr suggests draft arg:
+--draft
