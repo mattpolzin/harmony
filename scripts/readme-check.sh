@@ -2,10 +2,9 @@
 
 # check that the README was generated based on latest changes to its source
 # files.
-git stash || :
-make README.md
-git diff --exit-code
+sh ./scripts/generate-readme.sh README.md.generated
+diff README.md README.md.generated
 EXITC=$?
-git stash pop || :
+rm -f ./README.md.generated
 exit $EXITC
 
