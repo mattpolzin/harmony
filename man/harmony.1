@@ -110,7 +110,29 @@ loaded by adding the following to your Zsh resource file or profile:
 .EX
 eval \(dq$(harmony \-\-zsh\-completion\-script)\(dq
 .EE
-.SS Usage
+.SS Initial configuration
+For most things harmony does, you need to have a GitHub \c
+.UR https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token
+Personal Access Token
+.UE \c
+\&.
+.PP
+Your Personal Access Token should have the following permissions: \-
+\f[CR]repo\f[R] (Full control of private repositories) \-
+\f[CR]read:org\f[R] (Read org and team membership, read org projects) \-
+\f[CR]read:user\f[R] \- \f[CR]user:email\f[R] \-
+\f[CR]read:discussion\f[R] \- \f[CR]read:enterprise\f[R] (Read
+enterprise profile data)
+.PP
+You can either add the PAT to your environment as the
+\f[CR]GITHUB_PAT\f[R] (or alternatively \f[CR]GH_TOKEN\f[R]) variable
+(perhaps exporting it from your shell resource file or profile) or you
+can store your PAT in Harmony\(cqs config file.
+The first time you start Harmony, it will ask you to configure your PAT
+if you don\(cqt want to use the Environment variable.
+You only need one of (a) the ENV var and (b) the config property and the
+environment variable will take precedence if you have both set.
+.PP
 The first time you start Harmony in any particular folder, you will be
 asked to provide some information about the GitHub repository you are
 working with.
@@ -146,13 +168,13 @@ Would you like harmony to comment when it requests reviewers? [Y/n]
 Would you like harmony to request team reviews in addition to individuals when it requests reviewers? [Y/n] 
 Creating config...
 .EE
-.PP
-Once configured, Harmony supports the following commands:
-\f[CR]config\f[R], \f[CR]branch\f[R], \f[CR]pr\f[R], \f[CR]quick\f[R],
-\f[CR]label\f[R], \f[CR]request\f[R] (also aliased to \f[CR]rq\f[R]),
-\f[CR]contribute\f[R], \f[CR]whoami\f[R], \f[CR]reflect\f[R],
-\f[CR]list\f[R], \f[CR]graph\f[R], \f[CR]health\f[R], and
-\f[CR]sync\f[R].
+.SS Usage
+Once configured, Harmony supports the following commands that are
+documented below: \f[CR]config\f[R], \f[CR]branch\f[R], \f[CR]pr\f[R],
+\f[CR]quick\f[R], \f[CR]label\f[R], \f[CR]request\f[R] (also aliased to
+\f[CR]rq\f[R]), \f[CR]contribute\f[R], \f[CR]whoami\f[R],
+\f[CR]reflect\f[R], \f[CR]list\f[R], \f[CR]graph\f[R],
+\f[CR]health\f[R], and \f[CR]sync\f[R].
 .PP
 \f[B]Note on color output:\f[R] Harmony uses colored output for some
 commands.

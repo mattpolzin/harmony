@@ -1,4 +1,23 @@
-## Usage
+## Initial configuration
+For most things harmony does, you need to have a GitHub 
+[Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token).
+
+Your Personal Access Token should have the following permissions:
+- `repo` (Full control of private repositories)
+- `read:org` (Read org and team membership, read org projects)
+- `read:user`
+- `user:email`
+- `read:discussion`
+- `read:enterprise` (Read enterprise profile data)
+
+You can either add the PAT to your environment as the `GITHUB_PAT` (or
+alternatively `GH_TOKEN`) variable (perhaps exporting it from your shell
+resource file or profile) or you can store your PAT in Harmony's config file.
+The first time you start Harmony, it will ask you to configure your PAT if you
+don't want to use the Environment variable. You only need one of (a) the ENV var
+and (b) the config property and the environment variable will take precedence if
+you have both set.
+
 The first time you start Harmony in any particular folder, you will be asked to
 provide some information about the GitHub repository you are working with. This
 information is stored in a file named `harmony.json` in the current working
@@ -29,16 +48,4 @@ Would you like harmony to comment when it requests reviewers? [Y/n]
 Would you like harmony to request team reviews in addition to individuals when it requests reviewers? [Y/n] 
 Creating config...
 ```
-
-Once configured, Harmony supports the following commands: `config`, `branch`,
-`pr`, `quick`, `label`, `request` (also aliased to `rq`), `contribute`,
-`whoami`, `reflect`, `list`, `graph`, `health`, and `sync`.
-
-**Note on color output:**
-Harmony uses colored output for some commands. You can adjust these colors
-slightly with the `theme` configuration option. You can also use the `NO_COLOR`
-environment variable to disable all colored output. Lastly, Harmony will avoid
-colored output when it determines `stdout` is not a TTY device (as is the case
-for e.g. redirecting harmony output into a file or piping into `cat`: 
-`harmony ... | cat`).
 

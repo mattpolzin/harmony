@@ -54,24 +54,8 @@ to run all the tests:
   - `xargs`
 
 ## Installation
-For any installation, you need to have a GitHub 
-[Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token).
-
-Your Personal Access Token should have the following permissions:
-- `repo` (Full control of private repositories)
-- `read:org` (Read org and team membership, read org projects)
-- `read:user`
-- `user:email`
-- `read:discussion`
-- `read:enterprise` (Read enterprise profile data)
-
-You can either add the PAT to your environment as the `GITHUB_PAT` (or
-alternatively `GH_TOKEN`) variable (perhaps exporting it from your shell
-resource file or profile) or you can store your PAT in Harmony's config file.
-The first time you start Harmony, it will ask you to configure your PAT if you
-don't want to use the Environment variable. You only need one of (a) the ENV var
-and (b) the config property and the environment variable will take precedence if
-you have both set.
+You can install Harmony in several different ways, though by far the easiest is
+to install it via the Node Package Manager (NPM).
 
 ### NPM
 You can install Harmony via npm directly by running 
@@ -143,7 +127,26 @@ following to your Zsh resource file or profile:
 eval "$(harmony --zsh-completion-script)"
 ```
 
-## Usage
+## Initial configuration
+For most things harmony does, you need to have a GitHub 
+[Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token).
+
+Your Personal Access Token should have the following permissions:
+- `repo` (Full control of private repositories)
+- `read:org` (Read org and team membership, read org projects)
+- `read:user`
+- `user:email`
+- `read:discussion`
+- `read:enterprise` (Read enterprise profile data)
+
+You can either add the PAT to your environment as the `GITHUB_PAT` (or
+alternatively `GH_TOKEN`) variable (perhaps exporting it from your shell
+resource file or profile) or you can store your PAT in Harmony's config file.
+The first time you start Harmony, it will ask you to configure your PAT if you
+don't want to use the Environment variable. You only need one of (a) the ENV var
+and (b) the config property and the environment variable will take precedence if
+you have both set.
+
 The first time you start Harmony in any particular folder, you will be asked to
 provide some information about the GitHub repository you are working with. This
 information is stored in a file named `harmony.json` in the current working
@@ -175,9 +178,10 @@ Would you like harmony to request team reviews in addition to individuals when i
 Creating config...
 ```
 
-Once configured, Harmony supports the following commands: `config`, `branch`,
-`pr`, `quick`, `label`, `request` (also aliased to `rq`), `contribute`,
-`whoami`, `reflect`, `list`, `graph`, `health`, and `sync`.
+## Usage
+Once configured, Harmony supports the following commands that are documented
+below: `config`, `branch`, `pr`, `quick`, `label`, `request` (also aliased to
+`rq`), `contribute`, `whoami`, `reflect`, `list`, `graph`, `health`, and `sync`.
 
 **Note on color output:**
 Harmony uses colored output for some commands. You can adjust these colors
