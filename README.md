@@ -1,5 +1,3 @@
-% harmony(1) Version 6.0.0 | Harmony User's Guide
-
 # NAME
 Harmony - Harmonize with coworkers around GitHub reviewing
 
@@ -131,14 +129,14 @@ globally:
 npm install --global
 ```
 
-### Bash completion
+## Bash completion
 Set up Bash completion by adding the following to your Bash resource file or
 profile:
 ```shell
 eval "$(harmony --bash-completion-script)"
 ```
 
-### Zsh completion
+## Zsh completion
 Zsh completion is supported via `bashcompinit` and can be loaded by adding the
 following to your Zsh resource file or profile:
 ```shell
@@ -300,6 +298,7 @@ Graph all open PRs grouped by the month when each was created.
 The idea is that a healthy repository does not have many old PRs still open
 because those PRs represent effort spent by developers that hasn't yet paid off.
 
+<!-- image location is intentionally relative to repository root -->
 ![Health Screenshot](./docs/images/health.png)
 
 ## `help [subcommand]`
@@ -390,6 +389,7 @@ description.
 ## `reflect`
 Show a summary of your review requests and authored pull requests.
 
+<!-- image location is intentionally relative to repository root -->
 ![Reflect Screenshot](./docs/images/reflect.png)
 
 ## `request {team-slug | +user-login} [options]`
