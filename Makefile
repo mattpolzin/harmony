@@ -180,21 +180,22 @@ version:
 	$(ised) "s/version = .*/version = ${v}/" ./harmony.ipkg
 	$(ised) "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
 	$(ised) "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
-	$(ised) "s/Version [^ ]*/Version ${v}/" ./README.md
+	$(ised) "s/Version [^ ]*/Version ${v}/" ./docs/_0_0_MANPAGE_HEADER.md
 	@npm update
 	@find . -name '*.nix' | xargs $(nix) fmt
 	$(MAKE) manpage
 
-# Remove image tags (not supported in manpages) and generate
-# manpage via pandoc
-manpage:
-	sed 's#!\[.*\](.*)##' README.md | \
-    pandoc \
-    --standalone \
-    --to man \
-    -o man/harmony.1
+README_FILES = $(wildcard docs/*.md)
 
-package: build
+README.md: $(README_FILES)
+	bash ./scripts/generate-readme.sh
+
+man/harmony.1: $(README_FILES)
+	bash ./scripts/generate-manpage.sh
+
+manpage: man/harmony.1
+
+package: build README.md man/harmony.1
 	bash ./scripts/version-check.sh
 	bash ./scripts/todo-check.sh
 	# leave ./harmony in place

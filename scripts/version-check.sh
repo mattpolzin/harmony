@@ -3,7 +3,7 @@
 pkgversion="$(cat harmony.ipkg | sed -n 's/version = \(.*\)/\1/p')"
 idrversion="$(cat src/AppVersion.idr | sed -n 's/appVersion = "\(.*\)"/\1/p')"
 npmversion="$(cat package.json | jq -r .version)"
-readmeversion="$(cat README.md | sed -n 's/.*Version \([^ ]*\).*/\1/p')"
+readmeversion="$(cat docs/_0_0_MANPAGE_HEADER.md | sed -n 's/.*Version \([^ ]*\).*/\1/p')"
 manpageversion="$(cat man/harmony.1 | sed -n 's/.*"Version \([^"]*\)".*/\1/p')"
 
 if [ "$pkgversion" == "$npmversion" ] && [ "$pkgversion" == "$idrversion" ] && [ "$pkgversion" == "$readmeversion" ] && [ "$pkgversion" == "$manpageversion" ]; then
