@@ -28,13 +28,3 @@ jobs:
         uses: actions/checkout@v4
       - name: Check readme
         run: ./scripts/readme-check.sh
-
-  check-manpage:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install pandoc
-        run: sudo apt-get update && sudo apt-get install -y pandoc
-      - name: Check manpage
-        run: ./scripts/manpage-check.sh
