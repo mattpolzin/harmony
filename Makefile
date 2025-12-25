@@ -195,8 +195,8 @@ manpage:
     -o man/harmony.1
 
 package: build
-	bash ./version-check.sh
-	bash ./todo-check.sh
+	bash ./scripts/version-check.sh
+	bash ./scripts/todo-check.sh
 	# leave ./harmony in place
 	rm -rf ./harmony-npm
 	mkdir harmony-npm
