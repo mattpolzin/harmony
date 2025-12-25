@@ -19,4 +19,8 @@ echo ''
 echo 'into pr suggests draft arg:'
 $harmony --bash-completion pr -- main
 
+echo ''
+echo 'ready pr only suggests into arg:'
+$harmony --bash-completion pr -- --ready
+
 . ./cleanup.sh

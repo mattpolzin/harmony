@@ -111,6 +111,7 @@ cmdOpts "quick" partialArg "quick" =
 cmdOpts "pr" "-"  "pr" = Just ["--ready", "--draft", "--into"]
 cmdOpts "pr" "--" "pr" = Just ["--ready", "--draft", "--into"]
 cmdOpts "pr" partialBranch "--into" = Nothing -- <- falls through to handle with config below.
+cmdOpts "pr" _ "--ready" = Just ["--into"] -- The ready flag does not work with the --draft flag.
 cmdOpts "pr" partialArg "pr" =
   if partialArg `isPrefixOf` "--"
      then Just ["--ready", "--draft", "--into"]

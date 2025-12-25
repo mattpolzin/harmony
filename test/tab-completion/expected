@@ -26,3 +26,6 @@ draft pr suggests into arg:
 
 into pr suggests draft arg:
 --draft
+
+ready pr only suggests into arg:
+--into
