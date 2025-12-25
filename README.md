@@ -1,4 +1,4 @@
-% harmony(1) Version 5.8.0 | Harmony User's Guide
+% harmony(1) Version 6.0.0 | Harmony User's Guide
 
 # NAME
 Harmony - Harmonize with coworkers around GitHub reviewing

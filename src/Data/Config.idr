@@ -74,11 +74,6 @@ commentConfig = (map toLower . string)  >=> (maybeToEither "" . parseCommentConf
     err : String
     err = "Expected the commentOnRequest setting to be 'none', 'name', or 'at-mention'"
 
--- TODO 6.0.0: remove support for boolean comment config
-boolToCommentConfig : Bool -> CommentStrategy
-boolToCommentConfig False = None
-boolToCommentConfig True = AtMention
-
 namespace ParseBranchStrategy
   public export
   data ParseBranchStrategy = None | Jira | Github
@@ -376,6 +371,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , requestTeams
                                             , requestUsers
                                             , commentOnRequest
+                                            , theme
                                             ] <-
                                             lookupAll [
                                                 "updatedAt"
@@ -390,9 +386,9 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               , "requestTeams"
                                               , "requestUsers"
                                               , "commentOnRequest"
+                                              , "theme"
                                               ] config
                                           let maybeGithubPAT = lookup "githubPAT" config
-                                          let maybeTheme = lookup "theme" config
                                           let maybeBranchParsing = lookup "branchParsing" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
@@ -401,8 +397,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           mb <- string mainBranch
                                           at <- bool requestTeams
                                           au <- bool requestUsers
-                                          ca <- (commentConfig commentOnRequest
-                                                  <|> (boolToCommentConfig <$> bool commentOnRequest)) 
+                                          ca <- commentConfig commentOnRequest
                                           bp <- maybe (Right Jira) branchConfig maybeBranchParsing
                                           -- TODO 7.0.0: Make branchParsing required part of config file (default to none)
                                           --             branchParsing lookup can be moved to the required lookupAll above.
@@ -411,11 +406,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           om <- array string orgMembers
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
-                                          -- TODO 6.0.0: Make theme required part of config file (default to dark still)
-                                          --             theme lookup can be moved to the required lookupAll above.
-                                          th <- maybe (Right Dark) 
-                                                      (stringy "dark or light" parseString) 
-                                                      maybeTheme
+                                          th <- (stringy "dark or light" parseString) theme
                                           pure $ MkConfig {
                                               updatedAt         = ua
                                             , org               = o
