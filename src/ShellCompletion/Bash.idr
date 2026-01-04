@@ -1,4 +1,4 @@
-module BashCompletion
+module ShellCompletion.Bash
 
 import Data.Config
 import Data.List

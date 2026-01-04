@@ -6,7 +6,7 @@ import Data.Promise
 import Data.PullRequest
 import Data.String
 
-import BashCompletion
+import ShellCompletion.Bash
 
 import FFI.GitHub
 
@@ -22,7 +22,7 @@ unslugifyLabel : (configLabels : List String) -> (slugifiedLabel : String) -> St
 unslugifyLabel configLabels slugifiedLabel =
   case find (== slugifiedLabel) configLabels of
        Just label => label
-       Nothing    => BashCompletion.unslugify $ BashCompletion.unhashify slugifiedLabel
+       Nothing    => Bash.unslugify $ Bash.unhashify slugifiedLabel
 
 namespace TestUnslugifyLabel
   test1 : unslugifyLabel ["hello", "world"] "hello" = "hello"
