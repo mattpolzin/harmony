@@ -19,8 +19,7 @@ import System.File
 import System.Git
 import Util
 
-import BashCompletion
-import ZshCompletion
+import ShellCompletion
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -59,20 +58,20 @@ bashCompletion : HasIO io =>
               -> (prevWord : String) 
               -> io ()
 bashCompletion subcommand curWord prevWord = 
-  let trivialCompletions = BashCompletion.cmdOpts subcommand curWord prevWord
+  let trivialCompletions = Bash.cmdOpts subcommand curWord prevWord
       ffiCompletions = maybe ffiOpts (pure . Just) trivialCompletions
       completions = ffiCompletions >>= \case Nothing => configuredOpts; Just cs => pure cs
   in  putStr $ unlines !completions
   where
     ffiOpts : io (Maybe (List String))
     ffiOpts =
-      BashCompletion.ffiOpts subcommand curWord prevWord
+      Bash.ffiOpts subcommand curWord prevWord
 
     configuredOpts : io (List String)
     configuredOpts =
       do Right config <- loadConfig False maximumLayoutWidth Nothing
            | Left _ => pure []
-         pure (BashCompletion.opts subcommand curWord prevWord)
+         pure (Bash.opts subcommand curWord prevWord)
 
 
 ||| Handle commands that require both configuration and
@@ -203,8 +202,8 @@ handleArgs : (envGithubPAT : Maybe String)
           -> List String 
           -> IO ()
 handleArgs _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = bashCompletion subcommand curWord prevWord
-handleArgs _ _ _ _ ["--bash-completion-script"] = putStrLn BashCompletion.script
-handleArgs _ _ _ _ ["--zsh-completion-script"] = putStrLn ZshCompletion.script
+handleArgs _ _ _ _ ["--bash-completion-script"] = putStrLn Bash.script
+handleArgs _ _ _ _ ["--zsh-completion-script"] = putStrLn Zsh.script
 handleArgs envPAT terminalColors terminalColumns editor args =
   resolve'' $
     do -- create the config file before continuing if it does not exist yet
