@@ -52,27 +52,29 @@ resolve'' : Promise' () -> IO ()
 resolve'' = resolve' pure exitError
 
 covering
-bashCompletion : HasIO io => 
-                 (subcommand : String)
-              -> (curWord : String) 
-              -> (prevWord : String) 
-              -> io ()
-bashCompletion subcommand curWord prevWord = 
-  let trivialCompletions = Bash.cmdOpts subcommand curWord prevWord
+shellCompletion : HasIO io => 
+                  CompletionStyle
+               -> (subcommand : String)
+               -> (curWord : String) 
+               -> (prevWord : String) 
+               -> io ()
+shellCompletion completionStyle subcommand curWord prevWord = 
+  let trivialCompletions = cmdOpts completionStyle subcommand curWord prevWord
       ffiCompletions = maybe ffiOpts (pure . Just) trivialCompletions
       completions = ffiCompletions >>= \case Nothing => configuredOpts; Just cs => pure cs
-  in  putStr $ unlines !completions
+  in  case completionStyle of
+           Cmds => putStr $ unlines !completions
+           CmdsAndDescriptions => putStr $ join "~" !completions
   where
     ffiOpts : io (Maybe (List String))
     ffiOpts =
-      Bash.ffiOpts subcommand curWord prevWord
+      Common.ffiOpts completionStyle subcommand curWord prevWord
 
     configuredOpts : io (List String)
     configuredOpts =
       do Right config <- loadConfig False maximumLayoutWidth Nothing
            | Left _ => pure []
-         pure (Bash.opts subcommand curWord prevWord)
-
+         pure (opts completionStyle subcommand curWord prevWord)
 
 ||| Handle commands that require both configuration and
 ||| authentication.
@@ -201,7 +203,8 @@ handleArgs : (envGithubPAT : Maybe String)
           -> (editor : Maybe String)
           -> List String 
           -> IO ()
-handleArgs _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = bashCompletion subcommand curWord prevWord
+handleArgs _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = shellCompletion Cmds subcommand curWord prevWord
+handleArgs _ _ _ _ ["--zsh-completion", subcommand, curWord, prevWord] = shellCompletion CmdsAndDescriptions subcommand curWord prevWord
 handleArgs _ _ _ _ ["--bash-completion-script"] = putStrLn Bash.script
 handleArgs _ _ _ _ ["--zsh-completion-script"] = putStrLn Zsh.script
 handleArgs envPAT terminalColors terminalColumns editor args =

@@ -20,7 +20,7 @@ import Data.SortedMap
 import Data.String
 import Data.User
 
-import ShellCompletion.Bash
+import ShellCompletion.Util
 import Config
 import FFI.Concurrency
 import FFI.GitHub

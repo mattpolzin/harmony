@@ -32,11 +32,16 @@ _harmony()
 
   __harmony_debug "CURRENT_PARTIAL: ${CURRENT_PARTIAL}, PREVIOUS: ${PREVIOUS}, SUBCOMMAND: ${SUBCOMMAND}"
 
-  REPLY=($(harmony --bash-completion "$SUBCOMMAND" "$CURRENT_PARTIAL" "$PREVIOUS"))
+  REPLY="$(harmony --zsh-completion "$SUBCOMMAND" "$CURRENT_PARTIAL" "$PREVIOUS")"
 
-  __harmony_debug "REPLY[*]: ${REPLY[*]}"
+  __harmony_debug "REPLY: ${REPLY}"
 
-  compadd -a REPLY
+  IFS_OLD="${IFS}"
+  IFS='~'
+  read -rA comps <<< "${REPLY}"
+  IFS="${IFS_OLD}"
+
+  _describe 'harmony' comps
 }
 
 # don't run the completion function when being source-ed or eval-ed
