@@ -6,7 +6,11 @@ import Data.List
 import Data.String
 import Data.Promise
 
+import Language.Reflection
+
 %default total
+
+%language ElabReflection
 
 ||| The Bash Completion script calls to harmony with a special --bash-completion
 ||| flag and passes harmony the subcommand (i.e. first argument after harmony),
@@ -28,15 +32,12 @@ import Data.Promise
 |||   `harmony --bash-completion "graph" "fl" "developers"
 export
 script : String
-script = """
-_harmony()
-{
-  CURRENT_PARTIAL=$([ -z $2 ] && echo "--" || echo "$2")
-  PREVIOUS="$3"
-  SUBCOMMAND=$([ -z ${COMP_WORDS[1]} ] && echo "--" || echo "${COMP_WORDS[1]}")
-  COMPREPLY=($(harmony --bash-completion "$SUBCOMMAND" "$CURRENT_PARTIAL" "$PREVIOUS"))
-}
-
-complete -F _harmony harmony
-"""
+script = %runElab do
+  Just completionScript <- readFile ProjectDir "support/shell/bash-completions.sh"
+    | Nothing => 
+        fail """
+             support/shell/bash-completions.sh file \
+             is missing from the project directory!
+             """
+  pure completionScript
 
