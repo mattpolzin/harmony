@@ -71,6 +71,10 @@ buildIdris {
     make manpage
 
     installManPage man/harmony.1
+
+    installShellCompletion --cmd harmony \
+      --bash support/shell/bash-completions.sh \
+      --zsh support/shell/zsh-completions.sh
   '';
 
   postInstall = ''
@@ -82,12 +86,6 @@ buildIdris {
         ]
       } \
       --prefix NODE_PATH : ${nodeDependencies}/node_modules
-  '';
-
-  postFixup = ''
-    installShellCompletion --cmd harmony \
-      --bash <($out/bin/harmony --bash-completion-script) \
-      --zsh <($out/bin/harmony --zsh-completion-script)
   '';
 
   installCheckPhase = ''
