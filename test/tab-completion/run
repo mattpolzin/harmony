@@ -5,6 +5,13 @@ echo 'no subcommand:'
 $harmony --bash-completion -- -- harmony
 
 #
+# config command
+#
+echo ''
+echo 'no args suggests all settable props:'
+$harmony --bash-completion config -- config
+
+#
 # pr command
 #
 echo ''

@@ -16,6 +16,16 @@ version
 whoami
 quick
 
+no args suggests all settable props:
+requestTeams
+requestUsers
+commentOnRequest
+branchParsing
+defaultRemote
+mainBranch
+theme
+githubPAT
+
 no args suggests into, ready, and draft args:
 --ready
 --draft

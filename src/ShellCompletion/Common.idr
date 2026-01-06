@@ -153,6 +153,10 @@ cmdOpts s "graph" "-"  _ = all (allGraphCmdOpts s)
 cmdOpts s "graph" partialArg _ =
   someWithPrefixOrNothing partialArg (allGraphCmdOpts s)
 
+cmdOpts s "config" "--"        "config" = all (allSettableProps s)
+cmdOpts s "config" partialProp "config" = someWithPrefix partialProp (allSettableProps s)
+cmdOpts _ "config" _           _        = Just []
+
 -- anything else requires configuration being loaded
 cmdOpts _ _ _ _ = Nothing
 
@@ -192,13 +196,6 @@ export
 opts : Config => (s : CompletionStyle) -> (subcommand : String) -> (curWord : String) -> (prevWord : String) -> List String
 -- we assume we are not handling a root command (see @cmdOpts@ which
 -- should have already been called).
-
--- then the config command
-opts @{_} s "config" "--"              "config" =
-  stringify' $ (allSettableProps s)
-opts @{_} s "config" partialConfigProp "config" = 
-  stringify' $ filter (isPrefixOf partialConfigProp) (allSettableProps s)
-opts @{_} _ "config" _                 _ = []
 
 -- and the label command
 opts @{config} _ "label" "--"         _ = 
