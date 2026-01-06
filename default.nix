@@ -27,14 +27,14 @@ let
   nodeDependencies = buildNpmPackage {
     name = "harmony-npm-deps";
     src = lib.fileset.toSource {
-      root = ./.; 
+      root = ./.;
       fileset = lib.fileset.unions [
         ./package.json
         ./package-lock.json
         ./man/harmony.1
-        ];
-      };
-    npmDepsHash = "sha256-N/pvX1PaSdDkAtB+3qirlXOwlRtjWQx/8246sbSzJUI=";
+      ];
+    };
+    npmDepsHash = "sha256-4rWL3VrB/FgyUb/4WMhEwuqWUjn8m1Rs8jc+zyjcZAs=";
     dontNpmBuild = true;
     dontBuild = true;
 
