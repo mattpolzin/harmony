@@ -27,14 +27,14 @@ let
   nodeDependencies = buildNpmPackage {
     name = "harmony-npm-deps";
     src = lib.fileset.toSource {
-      root = ./.; 
+      root = ./.;
       fileset = lib.fileset.unions [
         ./package.json
         ./package-lock.json
         ./man/harmony.1
-        ];
-      };
-    npmDepsHash = "sha256-N/pvX1PaSdDkAtB+3qirlXOwlRtjWQx/8246sbSzJUI=";
+      ];
+    };
+    npmDepsHash = "sha256-4rWL3VrB/FgyUb/4WMhEwuqWUjn8m1Rs8jc+zyjcZAs=";
     dontNpmBuild = true;
     dontBuild = true;
 
@@ -71,6 +71,10 @@ buildIdris {
     make manpage
 
     installManPage man/harmony.1
+
+    installShellCompletion --cmd harmony \
+      --bash support/shell/bash-completions.sh \
+      --zsh support/shell/zsh-completions.sh
   '';
 
   postInstall = ''
@@ -82,12 +86,6 @@ buildIdris {
         ]
       } \
       --prefix NODE_PATH : ${nodeDependencies}/node_modules
-  '';
-
-  postFixup = ''
-    installShellCompletion --cmd harmony \
-      --bash <($out/bin/harmony --bash-completion-script) \
-      --zsh <($out/bin/harmony --zsh-completion-script)
   '';
 
   installCheckPhase = ''
