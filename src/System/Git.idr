@@ -26,16 +26,12 @@ stdout = fst
 mapStdout : (String -> a) -> (String, String, Int) -> (a, String, Int)
 mapStdout = mapFst
 
-||| Drop the given char from the String throughout and for any number of
-||| occurrences.
-dropChar : Char -> String -> String
-dropChar c = pack . go . unpack
-  where
-    go : List Char -> List Char
-    go [] = []
-    go (x :: xs) =
-      let rest = go xs
-      in if c == x then rest else (x :: rest)
+||| Drop the first char if it fits the predicate.
+dropFirstIf : (Char -> Bool) -> String -> String
+dropFirstIf pred str with (asList str)
+  dropFirstIf pred "" | [] = ""
+  dropFirstIf pred str@(strCons c str') | (c :: _) =
+    if pred c then str' else str
 
 promise : IO (a, String, Int) -> Promise' a
 promise gitOp = liftIO res >>= either
@@ -52,7 +48,12 @@ currentBranch : Promise' String
 currentBranch = map trim . promise $ git ["branch", "--show-current"]
 
 parseBranchList : String -> List String
-parseBranchList = map trim . lines . dropChar '*'
+parseBranchList = map (trim . dropFirstIf specialPrefix) . lines
+  where
+    specialPrefix : Char -> Bool
+    specialPrefix '*' = True
+    specialPrefix '+' = True
+    specialPrefix _   = False
 
 export
 listBranches : Promise' (List String)
