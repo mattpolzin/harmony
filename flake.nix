@@ -7,9 +7,6 @@
     packageset.url = "github:mattpolzin/nix-idris2-packages";
   };
 
-  # we use Idris2 from nixpkgs unstable because it will already be built and cached.
-  # harmony should always build against the latest Idris2 release so this is a nice
-  # default for the flake.
   outputs =
     {
       self,
