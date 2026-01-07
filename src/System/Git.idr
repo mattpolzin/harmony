@@ -48,7 +48,12 @@ currentBranch : Promise' String
 currentBranch = map trim . promise $ git ["branch", "--show-current"]
 
 parseBranchList : String -> List String
-parseBranchList = map (trim . dropFirstIf (== '*')) . lines
+parseBranchList = map (trim . dropFirstIf specialPrefix) . lines
+  where
+    specialPrefix : Char -> Bool
+    specialPrefix '*' = True
+    specialPrefix '+' = True
+    specialPrefix _   = False
 
 export
 listBranches : Promise' (List String)
