@@ -8,7 +8,7 @@ homepage = "https://github.com/mattpolzin/harmony"
 sourceloc = "https://github.com/mattpolzin/harmony"
 bugtracker = "https://github.com/mattpolzin/harmony/issues"
 
-langversion >= 0.7.0
+langversion >= 0.8.0
 
 depends = contrib
         , idris-adds >= 0.4.0
