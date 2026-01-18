@@ -126,6 +126,19 @@ namespace Prompting
   orIfEmpty (Just y) "" = y
   orIfEmpty (Just _) x  = x
 
+  namespace TestOrIfEmpty
+    noFallbackEmpty : orIfEmpty Nothing "" === ""
+    noFallbackEmpty = Refl
+
+    noFallbackNotEmpty : orIfEmpty Nothing "hi" === "hi"
+    noFallbackNotEmpty = Refl
+
+    fallbackEmpty : orIfEmpty (Just "hi") "" === "hi"
+    fallbackEmpty = Refl
+
+    fallbackNotEmpty : orIfEmpty (Just "hi") "hello" === "hello"
+    fallbackNotEmpty = Refl
+
   export
   enterForDefaultStr : String -> String
   enterForDefaultStr str = " (ENTER for default: \{str})"
@@ -136,6 +149,22 @@ namespace Prompting
                             -> So (not $ "?" `isSuffixOf` prompt) =>
                                PromptWithoutQuestionMark prompt
 
+  enterForDefaultPrompt : (prompt : String)
+                       -> (defaultAnswer : Maybe String)
+                       -> String
+  enterForDefaultPrompt prompt defaultAnswer =
+    "\{prompt}\{defaultStr}?"
+      where
+        defaultStr : String
+        defaultStr = maybe "" enterForDefaultStr defaultAnswer
+
+  namespace TestEnterForDefaultPrompt
+    withoutDefault : enterForDefaultPrompt "prompt" Nothing === "prompt?"
+    withoutDefault = Refl
+
+    withDefault : enterForDefaultPrompt "prompt" (Just "default") === "prompt (ENTER for default: default)?"
+    withDefault = Refl
+
   export
   getLineEnterForDefault : HasIO io =>
                            (prompt : String)
@@ -143,11 +172,8 @@ namespace Prompting
                            (defaultAnswer : Maybe String)
                         -> io String
   getLineEnterForDefault prompt defaultAnswer = do
-    putStrLn "\{prompt}\{defaultStr}?"
+    putStrLn (enterForDefaultPrompt prompt defaultAnswer)
     orIfEmpty defaultAnswer . trim <$> getLine
-      where
-        defaultStr : String
-        defaultStr = maybe "" enterForDefaultStr defaultAnswer
 
   export
   inlineDescription : HasIO io => (promptMsg : String) -> (bodyPrefix : String) -> io String
