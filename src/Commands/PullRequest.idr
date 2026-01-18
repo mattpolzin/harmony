@@ -319,6 +319,35 @@ getTitleAndBodyPrefix @{config} branch =
          Github => githubTitleAndBodyPrefix branch
          None   => pure ("", "")
 
+||| A GitHub URL at which a PR can be created for the given branch.
+prCreationUrl : (org : String) -> (repo : String) -> (branch : String) -> (intoBranch : Maybe String) -> String
+prCreationUrl org repo branch intoBranch =
+  "https://github.com/\{org}/\{repo}/compare/\{into}\{branch}?expand=1"
+    -- NOTE: I would love to be able to create the above 
+    --       URL such that the page opens with "draft" 
+    --       as the default if the PR was requested to 
+    --       be a draft via the CLI but I have not found 
+    --       a way to do that yet.
+    where
+      into : String
+      into = case intoBranch of
+                  Just branch => "\{branch}..."
+                  Nothing     => ""
+
+namespace TestPrCreationUrl
+  withoutIntoBranch : prCreationUrl "org" "repo" "branch" Nothing === "https://github.com/org/repo/compare/branch?expand=1"
+  withoutIntoBranch = Refl
+
+  withIntoBranch : prCreationUrl "org" "repo" "branch" (Just "main") === "https://github.com/org/repo/compare/main...branch?expand=1"
+  withIntoBranch = Refl
+
+||| If a PR can be found on GitHub for the current branch, that PR is returned.
+|||
+||| If no PR can be found on GitHub, the result depends on whether the current
+||| `stdout` is a TTY terminal or not. Given a TTY terminal, the user is walked
+||| through creating a new PR in-terminal. Otherwise, a GitHub URL is returned
+||| that, when visited, will allow the user to create a PR for the current
+||| branch in-browser.
 export
 identifyOrCreatePR : Config => Octokit => 
                      {default False markAsDraft : Bool}
@@ -329,21 +358,10 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
     | [] => case !(isTTY stdout) of
                True  => Actual Created <$> createPR
-               False => pure (Hypothetical prCreationUrl)
+               False => pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
     | _  => reject "Multiple PRs for the current brach. Harmony only handles 1 PR per branch currently."
   pure (Actual Identified openPr)
     where
-      prCreationUrl : String
-      prCreationUrl =
-        let repo = config.repo
-            org  = config.org
-        in  "https://github.com/\{org}/\{repo}/compare/\{branch}?expand=1"
-        -- NOTE: I would love to be able to create the above 
-        --       URL such that the page opens with "draft" 
-        --       as the default if the PR was requested to 
-        --       be a draft via the CLI but I have not found 
-        --       a way to do that yet.
-
       continueGivenUncommittedChanges : Promise' Bool
       continueGivenUncommittedChanges = do
         case !uncommittedChanges of
