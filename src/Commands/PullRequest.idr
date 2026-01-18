@@ -442,7 +442,7 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
         let bodyPrefix  = fromMaybe "" inferredBranchInfo.bodyPrefix
 
         title <- (titlePrefix ++) <$>
-          (getLineEnterForDefault "What would you like the title to be"
+          (getLineEnterForDefault "What would you like the title to be?"
                                   inferredBranchInfo.defaultTitle)
 
         -- either get the description at the command line or open an editor

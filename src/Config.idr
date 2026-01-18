@@ -202,7 +202,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
                    , "If you don't set in your config now, you can set later with `harmony config githubPAT abcdefg`."
                    , "The ENV var will always take precedence over the config property."
                    , ""
-                   , "What PAT would you like to set in the config file\{defaultPATString}?"
+                   , "What PAT would you like to set in the config file?\{defaultPATString}"
                    ]
   configPAT <- (\case "" => Nothing; s => Just s) . trim <$> getLine
 
@@ -215,19 +215,22 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
   defaultOrgAndRepo <- (parseGitHubURI <$> remoteURI remoteGuess) <|> pure Nothing
 
   putStrLn ""
-  let orgDefaultStr = defaultStr (.org) defaultOrgAndRepo
-  putStrLn "What GitHub org would you like to use harmony for\{orgDefaultStr}?"
-  org  <- orIfEmpty (org defaultOrgAndRepo) . trim <$> getLine
+  org <-
+    getLineEnterForDefault
+      "What GitHub org would you like to use harmony for?"
+      (org defaultOrgAndRepo)
 
   putStrLn ""
-  let repoDefaultStr = defaultStr (.repo) defaultOrgAndRepo
-  putStrLn "What repository would you like to use harmony for\{repoDefaultStr}?"
-  repo <- orIfEmpty (repo defaultOrgAndRepo) . trim <$> getLine
+  repo <-
+    getLineEnterForDefault 
+      "What repository would you like to use harmony for?"
+      (repo defaultOrgAndRepo)
 
   putStrLn ""
-  let remoteDefaultStr = enterForDefaultStr remoteGuess
-  putStrLn "What GitHub remote repo would you like to use harmony for\{remoteDefaultStr}?"
-  defaultRemote <- orIfEmpty (Just remoteGuess) . trim <$> getLine
+  defaultRemote <-
+    getLineEnterForDefault
+      "What GitHub remote repo would you like to use harmony for?"
+      (Just remoteGuess)
   
   putStrLn ""
   commentOnRequest <- commentConfigPrompt 

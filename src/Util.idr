@@ -143,33 +143,26 @@ namespace Prompting
   enterForDefaultStr : String -> String
   enterForDefaultStr str = " (ENTER for default: \{str})"
 
-  public export
-  data PromptWithoutQuestionMark : String -> Type where
-    DoesNotEndInQuestionMark : (prompt : String)
-                            -> So (not $ "?" `isSuffixOf` prompt) =>
-                               PromptWithoutQuestionMark prompt
-
   enterForDefaultPrompt : (prompt : String)
                        -> (defaultAnswer : Maybe String)
                        -> String
   enterForDefaultPrompt prompt defaultAnswer =
-    "\{prompt}\{defaultStr}?"
+    "\{prompt}\{defaultStr}"
       where
         defaultStr : String
         defaultStr = maybe "" enterForDefaultStr defaultAnswer
 
   namespace TestEnterForDefaultPrompt
-    withoutDefault : enterForDefaultPrompt "prompt" Nothing === "prompt?"
+    withoutDefault : enterForDefaultPrompt "prompt?" Nothing === "prompt?"
     withoutDefault = Refl
 
-    withDefault : enterForDefaultPrompt "prompt" (Just "default") === "prompt (ENTER for default: default)?"
+    withDefault : enterForDefaultPrompt "prompt?" (Just "default") === "prompt? (ENTER for default: default)"
     withDefault = Refl
 
   export
   getLineEnterForDefault : HasIO io =>
                            (prompt : String)
-                        -> PromptWithoutQuestionMark prompt =>
-                           (defaultAnswer : Maybe String)
+                        -> (defaultAnswer : Maybe String)
                         -> io String
   getLineEnterForDefault prompt defaultAnswer = do
     putStrLn (enterForDefaultPrompt prompt defaultAnswer)
