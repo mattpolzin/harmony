@@ -323,7 +323,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     themePrompt : HasIO io => io Theme
     themePrompt = do
       let defaultStr = enterForDefaultStr "dark"
-      putStrLn "Would you like harmony configured for a 'dark' or 'light' terminal background\{defaultStr}?"
+      putStrLn "Would you like harmony configured for a 'dark' or 'light' terminal background?\{defaultStr}"
       offerRetry "The theme must be either 'dark' or 'light'. Which would you prefer?" 
                  "Could not parse the input as a valid theme; will use 'dark' for now."
                  Dark $
@@ -332,7 +332,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     branchParsingPrompt : HasIO io => io ParseBranchStrategy
     branchParsingPrompt = do
       let defaultStr = enterForDefaultStr "none"
-      putStrLn "Would you like harmony to parse branch names for 'jira' slugs or 'github' issue numbers to use as part of new PR title or body\{defaultStr}?"
+      putStrLn "Would you like harmony to parse branch names for 'jira' slugs or 'github' issue numbers to use as part of new PR title or body?\{defaultStr}"
       offerRetry "Branch parsing must be 'none', 'jira', or 'github'. Which would you prefer?" 
                  "Could not parse the input as a valid option; will use 'none' for now."
                  None $
