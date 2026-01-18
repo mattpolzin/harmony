@@ -305,9 +305,6 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     repo : Maybe GitRemote -> Maybe String
     repo = map (.repo)
 
-    enterForDefaultStr : String -> String
-    enterForDefaultStr str = " (ENTER for default: \{str})"
-
     defaultStr : (GitRemote -> String) -> Maybe GitRemote -> String
     defaultStr f = fromMaybe "" . map (enterForDefaultStr . f)
 

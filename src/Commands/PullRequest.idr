@@ -274,25 +274,40 @@ convertPRToReady @{config} pr = do
   prId <- getPullRequestGraphQlId config.org config.repo pr.number
   markPullRequestReady prId
 
-githubTitleAndBodyPrefix : Config => Octokit => (branch: String) -> Promise' (String, String)
-githubTitleAndBodyPrefix @{config} branch =
+record BranchInferredData where
+  constructor MkInferredData
+
+  ||| The title prefix is to be prepended to the new PR title.
+  titlePrefix : Maybe String
+  ||| The body prefix is to be prepended to the new PR body.
+  bodyPrefix  : Maybe String
+  ||| The default title is an option the user may choose to avoid needing to
+  ||| specify a title now when one can be borrowed from a GitHub issue.
+  defaultTitle : Maybe String
+
+noInferredData : BranchInferredData
+noInferredData = MkInferredData Nothing Nothing Nothing
+
+githubInferredBranchInfo : Config => Octokit => (branch: String) -> Promise' BranchInferredData
+githubInferredBranchInfo @{config} branch =
   case issueNumber of
-    Nothing => pure ("", "")
-    Just issue => pure $ 
-      (""
-      , !(issueDescriptionPrefix issue) ++ "\n\n" ++ (relatedToPrefix issue)
-      )
+    Nothing => pure noInferredData
+    Just issueNum => do
+      issue <- getIssue config.org config.repo issueNum
+      pure $ 
+        MkInferredData Nothing 
+                       (Just $ !(issueDescriptionPrefix issue) ++ "\n\n" ++ (relatedToPrefix issueNum))
+                       (Just issue.title)
 
   where
     issueNumber : Maybe String
     issueNumber = parseGithubIssueNumber branch
 
-    relatedToPrefix : String -> String
-    relatedToPrefix issue = "Related to #\{issue}"
+    relatedToPrefix : (issueNumber : String) -> String
+    relatedToPrefix issueNumber = "Related to #\{issueNumber}"
 
-    issueDescriptionPrefix : String -> Promise' String
-    issueDescriptionPrefix issueNumber = do
-      issue <- getIssue config.org config.repo issueNumber
+    issueDescriptionPrefix : Issue -> Promise' String
+    issueDescriptionPrefix issue = do
       pure """
         <!--
         ## GitHub Issue
@@ -302,22 +317,24 @@ githubTitleAndBodyPrefix @{config} branch =
         -->
         """
 
-||| The title prefix is to be prepended to the new PR title.
-||| The body prefix is to be prepended to the new PR body.
+||| Get any inferred title prefix, body prefix, or default title from the
+||| current branch.
 |||
-||| The idea in either case is to pass along the information parsed from the
+||| The idea in any case is to pass along the information parsed from the
 ||| branch name to GitHub either via the PR's title or part of its body so that
 ||| an issue referenced by the branch is tracked in relation to the new PR.
 |||
+||| For GitHub only, the issue title is suggested as the default PR title.
+|||
 ||| If a GitHub issue is found, the body of the GitHub issue is also added
 ||| (commented out) to the body prefix as additional context.
-getTitleAndBodyPrefix : Config => Octokit => (branch : String) -> Promise' (String, String)
-getTitleAndBodyPrefix @{config} branch =
+getInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
+getInferredBranchInfo @{config} branch =
     case config.branchParsing of
-         Jira   => pure (fromMaybe "" $ (++ " - ") <$> parseJiraSlug branch, "")
+         Jira   => pure (MkInferredData ((++ " - ") <$> parseJiraSlug branch) Nothing Nothing)
          --               ^ Jira slugs become a title prefix
-         Github => githubTitleAndBodyPrefix branch
-         None   => pure ("", "")
+         Github => githubInferredBranchInfo branch
+         None   => pure noInferredData
 
 ||| A GitHub URL at which a PR can be created for the given branch.
 prCreationUrl : (org : String) -> (repo : String) -> (branch : String) -> (intoBranch : Maybe String) -> String
@@ -420,11 +437,13 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
         putStrLn "Creating a new PR for the current branch (\{branch})."
         baseBranch <- getBaseBranch
 
-        (titlePrefix, bodyPrefix) <- getTitleAndBodyPrefix branch
+        inferredBranchInfo <- getInferredBranchInfo branch
+        let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
+        let bodyPrefix  = fromMaybe "" inferredBranchInfo.bodyPrefix
 
-        putStrLn "What would you like the title to be?"
-        putStr titlePrefix
-        title <- (titlePrefix ++) . trim <$> getLine
+        title <- (titlePrefix ++) <$>
+          (getLineEnterForDefault "What would you like the title to be"
+                                  inferredBranchInfo.defaultTitle)
 
         -- either get the description at the command line or open an editor
         -- with a template if available

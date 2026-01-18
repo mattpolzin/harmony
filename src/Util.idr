@@ -127,6 +127,29 @@ namespace Prompting
   orIfEmpty (Just _) x  = x
 
   export
+  enterForDefaultStr : String -> String
+  enterForDefaultStr str = " (ENTER for default: \{str})"
+
+  public export
+  data PromptWithoutQuestionMark : String -> Type where
+    DoesNotEndInQuestionMark : (prompt : String)
+                            -> So (not $ "?" `isSuffixOf` prompt) =>
+                               PromptWithoutQuestionMark prompt
+
+  export
+  getLineEnterForDefault : HasIO io =>
+                           (prompt : String)
+                        -> PromptWithoutQuestionMark prompt =>
+                           (defaultAnswer : Maybe String)
+                        -> io String
+  getLineEnterForDefault prompt defaultAnswer = do
+    putStrLn "\{prompt}\{defaultStr}?"
+    orIfEmpty defaultAnswer . trim <$> getLine
+      where
+        defaultStr : String
+        defaultStr = maybe "" enterForDefaultStr defaultAnswer
+
+  export
   inlineDescription : HasIO io => (promptMsg : String) -> (bodyPrefix : String) -> io String
   inlineDescription promptMsg bodyPrefix = do
     putStrLn promptMsg
