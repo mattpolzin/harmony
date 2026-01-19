@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 todos=$(find . \( -name '*.idr' -o -name '*.js' \) ! -path '*build*' ! -path '*node_modules*' | xargs grep -U1 'TODO')
 

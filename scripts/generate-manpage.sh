@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 # Skip the installation section for the manpage. Presumably this thing has been
 # installed by the time the manpage is most useful.
