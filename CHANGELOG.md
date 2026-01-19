@@ -8,10 +8,8 @@ Published: 2026-01-19T03:42:49Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.1.1...6.2.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`. Install to your Nix profile with `nix profile add github:mattpolzin/harmony`.
 
-You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.\n
+You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
 
 # 6.1.1 (Overflowing with stability)
 Published: 2026-01-07T04:13:08Z
@@ -21,8 +19,6 @@ Published: 2026-01-07T04:13:08Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.1.0...6.1.1
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`. Install to your Nix profile with `nix profile add github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -34,8 +30,6 @@ Published: 2026-01-06T15:44:08Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.0.0...6.1.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`. Install to your Nix profile with `nix profile add github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -54,8 +48,6 @@ The `commentOnRequest` harmony.json configuration option can no longer be a bool
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.8.0...6.0.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -69,8 +61,6 @@ Published: 2025-12-15T03:36:01Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.7.0...5.8.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -83,8 +73,6 @@ Published: 2025-12-08T03:50:45Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.6.0...5.7.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -97,8 +85,6 @@ Published: 2025-11-27T03:06:01Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.5.1...5.6.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -112,8 +98,6 @@ Published: 2025-11-26T04:09:17Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.5.0...5.5.1
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -129,8 +113,6 @@ The new `harmony quick` command will prompt for details for a new GitHub issue a
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.4.2...5.5.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -143,8 +125,6 @@ Published: 2025-08-25T01:26:28Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.4.1...5.4.2
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -157,8 +137,6 @@ Published: 2025-08-24T04:25:43Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.4.0...5.4.1
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -178,8 +156,6 @@ As of this version, that remains the default for backwards compatibilty. You now
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.3.1...5.4.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -191,8 +167,6 @@ Published: 2025-07-09T02:43:08Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.3.0...5.3.1
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -206,8 +180,6 @@ Published: 2025-07-08T16:14:17Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.2.0...5.3.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -219,8 +191,6 @@ You can now use `harmony pr` to print a GitHub URL that will create a new PR whe
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.1.0...5.2.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -232,8 +202,6 @@ You can now use `harmony pr --draft` to convert an existing PR into a draft. Pre
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/5.0.0...5.1.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -266,8 +234,6 @@ If you are coming from a Harmony version prior to 4.0.0, the easiest way to upda
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/4.4.0...5.0.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -281,8 +247,6 @@ Published: 2024-07-02T04:11:40Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/4.3.0...4.4.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -296,8 +260,6 @@ Published: 2024-06-30T16:19:12Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/4.2.0...4.3.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -316,8 +278,6 @@ Published: 2024-03-08T16:02:20Z
 
 **Full Changelog**: https://github.com/mattpolzin/harmony/compare/4.0.1...4.1.0
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -329,8 +289,6 @@ Published: 2024-01-22T05:24:55Z
 ### Non-breaking
 - Added missing `help` command documentation for the now-deprecated `assign` command.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -347,8 +305,6 @@ The way harmony used the word "assign" in commands, configuration options, and h
 ### Breaking
 - The `assignTeams` and `assignUsers` config options in the `harmony.json` configuration file were renamed to `requestTeams` and `requestUsers`. Although the old names will continue to work via the `harmony config ...` CLI command, only the new names will be stored in the `harmony.json` file. This makes the configuration file not backwards compatible with older versions of Harmony. Harmony will automatically update the config file for you.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -361,8 +317,6 @@ Published: 2024-01-15T23:07:48Z
 - The full `help` command output is now sorted by subcommand alphabetically.
 - The `help` description for shell prompt completion has been updated to reflect the newest way to use Zsh completion for Harmony.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -373,8 +327,6 @@ Published: 2024-01-08T16:09:10Z
 ### Non-breaking
 - I chose to add an additional note at the bottom of the `graph` command output that explains my strong opinion about what the graph output does and does not represent.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -385,8 +337,6 @@ Published: 2023-12-30T22:16:05Z
 ### Non-breaking
 - Support `zsh` completion more directly. See the [README](https://github.com/mattpolzin/harmony/blob/main/README.md#zsh-completion).
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -402,8 +352,6 @@ Published: 2023-12-27T16:40:27Z
 ### Non-breaking
 - Implements faster JSON parsing which speeds up several of the slower Harmony commands.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.7.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -413,8 +361,6 @@ Published: 2023-12-06T15:59:26Z
 ## Changes
 When requesting a PR to contribute a review to, draft PRs will be skipped over. This way, the PR Harmony suggests is actually going to be ready for your review.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.6.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -425,8 +371,6 @@ Published: 2023-08-19T03:59:37Z
 _non-breaking:_
 Teams are assigned prior to individuals which allows GitHub to assign individuals from the team via round-robin or weight-based approaches if it is configured to do so. If GitHub is not configured to do so, this has no impact on Harmony's functionality.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.6.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -441,8 +385,6 @@ Two new prompts that only show up when relevant to make sure that you are ready 
 
 I think a future iteration will swap the second prompt with the ability to create a commit or else it would make less sense to separate the two out like this.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.6.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -453,8 +395,6 @@ Published: 2023-07-03T15:35:57Z
 _non-breaking:_
 - Add `--ignore <uri>/<pr-num>` option to `contribute` command. Use this option to permanently ignore (local to your machine only) a particular PR when delivering results for the `contribute` command.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.6.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -466,8 +406,6 @@ _non-breaking:_
 - Fix label auto complete for the `assign` command.
 - Fix label application for the `pr` command (no longer applies label with the `#` prefix in place).
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.6.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -478,8 +416,6 @@ Published: 2023-06-28T16:32:06Z
 _non-breaking:_
 - Add support for specifying labels to add to a PR via the `harmony pr` command.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.6.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -490,8 +426,6 @@ Published: 2023-01-30T02:17:54Z
 _non-breaking:_
 - Add a new `health` command that shows all open Pull Requests grouped by the month when the PR was created.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.6.0` _or_ the latest HEAD of the main Idris 2 branch.
 
@@ -502,8 +436,6 @@ Published: 2022-12-04T22:48:20Z
 _non-breaking:_
 - Add`--draft` flag to `pr` command to facilitate creating draft PRs. Converting an existing PR to a draft is not yet supported.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.6.0`.
 
@@ -514,8 +446,6 @@ Published: 2022-12-04T21:48:26Z
 _non-breaking:_
 - Allow specifying labels to apply when using the `assign` command. In this context, labels are specified with a `#` prefix to differentiate them from team names and user logins.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.6.0`.
 
@@ -533,8 +463,6 @@ _non-breaking:_
 ### Notes
 ℹ️ Harmony syncs its cache of users, teams, and labels once per day (when you run it). If you've run harmony in the past 24 hours before updating from v1.x to v2.x then you should run `harmony sync` manually to populate your local cache of labels so that tab completion for the `label` command works properly.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.6.0`.
 
@@ -549,8 +477,6 @@ _non-breaking:_
 ℹ️ Harmony does not use completed PR reviews in calculating its weighted review workload; graphing completed PR reviews is just available to give the user a bigger picture.
 ℹ️ This is the first release to require Idris 2 `v0.6.0` -- The source code is no longer compatible with the `v0.5.1` release of Idris 2.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.6.0`.
 
@@ -563,8 +489,6 @@ However, GitHub also supports two styles of automated review request: round robi
 
 When this is desirable, Harmony definitely does less but it still surfaces a reasonable CLI to PR creation and team assignment, good auto-completion, and its reflect command is still useful.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.5.1`
 
@@ -577,8 +501,6 @@ N/A
 ### Notes
 ℹ️ Going forward, the Harmony README will be packaged with NPM releases.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony`.
 
 You can build the source with Idris 2 `v0.5.1`
 
@@ -592,8 +514,6 @@ _non-breaking:_
 ### Notes
 ℹ️ A GitHub Personal Access Token is still required. If the `$GITHUB_PAT` environment variable is set, that value will always be used. If no environment variable is set but the `githubPAT` option in the config file is set, that value will be used. You can set the config value with `harmony config githubPAT abcde` where `abcde` is your Personal Access Token.  
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.5.1`
 
@@ -608,8 +528,6 @@ _non-breaking:_
 ### Notes
 ℹ️ This is the first technically stable release. I have not needed to create any breaking changes for a couple of versions and the app is quite useful in its current form, so it feels like time to commit to not breaking things for a while now.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.5.1`
 
@@ -619,8 +537,6 @@ Published: 2022-07-15T07:19:18Z
 - Fix bug where color support and configuration was ignored for the `list` command which always output with ANSI formatting.
 - Make `whoami` output prettier by adding a bit of color and formatting.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.5.1`
 
@@ -629,8 +545,6 @@ Published: 2022-07-13T16:58:03Z
 
 Adds a `whoami` command that prints information about the currently configured and authenticated user.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.5.1`
 
@@ -642,8 +556,6 @@ Published: 2022-07-13T00:57:25Z
 - The help menu colors have changed slightly to be more visible against nearly-black terminal backgrounds.
 - The shell auto-completion handling has been slightly improved.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.5.1`
 
@@ -653,8 +565,6 @@ Published: 2022-03-28T05:48:44Z
 
 Adds support for the `NO_COLOR` and `EDITOR` environment variables. The latter of which is used when asking for Pull Request descriptions, which now also support GitHub PR templates (or at least the specific case where a `.github/PULL_REQUEST_TEMPLATE.md` file is present).
 
---------
-Install via npm with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 `v0.5.1`
 
@@ -665,8 +575,6 @@ Published: 2021-10-08T04:24:36Z
 - Asks for additional configuration options when initially creating the configuration file.
 - Adds more details to the output of the `graph` command.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 v0.5.1
 
@@ -676,8 +584,6 @@ Published: 2021-10-01T19:24:06Z
 - Adds a `contribute` command that suggests a PR you could review to contribute to the org.
 - Adds information on reviews you have given to the output of the `reflect` command.
 
---------
-Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system.
 
 You can build the source with Idris 2 v0.5.1
 
@@ -686,8 +592,6 @@ Published: 2021-09-25T05:23:38Z
 
 This release adds a `reflect` command that summarizes your PR history over the past 100 PRs.
 
---------
-Install release by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` to install globally on your system.
 
 You can build the source with Idris 2 v0.5.1
 
@@ -696,7 +600,5 @@ Published: 2021-09-13T00:25:53Z
 
 The first release of Harmony.
 
---------
-Install release by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` to install globally on your system.
 
 You can build the source with Idris 2 v0.5.1
