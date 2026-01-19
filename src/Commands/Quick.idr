@@ -1,9 +1,10 @@
 module Commands.Quick
 
 import Data.Config
+import Data.Issue
+import Data.List
 import Data.Promise
 import Data.String
-import Data.Issue
 
 import FFI.GitHub
 import Util
@@ -19,6 +20,13 @@ data IssueCategory = Bugfix | Feature
 Show IssueCategory where
   show Bugfix = "Bugfix"
   show Feature = "Feature"
+
+dasherize : String -> String
+dasherize = pack . replaceOn ' ' '-' . unpack
+
+namespace TestDasherize
+  replacesSpacesWithDashes : dasherize "a b c" === "a-b-c"
+  replacesSpacesWithDashes = Refl
 
 ||| Quickly create a new GitHub issue and branch to go along with it.
 export
@@ -46,9 +54,11 @@ quickStartNewWork @{config} issueCategory issueTitle' = do
   issue <- createIssue config.org config.repo issueTitle issueBody
 
   let branchTemplate = "\{branchPrefix}/\{show issue.number}/"
-  putStrLn "What would you like the branch to be named?"
+  let defaultBranchSlug = dasherize issueTitle
+  let defaultBranchName = branchTemplate ++ defaultBranchSlug
+  putStrLn "What would you like the branch to be named? \{enterForDefaultStr defaultBranchName}"
   putStr branchTemplate
-  branchSlug <- trim <$> getLine
+  branchSlug <- orIfEmpty (Just defaultBranchSlug) . trim <$> getLine
   
   checkoutBranch {b=New} "\{branchTemplate}\{branchSlug}"
 
