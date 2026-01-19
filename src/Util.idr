@@ -167,6 +167,21 @@ namespace Prompting
   getLineEnterForDefault prompt defaultAnswer = do
     putStrLn (enterForDefaultPrompt prompt defaultAnswer)
     orIfEmpty defaultAnswer . trim <$> getLine
+  export
+  offerRetry : HasIO io =>
+               (fallbackDescription : String)
+            -> (failureDescription : String)
+            -> (fallback : Lazy a)
+            -> io (Maybe a)
+            -> io a
+  offerRetry fallbackDescription failureDescription fallback p = do
+    Nothing <- p
+      | Just first => pure first
+    putStrLn fallbackDescription
+    Nothing <- p
+      | Just second => pure second
+    putStrLn failureDescription
+    pure fallback
 
   export
   inlineDescription : HasIO io => (promptMsg : String) -> (bodyPrefix : String) -> io String

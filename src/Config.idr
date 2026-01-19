@@ -287,21 +287,6 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
      either renderIO pure (checkConfigConsistency config)
      pure config
   where
-    offerRetry : HasIO io =>
-                 (fallbackDescription : String)
-              -> (failureDescription : String)
-              -> (fallback : Lazy a)
-              -> io (Maybe a)
-              -> io a
-    offerRetry fallbackDescription failureDescription fallback p = do
-      Nothing <- p
-        | Just first => pure first
-      putStrLn fallbackDescription
-      Nothing <- p
-        | Just second => pure second
-      putStrLn failureDescription
-      pure fallback
-
     org : Maybe GitRemote -> Maybe String
     org = map (.org)
 

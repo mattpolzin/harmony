@@ -411,6 +411,20 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
       inlineDescriptionPrompt =
         "What would you like the description to be (two blank lines to finish)?"
 
+      notEmptyString : String -> Maybe String
+      notEmptyString "" = Nothing
+      notEmptyString str = Just str
+
+      prTitlePrompt : Maybe String -> Promise' String
+      prTitlePrompt defaultTitle =
+        let fallbackTitle = "New PR"
+        in  offerRetry 
+              "PR title cannot be an empty string. Please enter a title:"
+              "Did not find a non-empty value for a PR title. Will use '\{fallbackTitle}'"
+              fallbackTitle
+              (notEmptyString <$> getLineEnterForDefault "What would you like the title to be?"
+                                                         defaultTitle)
+
       createPR : Promise' PullRequest
       createPR = do
         -- create a remote tracking branch if needed
@@ -441,9 +455,7 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
         let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
         let bodyPrefix  = fromMaybe "" inferredBranchInfo.bodyPrefix
 
-        title <- (titlePrefix ++) <$>
-          (getLineEnterForDefault "What would you like the title to be?"
-                                  inferredBranchInfo.defaultTitle)
+        title <- (titlePrefix ++) <$> (prTitlePrompt inferredBranchInfo.defaultTitle)
 
         -- either get the description at the command line or open an editor
         -- with a template if available
