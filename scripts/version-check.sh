@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 pkgversion="$(cat harmony.ipkg | sed -n 's/version = \(.*\)/\1/p')"
 idrversion="$(cat src/AppVersion.idr | sed -n 's/appVersion = "\(.*\)"/\1/p')"
