@@ -274,25 +274,40 @@ convertPRToReady @{config} pr = do
   prId <- getPullRequestGraphQlId config.org config.repo pr.number
   markPullRequestReady prId
 
-githubTitleAndBodyPrefix : Config => Octokit => (branch: String) -> Promise' (String, String)
-githubTitleAndBodyPrefix @{config} branch =
+record BranchInferredData where
+  constructor MkInferredData
+
+  ||| The title prefix is to be prepended to the new PR title.
+  titlePrefix : Maybe String
+  ||| The body prefix is to be prepended to the new PR body.
+  bodyPrefix  : Maybe String
+  ||| The default title is an option the user may choose to avoid needing to
+  ||| specify a title now when one can be borrowed from a GitHub issue.
+  defaultTitle : Maybe String
+
+noInferredData : BranchInferredData
+noInferredData = MkInferredData Nothing Nothing Nothing
+
+githubInferredBranchInfo : Config => Octokit => (branch: String) -> Promise' BranchInferredData
+githubInferredBranchInfo @{config} branch =
   case issueNumber of
-    Nothing => pure ("", "")
-    Just issue => pure $ 
-      (""
-      , !(issueDescriptionPrefix issue) ++ "\n\n" ++ (relatedToPrefix issue)
-      )
+    Nothing => pure noInferredData
+    Just issueNum => do
+      issue <- getIssue config.org config.repo issueNum
+      pure $ 
+        MkInferredData Nothing 
+                       (Just $ !(issueDescriptionPrefix issue) ++ "\n\n" ++ (relatedToPrefix issueNum))
+                       (Just issue.title)
 
   where
     issueNumber : Maybe String
     issueNumber = parseGithubIssueNumber branch
 
-    relatedToPrefix : String -> String
-    relatedToPrefix issue = "Related to #\{issue}"
+    relatedToPrefix : (issueNumber : String) -> String
+    relatedToPrefix issueNumber = "Related to #\{issueNumber}"
 
-    issueDescriptionPrefix : String -> Promise' String
-    issueDescriptionPrefix issueNumber = do
-      issue <- getIssue config.org config.repo issueNumber
+    issueDescriptionPrefix : Issue -> Promise' String
+    issueDescriptionPrefix issue = do
       pure """
         <!--
         ## GitHub Issue
@@ -302,23 +317,54 @@ githubTitleAndBodyPrefix @{config} branch =
         -->
         """
 
-||| The title prefix is to be prepended to the new PR title.
-||| The body prefix is to be prepended to the new PR body.
+||| Get any inferred title prefix, body prefix, or default title from the
+||| current branch.
 |||
-||| The idea in either case is to pass along the information parsed from the
+||| The idea in any case is to pass along the information parsed from the
 ||| branch name to GitHub either via the PR's title or part of its body so that
 ||| an issue referenced by the branch is tracked in relation to the new PR.
 |||
+||| For GitHub only, the issue title is suggested as the default PR title.
+|||
 ||| If a GitHub issue is found, the body of the GitHub issue is also added
 ||| (commented out) to the body prefix as additional context.
-getTitleAndBodyPrefix : Config => Octokit => (branch : String) -> Promise' (String, String)
-getTitleAndBodyPrefix @{config} branch =
+getInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
+getInferredBranchInfo @{config} branch =
     case config.branchParsing of
-         Jira   => pure (fromMaybe "" $ (++ " - ") <$> parseJiraSlug branch, "")
+         Jira   => pure (MkInferredData ((++ " - ") <$> parseJiraSlug branch) Nothing Nothing)
          --               ^ Jira slugs become a title prefix
-         Github => githubTitleAndBodyPrefix branch
-         None   => pure ("", "")
+         Github => githubInferredBranchInfo branch
+         None   => pure noInferredData
 
+||| A GitHub URL at which a PR can be created for the given branch.
+prCreationUrl : (org : String) -> (repo : String) -> (branch : String) -> (intoBranch : Maybe String) -> String
+prCreationUrl org repo branch intoBranch =
+  "https://github.com/\{org}/\{repo}/compare/\{into}\{branch}?expand=1"
+    -- NOTE: I would love to be able to create the above 
+    --       URL such that the page opens with "draft" 
+    --       as the default if the PR was requested to 
+    --       be a draft via the CLI but I have not found 
+    --       a way to do that yet.
+    where
+      into : String
+      into = case intoBranch of
+                  Just branch => "\{branch}..."
+                  Nothing     => ""
+
+namespace TestPrCreationUrl
+  withoutIntoBranch : prCreationUrl "org" "repo" "branch" Nothing === "https://github.com/org/repo/compare/branch?expand=1"
+  withoutIntoBranch = Refl
+
+  withIntoBranch : prCreationUrl "org" "repo" "branch" (Just "main") === "https://github.com/org/repo/compare/main...branch?expand=1"
+  withIntoBranch = Refl
+
+||| If a PR can be found on GitHub for the current branch, that PR is returned.
+|||
+||| If no PR can be found on GitHub, the result depends on whether the current
+||| `stdout` is a TTY terminal or not. Given a TTY terminal, the user is walked
+||| through creating a new PR in-terminal. Otherwise, a GitHub URL is returned
+||| that, when visited, will allow the user to create a PR for the current
+||| branch in-browser.
 export
 identifyOrCreatePR : Config => Octokit => 
                      {default False markAsDraft : Bool}
@@ -329,21 +375,10 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
     | [] => case !(isTTY stdout) of
                True  => Actual Created <$> createPR
-               False => pure (Hypothetical prCreationUrl)
+               False => pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
     | _  => reject "Multiple PRs for the current brach. Harmony only handles 1 PR per branch currently."
   pure (Actual Identified openPr)
     where
-      prCreationUrl : String
-      prCreationUrl =
-        let repo = config.repo
-            org  = config.org
-        in  "https://github.com/\{org}/\{repo}/compare/\{branch}?expand=1"
-        -- NOTE: I would love to be able to create the above 
-        --       URL such that the page opens with "draft" 
-        --       as the default if the PR was requested to 
-        --       be a draft via the CLI but I have not found 
-        --       a way to do that yet.
-
       continueGivenUncommittedChanges : Promise' Bool
       continueGivenUncommittedChanges = do
         case !uncommittedChanges of
@@ -376,6 +411,20 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
       inlineDescriptionPrompt =
         "What would you like the description to be (two blank lines to finish)?"
 
+      notEmptyString : String -> Maybe String
+      notEmptyString "" = Nothing
+      notEmptyString str = Just str
+
+      prTitlePrompt : Maybe String -> Promise' String
+      prTitlePrompt defaultTitle =
+        let fallbackTitle = "New PR"
+        in  offerRetry 
+              "PR title cannot be an empty string."
+              "Did not find a non-empty value for a PR title. Will use '\{fallbackTitle}'"
+              fallbackTitle
+              (notEmptyString <$> getLineEnterForDefault "What would you like the title to be?"
+                                                         defaultTitle)
+
       createPR : Promise' PullRequest
       createPR = do
         -- create a remote tracking branch if needed
@@ -402,11 +451,11 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
         putStrLn "Creating a new PR for the current branch (\{branch})."
         baseBranch <- getBaseBranch
 
-        (titlePrefix, bodyPrefix) <- getTitleAndBodyPrefix branch
+        inferredBranchInfo <- getInferredBranchInfo branch
+        let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
+        let bodyPrefix  = fromMaybe "" inferredBranchInfo.bodyPrefix
 
-        putStrLn "What would you like the title to be?"
-        putStr titlePrefix
-        title <- (titlePrefix ++) . trim <$> getLine
+        title <- (titlePrefix ++) <$> (prTitlePrompt inferredBranchInfo.defaultTitle)
 
         -- either get the description at the command line or open an editor
         -- with a template if available

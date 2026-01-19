@@ -202,7 +202,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
                    , "If you don't set in your config now, you can set later with `harmony config githubPAT abcdefg`."
                    , "The ENV var will always take precedence over the config property."
                    , ""
-                   , "What PAT would you like to set in the config file\{defaultPATString}?"
+                   , "What PAT would you like to set in the config file?\{defaultPATString}"
                    ]
   configPAT <- (\case "" => Nothing; s => Just s) . trim <$> getLine
 
@@ -215,19 +215,22 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
   defaultOrgAndRepo <- (parseGitHubURI <$> remoteURI remoteGuess) <|> pure Nothing
 
   putStrLn ""
-  let orgDefaultStr = defaultStr (.org) defaultOrgAndRepo
-  putStrLn "What GitHub org would you like to use harmony for\{orgDefaultStr}?"
-  org  <- orIfEmpty (org defaultOrgAndRepo) . trim <$> getLine
+  org <-
+    getLineEnterForDefault
+      "What GitHub org would you like to use harmony for?"
+      (org defaultOrgAndRepo)
 
   putStrLn ""
-  let repoDefaultStr = defaultStr (.repo) defaultOrgAndRepo
-  putStrLn "What repository would you like to use harmony for\{repoDefaultStr}?"
-  repo <- orIfEmpty (repo defaultOrgAndRepo) . trim <$> getLine
+  repo <-
+    getLineEnterForDefault 
+      "What repository would you like to use harmony for?"
+      (repo defaultOrgAndRepo)
 
   putStrLn ""
-  let remoteDefaultStr = enterForDefaultStr remoteGuess
-  putStrLn "What GitHub remote repo would you like to use harmony for\{remoteDefaultStr}?"
-  defaultRemote <- orIfEmpty (Just remoteGuess) . trim <$> getLine
+  defaultRemote <-
+    getLineEnterForDefault
+      "What GitHub remote repo would you like to use harmony for?"
+      (Just remoteGuess)
   
   putStrLn ""
   commentOnRequest <- commentConfigPrompt 
@@ -284,29 +287,11 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
      either renderIO pure (checkConfigConsistency config)
      pure config
   where
-    offerRetry : HasIO io =>
-                 (fallbackDescription : String)
-              -> (failureDescription : String)
-              -> (fallback : Lazy a)
-              -> io (Maybe a)
-              -> io a
-    offerRetry fallbackDescription failureDescription fallback p = do
-      Nothing <- p
-        | Just first => pure first
-      putStrLn fallbackDescription
-      Nothing <- p
-        | Just second => pure second
-      putStrLn failureDescription
-      pure fallback
-
     org : Maybe GitRemote -> Maybe String
     org = map (.org)
 
     repo : Maybe GitRemote -> Maybe String
     repo = map (.repo)
-
-    enterForDefaultStr : String -> String
-    enterForDefaultStr str = " (ENTER for default: \{str})"
 
     defaultStr : (GitRemote -> String) -> Maybe GitRemote -> String
     defaultStr f = fromMaybe "" . map (enterForDefaultStr . f)
@@ -323,7 +308,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     themePrompt : HasIO io => io Theme
     themePrompt = do
       let defaultStr = enterForDefaultStr "dark"
-      putStrLn "Would you like harmony configured for a 'dark' or 'light' terminal background\{defaultStr}?"
+      putStrLn "Would you like harmony configured for a 'dark' or 'light' terminal background?\{defaultStr}"
       offerRetry "The theme must be either 'dark' or 'light'. Which would you prefer?" 
                  "Could not parse the input as a valid theme; will use 'dark' for now."
                  Dark $
@@ -332,7 +317,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     branchParsingPrompt : HasIO io => io ParseBranchStrategy
     branchParsingPrompt = do
       let defaultStr = enterForDefaultStr "none"
-      putStrLn "Would you like harmony to parse branch names for 'jira' slugs or 'github' issue numbers to use as part of new PR title or body\{defaultStr}?"
+      putStrLn "Would you like harmony to parse branch names for 'jira' slugs or 'github' issue numbers to use as part of new PR title or body?\{defaultStr}"
       offerRetry "Branch parsing must be 'none', 'jira', or 'github'. Which would you prefer?" 
                  "Could not parse the input as a valid option; will use 'none' for now."
                  None $
