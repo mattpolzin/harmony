@@ -1,3 +1,18 @@
+# 6.2.0 (More defaults)
+Published: 2026-01-19T03:42:49Z
+
+## What's Changed
+* Add better PR title handling to `pr` command (https://github.com/mattpolzin/harmony/pull/225)
+* Add enter-for-default option to `quick` command for the branch name (https://github.com/mattpolzin/harmony/pull/227)
+
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.1.1...6.2.0
+
+--------
+Install via `npm` with `npm install --global @mattpolzin/harmony` or by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` from the unzipped folder to install globally on your system. Use in a `nix` shell (assuming flakes are enabled) with `nix shell github:mattpolzin/harmony`. Install to your Nix profile with `nix profile add github:mattpolzin/harmony`.
+
+You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.\n
+
 # 6.1.1 (Overflowing with stability)
 Published: 2026-01-07T04:13:08Z
 
@@ -685,4 +700,3 @@ The first release of Harmony.
 Install release by downloading the attached `harmony-npm.tar.gz` file, extracting, and then running `npm install -g` to install globally on your system.
 
 You can build the source with Idris 2 v0.5.1
-
