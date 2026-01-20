@@ -491,25 +491,25 @@ branch @{config} = do
   putStrLn uri
 
 export
-data QuickArg = ABugfix | Title String
+data QuickArg = ABugfix | IssueNumOrTitle String
 
 export
 parseQuickArgs : List String -> List QuickArg
 parseQuickArgs [] = []
 parseQuickArgs ("--bugfix" :: xs) = ABugfix :: parseQuickArgs xs
-parseQuickArgs (titleStr :: xs) = Title titleStr :: parseQuickArgs xs
+parseQuickArgs (titleStr :: xs) = IssueNumOrTitle titleStr :: parseQuickArgs xs
 
 namespace TestParseQuickArgs
   testBugfix : parseQuickArgs ["--bugfix"] === [ABugfix]
   testBugfix = Refl
 
-  testBugfixLast : parseQuickArgs ["a", "bug", "--bugfix"] === [Title "a", Title "bug", ABugfix]
+  testBugfixLast : parseQuickArgs ["a", "bug", "--bugfix"] === [IssueNumOrTitle "a", IssueNumOrTitle "bug", ABugfix]
   testBugfixLast = Refl
 
-  testBugfixFirst : parseQuickArgs ["--bugfix", "a", "bug"] === [ABugfix, Title "a", Title "bug"]
+  testBugfixFirst : parseQuickArgs ["--bugfix", "a", "bug"] === [ABugfix, IssueNumOrTitle "a", IssueNumOrTitle "bug"]
   testBugfixFirst = Refl
 
-  testBugfixMiddle : parseQuickArgs ["a", "--bugfix", "bug"] === [Title "a", ABugfix, Title "bug"]
+  testBugfixMiddle : parseQuickArgs ["a", "--bugfix", "bug"] === [IssueNumOrTitle "a", ABugfix, IssueNumOrTitle "bug"]
   testBugfixMiddle = Refl
 
 titleArg : List QuickArg -> Maybe String
@@ -517,30 +517,47 @@ titleArg = foldl go Nothing
   where
     go : Maybe String -> QuickArg -> Maybe String
     go mstr ABugfix = mstr
-    go Nothing (Title str) = Just str
-    go (Just x) (Title str) = Just $ "\{x} \{str}"
+    go Nothing (IssueNumOrTitle str) = Just str
+    go (Just x) (IssueNumOrTitle str) = Just $ "\{x} \{str}"
 
 namespace TestTitleArg
-  testConcatsTitleStrings : titleArg [Title "One", Title "Two"] === Just "One Two"
+  testConcatsTitleStrings : titleArg [IssueNumOrTitle "One", IssueNumOrTitle "Two"] === Just "One Two"
   testConcatsTitleStrings = Refl
 
-  testSkipsBugfixArgs : titleArg [Title "One", ABugfix] === Just "One"
+  testSkipsBugfixArgs : titleArg [IssueNumOrTitle "One", ABugfix] === Just "One"
   testSkipsBugfixArgs = Refl
 
   testNothingForOnlyBugfix : titleArg [ABugfix] === Nothing
   testNothingForOnlyBugfix = Refl
 
+titleOrNumberArg : List QuickArg -> IssueIdent
+titleOrNumberArg [IssueNumOrTitle str] =
+  if isHashPrefix str
+     then IssueNumber $ drop 1 str
+     else IssueTitle str
+titleOrNumberArg args = maybe NoInfo IssueTitle $ titleArg args
+
+namespace TestTitleOrNumberArg
+  singleHashArgumentIsIssueNumber : titleOrNumberArg [IssueNumOrTitle "#1234"] === IssueNumber "1234"
+  singleHashArgumentIsIssueNumber = Refl
+
+  singleNonHashArgumentIsTitle : titleOrNumberArg [IssueNumOrTitle "1234"] === IssueTitle "1234"
+  singleNonHashArgumentIsTitle = Refl
+
+  multipleArgumentsIsTitle : titleOrNumberArg [IssueNumOrTitle "#1234", IssueNumOrTitle "hi"] === IssueTitle "#1234 hi"
+  multipleArgumentsIsTitle = Refl
+
 issueCategory : List QuickArg -> IssueCategory
 issueCategory = maybe Feature (const Bugfix) . find (\case ABugfix => True; _ => False)
 
 namespace TestIssueCategory
-  testPicksBugfixUpLast : issueCategory [Title "hello", ABugfix] === Bugfix
+  testPicksBugfixUpLast : issueCategory [IssueNumOrTitle "hello", ABugfix] === Bugfix
   testPicksBugfixUpLast = Refl
 
-  testPicksBugfixUpFirst : issueCategory [ABugfix, Title "hello"] === Bugfix
+  testPicksBugfixUpFirst : issueCategory [ABugfix, IssueNumOrTitle "hello"] === Bugfix
   testPicksBugfixUpFirst = Refl
 
-  testNotBugfix : issueCategory [Title "hi", Title "hello"] === Feature
+  testNotBugfix : issueCategory [IssueNumOrTitle "hi", IssueNumOrTitle "hello"] === Feature
   testNotBugfix = Refl
 
   testNotBugfixSimple : issueCategory [] === Feature
@@ -552,4 +569,4 @@ quick : Config =>
         Octokit =>
         (args : List QuickArg)
      -> Promise' ()
-quick args = quickStartNewWork (issueCategory args) (titleArg args)
+quick args = quickStartNewWork (issueCategory args) (titleOrNumberArg args)

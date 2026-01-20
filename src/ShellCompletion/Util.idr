@@ -57,11 +57,6 @@ namespace TestUnhashify
   test5 = Refl
 
 export
-isHashPrefix : String -> Bool
-isHashPrefix str =
-  ("#" `isPrefixOf` str) || ("\\#" `isPrefixOf` str)
-
-export
 isPrefixOf : (s : CompletionStyle) => String -> CompletionResult -> Bool
 isPrefixOf str = isPrefixOf str . name
 

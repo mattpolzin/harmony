@@ -28,14 +28,11 @@ namespace TestDasherize
   replacesSpacesWithDashes : dasherize "a b c" === "a-b-c"
   replacesSpacesWithDashes = Refl
 
-||| Quickly create a new GitHub issue and branch to go along with it.
-export
-quickStartNewWork : Config =>
-                    Octokit =>
-                    IssueCategory
-                 -> (issueTitle: Maybe String)
-                 -> Promise' ()
-quickStartNewWork @{config} issueCategory issueTitle' = do
+createNewIssue : Config =>
+                 Octokit =>
+                 (issueTitle : Maybe String)
+              -> Promise' Issue
+createNewIssue @{config} issueTitle' = do
   putStrLn "Creating a new GitHub issue and branch."
   putStrLn ""
 
@@ -51,10 +48,31 @@ quickStartNewWork @{config} issueCategory issueTitle' = do
                     Just ed => either (const "") id <$>
                                  editorDescription ed Nothing ""
 
-  issue <- createIssue config.org config.repo issueTitle issueBody
+  createIssue config.org config.repo issueTitle issueBody
+    where
+      issuePrompt : String
+      issuePrompt = "What would you like the issue description to be (two blank lines to finish)?"
+
+public export
+data IssueIdent = NoInfo
+                | IssueTitle String
+                | IssueNumber String
+
+||| Quickly create a branch to go along with a new GitHub or existing issue.
+export
+quickStartNewWork : Config =>
+                    Octokit =>
+                    IssueCategory
+                 -> (issueIdent : IssueIdent)
+                 -> Promise' ()
+quickStartNewWork @{config} issueCategory issueIdent = do
+  issue <- case issueIdent of
+                NoInfo                 => createNewIssue Nothing
+                IssueTitle  issueTitle => createNewIssue (Just issueTitle)
+                IssueNumber issueNum   => getIssue config.org config.repo issueNum
 
   let branchTemplate = "\{branchPrefix}/\{show issue.number}/"
-  let defaultBranchSlug = dasherize issueTitle
+  let defaultBranchSlug = dasherize issue.title
   let defaultBranchName = branchTemplate ++ defaultBranchSlug
   putStrLn "What would you like the branch to be named? \{enterForDefaultStr defaultBranchName}"
   putStr branchTemplate
@@ -63,9 +81,6 @@ quickStartNewWork @{config} issueCategory issueTitle' = do
   checkoutBranch {b=New} "\{branchTemplate}\{branchSlug}"
 
   where
-    issuePrompt : String
-    issuePrompt = "What would you like the issue description to be (two blank lines to finish)?"
-
     branchPrefix : String
     branchPrefix = toLower $ show issueCategory
 

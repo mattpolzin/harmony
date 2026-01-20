@@ -6,6 +6,8 @@ import Data.Maybe
 import ShellCompletion.Util
 import Data.String
 
+import Util
+
 import System.Git
 
 %default total

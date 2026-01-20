@@ -33,6 +33,11 @@ namespace String
   nonEmpty "" = Nothing
   nonEmpty cs = Just $ IsNonEmpty cs @{believe_me Oh}
 
+  public export
+  isHashPrefix : String -> Bool
+  isHashPrefix str =
+    ("#" `isPrefixOf` str) || ("\\#" `isPrefixOf` str)
+
 ||| Run the given applicative when the input is @Nothing@.
 ||| The dual of @whenJust@.
 export
