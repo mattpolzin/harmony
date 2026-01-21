@@ -272,7 +272,6 @@ const okit_list_pr_reviews = (octokit, owner, repo, pull_number, onSuccess, onFa
     onFailure
   )
 
-// list PRs for branch
 const digIssue = issue => {
     return {
       issue_number: issue.number,
@@ -301,6 +300,15 @@ const okit_get_issue = (octokit, owner, repo, issue_number, onSuccess, onFailure
   idris__okit_unpromisify(
     octokit.rest.issues.get({ owner, repo, issue_number }),
     r => onSuccess(JSON.stringify(digIssue(r.data))),
+    onFailure
+  )
+
+// Get a list of Issues
+// Executes callback with stringified JSON [{"issue_number": Int, "author": String, "created_at": Date, "title": String, "body": String?, "assignee": String?}]
+const okit_list_open_issues = (octokit, owner, repo, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.rest.issues.listForRepo({ owner, repo, state: 'open', sort: 'updated', direction: 'desc' }),
+    r => onSuccess(JSON.stringify(digIssues(r.data))),
     onFailure
   )
 

@@ -74,7 +74,7 @@ parseIssueString : String -> Either String Issue
 parseIssueString =
   (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> parseIssue
 
-||| Parse a list of users from a JSON String
+||| Parse a list of issues from a JSON String
 export
 parseIssuesString : String -> Either String (List Issue)
 parseIssuesString =

@@ -4,6 +4,7 @@ import Commands
 import Commands.Help
 
 import Data.Config
+import Data.Either
 import Data.Promise
 import Data.PullRequest
 import Data.String
@@ -52,37 +53,43 @@ resolve'' : Promise' () -> IO ()
 resolve'' = resolve' pure exitError
 
 covering
-shellCompletion : HasIO io => 
-                  CompletionStyle
+shellCompletion : (envGithubPAT : Maybe String)
+               -> CompletionStyle
                -> (subcommand : String)
                -> (curWord : String) 
                -> (prevWord : String) 
-               -> io ()
-shellCompletion completionStyle subcommand curWord prevWord = 
-  case completionStyle of
-       Cmds => putStr $ unlines !completions
-       CmdsAndDescriptions => putStr $ join "~" !completions
+               -> IO ()
+shellCompletion envPAT completionStyle subcommand curWord prevWord = 
+  resolve'' $
+    case completionStyle of
+         Cmds => putStr $ unlines !completions
+         CmdsAndDescriptions => putStr $ join "~" !completions
   where
-    ffiOpts : io (Maybe (List String))
-    ffiOpts =
-      Common.ffiOpts completionStyle subcommand curWord prevWord
-
-    configuredOpts : io (List String)
-    configuredOpts =
-      do Right config <- loadConfig False maximumLayoutWidth Nothing
-           | Left _ => pure []
-         pure (opts completionStyle subcommand curWord prevWord)
-
     trivialCompletions : Maybe (List String)
-    trivialCompletions = cmdOpts completionStyle subcommand curWord prevWord
+    trivialCompletions =
+      cmdOpts completionStyle subcommand curWord prevWord
 
-    completions : io (List String)
+    ffiCompletions : IO (Maybe (List String))
+    ffiCompletions =
+      ffiOpts completionStyle subcommand curWord prevWord
+
+    gitCompletions : Config => Lazy Octokit -> Promise' (List String)
+    gitCompletions gh =
+      gitOpts gh completionStyle subcommand curWord prevWord
+
+    completions : Promise' (List String)
     completions = do
       let Nothing = trivialCompletions
         | Just cs => pure cs
-      Nothing <- ffiOpts
+      Nothing <- liftIO ffiCompletions
         | Just cs => pure cs
-      configuredOpts
+      Right config <- loadConfig False maximumLayoutWidth Nothing
+        | Left _ => pure []
+      let [] = configuredOpts completionStyle subcommand curWord prevWord
+        | cs => pure cs
+      Just pat <- pure $ envPAT <|> expose <$> config.githubPAT
+        | Nothing => pure []
+      gitCompletions !(liftIO $ octokit pat)
 
 ||| Handle commands that require both configuration and
 ||| authentication.
@@ -211,8 +218,8 @@ handleArgs : (envGithubPAT : Maybe String)
           -> (editor : Maybe String)
           -> List String 
           -> IO ()
-handleArgs _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = shellCompletion Cmds subcommand curWord prevWord
-handleArgs _ _ _ _ ["--zsh-completion", subcommand, curWord, prevWord] = shellCompletion CmdsAndDescriptions subcommand curWord prevWord
+handleArgs envPAT _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = shellCompletion envPAT Cmds subcommand curWord prevWord
+handleArgs envPAT _ _ _ ["--zsh-completion", subcommand, curWord, prevWord] = shellCompletion envPAT CmdsAndDescriptions subcommand curWord prevWord
 handleArgs _ _ _ _ ["--bash-completion-script"] = putStrLn Bash.script
 handleArgs _ _ _ _ ["--zsh-completion-script"] = putStrLn Zsh.script
 handleArgs envPAT terminalColors terminalColumns editor args =
