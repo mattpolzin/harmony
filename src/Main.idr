@@ -59,12 +59,9 @@ shellCompletion : HasIO io =>
                -> (prevWord : String) 
                -> io ()
 shellCompletion completionStyle subcommand curWord prevWord = 
-  let trivialCompletions = cmdOpts completionStyle subcommand curWord prevWord
-      ffiCompletions = maybe ffiOpts (pure . Just) trivialCompletions
-      completions = ffiCompletions >>= \case Nothing => configuredOpts; Just cs => pure cs
-  in  case completionStyle of
-           Cmds => putStr $ unlines !completions
-           CmdsAndDescriptions => putStr $ join "~" !completions
+  case completionStyle of
+       Cmds => putStr $ unlines !completions
+       CmdsAndDescriptions => putStr $ join "~" !completions
   where
     ffiOpts : io (Maybe (List String))
     ffiOpts =
@@ -75,6 +72,17 @@ shellCompletion completionStyle subcommand curWord prevWord =
       do Right config <- loadConfig False maximumLayoutWidth Nothing
            | Left _ => pure []
          pure (opts completionStyle subcommand curWord prevWord)
+
+    trivialCompletions : Maybe (List String)
+    trivialCompletions = cmdOpts completionStyle subcommand curWord prevWord
+
+    completions : io (List String)
+    completions = do
+      let Nothing = trivialCompletions
+        | Just cs => pure cs
+      Nothing <- ffiOpts
+        | Just cs => pure cs
+      configuredOpts
 
 ||| Handle commands that require both configuration and
 ||| authentication.
