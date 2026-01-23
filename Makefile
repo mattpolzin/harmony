@@ -20,131 +20,158 @@ endif
 
 all: deps build
 
-./depends/idris-adds:
-	mkdir -p depends/idris-adds-${idris-adds-version}
+./build/deps/idris-adds:
 	mkdir -p build/deps
 	cd ./build/deps && \
-  git clone https://github.com/mattpolzin/idris-adds.git && \
-	cd idris-adds && \
+  git clone https://github.com/mattpolzin/idris-adds.git
+
+./depends/idris-adds: ./build/deps/idris-adds
+	mkdir -p depends/idris-adds-${idris-adds-version}
+	cd ./build/deps/idris-adds && \
 	git checkout ${idris-adds-version} && \
 	make && \
 	cp -R ./build/ttc/* ../../../depends/idris-adds-${idris-adds-version}
 
-./depends/idris2-elab-util:
+./build/deps/idris2-elab-util:
 	mkdir -p ./build/deps
-	mkdir -p ./depends
 	cd ./build/deps && \
-	git clone https://github.com/stefan-hoeck/idris2-elab-util.git && \
-	cd idris2-elab-util && \
+	git clone https://github.com/stefan-hoeck/idris2-elab-util.git
+
+./depends/idris2-elab-util: ./build/deps/idris2-elab-util
+	mkdir -p ./depends
+	cd ./build/deps/idris2-elab-util && \
 	$(IDRIS) --build elab-util.ipkg && \
 	IDRIS2_PACKAGE_PATH=$(IDRIS_LIB_DIR) IDRIS2_PREFIX=../../../depends $(IDRIS) --install elab-util.ipkg && \
+	rm -rf ../../../depends/elab-util-* && \
 	mv ../../../depends/idris2*/* ../../../depends/
 
-./depends/idris2-algebra:
+./build/deps/idris2-algebra:
 	mkdir -p ./build/deps
-	mkdir -p ./depends
 	cd ./build/deps && \
-	git clone https://github.com/stefan-hoeck/idris2-algebra.git && \
-	cd idris2-algebra && \
+	git clone https://github.com/stefan-hoeck/idris2-algebra.git
+
+./depends/idris2-algebra: ./build/deps/idris2-algebra
+	mkdir -p ./depends
+	cd ./build/deps/idris2-algebra && \
 	$(IDRIS) --build algebra.ipkg && \
 	IDRIS2_PACKAGE_PATH=$(IDRIS_LIB_DIR) IDRIS2_PREFIX=../../../depends $(IDRIS) --install algebra.ipkg && \
+	rm -rf ../../../depends/algebra-* && \
 	mv ../../../depends/idris2*/* ../../../depends/
 
-./depends/idris2-ref1:
+./build/deps/idris2-ref1:
 	mkdir -p ./build/deps
-	mkdir -p ./depends
 	cd ./build/deps && \
-	git clone https://github.com/stefan-hoeck/idris2-ref1.git && \
-	cd idris2-ref1 && \
+	git clone https://github.com/stefan-hoeck/idris2-ref1.git
+
+./depends/idris2-ref1: ./build/deps/idris2-ref1
+	mkdir -p ./depends
+	cd ./build/deps/idris2-ref1 && \
 	$(IDRIS) --build ref1.ipkg && \
 	IDRIS2_PACKAGE_PATH=$(IDRIS_LIB_DIR) IDRIS2_PREFIX=../../../depends $(IDRIS) --install ref1.ipkg && \
+	rm -rf ../../../depends/ref1-* && \
 	mv ../../../depends/idris2*/* ../../../depends/
 
-./depends/idris2-array:
+./build/deps/idris2-array:
 	mkdir -p ./build/deps
-	mkdir -p ./depends
 	cd ./build/deps && \
-	git clone https://github.com/stefan-hoeck/idris2-array.git && \
-	cd idris2-array && \
+	git clone https://github.com/stefan-hoeck/idris2-array.git
+
+./depends/idris2-array: ./build/deps/idris2-array
+	mkdir -p ./depends
+	cd ./build/deps/idris2-array && \
 	IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" $(IDRIS) --build array.ipkg && \
   IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" IDRIS2_PREFIX=../../../depends $(IDRIS) --install array.ipkg && \
+	rm -rf ../../../depends/array-* && \
 	mv ../../../depends/idris2*/* ../../../depends/
 
-./depends/idris2-bytestring:
+./build/deps/idris2-bytestring:
+	mkdir -p ./build/deps
+	cd ./build/deps && \
+	git clone https://github.com/stefan-hoeck/idris2-bytestring.git
+
+./depends/idris2-bytestring: ./build/deps/idris2-bytestring
 	mkdir -p ./build/deps
 	mkdir -p ./depends
-	cd ./build/deps && \
-	git clone https://github.com/stefan-hoeck/idris2-bytestring.git && \
-	cd idris2-bytestring && \
+	cd ./build/deps/idris2-bytestring && \
 	IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" $(IDRIS) --build bytestring.ipkg && \
   IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" IDRIS2_PREFIX=../../../depends $(IDRIS) --install bytestring.ipkg && \
+	rm -rf ../../../depends/bytestring-* && \
 	mv ../../../depends/idris2*/* ../../../depends/
 
-./depends/idris2-refined:
+./build/deps/idris2-refined:
 	mkdir -p ./build/deps
-	mkdir -p ./depends
 	cd ./build/deps && \
-	git clone https://github.com/stefan-hoeck/idris2-refined.git && \
-	cd idris2-refined && \
+	git clone https://github.com/stefan-hoeck/idris2-refined.git
+
+./depends/idris2-refined: ./build/deps/idris2-refined
+	mkdir -p ./depends
+	cd ./build/deps/idris2-refined && \
 	IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" $(IDRIS) --build refined.ipkg && \
   IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" IDRIS2_PREFIX=../../../depends $(IDRIS) --install refined.ipkg && \
+	rm -rf ../../../depends/refined-* && \
 	mv ../../../depends/idris2*/* ../../../depends/
 
-./depends/idris2-ilex/core:
+./build/deps/idris2-ilex:
 	mkdir -p ./build/deps
-	mkdir -p ./depends
 	cd ./build/deps && \
-	git clone https://github.com/stefan-hoeck/idris2-ilex.git && \
-	cd idris2-ilex/core && \
+	git clone https://github.com/stefan-hoeck/idris2-ilex.git
+
+./depends/idris2-ilex/core: ./build/deps/idris2-ilex
+	mkdir -p ./depends
+	cd ./build/deps/idris2-ilex/core && \
 	IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../../depends" $(IDRIS) --build ilex-core.ipkg && \
   IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../../depends" IDRIS2_PREFIX=../../../../depends $(IDRIS) --install ilex-core.ipkg && \
+	rm -rf ../../../../depends/ilex-core-* && \
 	mv ../../../../depends/idris2*/* ../../../../depends/
 
-./depends/idris2-ilex:
-	mkdir -p ./build/deps
+./depends/idris2-ilex: ./build/deps/idris2-ilex
 	mkdir -p ./depends
-	cd ./build/deps && \
-	cd idris2-ilex && \
+	cd ./build/deps/idris2-ilex && \
 	IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" $(IDRIS) --build ilex.ipkg && \
   IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" IDRIS2_PREFIX=../../../depends $(IDRIS) --install ilex.ipkg && \
+	rm -rf ../../../depends/ilex-0* && \
 	mv ../../../depends/idris2*/* ../../../depends/
 
-./depends/idris2-ilex/json:
-	mkdir -p ./build/deps
+./depends/idris2-ilex/json: ./build/deps/idris2-ilex
 	mkdir -p ./depends
-	cd ./build/deps && \
-	cd idris2-ilex/json && \
+	cd ./build/deps/idris2-ilex/json && \
 	IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../../depends" $(IDRIS) --build ilex-json.ipkg && \
   IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../../depends" IDRIS2_PREFIX=../../../../depends $(IDRIS) --install ilex-json.ipkg && \
+	rm -rf ../../../../depends/ilex-json-* && \
 	mv ../../../../depends/idris2*/* ../../../../depends/
 
-./depends/idris2-parser:
+./build/deps/idris2-parser:
 	mkdir -p ./build/deps
-	mkdir -p ./depends
 	cd ./build/deps && \
-	git clone https://github.com/stefan-hoeck/idris2-parser.git && \
-	cd idris2-parser && \
+	git clone https://github.com/stefan-hoeck/idris2-parser.git
+
+./depends/idris2-parser: ./build/deps/idris2-parser
+	mkdir -p ./depends
+	cd ./build/deps/idris2-parser && \
 	IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" $(IDRIS) --build parser.ipkg && \
 	IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" IDRIS2_PREFIX=../../../depends $(IDRIS) --install parser.ipkg && \
+	rm -rf ../../../depends/parser-* && \
 	mv ../../../depends/idris2*/* ../../../depends/
 
-./depends/idris2-parser/json:
-	mkdir -p ./build/deps
+./depends/idris2-parser/json: ./build/deps/idris2-parser
 	mkdir -p ./depends
-	cd ./build/deps && \
-	cd idris2-parser/json && \
+	cd ./build/deps/idris2-parser/json && \
 	IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../../depends" $(IDRIS) --build parser-json.ipkg && \
   IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../../depends" IDRIS2_PREFIX=../../../../depends $(IDRIS) --install parser-json.ipkg && \
+	rm -rf ../../../../depends/parser-json-* && \
 	mv ../../../../depends/idris2*/* ../../../../depends/
 
-./depends/idris2-json:
+./build/deps/idris2-json:
 	mkdir -p ./build/deps
-	mkdir -p ./depends
 	cd ./build/deps && \
-	git clone https://github.com/stefan-hoeck/idris2-json.git && \
-	cd idris2-json && \
+	git clone https://github.com/stefan-hoeck/idris2-json.git
+
+./depends/idris2-json: ./build/deps/idris2-json
+	mkdir -p ./depends
+	cd ./build/deps/idris2-json && \
 	IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" $(IDRIS) --build json.ipkg && \
   IDRIS2_PACKAGE_PATH="$(IDRIS_LIB_DIR):../../../depends" IDRIS2_PREFIX=../../../depends $(IDRIS) --install json.ipkg && \
+	rm -rf ../../../depends/json-* && \
 	mv ../../../depends/idris2*/* ../../../depends/
 
 deps: ./depends/idris-adds ./depends/idris2-elab-util ./depends/idris2-algebra ./depends/idris2-ref1 ./depends/idris2-array ./depends/idris2-bytestring ./depends/idris2-refined ./depends/idris2-ilex/core ./depends/idris2-ilex ./depends/idris2-ilex/json ./depends/idris2-parser ./depends/idris2-parser/json ./depends/idris2-json
