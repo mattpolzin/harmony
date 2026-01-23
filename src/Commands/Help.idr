@@ -105,7 +105,7 @@ subcommandHelp' n@"graph"   = subcommand n [argument False "-c/--completed", arg
   [reflow "Graph the relative review workload of the members of the given GitHub Team."]
 subcommandHelp' n@"help"    = subcommand n [argument False "<subcommand>"] ["Print help"]
 subcommandHelp' n@"version" = subcommand n [] ["Print version"]
-subcommandHelp' n@"quick"   = subcommand n [argument False "--bugfix", argument False "<title>", argument False "..."] [
+subcommandHelp' n@"quick"   = subcommand n [argument False "--bugfix", argument False "<title> | #<issue-number>", argument False "..."] [
     hcat [ reflow "Quickly spin up new work with a GitHub issue and associated feature branch. If you have harmony configured to parse GitHub issue numbers ("
          ,  shell "harmony config branchParsing github"
          , reflow ") then any PR created from the new branch will automatically link to the new ticket in its description."
@@ -115,10 +115,12 @@ subcommandHelp' n@"quick"   = subcommand n [argument False "--bugfix", argument 
       --bugfix flag is specified, the 'bugfix' prefix will be used.
       """
   , reflow """
-      All additional arguments other than --bugfix will be used as the issue
-      title. If you don't give any arguments then you will be prompted to enter
-      the issue title interactively. You will also be prompted for the issue
-      description.
+      If your only argument (possibly in addition to the bugfix flag) is
+      #<issue-number> for an existing GitHub issue then the new branch will
+      point at that existing issue. Otherwise, all additional arguments other
+      than --bugfix will be used as the issue title. If you don't give any
+      arguments then you will be prompted to enter the issue title
+      interactively. You will also be prompted for the issue description.
       """
   ]
 subcommandHelp' n@"sync"    = subcommand n [] ["Synchronize local config with information from GitHub."]
