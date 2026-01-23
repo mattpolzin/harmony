@@ -183,7 +183,7 @@ Create a pull request that will merge into the hypothetical pre-existing
 harmony pr --into release/2_0
 ```
 
-## `quick [--bugfix] [issue-title] [...]`
+## `quick [--bugfix] [issue-title | #<issue-number>] [...]`
 Helps you create a new GitHub issue and a branch to work on that issue all in
 one go. The branch name will be structured such that if you have GitHub branch
 parsing on then the PR you create for the branch later on will refer to the
@@ -192,10 +192,12 @@ issue created now.
 By default the branch created will be prefixed with `feature` but if you specify
 the `--bugfix` flag then the branch's prefix will be `bugfix`.
 
-Any additional arguments other than `--bugfix` will be used as the issue's
-title. If you don't specify the title as additional arguments, you will be
-prompted for one interactively. You will also be prompted for an issue
-description.
+If your only argument (possibly in addition to the bugfix flag) is
+`#<issue-number>` for an existing GitHub issue then the new branch will point at
+that existing issue. Otherwise, all additional arguments other than `--bugfix`
+will be used as the issue title. If you don't give any arguments then you will
+be prompted to enter the issue title interactively. You will also be prompted
+for the issue description.
 
 ## `reflect`
 Show a summary of your review requests and authored pull requests.

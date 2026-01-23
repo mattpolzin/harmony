@@ -39,3 +39,6 @@ into pr suggests draft arg:
 
 ready pr only suggests into arg:
 --into
+
+bugfix flag partial match:
+--bugfix

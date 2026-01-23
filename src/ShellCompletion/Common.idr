@@ -2,9 +2,15 @@ module ShellCompletion.Common
 
 import Data.CompletionStyle
 import Data.Config
+import Data.Issue
 import Data.Maybe
-import ShellCompletion.Util
+import Data.Promise
 import Data.String
+
+import ShellCompletion.Util
+import Util
+
+import FFI.GitHub
 
 import System.Git
 
@@ -95,7 +101,8 @@ allSettableProps s = completionResult <$> settablePropNamesAndHelp
 ||| @Nothing@ so that code can call out to the full @opts@
 ||| function after loading the config file.
 |||
-||| Depending on the CompletionStyle, the return value will either be just a name or a "name:descriptuion"
+||| Depending on the CompletionStyle, the return value will either be just a
+||| name or a "name:descriptuion"
 export
 cmdOpts : (s : CompletionStyle)
        -> (subcommand : String)
@@ -121,7 +128,10 @@ cmdOpts s "help" partialArg "help" = someWithPrefix partialArg (allRootCmds s)
 
 cmdOpts s "quick" "--"       "quick" = all (allQuickCmdOpts s)
 cmdOpts s "quick" "-"        "quick" = someWithPrefix "--" (allQuickCmdOpts s)
-cmdOpts s "quick" partialArg "quick" = someWithPrefix partialArg (allQuickCmdOpts s)
+cmdOpts s "quick" partialArg "quick" = 
+  if isHashPrefix partialArg
+     then Nothing -- <- falls through to handle with config below.
+     else someWithPrefix partialArg (allQuickCmdOpts s)
 
 cmdOpts s "pr" "--"          "pr"      = all (allPrCmdOpts s)
 cmdOpts s "pr" "-"           "pr"      = someWithPrefix "--" (allPrCmdOpts s)
@@ -168,11 +178,12 @@ optsForPrIntoOption partialBranch = do
                      _ => List.filter (isPrefixOf partialBranch) allBranches
   pure . Just $ matches
 
+||| Opts for which completion requires IO but not harmony configuration.
 export
 ffiOpts : HasIO io => (s : CompletionStyle) -> (subcommand : String) -> (curWord : String) -> (prevWord : String) -> io (Maybe (List String))
--- pr command (handled partially above, but when head references are specified, handled here)
--- we intentionally just return names without descriptions here for the
--- branches that match the partial argument
+-- pr command (handled partially above, but when head references are specified,
+-- handled here) we intentionally just return names without descriptions here
+-- for the branches that match the partial argument
 ffiOpts _ "pr" partialBranch "-i"     = optsForPrIntoOption partialBranch
 ffiOpts _ "pr" partialBranch "--into" = optsForPrIntoOption partialBranch
 ffiOpts _ _ _ _ = pure Nothing
@@ -192,51 +203,81 @@ optsForRequestCmd @{config} s partialArg =
                    then hashify . slugify <$> config.repoLabels
                    else config.teamSlugs
 
+||| opts for which completion requires full harmony configuration.
 export
-opts : Config => (s : CompletionStyle) -> (subcommand : String) -> (curWord : String) -> (prevWord : String) -> List String
+configuredOpts : Config => 
+       (s : CompletionStyle)
+    -> (subcommand : String)
+    -> (curWord : String)
+    -> (prevWord : String)
+    -> List String
 -- we assume we are not handling a root command (see @cmdOpts@ which
 -- should have already been called).
 
 -- and the label command
-opts @{config} _ "label" "--"         _ = 
+configuredOpts @{config} _ "label" "--"         _ = 
   let labels := describe "\{config.repo} label" . slugify <$> config.repoLabels
   in  name <$> labels
-opts @{config} _ "label" partialLabel _ = 
+configuredOpts @{config} _ "label" partialLabel _ = 
   let labels := describe "\{config.repo} label" . slugify <$> config.repoLabels
       filteredLabels := filter (isPrefixOf partialLabel) labels
   in  name <$> filteredLabels
 
 -- then list, which only accepts a single team slug:
-opts @{config} _ "list" "--"            "list" = 
+configuredOpts @{config} _ "list" "--"            "list" = 
   let teams := describe "\{config.repo} team" <$> config.teamSlugs
   in  name <$> teams
-opts @{config} _ "list" partialTeamName "list" = 
+configuredOpts @{config} _ "list" partialTeamName "list" = 
   let teams := describe "\{config.repo} team" <$> config.teamSlugs
       filteredTeams := filter (isPrefixOf partialTeamName) teams
   in  name <$> filteredTeams
-opts @{config} _ "list" "--" _ = []
+configuredOpts @{config} _ "list" "--" _ = []
 
 -- then graph, which only accepts a single team slug
-opts @{config} _ "graph" "--"            "graph"       = "--completed" :: config.teamSlugs
-opts @{config} _ "graph" "--"            "--completed" = config.teamSlugs
-opts @{config} _ "graph" partialTeamName previous =
+configuredOpts @{config} _ "graph" "--"            "graph"       = "--completed" :: config.teamSlugs
+configuredOpts @{config} _ "graph" "--"            "--completed" = config.teamSlugs
+configuredOpts @{config} _ "graph" partialTeamName previous =
   if isJust $ find (== previous) ["--completed", "graph"]
      then name <$> (filter (isPrefixOf partialTeamName) $ describe "\{config.repo} team" <$> config.teamSlugs)
      else []
 
 -- then pr (handled partially above, but when labels are specified, handled here)
-opts @{config} _ "pr" partialArg _ =
+configuredOpts @{config} _ "pr" partialArg _ =
   if isHashPrefix partialArg
      then hashify . slugify <$> config.repoLabels
      else []
 
 -- finally, request auto-completes with 
 -- either a team slug or '+' followed by a user login:
-opts @{config} _ "rq"      "--"       "rq"      = "--dry" :: config.teamSlugs
-opts @{config} _ "request" "--"       "request" = "--dry" :: config.teamSlugs
-opts @{config} _ "rq"      "--"       _         = config.teamSlugs
-opts @{config} _ "request" "--"       _         = config.teamSlugs
-opts           s "rq"      partialArg _         = optsForRequestCmd s partialArg
-opts           s "request" partialArg _         = optsForRequestCmd s partialArg
+configuredOpts @{config} _ "rq"      "--"       "rq"      = "--dry" :: config.teamSlugs
+configuredOpts @{config} _ "request" "--"       "request" = "--dry" :: config.teamSlugs
+configuredOpts @{config} _ "rq"      "--"       _         = config.teamSlugs
+configuredOpts @{config} _ "request" "--"       _         = config.teamSlugs
+configuredOpts           s "rq"      partialArg _         = optsForRequestCmd s partialArg
+configuredOpts           s "request" partialArg _         = optsForRequestCmd s partialArg
 
-opts _ _ _ _ = []
+configuredOpts _ _ _ _ = []
+
+hashifyIfPrefix : (substr : String) -> (issueNumber : Integer) -> Maybe String
+hashifyIfPrefix substr num =
+  let hashified = hashify $ show num
+  in  if substr `isPrefixOf` hashified
+         then Just hashified
+         else Nothing
+
+export
+gitOpts : Config =>
+          Lazy Octokit
+       -> (s : CompletionStyle)
+       -> (subcommand : String)
+       -> (curWord : String)
+       -> (prevWord : String)
+       -> Promise' (List String)
+gitOpts @{config} gh _ "quick" partialArg _ = do
+  issues <- listIssues @{gh} config.org config.repo
+  let str = stringify . completionResult
+  pure $ 
+    mapMaybe (\i => str . (, i.title) <$> hashifyIfPrefix partialArg i.number)
+             issues
+gitOpts _ _ _ _ _ = pure []
+
