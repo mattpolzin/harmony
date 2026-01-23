@@ -40,7 +40,7 @@ Harmony \- Harmonize with coworkers around GitHub reviewing
 .PD 0
 .P
 .PD
-\f[CR]harmony quick [options]\f[R]
+\f[CR]harmony quick [options] [issue\-title | #issue\-number] [...]\f[R]
 .PD 0
 .P
 .PD
@@ -399,7 +399,7 @@ pre\-existing \f[CR]release/2_0\f[R] branch:
 .EX
 harmony pr \-\-into release/2_0
 .EE
-.SS \f[CR]quick [\-\-bugfix] [issue\-title] [...]\f[R]
+.SS \f[CR]quick [\-\-bugfix] [issue\-title | #<issue\-number>] [...]\f[R]
 Helps you create a new GitHub issue and a branch to work on that issue
 all in one go.
 The branch name will be structured such that if you have GitHub branch
@@ -410,11 +410,14 @@ By default the branch created will be prefixed with \f[CR]feature\f[R]
 but if you specify the \f[CR]\-\-bugfix\f[R] flag then the branch\(cqs
 prefix will be \f[CR]bugfix\f[R].
 .PP
-Any additional arguments other than \f[CR]\-\-bugfix\f[R] will be used
-as the issue\(cqs title.
-If you don\(cqt specify the title as additional arguments, you will be
-prompted for one interactively.
-You will also be prompted for an issue description.
+If your only argument (possibly in addition to the bugfix flag) is
+\f[CR]#<issue\-number>\f[R] for an existing GitHub issue then the new
+branch will point at that existing issue.
+Otherwise, all additional arguments other than \f[CR]\-\-bugfix\f[R]
+will be used as the issue title.
+If you don\(cqt give any arguments then you will be prompted to enter
+the issue title interactively.
+You will also be prompted for the issue description.
 .SS \f[CR]reflect\f[R]
 Show a summary of your review requests and authored pull requests.
 .SS \f[CR]request {team\-slug | +user\-login} [options]\f[R]
