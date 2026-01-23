@@ -30,4 +30,11 @@ echo ''
 echo 'ready pr only suggests into arg:'
 $harmony --bash-completion pr -- --ready
 
+#
+# quick command
+#
+echo ''
+echo 'bugfix flag partial match:'
+$harmony --bash-completion quick - quick
+
 . ./cleanup.sh
