@@ -16,7 +16,7 @@ else
 	ised = sed -I ''
 endif
 
-.PHONY: all deps build test nix-build install package publish clean version manpage harmony
+.PHONY: all deps build test nix-build install package publish clean version readme manpage harmony
 
 all: deps build
 
@@ -216,6 +216,8 @@ README_FILES = $(wildcard docs/*.md)
 
 README.md: $(README_FILES)
 	bash ./scripts/generate-readme.sh
+
+readme: README.md
 
 man/harmony.1: $(README_FILES)
 	bash ./scripts/generate-manpage.sh
