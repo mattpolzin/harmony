@@ -16,7 +16,7 @@ else
 	ised = sed -I ''
 endif
 
-.PHONY: all deps build test nix-build install package publish clean version readme manpage harmony
+.PHONY: all deps build test nix-build install package publish clean version readme manpage changelog harmony
 
 all: deps build
 
@@ -223,6 +223,9 @@ man/harmony.1: $(README_FILES)
 	bash ./scripts/generate-manpage.sh
 
 manpage: man/harmony.1
+
+changelog:
+	bash ./scripts/generate-changelog.sh
 
 package: build README.md man/harmony.1
 	bash ./scripts/version-check.sh
