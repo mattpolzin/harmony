@@ -555,6 +555,9 @@ namespace TestTitleOrNumberArg
   singleHashArgPlusFlagIsNumber : titleOrNumberArg [ABugfix, IssueNumOrTitle "#1234"] === IssueNumber "1234"
   singleHashArgPlusFlagIsNumber = Refl
 
+  singleHashArgPlusFlagIsNumber' : titleOrNumberArg [IssueNumOrTitle "#1234", ABugfix] === IssueNumber "1234"
+  singleHashArgPlusFlagIsNumber' = Refl
+
 issueCategory : List QuickArg -> IssueCategory
 issueCategory = maybe Feature (const Bugfix) . find (\case ABugfix => True; _ => False)
 
