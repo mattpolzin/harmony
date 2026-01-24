@@ -279,19 +279,19 @@ namespace TestHashifyIfPrefix
     in  rewrite postulateIntegerShown in Refl
 
 export
-gitOpts : Config =>
-          Lazy Octokit
-       -> (s : CompletionStyle)
-       -> (subcommand : String)
-       -> (curWord : String)
-       -> (prevWord : String)
-       -> Promise' (List String)
-gitOpts @{config} gh _ "quick" partialArg _ = do
+githubOpts : Config =>
+             Lazy Octokit
+          -> (s : CompletionStyle)
+          -> (subcommand : String)
+          -> (curWord : String)
+          -> (prevWord : String)
+          -> Promise' (List String)
+githubOpts @{config} gh _ "quick" partialArg _ = do
   issues <- listIssues @{gh} config.org config.repo
   let partialArg' = unhashify partialArg
   let str = stringify . completionResult
   pure $ 
     mapMaybe (\i => str . (, i.title) <$> hashifyIfPrefix partialArg' i.number)
              issues
-gitOpts _ _ _ _ _ = pure []
+githubOpts _ _ _ _ _ = pure []
 

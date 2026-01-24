@@ -75,7 +75,7 @@ shellCompletion envPAT completionStyle subcommand curWord prevWord =
 
     gitCompletions : Config => Lazy Octokit -> Promise' (List String)
     gitCompletions gh =
-      gitOpts gh completionStyle subcommand curWord prevWord
+      githubOpts gh completionStyle subcommand curWord prevWord
 
     completions : Promise' (List String)
     completions = do
