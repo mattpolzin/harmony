@@ -241,7 +241,7 @@ const okit_mark_pr_ready = (octokit, opaque_pr_graphql_id, onSuccess, onFailure)
       }`,
       opaque_pr_graphql_id
     }),
-    r => onSuccess(JSON.stringify(digGraphQlPr(r.convertPullRequestToReady.pullRequest))),
+    r => onSuccess(JSON.stringify(digGraphQlPr(r.markPullRequestReadyForReview.pullRequest))),
     onFailure
   )
 
