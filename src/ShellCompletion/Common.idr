@@ -260,10 +260,23 @@ configuredOpts _ _ _ _ = []
 
 hashifyIfPrefix : (substr : String) -> (issueNumber : Integer) -> Maybe String
 hashifyIfPrefix substr num =
-  let hashified = hashify $ show num
-  in  if substr `isPrefixOf` hashified
-         then Just hashified
+  let numStr := show num
+  in  if substr `isPrefixOf` numStr
+         then Just . hashify $ numStr
          else Nothing
+
+namespace TestHashifyIfPrefix
+  testUnhashedMatch : hashifyIfPrefix "12" 1234 === Just "#1234"
+  testUnhashedMatch =
+    let postulateIntegerShown : show 1234 === "1234"
+        postulateIntegerShown = believe_me (Refl {x="1234"})
+    in rewrite postulateIntegerShown in Refl
+
+  testUnhashedNonMatch : hashifyIfPrefix "34" 1234 === Nothing
+  testUnhashedNonMatch =
+    let postulateIntegerShown : show 1234 === "1234"
+        postulateIntegerShown = believe_me (Refl {x="1234"})
+    in  rewrite postulateIntegerShown in Refl
 
 export
 gitOpts : Config =>
@@ -275,9 +288,10 @@ gitOpts : Config =>
        -> Promise' (List String)
 gitOpts @{config} gh _ "quick" partialArg _ = do
   issues <- listIssues @{gh} config.org config.repo
+  let partialArg' = unhashify partialArg
   let str = stringify . completionResult
   pure $ 
-    mapMaybe (\i => str . (, i.title) <$> hashifyIfPrefix partialArg i.number)
+    mapMaybe (\i => str . (, i.title) <$> hashifyIfPrefix partialArg' i.number)
              issues
 gitOpts _ _ _ _ _ = pure []
 

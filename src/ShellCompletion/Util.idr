@@ -24,7 +24,7 @@ public export
 unslugify : String -> String
 unslugify = pack . replaceOn '◌' ' ' . unpack
 
-export
+public export
 hashify : String -> String
 hashify = strCons '#'
 
@@ -56,7 +56,7 @@ namespace TestUnhashify
   test5 : unhashify "\\#hello" = "hello"
   test5 = Refl
 
-export
+public export
 isPrefixOf : (s : CompletionStyle) => String -> CompletionResult -> Bool
 isPrefixOf str = isPrefixOf str . name
 
