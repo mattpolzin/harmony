@@ -531,11 +531,16 @@ namespace TestTitleArg
   testNothingForOnlyBugfix = Refl
 
 titleOrNumberArg : List QuickArg -> IssueIdent
-titleOrNumberArg [IssueNumOrTitle str] =
-  if isHashPrefix str
-     then IssueNumber $ drop 1 str
-     else IssueTitle str
-titleOrNumberArg args = maybe NoInfo IssueTitle $ titleArg args
+titleOrNumberArg args =
+  go $ filter (\case ABugfix => False; _ => True) args
+
+  where
+    go : List QuickArg -> IssueIdent
+    go [IssueNumOrTitle str] =
+      if isHashPrefix str
+         then IssueNumber $ drop 1 str
+         else IssueTitle str
+    go args = maybe NoInfo IssueTitle $ titleArg args
 
 namespace TestTitleOrNumberArg
   singleHashArgumentIsIssueNumber : titleOrNumberArg [IssueNumOrTitle "#1234"] === IssueNumber "1234"
@@ -546,6 +551,9 @@ namespace TestTitleOrNumberArg
 
   multipleArgumentsIsTitle : titleOrNumberArg [IssueNumOrTitle "#1234", IssueNumOrTitle "hi"] === IssueTitle "#1234 hi"
   multipleArgumentsIsTitle = Refl
+
+  singleHashArgPlusFlagIsNumber : titleOrNumberArg [ABugfix, IssueNumOrTitle "#1234"] === IssueNumber "1234"
+  singleHashArgPlusFlagIsNumber = Refl
 
 issueCategory : List QuickArg -> IssueCategory
 issueCategory = maybe Feature (const Bugfix) . find (\case ABugfix => True; _ => False)
