@@ -1,3 +1,17 @@
+# 6.3.0 (Support existing issues for `quick` command)
+Published: 2026-01-24T18:54:10Z
+
+## What's Changed
+* quick command can be used with just an issue number by @mattpolzin in https://github.com/mattpolzin/harmony/pull/235
+* Fix crash after marking PR ready by @mattpolzin in https://github.com/mattpolzin/harmony/pull/247
+
+`harmony quick \#1234` is now short-hand for creating a branch locally for the given issue. This doesn't do much beyond `git checkout -b feature/1234/whatever` but it does allow you to accept-by-default a branch name built from the issue title. So if the issue title is "Fix a bug" then you can quickly and with few key-presses get a branch named `bugfix/1234/fix-a-bug` via `harmony quick --bugfix \#1234`.
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.2.0...6.3.0
+
+
+You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
+
 # 6.2.0 (More defaults)
 Published: 2026-01-19T03:42:49Z
 
