@@ -28,6 +28,13 @@ namespace TestDasherize
   replacesSpacesWithDashes : dasherize "a b c" === "a-b-c"
   replacesSpacesWithDashes = Refl
 
+branchNameSuggestion : String -> String
+branchNameSuggestion = toLower . dasherize
+
+namespace TestBranchNameSuggestion
+  testUppercaseAndSpace : branchNameSuggestion "A branch-Name-candidate" === "a-branch-name-candidate"
+  testUppercaseAndSpace = Refl
+
 createNewIssue : Config =>
                  Octokit =>
                  (issueTitle : Maybe String)
@@ -72,7 +79,7 @@ quickStartNewWork @{config} issueCategory issueIdent = do
                 IssueNumber issueNum   => getIssue config.org config.repo issueNum
 
   let branchTemplate = "\{branchPrefix}/\{show issue.number}/"
-  let defaultBranchSlug = dasherize issue.title
+  let defaultBranchSlug = branchNameSuggestion issue.title
   let defaultBranchName = branchTemplate ++ defaultBranchSlug
   putStrLn "What would you like the branch to be named? \{enterForDefaultStr defaultBranchName}"
   putStr branchTemplate
