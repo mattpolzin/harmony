@@ -55,14 +55,16 @@ export
 parseIssue : JSON -> Either String Issue
 parseIssue json =
  do issue <- object json
-    [issueNumber, issueTitle, issueBody, authorLogin, createdAtStr, assigneeLogin, prCount] <- lookupAll ["issue_number", "title", "body", "author", "created_at", "assignee", "linked_pr_count"] issue
+    [issueNumber, issueTitle, issueBody, authorLogin, createdAtStr, assigneeLogin] <- lookupAll ["issue_number", "title", "body", "author", "created_at", "assignee"] issue
     number      <- integer issueNumber
     title       <- string issueTitle
     body        <- maybe "" id <$> optional string issueBody
     author      <- string authorLogin
     createdAt   <- parseDateTime =<< string createdAtStr
     assignee    <- optional string assigneeLogin
-    linkedPRCount <- optional nat prCount 
+    linkedPRCount <- maybe (Right Nothing) 
+                           (optional nat)
+                           (lookup "linked_pr_count" issue)
     pure $ MkIssue {
         number
       , title

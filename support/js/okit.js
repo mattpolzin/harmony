@@ -280,7 +280,7 @@ const digIssue = issue => {
       title: issue.title,
       body: issue.body,
       assignee: issue.assignee ? issue.assignee.login : null,
-      linked_branch_count: null
+      linked_pr_count: null
     }
   }
 const digIssues = issueJson =>
