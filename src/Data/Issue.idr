@@ -25,12 +25,15 @@ record Issue where
   author    : String
   ||| The `login` of the assignee of the issue.
   assignee  : Maybe String
+  ||| The number of PRs linked to the issue. This is not returned for all
+  ||| queries; if not available then it is `Nothing`.
+  linkedPRCount : Maybe Nat
 
 %name Issue issue, issue1, issue2
 
 export
 Show Issue where
-  show (MkIssue number title _ _ author _) = 
+  show (MkIssue number title _ _ author _ _) = 
     "[\{show number}] \{authorString} - \{title}"
     where
       authorString : String
@@ -42,8 +45,8 @@ isAuthor login = (== login) . author
 
 export
 isAssignee : String -> Issue -> Bool
-isAssignee login (MkIssue _ _ _ _ _ Nothing) = False
-isAssignee login (MkIssue _ _ _ _ _ (Just assignee)) = login == assignee
+isAssignee login (MkIssue _ _ _ _ _ Nothing _) = False
+isAssignee login (MkIssue _ _ _ _ _ (Just assignee) _) = login == assignee
 
 parseDateTime : String -> Either String Date
 parseDateTime = maybeToEither "Failed to parse Date" . parseDateTimeString
@@ -52,13 +55,14 @@ export
 parseIssue : JSON -> Either String Issue
 parseIssue json =
  do issue <- object json
-    [issueNumber, issueTitle, issueBody, authorLogin, createdAtStr, assigneeLogin] <- lookupAll ["issue_number", "title", "body", "author", "created_at", "assignee"] issue
+    [issueNumber, issueTitle, issueBody, authorLogin, createdAtStr, assigneeLogin, prCount] <- lookupAll ["issue_number", "title", "body", "author", "created_at", "assignee", "linked_pr_count"] issue
     number      <- integer issueNumber
     title       <- string issueTitle
     body        <- maybe "" id <$> optional string issueBody
     author      <- string authorLogin
     createdAt   <- parseDateTime =<< string createdAtStr
     assignee    <- optional string assigneeLogin
+    linkedPRCount <- optional nat prCount 
     pure $ MkIssue {
         number
       , title
@@ -66,6 +70,7 @@ parseIssue json =
       , createdAt
       , author
       , assignee
+      , linkedPRCount
       }
 
 ||| Parse a single user from a JSON String

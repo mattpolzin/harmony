@@ -278,6 +278,16 @@ namespace TestHashifyIfPrefix
         postulateIntegerShown = believe_me (Refl {x="1234"})
     in  rewrite postulateIntegerShown in Refl
 
+describe : Issue -> String
+describe issue = "\{openPrs}\{issue.title}"
+  where
+    openPrs : String
+    openPrs = case issue.linkedPRCount of
+                   Just 0  => ""
+                   Just 1  => "{1 PR} "
+                   Just n  => "{\{show n} PRs} "
+                   Nothing => ""
+
 export
 githubOpts : Config =>
              Lazy Octokit
@@ -290,8 +300,9 @@ githubOpts @{config} gh _ "quick" partialArg _ = do
   issues <- listIssues @{gh} config.org config.repo
   let partialArg' = unhashify partialArg
   let str = stringify . completionResult
-  pure $ 
-    mapMaybe (\i => str . (, i.title) <$> hashifyIfPrefix partialArg' i.number)
+  let issues' =
+    mapMaybe (\i => (, i) <$> hashifyIfPrefix partialArg' i.number)
              issues
+  pure (str . mapSnd describe <$> sortBy (compare `on` linkedPRCount . snd) issues')
 githubOpts _ _ _ _ _ = pure []
 

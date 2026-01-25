@@ -5,6 +5,7 @@ import Data.List
 import Data.Vect
 import JSON.Parser
 import JSON.Encoder
+import Data.String
 
 %default total
 
@@ -20,6 +21,10 @@ bool = access "bool" getBoolean
 export
 integer : JSON -> Either String Integer
 integer = access "integer" getInteger
+
+export
+nat : JSON -> Either String Nat
+nat = access "natural number" (map cast . getInteger)
 
 export
 string : JSON -> Either String String

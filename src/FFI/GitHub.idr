@@ -206,7 +206,7 @@ createPR @{Kit ptr} {markAsDraft} owner repo head base title description =
   parsePrimResult parsePullRequestString $
     prim__createPR ptr owner repo head base title description markAsDraft
 
-%foreign okit_ffi "list_open_issues"
+%foreign okit_ffi "list_open_issues_graphql"
 prim__listIssues : Ptr OctokitRef 
                -> (owner : String) 
                -> (repo : String) 

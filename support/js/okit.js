@@ -279,7 +279,8 @@ const digIssue = issue => {
       created_at: issue.created_at,
       title: issue.title,
       body: issue.body,
-      assignee: issue.assignee ? issue.assignee.login : null
+      assignee: issue.assignee ? issue.assignee.login : null,
+      linked_branch_count: null
     }
   }
 const digIssues = issueJson =>
@@ -309,6 +310,54 @@ const okit_list_open_issues = (octokit, owner, repo, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.rest.issues.listForRepo({ owner, repo, state: 'open', sort: 'updated', direction: 'desc' }),
     r => onSuccess(JSON.stringify(digIssues(r.data))),
+    onFailure
+  )
+
+// Get GraphQL Issue Data
+const digGraphQlIssue = issue => {
+    return {
+      graphql_id: issue.id,
+      issue_number: issue.number,
+      author: issue.author.login,
+//      state: issue.state.toLowerCase(),
+      created_at: issue.createdAt,
+      title: issue.title,
+      body: issue.body,
+      assignee: issue.assignedActors.nodes.map(a => a.login).first || null,
+      linked_pr_count: issue.closedByPullRequestsReferences.nodes.length
+    }
+  }
+const digGraphQlIssues = issueJson =>
+  issueJson.map(digGraphQlIssue)
+
+const graphql_issue_selections = `
+            id
+            number
+            author { ... on Actor { login } }
+            state
+            createdAt
+            title
+            body
+            assignedActors(first: 10) { nodes { ... on Actor { login } } }
+            closedByPullRequestsReferences(first: 10) { nodes { ... on PullRequest { number } } }
+`
+
+const okit_list_open_issues_graphql = (octokit, owner, repo, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.graphql({
+      query: `query listIssues($owner: String!, $repo: String!) {
+        repository(owner: $owner, name: $repo) {
+          issues(states: [OPEN], orderBy: {field: UPDATED_AT, direction: DESC}, first: 30) {
+            nodes { ... on Issue {
+              ${graphql_issue_selections}
+            }}
+          }
+        }
+      }`,
+      owner,
+      repo
+    }),
+    r => onSuccess(JSON.stringify(digGraphQlIssues(r.repository.issues.nodes))),
     onFailure
   )
 
