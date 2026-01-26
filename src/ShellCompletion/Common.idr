@@ -348,7 +348,7 @@ githubOpts @{config} gh _ "quick" partialArg _ = do
   issues <- listIssues @{gh} config.org config.repo
   let partialArg' = unhashify partialArg
   let str = stringify . completionResult
-  let sorter = (compareIssues config.githubUser) `on` id . snd
+  let sorter = (compareIssues config.githubUser) `on` snd
   let describer = describe config.githubUser
   let issues' =
     mapMaybe (\i => (, i) <$> hashifyIfPrefix partialArg' i.number)
