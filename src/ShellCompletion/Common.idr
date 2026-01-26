@@ -278,8 +278,8 @@ namespace TestHashifyIfPrefix
         postulateIntegerShown = believe_me (Refl {x="1234"})
     in  rewrite postulateIntegerShown in Refl
 
-describe : Issue -> String
-describe issue = "\{openPrs}\{issue.title}"
+describe : (githubUser : Maybe String) -> Issue -> String
+describe user issue = "\{assigned user}\{openPrs}\{issue.title}"
   where
     openPrs : String
     openPrs = case issue.linkedPRCount of
@@ -287,6 +287,54 @@ describe issue = "\{openPrs}\{issue.title}"
                    Just 1  => "{1 PR} "
                    Just n  => "{\{show n} PRs} "
                    Nothing => ""
+
+    assigned : Maybe String -> String
+    assigned Nothing           = ""
+    assigned (Just githubUser) =
+      case issue.assignee of
+           Nothing => ""
+           Just assignee =>
+             if assignee == githubUser
+                then "{yours} "
+                else "{taken} "
+
+||| Put issues assigned to the given user at the top and issues assigned to
+||| other users at the bottom with everything else between.
+compareAssignees : (githubUser : Maybe String) -> (assignee1 : Maybe String) -> (assignee2 : Maybe String) -> Ordering
+compareAssignees Nothing _ _ = EQ
+compareAssignees _ Nothing Nothing = EQ
+compareAssignees (Just u) Nothing (Just a2) =
+  if u == a2 then GT else LT
+compareAssignees (Just u) (Just a1) Nothing =
+  if u == a1 then LT else GT
+compareAssignees (Just u) (Just a1) (Just a2) =
+  if a1 == a2
+     then EQ
+     else if u == a2
+             then GT
+             else if u == a1
+                     then LT
+                     else EQ
+
+namespace TestCompareAssignees
+  noKnownGithubUser : (assignee1 : Maybe String) -> (assignee2 : Maybe String) -> compareAssignees Nothing assignee1 assignee2 === EQ
+  noKnownGithubUser _ _ = Refl
+
+  unassignedsAreEq : (githubUser : String) -> compareAssignees (Just githubUser) Nothing Nothing === EQ
+  unassignedsAreEq _ = Refl
+
+compareIssues : (githubUser : Maybe String) -> Issue -> Issue -> Ordering
+compareIssues u (MkIssue _ _ _ _ _ assignee1 (Just prCount1)) (MkIssue _ _ _ _ _ assignee2 (Just prCount2)) =
+  case compare prCount1 prCount2 of
+       LT => LT
+       GT => GT
+       EQ => compareAssignees u assignee1 assignee2
+compareIssues u (MkIssue _ _ _ _ _ assignee1 Nothing) (MkIssue _ _ _ _ _ assignee2 (Just _)) =
+  LT
+compareIssues u (MkIssue _ _ _ _ _ assignee1 (Just _)) (MkIssue _ _ _ _ _ assignee2 Nothing) =
+  GT
+compareIssues u (MkIssue _ _ _ _ _ assignee1 Nothing) (MkIssue _ _ _ _ _ assignee2 Nothing) =
+  compareAssignees u assignee1 assignee2
 
 export
 githubOpts : Config =>
@@ -300,9 +348,11 @@ githubOpts @{config} gh _ "quick" partialArg _ = do
   issues <- listIssues @{gh} config.org config.repo
   let partialArg' = unhashify partialArg
   let str = stringify . completionResult
+  let sorter = (compareIssues config.githubUser) `on` id . snd
+  let describer = describe config.githubUser
   let issues' =
     mapMaybe (\i => (, i) <$> hashifyIfPrefix partialArg' i.number)
              issues
-  pure (str . mapSnd describe <$> sortBy (compare `on` linkedPRCount . snd) issues')
+  pure (str . mapSnd describer <$> sortBy sorter issues')
 githubOpts _ _ _ _ _ = pure []
 
