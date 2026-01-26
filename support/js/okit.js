@@ -323,7 +323,7 @@ const digGraphQlIssue = issue => {
       created_at: issue.createdAt,
       title: issue.title,
       body: issue.body,
-      assignee: issue.assignedActors.nodes.map(a => a.login).first || null,
+      assignee: issue.assignedActors.nodes.map(a => a.login).at(0) || null,
       linked_pr_count: issue.closedByPullRequestsReferences.nodes.length
     }
   }
