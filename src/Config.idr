@@ -8,6 +8,7 @@ import Data.List1
 import Data.Promise
 import Data.String
 import Data.Theme
+import Data.User
 import Decidable.Equality
 import FFI.GitHub
 import JSON.Parser
@@ -38,11 +39,13 @@ syncConfig @{config} echo =
  do teamSlugs  <- nonOrgFallback [] $ listTeams config.org
     orgMembers <- nonOrgFallback [] $ listOrgMembers config.org
     labelNames <- listRepoLabels config.org config.repo
+    githubUser <- login <$> getSelf
     updatedAt  <- cast {to=Data.Config.Timestamp} <$> time
     let config' = { updatedAt  := updatedAt
                   , teamSlugs  := teamSlugs
                   , repoLabels := labelNames
                   , orgMembers := orgMembers
+                  , githubUser := Just githubUser
                   } config
     ignore $ writeConfig config'
     when echo $
@@ -263,6 +266,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
   do teamSlugs  <- nonOrgFallback [] $ listTeams org
      orgMembers <- nonOrgFallback [] $ listOrgMembers org
      repoLabels <- listRepoLabels org repo
+     githubUser <- login <$> getSelf
      let config = MkConfig {
          updatedAt
        , org
@@ -278,6 +282,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
        , orgMembers
        , ignoredPRs = []
        , githubPAT = hide <$> configPAT
+       , githubUser = Just githubUser
        , theme
        , ephemeral
        }

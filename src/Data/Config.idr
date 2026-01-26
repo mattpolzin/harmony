@@ -146,6 +146,13 @@ record Config where
   ||| $GITHUB_PAT or $GH_TOKEN environment variable set. One of either the
   ||| environment variable or this config property must be set.
   githubPAT     : Maybe (Hidden String)
+  ||| Generally not used for harmony actions which can rely on the concept of a
+  ||| current (authenticated) user for any given GitHub request, but if shell
+  ||| completion or some other action is only indirectly related to a GitHub
+  ||| user then it may use this cached information.
+  |||
+  ||| This is the user's login or "slug"
+  githubUser    : Maybe String
   ||| Should Harmony print with colors fit for a dark terminal or a light
   ||| terminal?
   theme         : Theme
@@ -318,6 +325,7 @@ Show Config where
     , "      orgMembers: \{show config.orgMembers}"
     , "      ignoredPRs: \{show config.ignoredPRs}"
     , "       githubPAT: \{personalAccessToken}"
+    , "      githubUser: \{show config.githubUser}"
     ]
       where
         personalAccessToken : String
@@ -331,7 +339,7 @@ export
 json : Config -> JSON
 json (MkConfig updatedAt org repo defaultRemote mainBranch
                requestTeams requestUsers commentOnRequest branchParsing teamSlugs
-               repoLabels orgMembers ignoredPRs githubPAT theme _) =
+               repoLabels orgMembers ignoredPRs githubPAT githubUser theme _) =
   JObject [
       ("requestTeams"    , JBool requestTeams)
     , ("requestUsers"    , JBool requestUsers)
@@ -347,6 +355,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch
     , ("repoLabels"      , JArray $ JString <$> sort repoLabels)
     , ("ignoredPRs"      , JArray $ JInteger . cast <$> sort ignoredPRs)
     , ("githubPAT"       , maybe JNull (JString . expose) githubPAT)
+    , ("githubUser"      , maybe JNull JString githubUser)
     , ("updatedAt"       , JInteger $ cast updatedAt)
     ]
 
@@ -389,6 +398,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               , "theme"
                                               ] config
                                           let maybeGithubPAT = lookup "githubPAT" config
+                                          let maybeGithubUser = lookup "githubUser" config
                                           let maybeBranchParsing = lookup "branchParsing" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
@@ -406,6 +416,9 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           om <- array string orgMembers
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
+                                          gu <- maybe (Right Nothing) (optional string) maybeGithubUser
+                                          -- TODO 7.0.0: Make githubUser required part of config file (default to Nothing)
+                                          --             githubUser lookup can be moved to the required lookupAll above.
                                           th <- (stringy "dark or light" parseString) theme
                                           pure $ MkConfig {
                                               updatedAt         = ua
@@ -422,6 +435,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , orgMembers        = om
                                             , ignoredPRs        = ip
                                             , githubPAT         = (map Hide) gp
+                                            , githubUser        = gu
                                             , theme             = th
                                             , ephemeral         = ephemeral
                                             }
@@ -463,6 +477,7 @@ simpleDefaults =
       , orgMembers        = []
       , ignoredPRs        = []
       , githubPAT         = Nothing
+      , githubUser        = Nothing
       , theme             = Dark
       , ephemeral         = MkEphem "path/to/repo" False 200 Nothing
       }

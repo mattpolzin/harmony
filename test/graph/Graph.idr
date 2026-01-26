@@ -21,6 +21,7 @@ config =
       , orgMembers        = ["sam", "gretta", "florence"]
       , ignoredPRs        = []
       , githubPAT         = Nothing
+      , githubUser        = Nothing
       , theme             = Dark
       , ephemeral         = MkEphem "path/to/repo" False 200 Nothing
       }
