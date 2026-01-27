@@ -1,3 +1,14 @@
+# 6.3.1 (Quick and precise)
+Published: 2026-01-27T02:39:24Z
+
+## What's Changed
+* make quick only issues (https://github.com/mattpolzin/harmony/pull/253)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.3.0...6.3.1
+
+
+You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
+
 # 6.3.0 (Support existing issues for `quick` command)
 Published: 2026-01-24T18:54:10Z
 
