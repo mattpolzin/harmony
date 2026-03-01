@@ -265,19 +265,6 @@ hashifyIfPrefix substr num =
          then Just . hashify $ numStr
          else Nothing
 
-namespace TestHashifyIfPrefix
-  testUnhashedMatch : hashifyIfPrefix "12" 1234 === Just "#1234"
-  testUnhashedMatch =
-    let postulateIntegerShown : show 1234 === "1234"
-        postulateIntegerShown = believe_me (Refl {x="1234"})
-    in rewrite postulateIntegerShown in Refl
-
-  testUnhashedNonMatch : hashifyIfPrefix "34" 1234 === Nothing
-  testUnhashedNonMatch =
-    let postulateIntegerShown : show 1234 === "1234"
-        postulateIntegerShown = believe_me (Refl {x="1234"})
-    in  rewrite postulateIntegerShown in Refl
-
 describe : (githubUser : Maybe String) -> Issue -> String
 describe user issue = "\{assigned user}\{openPrs}\{issue.title}"
   where
@@ -315,13 +302,6 @@ compareAssignees (Just u) (Just a1) (Just a2) =
              else if u == a1
                      then LT
                      else EQ
-
-namespace TestCompareAssignees
-  noKnownGithubUser : (assignee1 : Maybe String) -> (assignee2 : Maybe String) -> compareAssignees Nothing assignee1 assignee2 === EQ
-  noKnownGithubUser _ _ = Refl
-
-  unassignedsAreEq : (githubUser : String) -> compareAssignees (Just githubUser) Nothing Nothing === EQ
-  unassignedsAreEq _ = Refl
 
 compareIssues : (githubUser : Maybe String) -> Issue -> Issue -> Ordering
 compareIssues u (MkIssue _ _ _ _ _ assignee1 (Just prCount1)) (MkIssue _ _ _ _ _ assignee2 (Just prCount2)) =

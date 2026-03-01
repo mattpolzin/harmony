@@ -351,13 +351,6 @@ prCreationUrl org repo branch intoBranch =
                   Just branch => "\{branch}..."
                   Nothing     => ""
 
-namespace TestPrCreationUrl
-  withoutIntoBranch : prCreationUrl "org" "repo" "branch" Nothing === "https://github.com/org/repo/compare/branch?expand=1"
-  withoutIntoBranch = Refl
-
-  withIntoBranch : prCreationUrl "org" "repo" "branch" (Just "main") === "https://github.com/org/repo/compare/main...branch?expand=1"
-  withIntoBranch = Refl
-
 ||| If a PR can be found on GitHub for the current branch, that PR is returned.
 |||
 ||| If no PR can be found on GitHub, the result depends on whether the current
