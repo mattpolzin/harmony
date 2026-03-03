@@ -90,7 +90,7 @@ buildIdris {
       --prefix NODE_PATH : ${nodeDependencies}/node_modules
   '';
 
-  checkInputs = [ type-test ];
+  nativeCheckInputs = [ type-test ];
   checkPhase = ''
     find src -name 'Test.idr' | \
       xargs type-test --find-ipkg 
