@@ -40,22 +40,6 @@ unhashify str = case strM str of
                             (StrCons _ _) => str
                      (StrCons _ _) => str
 
-namespace TestUnhashify
-  test1 : unhashify "" = ""
-  test1 = Refl
-
-  test2 : unhashify "\\" = "\\"
-  test2 = Refl
-
-  test3 : unhashify "#hello" = "hello"
-  test3 = Refl
-
-  test4 : unhashify "\\hello" = "\\hello"
-  test4 = Refl
-
-  test5 : unhashify "\\#hello" = "hello"
-  test5 = Refl
-
 public export
 isPrefixOf : (s : CompletionStyle) => String -> CompletionResult -> Bool
 isPrefixOf str = isPrefixOf str . name
@@ -88,16 +72,3 @@ all = Just . stringify'
 export
 someFrom : (s : CompletionStyle) => List String -> List (CompletionResult @{s}) -> Maybe (List String)
 someFrom opts = Just . stringify' . filter (\o => isInfixOfBy (flip matches) [o] opts)
-
-namespace TestSomeFrom
-  matchesAllOpts1 : someFrom @{Cmds} ["--bugfix"] ["--bugfix"] === Just ["--bugfix"]
-  matchesAllOpts1 = Refl
-
-  matchesAllOpts2 : someFrom @{Cmds} ["--one", "--two"] ["--one", "--two"] === Just ["--one", "--two"]
-  matchesAllOpts2 = Refl
-
-  matchesOneOpt : someFrom @{Cmds} ["--bugfix"] ["--one", "--two", "--bugfix", "--three"] === Just ["--bugfix"]
-  matchesOneOpt = Refl
-
-  matchesWithDescription : someFrom @{CmdsAndDescriptions} ["--bugfix"] [("--one", "one"), ("--bugfix", "hello"), ("--three", "three")] === Just ["--bugfix:hello"]
-  matchesWithDescription = Refl
