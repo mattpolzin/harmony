@@ -168,17 +168,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1768443518,
-        "narHash": "sha256-2TH/mT6Z5BNoVunICv257JxtrPftwNFqDo8h6Rm4LG8=",
+        "lastModified": 1771924075,
+        "narHash": "sha256-8YocUHeptsWn3J20LxxBrsvuFTXYVpq4dbhBDy4p2uw=",
         "owner": "idris-lang",
         "repo": "idris2",
-        "rev": "2be43760d947b6d315de909bc7f44404e3e9de7a",
+        "rev": "6837b47a887a87228d202e9580f3ac8e8695ff58",
         "type": "github"
       },
       "original": {
         "owner": "idris-lang",
         "repo": "idris2",
-        "rev": "2be43760d947b6d315de909bc7f44404e3e9de7a",
+        "rev": "6837b47a887a87228d202e9580f3ac8e8695ff58",
         "type": "github"
       }
     },
@@ -286,11 +286,11 @@
     "idris2PackDbSrc": {
       "flake": false,
       "locked": {
-        "lastModified": 1769466913,
-        "narHash": "sha256-8TGzRlK6wjxC1Zt+UG/5lWQvtOocikykhpe5FJ+CRnM=",
+        "lastModified": 1772404621,
+        "narHash": "sha256-dyx/8wAu6/NBzbwGpnLEJRr9nzwTREx2uXBTNvlxljk=",
         "owner": "stefan-hoeck",
         "repo": "idris2-pack-db",
-        "rev": "110d8ef21bc2f9467bf2e3e8d3b3fc7ac6277eaa",
+        "rev": "1bfa7cd7bd6e0fa0315959d64e1bef6c6ceaf00e",
         "type": "github"
       },
       "original": {
@@ -368,11 +368,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1769421245,
-        "narHash": "sha256-m5QLKjpdhbDrhyrUbEm5Haq3lqE5Z6xh2tab5vTHUTo=",
+        "lastModified": 1772419343,
+        "narHash": "sha256-QU3Cd5DJH7dHyMnGEFfPcZDaCAsJQ6tUD+JuUsYqnKU=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "5b265bda51b42a2a85af0a543c3e57b778b01b7d",
+        "rev": "93178f6a00c22fcdee1c6f5f9ab92f2072072ea9",
         "type": "github"
       },
       "original": {
@@ -384,11 +384,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1769421245,
-        "narHash": "sha256-m5QLKjpdhbDrhyrUbEm5Haq3lqE5Z6xh2tab5vTHUTo=",
+        "lastModified": 1772173633,
+        "narHash": "sha256-MOH58F4AIbCkh6qlQcwMycyk5SWvsqnS/TCfnqDlpj4=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "5b265bda51b42a2a85af0a543c3e57b778b01b7d",
+        "rev": "c0f3d81a7ddbc2b1332be0d8481a672b4f6004d6",
         "type": "github"
       },
       "original": {
@@ -406,11 +406,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1769478171,
-        "narHash": "sha256-2r3wkmU6fQuvPMtWStxrbltO2QCnG6VpyEZyai9YuxU=",
+        "lastModified": 1772415952,
+        "narHash": "sha256-UcCblOYA9dpXEahDLMhmQfOBYCe5eUYVaqLm+zN0M0Y=",
         "owner": "mattpolzin",
         "repo": "nix-idris2-packages",
-        "rev": "fbfc343a581c795b2dcd88354539206efc7209fe",
+        "rev": "acfcaec06b55802fb4434e06d971d35a90fd3f14",
         "type": "github"
       },
       "original": {
@@ -422,7 +422,8 @@
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
-        "packageset": "packageset"
+        "packageset": "packageset",
+        "type-test-pkg": "type-test-pkg"
       }
     },
     "rust-analyzer-src": {
@@ -469,6 +470,29 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "type-test-pkg": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "packageset": [
+          "packageset"
+        ]
+      },
+      "locked": {
+        "lastModified": 1770582788,
+        "narHash": "sha256-uCaM4wxeySFEcT+byXgFibMSuyc1M6mbeI/k7efXaeY=",
+        "owner": "mattpolzin",
+        "repo": "idris2-type-test",
+        "rev": "68310ba2948da780a4b1b5f8fa238991ea6bb689",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mattpolzin",
+        "repo": "idris2-type-test",
         "type": "github"
       }
     }

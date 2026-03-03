@@ -10,6 +10,8 @@
   pandoc,
   stdenv,
   zsh,
+  type-test,
+  type-testApi,
 }:
 let
   idrisAddsVersion = "0.5.0";
@@ -52,7 +54,7 @@ buildIdris {
     name = "harmony-pkg-src";
   };
 
-  extraIdrisLibraries = [ idrisAdds ];
+  extraIdrisLibraries = [ idrisAdds type-testApi ];
 
   nativeBuildInputs = [
     installShellFiles
@@ -86,6 +88,12 @@ buildIdris {
         ]
       } \
       --prefix NODE_PATH : ${nodeDependencies}/node_modules
+  '';
+
+  checkInputs = [ type-test ];
+  checkPhase = ''
+    find src -name 'Test.idr' | \
+      xargs type-test --find-ipkg 
   '';
 
   installCheckPhase = ''
