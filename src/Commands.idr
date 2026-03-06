@@ -135,25 +135,6 @@ parsePrArgs args =
            Nothing  => mapSnd (\xs' => "--into" :: x :: xs') (recombineIntoArgs xs)
     recombineIntoArgs (x :: xs) = mapSnd (x ::) (recombineIntoArgs xs)
 
-namespace TestParsePrArgs
-  parsesJustDraftFlag : parsePrArgs ["--draft"] === Right [Draft]
-  parsesJustDraftFlag = Refl
-
-  parsesJustReadyFlag : parsePrArgs ["--ready"] === Right [Ready]
-  parsesJustReadyFlag = Refl
-
-  parsesJustLabels : parsePrArgs ["#one", "#two"] === Right [Label "one", Label "two"]
-  parsesJustLabels = Refl
-
-  parsesIntoOption : parsePrArgs ["--into", "a"] === Right [Into (Branch (Evidence "a" (IsNonEmpty "a")))]
-  parsesIntoOption = Refl
-
-  errorsForJustIntoFlag : parsePrArgs ["--into"] === Left Commands.prUsageError
-  errorsForJustIntoFlag = Refl
-
-  errorsForLabelWithoutHash : parsePrArgs ["a"] === Left Commands.prUsageError
-  errorsForLabelWithoutHash = Refl
-
 ||| Print the URI for the current branch's PR or create a new PR if one
 ||| does not exist when the user executes `harmony pr`. Supports creation
 ||| of draft PRs (default False) and can accept any number of labels to apply
@@ -286,32 +267,6 @@ parseGraphArgs args =
 
     parseTeamArg : String -> Maybe GraphArg
     parseTeamArg str = Just (TeamName str)
-
-namespace TestParseGraphArgs
-
-  testJustTeamName : parseGraphArgs ["team1"] === Right [TeamName "team1"]
-  testJustTeamName = Refl
-
-  testRequiresOneArgument : parseGraphArgs [] === Left "The graph command expects the name of a GitHub Team and optionally --completed as arguments."
-  testRequiresOneArgument = Refl
-
-  testAcceptsAtMostTwoArguments : parseGraphArgs ["a", "b", "c"] === Left "graph accepts at most one team name and the --completed flag."
-  testAcceptsAtMostTwoArguments = Refl
-
-  testParsesCompleted : parseGraphArgs ["--completed"] === Right [IncludeCompletedReviews]
-  testParsesCompleted = Refl
-
-  testParsesCompletedShorthand : parseGraphArgs ["-c"] === Right [IncludeCompletedReviews]
-  testParsesCompletedShorthand = Refl
-
-  testParsesTeamArgument : parseGraphArgs ["developers"] === Right [TeamName "developers"]
-  testParsesTeamArgument = Refl
-
-  testParsesTeamArgumentAndCompletedFlag : parseGraphArgs ["developers", "--completed"] === Right [TeamName "developers", IncludeCompletedReviews]
-  testParsesTeamArgumentAndCompletedFlag = Refl
-
-  testParsesCompletedFlagAndTeamArgument : parseGraphArgs ["--completed", "developers"] === Right [IncludeCompletedReviews, TeamName "developers"]
-  testParsesCompletedFlagAndTeamArgument = Refl
 
 ||| Graph the PR review workload for each member of the given team when
 ||| the user executes `harmony graph <team>`.
@@ -499,19 +454,6 @@ parseQuickArgs [] = []
 parseQuickArgs ("--bugfix" :: xs) = ABugfix :: parseQuickArgs xs
 parseQuickArgs (titleStr :: xs) = IssueNumOrTitle titleStr :: parseQuickArgs xs
 
-namespace TestParseQuickArgs
-  testBugfix : parseQuickArgs ["--bugfix"] === [ABugfix]
-  testBugfix = Refl
-
-  testBugfixLast : parseQuickArgs ["a", "bug", "--bugfix"] === [IssueNumOrTitle "a", IssueNumOrTitle "bug", ABugfix]
-  testBugfixLast = Refl
-
-  testBugfixFirst : parseQuickArgs ["--bugfix", "a", "bug"] === [ABugfix, IssueNumOrTitle "a", IssueNumOrTitle "bug"]
-  testBugfixFirst = Refl
-
-  testBugfixMiddle : parseQuickArgs ["a", "--bugfix", "bug"] === [IssueNumOrTitle "a", ABugfix, IssueNumOrTitle "bug"]
-  testBugfixMiddle = Refl
-
 titleArg : List QuickArg -> Maybe String
 titleArg = foldl go Nothing
   where
@@ -519,16 +461,6 @@ titleArg = foldl go Nothing
     go mstr ABugfix = mstr
     go Nothing (IssueNumOrTitle str) = Just str
     go (Just x) (IssueNumOrTitle str) = Just $ "\{x} \{str}"
-
-namespace TestTitleArg
-  testConcatsTitleStrings : titleArg [IssueNumOrTitle "One", IssueNumOrTitle "Two"] === Just "One Two"
-  testConcatsTitleStrings = Refl
-
-  testSkipsBugfixArgs : titleArg [IssueNumOrTitle "One", ABugfix] === Just "One"
-  testSkipsBugfixArgs = Refl
-
-  testNothingForOnlyBugfix : titleArg [ABugfix] === Nothing
-  testNothingForOnlyBugfix = Refl
 
 titleOrNumberArg : List QuickArg -> IssueIdent
 titleOrNumberArg args =
@@ -542,37 +474,8 @@ titleOrNumberArg args =
          else IssueTitle str
     go args = maybe NoInfo IssueTitle $ titleArg args
 
-namespace TestTitleOrNumberArg
-  singleHashArgumentIsIssueNumber : titleOrNumberArg [IssueNumOrTitle "#1234"] === IssueNumber "1234"
-  singleHashArgumentIsIssueNumber = Refl
-
-  singleNonHashArgumentIsTitle : titleOrNumberArg [IssueNumOrTitle "1234"] === IssueTitle "1234"
-  singleNonHashArgumentIsTitle = Refl
-
-  multipleArgumentsIsTitle : titleOrNumberArg [IssueNumOrTitle "#1234", IssueNumOrTitle "hi"] === IssueTitle "#1234 hi"
-  multipleArgumentsIsTitle = Refl
-
-  singleHashArgPlusFlagIsNumber : titleOrNumberArg [ABugfix, IssueNumOrTitle "#1234"] === IssueNumber "1234"
-  singleHashArgPlusFlagIsNumber = Refl
-
-  singleHashArgPlusFlagIsNumber' : titleOrNumberArg [IssueNumOrTitle "#1234", ABugfix] === IssueNumber "1234"
-  singleHashArgPlusFlagIsNumber' = Refl
-
 issueCategory : List QuickArg -> IssueCategory
 issueCategory = maybe Feature (const Bugfix) . find (\case ABugfix => True; _ => False)
-
-namespace TestIssueCategory
-  testPicksBugfixUpLast : issueCategory [IssueNumOrTitle "hello", ABugfix] === Bugfix
-  testPicksBugfixUpLast = Refl
-
-  testPicksBugfixUpFirst : issueCategory [ABugfix, IssueNumOrTitle "hello"] === Bugfix
-  testPicksBugfixUpFirst = Refl
-
-  testNotBugfix : issueCategory [IssueNumOrTitle "hi", IssueNumOrTitle "hello"] === Feature
-  testNotBugfix = Refl
-
-  testNotBugfixSimple : issueCategory [] === Feature
-  testNotBugfixSimple = Refl
 
 ||| Quickly create a new GitHub issue and branch to go along with it.
 export

@@ -24,16 +24,8 @@ Show IssueCategory where
 dasherize : String -> String
 dasherize = pack . replaceOn ' ' '-' . unpack
 
-namespace TestDasherize
-  replacesSpacesWithDashes : dasherize "a b c" === "a-b-c"
-  replacesSpacesWithDashes = Refl
-
 branchNameSuggestion : String -> String
 branchNameSuggestion = toLower . dasherize
-
-namespace TestBranchNameSuggestion
-  testUppercaseAndSpace : branchNameSuggestion "A branch-Name-candidate" === "a-branch-name-candidate"
-  testUppercaseAndSpace = Refl
 
 createNewIssue : Config =>
                  Octokit =>

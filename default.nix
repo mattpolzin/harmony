@@ -10,6 +10,8 @@
   pandoc,
   stdenv,
   zsh,
+  type-test,
+  type-testApi,
 }:
 let
   idrisAddsVersion = "0.5.0";
@@ -34,7 +36,7 @@ let
         ./man/harmony.1
       ];
     };
-    npmDepsHash = "sha256-4ml3352Y2XdH+0qAkdfJtS8qDVnxffdEi4pMzRSJdSo=";
+    npmDepsHash = "sha256-qutlziw2fqrdiQYQJ7oQnDKVH6coJM0ElBhD/nvj49g=";
     dontNpmBuild = true;
     dontBuild = true;
 
@@ -52,7 +54,7 @@ buildIdris {
     name = "harmony-pkg-src";
   };
 
-  extraIdrisLibraries = [ idrisAdds ];
+  extraIdrisLibraries = [ idrisAdds type-testApi ];
 
   nativeBuildInputs = [
     installShellFiles
@@ -86,6 +88,12 @@ buildIdris {
         ]
       } \
       --prefix NODE_PATH : ${nodeDependencies}/node_modules
+  '';
+
+  nativeCheckInputs = [ type-test ];
+  checkPhase = ''
+    find src -name 'Test.idr' | \
+      xargs type-test --find-ipkg 
   '';
 
   installCheckPhase = ''

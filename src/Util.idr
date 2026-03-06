@@ -5,7 +5,7 @@ import Data.Fuel
 import Data.List
 import Data.Promise
 import Data.String
-import Data.So
+import public Data.So
 
 import System
 import System.File
@@ -125,24 +125,11 @@ namespace Prompting
   ||| Provide a default value to use if the second arg is an empty string. If
   ||| you pass Nothing as the first arg, you are choosing not to provide a
   ||| default.
-  export
+  public export
   orIfEmpty : (fallback : Maybe String) -> (input : String) -> String
   orIfEmpty Nothing  x  = x
   orIfEmpty (Just y) "" = y
   orIfEmpty (Just _) x  = x
-
-  namespace TestOrIfEmpty
-    noFallbackEmpty : orIfEmpty Nothing "" === ""
-    noFallbackEmpty = Refl
-
-    noFallbackNotEmpty : orIfEmpty Nothing "hi" === "hi"
-    noFallbackNotEmpty = Refl
-
-    fallbackEmpty : orIfEmpty (Just "hi") "" === "hi"
-    fallbackEmpty = Refl
-
-    fallbackNotEmpty : orIfEmpty (Just "hi") "hello" === "hello"
-    fallbackNotEmpty = Refl
 
   export
   enterForDefaultStr : String -> String

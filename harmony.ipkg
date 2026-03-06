@@ -16,6 +16,8 @@ depends = contrib
         , parser >= 0.1.0
         , parser-json >= 0.1.0
         , json >= 0.5.0
+        , hedgehog
+        , type-test-api
 
 modules = Main
         , Data.Config
