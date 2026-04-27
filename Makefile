@@ -1,8 +1,7 @@
 
-idris2 ?= idris2
-IDRIS = $(idris2)
-idris2-version = $(shell $(idris2) --version | sed -En 's/Idris 2, version ([^-]+).*/\1/p')
-idris2-build   = $(shell $(idris2) --version | sed -En 's/Idris 2, version [^-]+(.*)/\1/p')
+IDRIS ?= idris2
+idris2-version = $(shell $(IDRIS) --version | sed -En 's/Idris 2, version ([^-]+).*/\1/p')
+idris2-build   = $(shell $(IDRIS) --version | sed -En 's/Idris 2, version [^-]+(.*)/\1/p')
 idris2-minor-version = $(shell echo ${idris2-version} | sed -En 's/0\.(.*)\../\1/p')
 IDRIS_LIB_DIR := $(shell ${IDRIS} --libdir)
 
@@ -352,7 +351,7 @@ deps: ./depends/idris-adds ./depends/idris2-elab-util ./depends/idris2-algebra .
 	make build
 
 build: ./node_modules/
-	IDRIS2_DATA=./support $(idris2) --build harmony.ipkg
+	IDRIS2_DATA=./support $(IDRIS) --build harmony.ipkg
 	@if [ ${idris2-minor-version} -gt 6 ] || [ "${idris2-build}" != '' ]; then \
 	  cp ./build/exec/harmony ./harmony; \
 	else \
