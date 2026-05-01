@@ -288,8 +288,37 @@ record BranchInferredData where
 noInferredData : BranchInferredData
 noInferredData = MkInferredData Nothing Nothing Nothing
 
-githubInferredBranchInfo : Config => Octokit => (branch: String) -> Promise' BranchInferredData
-githubInferredBranchInfo @{config} branch =
+||| Get the chain of PRs that lead from the given branch to the given
+||| baseBranch and eventually to the configured mainBranch. The list will be in
+||| merge-order. The list does not contain the mainBranch (or any other branch
+||| along the way that has no PRs open against it) but such a terminal branch
+||| is the second element of the returned tuple.
+|||
+||| @return (list of PRs, terminal branch)
+prChain : Config => Octokit => Fuel -> (branch : String) -> Promise' (List PullRequest, String)
+prChain Dry branch = pure ([], branch)
+prChain @{config} (More fuel) branch =
+  if branch == config.mainBranch
+     then pure ([], branch)
+     else do (prForBranch :: _) <- listPRsForBranch config.org config.repo branch
+               | [] => pure ([], branch)
+             mapFst (prForBranch ::) <$> prChain fuel prForBranch.baseRef
+
+renderPrTree : (branch : String) -> List PullRequest -> (terminalBranch : String) -> String
+renderPrTree branch prs terminalBranch = 
+  "`\{terminalBranch}`" ++ "\n" ++ go indentIncrement (reverse prs) branch 
+
+  where
+    indentIncrement : Nat
+    indentIncrement = 2
+
+    go : (indentation : Nat) -> List PullRequest -> (branch : String) -> String
+    go idnt [] branch = indent idnt "↖ `\{branch}`"
+    go idnt (pr :: prs) branch =
+      indent idnt $ "↖ `\{pr.headRef}` (#\{show pr.number})" ++ go (idnt + indentIncrement) prs branch
+
+githubInferredBranchInfo : Config => Octokit => (branch : String) -> (baseBranch : String) -> Promise' BranchInferredData
+githubInferredBranchInfo @{config} branch baseBranch =
   case issueNumber of
     Nothing => pure noInferredData
     Just issueNum => do
@@ -306,10 +335,24 @@ githubInferredBranchInfo @{config} branch =
     relatedToPrefix : (issueNumber : String) -> String
     relatedToPrefix issueNumber = "Related to #\{issueNumber}"
 
+    maybePrTree : Promise' String
+    maybePrTree =
+      if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
+         then do (prs, terminalBranch) <- prChain (limit 10) baseBranch
+                 let tree = renderPrTree branch prs terminalBranch
+                 pure """
+                      ## PR Tree
+                      \{tree}
+
+                      """
+         else pure ""
+
     issueDescriptionPrefix : Issue -> Promise' String
     issueDescriptionPrefix issue = do
+      maybeTree <- maybePrTree
       pure """
         <!--
+        \{maybeTree}
         ## GitHub Issue
         \{issue.title}
         --
@@ -328,12 +371,16 @@ githubInferredBranchInfo @{config} branch =
 |||
 ||| If a GitHub issue is found, the body of the GitHub issue is also added
 ||| (commented out) to the body prefix as additional context.
-getInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
-getInferredBranchInfo @{config} branch =
+|||
+||| When the `addPrTreeDescription` Config option is set and a GitHub issue is
+||| found, a tree of branches will be added to the body prefix if the `--into`
+||| branch is not the configured `mainBranch`.
+getInferredBranchInfo : Config => Octokit => (branch : String) -> (baseBranch : String) -> Promise' BranchInferredData
+getInferredBranchInfo @{config} branch baseBranch =
     case config.branchParsing of
          Jira   => pure (MkInferredData ((++ " - ") <$> parseJiraSlug branch) Nothing Nothing)
          --               ^ Jira slugs become a title prefix
-         Github => githubInferredBranchInfo branch
+         Github => githubInferredBranchInfo branch baseBranch
          None   => pure noInferredData
 
 ||| A GitHub URL at which a PR can be created for the given branch.
@@ -444,7 +491,7 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
         putStrLn "Creating a new PR for the current branch (\{branch})."
         baseBranch <- getBaseBranch
 
-        inferredBranchInfo <- getInferredBranchInfo branch
+        inferredBranchInfo <- getInferredBranchInfo branch baseBranch
         let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
         let bodyPrefix  = fromMaybe "" inferredBranchInfo.bodyPrefix
 

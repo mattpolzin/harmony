@@ -209,11 +209,10 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     """
     [true/false] Determines whether to add a tree of PRs to the description \
     for any PR that is into a branch other than the `mainBranch` configured.
-
-    This looks like:
-      `main`
-        ↖ `feature-1`
-            ↖ `feature-2`
+        This looks like:
+          `main`
+            ↖ `feature-1` (#1234)
+                ↖ `feature-2`
     """
   DefaultRemote   : SettableProp
     "defaultRemote"
@@ -369,7 +368,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch
     , ("requestUsers"         , JBool requestUsers)
     , ("commentOnRequest"     , JString $ show commentOnRequest)
     , ("branchParsing"        , JString $ show branchParsing)
-    , ("addPrTreeDescription" , JString $ show addPrTreeDescription)
+    , ("addPrTreeDescription" , JBool addPrTreeDescription)
     , ("org"                  , JString org)
     , ("repo"                 , JString repo)
     , ("defaultRemote"        , JString defaultRemote)
