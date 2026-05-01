@@ -1,7 +1,7 @@
 module Theme
 
 import Data.Config
-import Data.Theme
+import public Data.Theme
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
@@ -24,24 +24,25 @@ cs (_ :: _ :: _ :: _) @{(Right Refl)} impossible
 ||| character being drawn is small so a different color choice might
 ||| be useful for visibility.
 public export
-data SemanticColor : Colors -> Colors -> Type where
-  Good       : SemanticColor (cs [Green ]) (cs [Green])
-  NotGreat   : SemanticColor (cs [Yellow]) (cs [Black])
-  Bad        : SemanticColor (cs [Red   ]) (cs [Red])
-  Completed  : SemanticColor (cs [Green ]) (cs [Green])
-  Completed' : SemanticColor (cs [Green ]) (cs [Black])
-  Pending    : SemanticColor (cs [Yellow]) (cs [Yellow])
-  Pending'   : SemanticColor (cs [Yellow]) (cs [Black])
-  Missed     : SemanticColor (cs [Red   ]) (cs [Red])
-  Data       : SemanticColor (cs [Green ]) (cs [Blue])
+data SemanticColor : (darkTheme : Colors) -> (lightTheme : Colors) -> Type where
+  -- desirability
+  Good       : SemanticColor (cs [Green  ]) (cs [Green])
+  NotGreat   : SemanticColor (cs [Yellow ]) (cs [Black])
+  Bad        : SemanticColor (cs [Red    ]) (cs [Red])
+  -- completion
+  Completed  : SemanticColor (cs [Green  ]) (cs [Green])
+  Completed' : SemanticColor (cs [Green  ]) (cs [Black])
+  Pending    : SemanticColor (cs [Yellow ]) (cs [Yellow])
+  Pending'   : SemanticColor (cs [Yellow ]) (cs [Black])
+  Missed     : SemanticColor (cs [Red    ]) (cs [Red])
+  -- categorization
+  Data       : SemanticColor (cs [Green  ]) (cs [Blue])
+  Special    : SemanticColor (cs [Magenta]) (cs [Magenta])
 
 public export
-theme : Config => {d, l : _} -> SemanticColor d l -> Doc AnsiStyle -> Doc AnsiStyle
-theme @{config} = go configTheme
+theme' : Theme => {d, l : _} -> SemanticColor d l -> Doc AnsiStyle -> Doc AnsiStyle
+theme' @{theme} = go theme
   where
-    configTheme : Theme
-    configTheme = config.theme
-
     maybeAnnotate : (Color -> AnsiStyle) -> Maybe Color -> Doc AnsiStyle -> Doc AnsiStyle
     maybeAnnotate s c = maybe id (annotate . s) c
 
@@ -51,4 +52,8 @@ theme @{config} = go configTheme
     go : Theme -> {dark, light : _} -> SemanticColor dark light -> Doc AnsiStyle -> Doc AnsiStyle
     go Dark _  = colorsAnn dark
     go Light _ = colorsAnn light
+
+public export
+theme : Config => {d, l : _} -> SemanticColor d l -> Doc AnsiStyle -> Doc AnsiStyle
+theme @{config} = theme' @{config.theme}
 
