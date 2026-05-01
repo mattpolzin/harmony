@@ -11,6 +11,7 @@ import Data.Config
 import Data.DPair
 import Data.Date
 import Data.Either
+import Data.Fuel
 import Data.Issue
 import Data.List
 import Data.List1
@@ -80,7 +81,7 @@ prUsageError =
 
 data IntoOpt = Branch (Exists String.NonEmpty)
 
-data PrArg = Draft | Ready | Into IntoOpt | Label String
+data PrArg = Draft | Ready | PrintTree | Into IntoOpt | Label String
 
 (<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
 (<||>) f g x = f x <|> g x
@@ -94,7 +95,7 @@ parsePrArgs [] = Right []
 parsePrArgs args =
   let (intoArgs, rest) = recombineIntoArgs args
       intoArgs' = Into <$> intoArgs
-      rest' = (traverse (parseReadyFlag <||> parseDraftFlag <||> parseLabelArg) rest)
+      rest' = (traverse (parseReadyFlag <||> parseDraftFlag <||> parsePrintTreeFlag <||> parseLabelArg) rest)
       in  maybeToEither prUsageError ((intoArgs' ++) <$> rest')
   where
     parseDraftFlag : String -> Maybe PrArg
@@ -104,6 +105,10 @@ parsePrArgs args =
     parseReadyFlag : String -> Maybe PrArg
     parseReadyFlag "--ready" = Just Ready
     parseReadyFlag _ = Nothing
+
+    parsePrintTreeFlag : String -> Maybe PrArg
+    parsePrintTreeFlag "--print-tree" = Just PrintTree
+    parsePrintTreeFlag _ = Nothing
 
     parseLabelArg : String -> Maybe PrArg
     parseLabelArg labelArg =
@@ -149,8 +154,8 @@ pr args = do
   Actual actionTaken pr <- identifyOrCreatePR {markAsDraft} {intoBranch} !currentBranch
     | Hypothetical url => putStrLn url
   case actionTaken of
-       Identified => putStrLn pr.webURI
-       Created    => pure ()
+       Identified => if printTree then printPrTree pr else putStrLn pr.webURI
+       Created    => if printTree then printPrTree pr else pure ()
   when (not $ null labelSlugs) $
     label labelSlugs
   whenJust intoBranch $ \branch =>
@@ -186,6 +191,14 @@ pr args = do
     intoBranch : Maybe String
     intoBranch =
       foldMap (\case (Into (Branch name)) => Just (value name.snd); _ => Nothing) args
+
+    printTree : Bool
+    printTree = isJust $ find (\case PrintTree => True; _ => False) args
+
+    printPrTree : PullRequest -> Promise' ()
+    printPrTree pr = do
+      (prs, terminalBranch) <- prChain (limit 10) pr.baseRef
+      putStrLn $ renderPrTree Nothing (pr :: prs) terminalBranch
 
 ||| Request review from the given teams & users as reviewers when the user executes
 ||| `harmony request ...`.

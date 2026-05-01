@@ -13,19 +13,26 @@ namespace PrCreationUrl
   withIntoBranch = Refl
 
 namespace RenderPrTree
-  noPrs : renderPrTree "feature-1" [] "main" ==> """
-                                                 ● `main`
-                                                     ↖ `feature-1`
-                                                 """
+  noPrs : renderPrTree (Just "feature-1") [] "main" ==> """
+                                                        ● `main`
+                                                            ↖ `feature-1`
+                                                        """
   noPrs = MkTTest
 
   mkPr : Integer -> String -> PullRequest
   mkPr num headRef = MkPullRequest num "" (MkDate 2025 01 01) False "" Open [] headRef ""
 
-  onePr : renderPrTree "feature-2" [mkPr 123 "feature-1"] "main" ==> """
-                                                                     ● `main`
-                                                                         ↖ `feature-1` (#123)
-                                                                             ↖ `feature-2`
-                                                                     """
+  onePr : renderPrTree (Just "feature-2") [mkPr 123 "feature-1"] "main" ==> """
+                                                                            ● `main`
+                                                                                ↖ `feature-1` (#123)
+                                                                                    ↖ `feature-2`
+                                                                            """
   onePr = MkTTest
+
+  onePrNoLeaf : renderPrTree Nothing [mkPr 123 "feature-1"] "main" ==> """
+                                                                       ● `main`
+                                                                           ↖ `feature-1` (#123)
+                                                                       
+                                                                       """
+  onePrNoLeaf = MkTTest
 

@@ -295,6 +295,7 @@ noInferredData = MkInferredData Nothing Nothing Nothing
 ||| is the second element of the returned tuple.
 |||
 ||| @return (list of PRs, terminal branch)
+export
 prChain : Config => Octokit => Fuel -> (branch : String) -> Promise' (List PullRequest, String)
 prChain Dry branch = pure ([], branch)
 prChain @{config} (More fuel) branch =
@@ -304,7 +305,14 @@ prChain @{config} (More fuel) branch =
                | [] => pure ([], branch)
              mapFst (prForBranch ::) <$> prChain fuel prForBranch.baseRef
 
-renderPrTree : (branch : String) -> List PullRequest -> (terminalBranch : String) -> String
+||| Render a PR tree.
+|||
+||| If you pass `branch`, that is the leaf of the tree. All PRs between that
+||| and the terminal branch should be passed as the next argument. Then the
+||| terminal branch (e.g. the `mainBranch` of the repo, usually) gets passed in
+||| last.
+export
+renderPrTree : (branch : Maybe String) -> List PullRequest -> (terminalBranch : String) -> String
 renderPrTree branch prs terminalBranch = 
   "● `\{terminalBranch}`" ++ "\n" ++ go indentIncrement (reverse prs) branch 
 
@@ -312,8 +320,10 @@ renderPrTree branch prs terminalBranch =
     indentIncrement : Nat
     indentIncrement = 4
 
-    go : (indentation : Nat) -> List PullRequest -> (branch : String) -> String
-    go idnt [] branch = indent idnt "↖ `\{branch}`"
+    go : (indentation : Nat) -> List PullRequest -> (maybeBranch : Maybe String) -> String
+    go idnt [] maybeBranch = case maybeBranch of
+                             (Just branch) => indent idnt "↖ `\{branch}`"
+                             Nothing => ""
     go idnt (pr :: prs) branch =
       indent idnt $ "↖ `\{pr.headRef}` (#\{show pr.number})\n" ++ go (idnt + indentIncrement) prs branch
 
@@ -339,7 +349,7 @@ githubInferredBranchInfo @{config} branch baseBranch =
     maybePrTree =
       if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
          then do (prs, terminalBranch) <- prChain (limit 10) baseBranch
-                 let tree = renderPrTree branch prs terminalBranch
+                 let tree = renderPrTree (Just branch) prs terminalBranch
                  pure """
                       ## PR Tree
                       \{tree}
