@@ -70,8 +70,12 @@ Show PullRequest where
       authorString = padRight 15 ' ' $ show author
 
 export
+webURI' : (org, repo : String) -> PullRequest -> String
+webURI' org repo pr = "https://github.com/\{org}/\{repo}/pull/\{show pr.number}"
+
+export
 (.webURI) : Config => PullRequest -> String
-pr.webURI @{config} = "https://github.com/\{config.org}/\{config.repo}/pull/\{show pr.number}"
+pr.webURI @{config} = webURI' config.org config.repo pr
 
 export
 isAuthor : String -> PullRequest -> Bool

@@ -26,9 +26,10 @@ import Language.JSON.Accessors
 import System
 import System.File
 import System.Git
+import Theme
 import Util
-import Util.Jira
 import Util.Github
+import Util.Jira
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -305,6 +306,12 @@ prChain @{config} (More fuel) branch =
                | [] => pure ([], branch)
              mapFst (prForBranch ::) <$> prChain fuel prForBranch.baseRef
 
+public export
+data ShellFormat = Pretty | Plain
+
+public export
+data RenderFormat = Markdown | Shell ShellFormat
+
 ||| Render a PR tree.
 |||
 ||| If you pass `branch`, that is the leaf of the tree. All PRs between that
@@ -312,20 +319,55 @@ prChain @{config} (More fuel) branch =
 ||| terminal branch (e.g. the `mainBranch` of the repo, usually) gets passed in
 ||| last.
 export
-renderPrTree : (branch : Maybe String) -> List PullRequest -> (terminalBranch : String) -> String
-renderPrTree branch prs terminalBranch = 
-  "● `\{terminalBranch}`" ++ "\n" ++ go indentIncrement (reverse prs) branch 
+renderPrTree : Theme -> RenderFormat -> (org : String) -> (repo : String) -> (branch : Maybe String) -> List PullRequest -> (terminalBranch : String) -> String
+renderPrTree t format org repo branch prs terminalBranch = 
+  (formattedBranchLine 0 terminus terminalBranch)  ++ "\n" ++ go 1 (reverse prs) branch
 
   where
     indentIncrement : Nat
     indentIncrement = 4
 
+    terminus : String
+    terminus = "●"
+
+    arrow : String
+    arrow = "↖"
+
+    delta : String
+    delta = "Δ"
+
+    renderPretty : Doc AnsiStyle -> String
+    renderPretty doc =
+      let formatFn = case format of
+                          (Shell Pretty) => id
+                          _ => unAnnotate
+      in renderString . layoutUnbounded $ formatFn doc
+
+    mdIndent : Nat -> String -> String
+    mdIndent i = (replicate (S i) '>' ++ " " ++)
+
+    formattedBranchLine : (indentation : Nat) -> (symbol : String) -> String -> String
+    formattedBranchLine idnt symbol branch =
+      case format of
+           Markdown => mdIndent idnt "\{delta} `\{branch}`"
+           Shell _ => renderPretty $ (pretty symbol) <++> (theme' Special $ pretty branch)
+
+    formattedPrLines : (indentation : Nat) -> PullRequest -> String
+    formattedPrLines idnt pr =
+      case format of
+           Markdown => mdIndent idnt (webURI' org repo pr)
+           Shell _  => renderPretty $
+                         indent (cast $ idnt * indentIncrement) $
+                           vsep [ (pretty arrow) <++> (theme' Data (pretty pr.title))
+                                , indent 2 $ "└" <++> annotate italic (pretty $ webURI' org repo pr)
+                                ]
+
     go : (indentation : Nat) -> List PullRequest -> (maybeBranch : Maybe String) -> String
     go idnt [] maybeBranch = case maybeBranch of
-                             (Just branch) => indent idnt "↖ `\{branch}`"
-                             Nothing => ""
+                                  (Just branch) => formattedBranchLine idnt arrow branch
+                                  Nothing => ""
     go idnt (pr :: prs) branch =
-      indent idnt $ "↖ `\{pr.headRef}` (#\{show pr.number})\n" ++ go (idnt + indentIncrement) prs branch
+      (formattedPrLines idnt pr) ++ "\n" ++ go (idnt + 1) prs branch
 
 githubInferredBranchInfo : Config => Octokit => (branch : String) -> (baseBranch : String) -> Promise' BranchInferredData
 githubInferredBranchInfo @{config} branch baseBranch =
@@ -349,7 +391,7 @@ githubInferredBranchInfo @{config} branch baseBranch =
     maybePrTree =
       if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
          then do (prs, terminalBranch) <- prChain (limit 10) baseBranch
-                 let tree = renderPrTree (Just branch) prs terminalBranch
+                 let tree = renderPrTree config.theme Markdown config.org config.repo (Just branch) prs terminalBranch
                  pure """
                       ## PR Tree
                       \{tree}
