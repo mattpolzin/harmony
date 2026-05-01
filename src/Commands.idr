@@ -148,7 +148,7 @@ export
 pr : Config => Octokit =>
      (args : List PrArg)
   -> Promise' ()
-pr args = do
+pr @{config} args = do
   when conflictingDraftReadyArgs $
     reject "You cannot set a PR as ready for review and mark it as a draft at the same time."
   Actual actionTaken pr <- identifyOrCreatePR {markAsDraft} {intoBranch} !currentBranch
@@ -198,7 +198,8 @@ pr args = do
     printPrTree : PullRequest -> Promise' ()
     printPrTree pr = do
       (prs, terminalBranch) <- prChain (limit 10) pr.baseRef
-      putStrLn $ renderPrTree Nothing (pr :: prs) terminalBranch
+      let format = if config.colors then Pretty else Plain
+      putStrLn $ renderPrTree config.theme (Shell format) config.org config.repo Nothing (pr :: prs) terminalBranch
 
 ||| Request review from the given teams & users as reviewers when the user executes
 ||| `harmony request ...`.
