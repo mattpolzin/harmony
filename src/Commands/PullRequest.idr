@@ -306,16 +306,16 @@ prChain @{config} (More fuel) branch =
 
 renderPrTree : (branch : String) -> List PullRequest -> (terminalBranch : String) -> String
 renderPrTree branch prs terminalBranch = 
-  "`\{terminalBranch}`" ++ "\n" ++ go indentIncrement (reverse prs) branch 
+  "● `\{terminalBranch}`" ++ "\n" ++ go indentIncrement (reverse prs) branch 
 
   where
     indentIncrement : Nat
-    indentIncrement = 2
+    indentIncrement = 4
 
     go : (indentation : Nat) -> List PullRequest -> (branch : String) -> String
     go idnt [] branch = indent idnt "↖ `\{branch}`"
     go idnt (pr :: prs) branch =
-      indent idnt $ "↖ `\{pr.headRef}` (#\{show pr.number})" ++ go (idnt + indentIncrement) prs branch
+      indent idnt $ "↖ `\{pr.headRef}` (#\{show pr.number})\n" ++ go (idnt + indentIncrement) prs branch
 
 githubInferredBranchInfo : Config => Octokit => (branch : String) -> (baseBranch : String) -> Promise' BranchInferredData
 githubInferredBranchInfo @{config} branch baseBranch =

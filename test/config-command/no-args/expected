@@ -6,9 +6,9 @@ commentOnRequest:     [none/name/at-mention] Determines whether- and how to comm
 branchParsing:        [none/jira/github] Determines whether- and how to parse branch names for a prefix to automatically add to a new PR's title or body to link the PR and issue/ticket.
 addPrTreeDescription: [true/false] Determines whether to add a tree of PRs to the description for any PR that is into a branch other than the `mainBranch` configured.
     This looks like:
-      `main`
-        ↖ `feature-1` (#1234)
-            ↖ `feature-2`
+      ● `main`
+          ↖ `feature-1` (#1234)
+              ↖ `feature-2`
 defaultRemote:        [string]     The name of the default Git remote to use (e.g. 'origin').
 mainBranch:           [string]     The name of the default Git base branch for new PRs.
 theme:                [dark/light]
