@@ -93,7 +93,9 @@ buildIdris {
   nativeCheckInputs = [ type-test ];
   checkPhase = ''
     find src -name 'Test.idr' | \
-      xargs type-test --find-ipkg 
+      xargs type-test --find-ipkg
+    mkdir -p $out
+    # ^ this means we can run the checkPhase without the build or install phases
   '';
 
   installCheckPhase = ''

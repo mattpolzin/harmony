@@ -44,7 +44,7 @@
         in
         {
           tests = harmony.overrideAttrs { doInstallCheck = true; };
-          type-tests = harmony.overrideAttrs { doCheck = true; };
+          type-tests = harmony.overrideAttrs { doCheck = true; dontBuild = true; dontInstall = true; };
         }
       );
       devShells = forAllSystems (
