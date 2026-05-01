@@ -1,8 +1,11 @@
 module Commands.PullRequest.Test
 
-import Data.PullRequest
 import Data.Date
+import Data.PullRequest
+import Data.Theme
+
 import Commands.PullRequest
+
 import TTest
 
 namespace PrCreationUrl
@@ -13,26 +16,29 @@ namespace PrCreationUrl
   withIntoBranch = Refl
 
 namespace RenderPrTree
-  noPrs : renderPrTree (Just "feature-1") [] "main" ==> """
-                                                        ● `main`
-                                                            ↖ `feature-1`
-                                                        """
+  noPrs : renderPrTree Dark Markdown "org" "repo" (Just "feature-1") [] "main"
+            ==> """
+                ● `main`
+                    ↖ `feature-1`
+                """
   noPrs = MkTTest
 
   mkPr : Integer -> String -> PullRequest
   mkPr num headRef = MkPullRequest num "" (MkDate 2025 01 01) False "" Open [] headRef ""
 
-  onePr : renderPrTree (Just "feature-2") [mkPr 123 "feature-1"] "main" ==> """
-                                                                            ● `main`
-                                                                                ↖ `feature-1` (#123)
-                                                                                    ↖ `feature-2`
-                                                                            """
+  onePr : renderPrTree Dark Markdown "org" "repo"  (Just "feature-2") [mkPr 123 "feature-1"] "main"
+            ==> """
+                ● `main`
+                    ↖ `feature-1` (#123)
+                        ↖ `feature-2`
+                """
   onePr = MkTTest
 
-  onePrNoLeaf : renderPrTree Nothing [mkPr 123 "feature-1"] "main" ==> """
-                                                                       ● `main`
-                                                                           ↖ `feature-1` (#123)
-                                                                       
-                                                                       """
+  onePrNoLeaf : renderPrTree Dark Markdown "org" "repo"  Nothing [mkPr 123 "feature-1"] "main"
+                  ==> """
+                      ● `main`
+                          ↖ `feature-1` (#123)
+                      
+                      """
   onePrNoLeaf = MkTTest
 
