@@ -36,7 +36,7 @@ Subcommands:
       Labels that do not exist yet will be created automatically.
   list [<team-slug>]
       List all teams or the members of the given GitHub Team.
-  pr [--ready] [--draft] [-i/--into {<branch-name>}] [#<label>] [...]
+  pr [--ready] [--draft] [-i/--into {<branch-name>}] [--print-result] [#<label>] [...]
       Identify an existing PR or create a new one for the current branch.
 
       Optionally apply any number of labels by prefixing them with '#'.
@@ -46,6 +46,8 @@ Subcommands:
       Optionally mark an existing PR as ready for review with the --ready flag.
 
       Optionally specify the branch to merge into with the --into option.
+
+      Optionally print a pr tree with the --print-tree flag.
   quick [--bugfix] [<title> | #<issue-number>] [...]
       Quickly spin up new work with a GitHub issue and associated feature
       branch. If you have harmony configured to parse GitHub issue numbers
