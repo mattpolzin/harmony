@@ -36,7 +36,7 @@ let
         ./man/harmony.1
       ];
     };
-    npmDepsHash = "sha256-r7Hd86ArfwU0D8yWH6kFljdHrrs/Qs7eLNyglqaD/zk=";
+    npmDepsHash = "sha256-oOh7+9rufZ69xcq9yzTrM4RLu9WGRyLxxdEXvv4j/eA=";
     dontNpmBuild = true;
     dontBuild = true;
 
@@ -54,7 +54,10 @@ buildIdris {
     name = "harmony-pkg-src";
   };
 
-  extraIdrisLibraries = [ idrisAdds type-testApi ];
+  extraIdrisLibraries = [
+    idrisAdds
+    type-testApi
+  ];
 
   nativeBuildInputs = [
     installShellFiles
