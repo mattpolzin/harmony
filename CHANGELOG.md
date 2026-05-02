@@ -1,3 +1,14 @@
+# 6.4.0 (To The Center Of The Earth)
+Published: 2026-05-02T03:12:30Z
+
+## What's Changed
+* PR trees (https://github.com/mattpolzin/harmony/pull/263)
+ 
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.3.1...6.4.0
+
+
+You can build the source with Idris 2 `v0.8.0` _or_ the latest HEAD of the main Idris 2 branch.
+
 # 6.3.1 (Quick and precise)
 Published: 2026-01-27T02:39:24Z
 
