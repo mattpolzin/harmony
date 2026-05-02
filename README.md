@@ -227,6 +227,9 @@ Not all configuration properties can be read/set with this command.
 `branchParsing` (`none`/`jira`/`github`) 
 : Optionally extract a Jira ticket slug or GitHub issue number from the branch name and prepend it to the PR title or body to link the PR and ticket/issue.
 
+`addPrTreeDescription` (`true`/`false`)
+: Determines whether to add a tree of PRs to the description for any PR that is into a branch other than the `mainBranch` configured.
+
 `defaultRemote` (optional string) 
 : When pushing new branches, what remote destination should be used.
 
