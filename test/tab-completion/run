@@ -15,19 +15,19 @@ $harmony --bash-completion config -- config
 # pr command
 #
 echo ''
-echo 'no args suggests into, ready, and draft args:'
+echo 'no args suggests print-tree, into, ready, and draft args:'
 $harmony --bash-completion pr -- pr
 
 echo ''
-echo 'draft pr suggests into arg:'
+echo 'draft pr suggests into and print-tree args:'
 $harmony --bash-completion pr -- --draft
 
 echo ''
-echo 'into pr suggests draft arg:'
+echo 'into pr suggests draft and print-tree args:'
 $harmony --bash-completion pr -- main
 
 echo ''
-echo 'ready pr only suggests into arg:'
+echo 'ready pr only suggests into and print-tree args:'
 $harmony --bash-completion pr -- --ready
 
 #

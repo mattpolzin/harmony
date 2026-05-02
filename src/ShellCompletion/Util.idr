@@ -49,6 +49,10 @@ matches : (s : CompletionStyle) => String -> CompletionResult -> Bool
 matches str = (== str) . name
 
 export
+doesNotMatch : (s : CompletionStyle) => String -> CompletionResult -> Bool
+doesNotMatch str = (/= str) . name
+
+export
 withPrefix : (s : CompletionStyle) => (prefixStr : String) -> List (CompletionResult @{s}) -> List String
 withPrefix prefixStr = stringify' . filter (isPrefixOf prefixStr)
 
