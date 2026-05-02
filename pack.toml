@@ -1,0 +1,23 @@
+
+[custom.all.harmony]
+type   = "local"
+path   = "."
+ipkg   = "harmony.ipkg"
+
+[custom.all.idris-adds]
+type   = "github"
+url    = "https://github.com/mattpolzin/idris-adds"
+commit = "latest:main"
+ipkg   = "idris-adds.ipkg"
+
+[custom.all.type-test]
+type   = "github"
+url    = "https://github.com/mattpolzin/idris2-type-test"
+commit = "latest:main"
+ipkg   = "type-test.ipkg"
+
+[custom.all.type-test-api]
+type   = "github"
+url    = "https://github.com/mattpolzin/idris2-type-test"
+commit = "latest:main"
+ipkg   = "type-test-api/type-test-api.ipkg"
