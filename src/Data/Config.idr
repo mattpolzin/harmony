@@ -210,9 +210,10 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     [true/false] Determines whether to add a tree of PRs to the description \
     for any PR that is into a branch other than the `mainBranch` configured.
         This looks like:
-          ● `main`
-              ↖ `feature-1` (#1234)
-                  ↖ `feature-2`
+          > ⨀ `main`
+          >> ↖ `feature-1` (https://github.com/org/repo/pull/1234)
+          >> **The first feature**
+          >>>> ↖ `feature-2`
     """
   DefaultRemote   : SettableProp
     "defaultRemote"
