@@ -36,7 +36,7 @@ let
         ./man/harmony.1
       ];
     };
-    npmDepsHash = "sha256-1rIMtMWIctMlKpphI5nCmocXcUwf+0nNC/ykdfDs/q0=";
+    npmDepsHash = "sha256-oOh7+9rufZ69xcq9yzTrM4RLu9WGRyLxxdEXvv4j/eA=";
     dontNpmBuild = true;
     dontBuild = true;
 
@@ -54,7 +54,10 @@ buildIdris {
     name = "harmony-pkg-src";
   };
 
-  extraIdrisLibraries = [ idrisAdds type-testApi ];
+  extraIdrisLibraries = [
+    idrisAdds
+    type-testApi
+  ];
 
   nativeBuildInputs = [
     installShellFiles
@@ -93,7 +96,9 @@ buildIdris {
   nativeCheckInputs = [ type-test ];
   checkPhase = ''
     find src -name 'Test.idr' | \
-      xargs type-test --find-ipkg 
+      xargs type-test --find-ipkg
+    mkdir -p $out
+    # ^ this means we can run the checkPhase without the build or install phases
   '';
 
   installCheckPhase = ''

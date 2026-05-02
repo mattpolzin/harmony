@@ -133,6 +133,14 @@ record Config where
   ||| If set to Github, attempt to extract a Github issue number from branch
   ||| names and use that in the PR body.
   branchParsing : ParseBranchStrategy
+  ||| Add a PR tree/chain to the PR body when creating a new PR that is not
+  ||| `--into` the `mainBranch`.
+  |||
+  ||| This looks like e.g.
+  ||| `main`
+  |||   ↖ `feature-1`
+  |||       ↖ `feature-2`
+  addPrTreeDescription : Bool
   ||| Local cache of GitHub teams within the configured org.
   teamSlugs     : List String
   ||| Local cache of GitHub labels for the configured repo.
@@ -196,6 +204,17 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     to automatically add to a new PR's title or body to link the PR and \
     issue/ticket.
     """
+  AddPrTreeDescription : SettableProp
+    "addPrTreeDescription"
+    """
+    [true/false] Determines whether to add a tree of PRs to the description \
+    for any PR that is into a branch other than the `mainBranch` configured.
+        This looks like:
+          > ⨀ `main`
+          >> ↖ `feature-1` (https://github.com/org/repo/pull/1234)
+          >> **The first feature**
+          >>>> ↖ `feature-2`
+    """
   DefaultRemote   : SettableProp
     "defaultRemote"
     "[string]     The name of the default Git remote to use (e.g. 'origin')."
@@ -227,14 +246,15 @@ propHelp x = h
 
 export
 settablePropNamed : (name : String) -> Maybe (Exists (SettableProp name))
-settablePropNamed "requestTeams"     = Just $ Evidence _ RequestTeams
-settablePropNamed "commentOnRequest" = Just $ Evidence _ CommentOnRequest
-settablePropNamed "branchParsing"    = Just $ Evidence _ ParseBranchStrategy
-settablePropNamed "defaultRemote"    = Just $ Evidence _ DefaultRemote
-settablePropNamed "mainBranch"       = Just $ Evidence _ MainBranch
-settablePropNamed "theme"            = Just $ Evidence _ ThemeProp
-settablePropNamed "githubPAT"        = Just $ Evidence _ GithubPAT
-settablePropNamed "requestUsers"     = Just $ Evidence _ RequestUsers
+settablePropNamed "requestTeams"         = Just $ Evidence _ RequestTeams
+settablePropNamed "commentOnRequest"     = Just $ Evidence _ CommentOnRequest
+settablePropNamed "branchParsing"        = Just $ Evidence _ ParseBranchStrategy
+settablePropNamed "addPrTreeDescription" = Just $ Evidence _ AddPrTreeDescription
+settablePropNamed "defaultRemote"        = Just $ Evidence _ DefaultRemote
+settablePropNamed "mainBranch"           = Just $ Evidence _ MainBranch
+settablePropNamed "theme"                = Just $ Evidence _ ThemeProp
+settablePropNamed "githubPAT"            = Just $ Evidence _ GithubPAT
+settablePropNamed "requestUsers"         = Just $ Evidence _ RequestUsers
 settablePropNamed _ = Nothing
 
 namespace SettablePropNamedProperties
@@ -251,6 +271,7 @@ settableProps = [
   , (_ ** _ ** RequestUsers)
   , (_ ** _ ** CommentOnRequest)
   , (_ ** _ ** ParseBranchStrategy)
+  , (_ ** _ ** AddPrTreeDescription)
   , (_ ** _ ** DefaultRemote)
   , (_ ** _ ** MainBranch)
   , (_ ** _ ** ThemeProp)
@@ -310,22 +331,23 @@ config.editor = config.ephemeral.editor
 export
 Show Config where
   show config = unlines [
-      "       updatedAt: \{show config.updatedAt}"
-    , "           theme: \{show config.theme}"
-    , "     org or user: \{show config.org}"
-    , "            repo: \{show config.repo}"
-    , "   defaultRemote: \{show config.defaultRemote}"
-    , "      mainBranch: \{show config.mainBranch}"
-    , "    requestTeams: \{show config.requestTeams}"
-    , "    requestUsers: \{show config.requestUsers}"
-    , "commentOnRequest: \{show config.commentOnRequest}"
-    , "   branchParsing: \{show config.branchParsing}"
-    , "       teamSlugs: \{show config.teamSlugs}"
-    , "      repoLabels: \{show config.repoLabels}"
-    , "      orgMembers: \{show config.orgMembers}"
-    , "      ignoredPRs: \{show config.ignoredPRs}"
-    , "       githubPAT: \{personalAccessToken}"
-    , "      githubUser: \{show config.githubUser}"
+      "           updatedAt: \{show config.updatedAt}"
+    , "               theme: \{show config.theme}"
+    , "         org or user: \{show config.org}"
+    , "                repo: \{show config.repo}"
+    , "       defaultRemote: \{show config.defaultRemote}"
+    , "          mainBranch: \{show config.mainBranch}"
+    , "        requestTeams: \{show config.requestTeams}"
+    , "        requestUsers: \{show config.requestUsers}"
+    , "    commentOnRequest: \{show config.commentOnRequest}"
+    , "       branchParsing: \{show config.branchParsing}"
+    , "addPrTreeDescription: \{show config.addPrTreeDescription}"
+    , "           teamSlugs: \{show config.teamSlugs}"
+    , "          repoLabels: \{show config.repoLabels}"
+    , "          orgMembers: \{show config.orgMembers}"
+    , "          ignoredPRs: \{show config.ignoredPRs}"
+    , "           githubPAT: \{personalAccessToken}"
+    , "          githubUser: \{show config.githubUser}"
     ]
       where
         personalAccessToken : String
@@ -338,25 +360,28 @@ Show Config where
 export
 json : Config -> JSON
 json (MkConfig updatedAt org repo defaultRemote mainBranch
-               requestTeams requestUsers commentOnRequest branchParsing teamSlugs
-               repoLabels orgMembers ignoredPRs githubPAT githubUser theme _) =
+               requestTeams requestUsers commentOnRequest
+               branchParsing addPrTreeDescription teamSlugs
+               repoLabels orgMembers ignoredPRs githubPAT
+               githubUser theme _) =
   JObject [
-      ("requestTeams"    , JBool requestTeams)
-    , ("requestUsers"    , JBool requestUsers)
-    , ("commentOnRequest", JString $ show commentOnRequest)
-    , ("branchParsing"   , JString $ show branchParsing)
-    , ("org"             , JString org)
-    , ("repo"            , JString repo)
-    , ("defaultRemote"   , JString defaultRemote)
-    , ("mainBranch"      , JString mainBranch)
-    , ("theme"           , JString $ show theme)
-    , ("orgMembers"      , JArray $ JString <$> sort orgMembers)
-    , ("teamSlugs"       , JArray $ JString <$> sort teamSlugs)
-    , ("repoLabels"      , JArray $ JString <$> sort repoLabels)
-    , ("ignoredPRs"      , JArray $ JInteger . cast <$> sort ignoredPRs)
-    , ("githubPAT"       , maybe JNull (JString . expose) githubPAT)
-    , ("githubUser"      , maybe JNull JString githubUser)
-    , ("updatedAt"       , JInteger $ cast updatedAt)
+      ("requestTeams"         , JBool requestTeams)
+    , ("requestUsers"         , JBool requestUsers)
+    , ("commentOnRequest"     , JString $ show commentOnRequest)
+    , ("branchParsing"        , JString $ show branchParsing)
+    , ("addPrTreeDescription" , JBool addPrTreeDescription)
+    , ("org"                  , JString org)
+    , ("repo"                 , JString repo)
+    , ("defaultRemote"        , JString defaultRemote)
+    , ("mainBranch"           , JString mainBranch)
+    , ("theme"                , JString $ show theme)
+    , ("orgMembers"           , JArray $ JString <$> sort orgMembers)
+    , ("teamSlugs"            , JArray $ JString <$> sort teamSlugs)
+    , ("repoLabels"           , JArray $ JString <$> sort repoLabels)
+    , ("ignoredPRs"           , JArray $ JInteger . cast <$> sort ignoredPRs)
+    , ("githubPAT"            , maybe JNull (JString . expose) githubPAT)
+    , ("githubUser"           , maybe JNull JString githubUser)
+    , ("updatedAt"            , JInteger $ cast updatedAt)
     ]
 
 --
@@ -400,6 +425,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           let maybeGithubUser = lookup "githubUser" config
                                           let maybeBranchParsing = lookup "branchParsing" config
+                                          let maybePrTree = lookup "addPrTreeDescription" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
@@ -411,6 +437,9 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           bp <- maybe (Right Jira) branchConfig maybeBranchParsing
                                           -- TODO 7.0.0: Make branchParsing required part of config file (default to none)
                                           --             branchParsing lookup can be moved to the required lookupAll above.
+                                          prt <- maybe (Right False) bool maybePrTree
+                                          -- TODO 7.0.0: Make addPrTreeDescription required part of config file (default to false)
+                                          --             addPrTreeDescription lookup can be moved to the required lookupAll above.
                                           ts <- array string teamSlugs
                                           rl <- array string repoLabels
                                           om <- array string orgMembers
@@ -421,23 +450,24 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           --             githubUser lookup can be moved to the required lookupAll above.
                                           th <- (stringy "dark or light" parseString) theme
                                           pure $ MkConfig {
-                                              updatedAt         = ua
-                                            , org               = o
-                                            , repo              = r
-                                            , defaultRemote     = dr
-                                            , mainBranch        = mb
-                                            , requestTeams      = at
-                                            , requestUsers      = au
-                                            , teamSlugs         = ts
-                                            , repoLabels        = rl
-                                            , commentOnRequest  = ca
-                                            , branchParsing     = bp
-                                            , orgMembers        = om
-                                            , ignoredPRs        = ip
-                                            , githubPAT         = (map Hide) gp
-                                            , githubUser        = gu
-                                            , theme             = th
-                                            , ephemeral         = ephemeral
+                                              updatedAt            = ua
+                                            , org                  = o
+                                            , repo                 = r
+                                            , defaultRemote        = dr
+                                            , mainBranch           = mb
+                                            , requestTeams         = at
+                                            , requestUsers         = au
+                                            , teamSlugs            = ts
+                                            , repoLabels           = rl
+                                            , commentOnRequest     = ca
+                                            , branchParsing        = bp
+                                            , addPrTreeDescription = prt
+                                            , orgMembers           = om
+                                            , ignoredPRs           = ip
+                                            , githubPAT            = (map Hide) gp
+                                            , githubUser           = gu
+                                            , theme                = th
+                                            , ephemeral            = ephemeral
                                             }
       where
         exactlyOneOf : String -> String -> Either String JSON
@@ -463,22 +493,23 @@ public export
 simpleDefaults : Config
 simpleDefaults = 
     MkConfig {
-        updatedAt         = 0
-      , org               = "org"
-      , repo              = "repo"
-      , defaultRemote     = "origin"
-      , mainBranch        = "main"
-      , requestTeams      = True
-      , requestUsers      = True
-      , teamSlugs         = []
-      , repoLabels        = []
-      , commentOnRequest  = None
-      , branchParsing     = None
-      , orgMembers        = []
-      , ignoredPRs        = []
-      , githubPAT         = Nothing
-      , githubUser        = Nothing
-      , theme             = Dark
-      , ephemeral         = MkEphem "path/to/repo" False 200 Nothing
+        updatedAt            = 0
+      , org                  = "org"
+      , repo                 = "repo"
+      , defaultRemote        = "origin"
+      , mainBranch           = "main"
+      , requestTeams         = True
+      , requestUsers         = True
+      , teamSlugs            = []
+      , repoLabels           = []
+      , commentOnRequest     = None
+      , branchParsing        = None
+      , addPrTreeDescription = False
+      , orgMembers           = []
+      , ignoredPRs           = []
+      , githubPAT            = Nothing
+      , githubUser           = Nothing
+      , theme                = Dark
+      , ephemeral            = MkEphem "path/to/repo" False 200 Nothing
       }
 

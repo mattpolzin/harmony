@@ -1,5 +1,5 @@
 package harmony
-version = 6.3.1
+version = 6.4.0
 authors = "Mathew Polzin"
 license = "MIT"
 brief = "Harmony GitHub collaboration tool"
@@ -33,20 +33,9 @@ sourcedir = "src"
 -- builddir =
 -- outputdir =
 
--- script to run before building
 -- prebuild =
-
--- script to run after building
 -- postbuild =
-
--- script to run after building, before installing
 -- preinstall =
-
--- script to run after installing
 -- postinstall =
-
--- script to run before cleaning
 -- preclean =
-
--- script to run after cleaning
 -- postclean =

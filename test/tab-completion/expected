@@ -21,23 +21,28 @@ requestTeams
 requestUsers
 commentOnRequest
 branchParsing
+addPrTreeDescription
 defaultRemote
 mainBranch
 theme
 githubPAT
 
-no args suggests into, ready, and draft args:
+no args suggests print-tree, into, ready, and draft args:
 --ready
 --draft
+--print-tree
 --into
 
-draft pr suggests into arg:
+draft pr suggests into and print-tree args:
+--print-tree
 --into
 
-into pr suggests draft arg:
+into pr suggests draft and print-tree args:
 --draft
+--print-tree
 
-ready pr only suggests into arg:
+ready pr only suggests into and print-tree args:
+--print-tree
 --into
 
 bugfix flag partial match:

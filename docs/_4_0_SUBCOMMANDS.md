@@ -27,6 +27,9 @@ Not all configuration properties can be read/set with this command.
 `branchParsing` (`none`/`jira`/`github`) 
 : Optionally extract a Jira ticket slug or GitHub issue number from the branch name and prepend it to the PR title or body to link the PR and ticket/issue.
 
+`addPrTreeDescription` (`true`/`false`)
+: Determines whether to add a tree of PRs to the description for any PR that is into a branch other than the `mainBranch` configured.
+
 `defaultRemote` (optional string) 
 : When pushing new branches, what remote destination should be used.
 
@@ -129,13 +132,16 @@ organization.
 
 Running `harmony list <team>` will list the members of the given GitHub Team.
 
-## `pr [--draft | --ready] [-i/--into {<branch-name>}] [#label, ...]`
+## `pr [--draft | --ready] [-i/--into {<branch-name>}] [--print-tree] [#label, ...]`
 With a branch checked out will reach out to GitHub to determine if there is an
 open PR for that branch. If there is a PR, Harmony will print a URI that can be
-used to view the PR. If there is not a PR, Harmony will help you create one. New
-and existing PRs can be marked as drafts by specifying the `--draft` flag with
-the `pr` command or they can be marked as ready for review with the `--ready`
-flag. The default behavior for new PRs is to mark them ready.
+used to view the PR. If there is not a PR, Harmony will help you create one. The
+`--print-tree` flag will print a tree of PRs for branches between the current
+one and the `mainBranch` of the repository instead of just printing the URI for
+the current branch's PR. New and existing PRs can be marked as drafts by
+specifying the `--draft` flag with the `pr` command or they can be marked as
+ready for review with the `--ready` flag. The default behavior for new PRs is to
+mark them ready.
 
 If you need to create a PR still, you will be prompted for a branch to open the
 PR against (merge into, eventually), a title for the PR, and a description for

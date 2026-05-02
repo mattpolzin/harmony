@@ -134,14 +134,15 @@ update : Functor f => (String -> f a) -> (a -> b -> b) -> b -> String -> f b
 update f g c = map (flip g c) . f
 
 propSetter : SettableProp n h -> (Config -> String -> Maybe Config)
-propSetter RequestTeams        = update parseBool (\b => { requestTeams := b })
-propSetter RequestUsers        = update parseBool (\b => { requestUsers := b })
-propSetter CommentOnRequest    = update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
-propSetter ParseBranchStrategy = update (parseBranchConfig . toLower) (\s => { branchParsing := s })
-propSetter DefaultRemote       = update Just (\s => { defaultRemote := s })
-propSetter MainBranch          = update Just (\s => { mainBranch := s })
-propSetter ThemeProp           = update parseString (\t => { theme := t })
-propSetter GithubPAT           = update Just (\s => { githubPAT := Just $ hide s })
+propSetter RequestTeams         = update parseBool (\b => { requestTeams := b })
+propSetter RequestUsers         = update parseBool (\b => { requestUsers := b })
+propSetter CommentOnRequest     = update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
+propSetter ParseBranchStrategy  = update (parseBranchConfig . toLower) (\s => { branchParsing := s })
+propSetter AddPrTreeDescription = update parseBool (\b => { addPrTreeDescription := b })
+propSetter DefaultRemote        = update Just (\s => { defaultRemote := s })
+propSetter MainBranch           = update Just (\s => { mainBranch := s })
+propSetter ThemeProp            = update parseString (\t => { theme := t })
+propSetter GithubPAT            = update Just (\s => { githubPAT := Just $ hide s })
 
 ||| Attempt to set a property and value given String representations.
 ||| After setting, write the config and return the updated result.
@@ -158,14 +159,15 @@ setConfig @{config} prop value with (settablePropNamed prop)
                           writeConfig config'
 
 propGetter : SettableProp n h -> (Config -> String)
-propGetter RequestTeams        = show . requestTeams
-propGetter RequestUsers        = show . requestUsers
-propGetter CommentOnRequest    = show . commentOnRequest
-propGetter ParseBranchStrategy = show . branchParsing
-propGetter DefaultRemote       = show . defaultRemote
-propGetter MainBranch          = show . mainBranch
-propGetter ThemeProp           = show . theme
-propGetter GithubPAT           = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show . githubPAT
+propGetter RequestTeams         = show . requestTeams
+propGetter RequestUsers         = show . requestUsers
+propGetter CommentOnRequest     = show . commentOnRequest
+propGetter ParseBranchStrategy  = show . branchParsing
+propGetter AddPrTreeDescription = show . addPrTreeDescription
+propGetter DefaultRemote        = show . defaultRemote
+propGetter MainBranch           = show . mainBranch
+propGetter ThemeProp            = show . theme
+propGetter GithubPAT            = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show . githubPAT
 
 export
 getConfig : Config =>
@@ -267,6 +269,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
      orgMembers <- nonOrgFallback [] $ listOrgMembers org
      repoLabels <- listRepoLabels org repo
      githubUser <- login <$> getSelf
+     let addPrTreeDescription = False
      let config = MkConfig {
          updatedAt
        , org
@@ -277,6 +280,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
        , requestUsers
        , commentOnRequest
        , branchParsing
+       , addPrTreeDescription
        , teamSlugs
        , repoLabels
        , orgMembers
