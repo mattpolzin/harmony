@@ -46,16 +46,17 @@ installed with flakes enabled, you can run it as
 `nix run github:mattpolzin/harmony`.
 
 ### Build time
-Building the latest commits of Harmony requires a HEAD build of the Idris 2
-compiler. Each release page also indicates the version of Idris 2 that
-particular release will build against.
+Harmony can be built with `nix` or using `make` which in turn requires you have
+the `pack` Idris2 package manager installed.
 
-Alternatively, you can build Harmony with Docker (see 
-[Docker Build](#docker-build)).
+Building the latest commits of Harmony requires either the latest package
+collection or one from the date of the most recent major release of Idrsi2. Each
+release page also indicates the version of Idris 2 that particular release will
+build against.
 
 ### Testing
-Tests can be run with `make test`. You'll need a few common tools in your `PATH`
-to run all the tests:
+Tests can be run with `make test`. You'll need a few common tools (in addition
+to the tools required to build harmony) in your `PATH` to run all the tests:
   - `realpath`
   - `sed`
   - `xargs`
@@ -91,34 +92,11 @@ adding `https://gh-harmony.cachix.org` to the list of `substituters` and
 list of `trusted-public-keys`.
 
 ### From Source
-The build script assumes a HEAD build of Idris 2 is installed on your system.
-For an alternative, see the [Docker Build](#docker-build) instructions below.
+The build script assumes `pack` with a recent version of the package collection
+is installed on your system.
 
 Build Harmony from source with a call to `make`. Then install it globally with
 `make install`.
-
-### Docker Build
-If you want to build Harmony without installing Idris 2 on your system, you can
-build Harmony within a Docker container and then install the resulting
-Javascript onto your system.
-
-First, download the latest nightly Docker image:
-```shell
-docker pull mattpolzin2/idris-docker:nightly
-```
-
-Then, from a directory containing this Harmony git repository, build Harmony:
-```shell
-docker run --rm -v "$(pwd):/build" \
-  mattpolzin2/idris-docker:nightly \
-  bash -c "apt-get update && apt-get install -y git && cd /build && make"
-```
-
-At this point you are done with Docker. From the same directory, install Harmony
-globally:
-```shell
-npm install --global
-```
 
 ## Bash completion
 Set up Bash completion by adding the following to your Bash resource file or
