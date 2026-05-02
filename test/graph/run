@@ -1,8 +1,8 @@
 . ../setup.sh
 
-export IDRIS2_PACKAGE_PATH=$IDRIS2_PACKAGE_PATH:$(realpath ../depends):$(realpath ../../depends)
+export IDRIS2_PACKAGE_PATH=$IDRIS2_PACKAGE_PATH:$(realpath ../depends)
 
-idris2 -p harmony \
+${idris2} -p harmony \
   -p contrib \
   -p json \
   -p algebra \
