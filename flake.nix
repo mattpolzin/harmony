@@ -27,12 +27,14 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          buildIdris = packageset.buildIdris'.${system};
+          buildIdris = packageset.buildIdris.${system};
+          buildIdris' = packageset.buildIdris'.${system};
+          packdb      = packageset.packages.${system}.idris2Packages.packdb;
           type-test = type-test-pkg.packages.${system}.default;
           type-testApi = type-test-pkg.packages.${system}.type-testApi;
         in
         {
-          harmony = pkgs.callPackage ./default.nix { inherit buildIdris type-test type-testApi; };
+          harmony = pkgs.callPackage ./default.nix { inherit buildIdris buildIdris' packdb type-test type-testApi; };
 
           default = self.packages.${system}.harmony;
         }

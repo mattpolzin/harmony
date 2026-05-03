@@ -2,6 +2,8 @@
   fetchFromGitHub,
   git,
   buildIdris,
+  buildIdris',
+  packdb,
   lib,
   installShellFiles,
   makeBinaryWrapper,
@@ -16,7 +18,7 @@
 let
   idrisAddsVersion = "0.5.0";
 
-  idrisAdds = buildIdris {
+  idrisAdds = buildIdris' {
     ipkgName = "idris-adds";
     src = fetchFromGitHub {
       owner = "mattpolzin";
@@ -46,17 +48,24 @@ let
       rm -rf $out/lib
     '';
   };
-in
-buildIdris {
+
+  harmony-test = import ./test { inherit buildIdris'; harmony-lib = pkg.library'; };
+
+  pkg = buildIdris {
   ipkgName = "harmony";
   src = builtins.path {
     path = ./.;
     name = "harmony-pkg-src";
   };
 
-  extraIdrisLibraries = [
+  idrisLibraries = [
     idrisAdds
     type-testApi
+    packdb.elab-util
+    packdb.parser
+    packdb.parser-json
+    packdb.json
+    packdb.hedgehog
   ];
 
   nativeBuildInputs = [
@@ -71,7 +80,9 @@ buildIdris {
   ];
 
   IDRIS2_DATA = "./support";
-
+};
+in
+pkg.executable.overrideAttrs {
   postBuild = ''
     make manpage
 
@@ -80,6 +91,14 @@ buildIdris {
     installShellCompletion --cmd harmony \
       --bash support/shell/bash-completions.sh \
       --zsh support/shell/zsh-completions.sh
+  '';
+
+  nativeCheckInputs = [ type-test ];
+  checkPhase = ''
+    find src -name 'Test.idr' | \
+      xargs type-test --find-ipkg
+    mkdir -p $out
+    # ^ this means we can run the checkPhase without the build or install phases
   '';
 
   postInstall = ''
@@ -93,21 +112,16 @@ buildIdris {
       --prefix NODE_PATH : ${nodeDependencies}/node_modules
   '';
 
-  nativeCheckInputs = [ type-test ];
-  checkPhase = ''
-    find src -name 'Test.idr' | \
-      xargs type-test --find-ipkg
-    mkdir -p $out
-    # ^ this means we can run the checkPhase without the build or install phases
-  '';
-
+  nativeInstallCheckInputs = [ harmony-test ];
   installCheckPhase = ''
     export harmony=$out/bin/harmony
+    export idris2=idris2
     # The following tests are not run in Nix checks because they are currently
     # only designed to run with a github token in the environment:
     # - branch-command
     # - whoami-command
-    INTERACTIVE="" except='branch-command whoami-command' make test
+    cd test
+    harmony-test runtests --except 'branch-command whoami-command'
   '';
 
   meta = with lib; {

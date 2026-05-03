@@ -20,9 +20,22 @@ depends = contrib
         , type-test-api
 
 modules = Main
-        , Data.Config
-        , Util
         , Commands.Graph
+        , Data.Config
+        , Data.Promise
+        , Data.Theme
+        , FFI
+        , FFI.SystemUtil
+        , System.Git
+        , Util
+        , Util.Github
+        , Util.Reflection
+        , Util.System
+        , Language.JSON.Accessors
+        , Theme
+        , Data.ReviewScore
+        , Data.PullRequest
+        , Data.Date
 
 main = Main
 

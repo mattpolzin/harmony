@@ -22,7 +22,7 @@ depends = test
 main = Test
 
 -- name of executable
-executable = test
+executable = harmony-test
 -- opts =
 -- sourcedir =
 -- builddir =

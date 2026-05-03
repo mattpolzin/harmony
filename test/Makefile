@@ -23,7 +23,7 @@ export harmony
 export idris2
 export IDRIS2_PACKAGE_PATH
 test: build/exec/test
-	build/exec/test runtests $(INTERACTIVE) --only "$(only)" --except "$(except)"
+	build/exec/harmony-test runtests $(INTERACTIVE) --only "$(only)" --except "$(except)"
 
 clean:
 	rm -rf ./build
