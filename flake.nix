@@ -57,7 +57,7 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          inherit (packageset.packages.${system}) idris2 idris2Lsp;
+          inherit (packageset.packages.${system}) idris2 idris2Lsp idris2Packages;
           type-test = type-test-pkg.packages.${system}.default;
         in
         {
@@ -67,6 +67,7 @@
               idris2
               idris2Lsp
               type-test
+              idris2Packages.pack
             ];
           };
         }
