@@ -49,11 +49,8 @@ installed with flakes enabled, you can run it as
 Harmony can be built with `nix` or using `make` which in turn requires you have
 the `pack` Idris2 package manager installed.
 
-Building the latest commits of Harmony requires either the latest package
-collection or one from the date of the most recent major release of Idrsi2. Each
-release page also indicates the version of Idris 2 that particular release will
-build against.
-
+Building the latest commits of Harmony is only tested to work against the latest
+package collection but may work from one that is sufficiently recent as well.
 ### Testing
 Tests can be run with `make test`. You'll need a few common tools (in addition
 to the tools required to build harmony) in your `PATH` to run all the tests:

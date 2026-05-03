@@ -14,8 +14,6 @@ jobs:
     strategy:
       matrix:
         version:
-          - nightly-20251031
-          # ^ nightly-yyyymmdd (year/month/day) of last Idris2 release
           - latest
     runs-on: ubuntu-latest
     container: ghcr.io/stefan-hoeck/idris2-pack:${{ matrix.version }}
