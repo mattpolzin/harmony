@@ -19,7 +19,7 @@ endif
 
 .PHONY: all deps build test nix-build install package publish clean version readme manpage changelog harmony
 
-all: deps build
+all: build
 
 deps: pack.toml
 	$(pack) install-deps
@@ -28,11 +28,11 @@ deps: pack.toml
 	npm install
 
 ./build/ttc:
-	make build
+	$(MAKE) build
 
 export IDRIS2_DATA
 export IDRIS2_PACKAGE_PATH
-build: ./node_modules/
+build: deps ./node_modules/
 	$(idris2) --build harmony.ipkg
 	@cp ./build/exec/harmony ./harmony
 	@chmod +x ./harmony
