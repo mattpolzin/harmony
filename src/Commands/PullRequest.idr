@@ -307,68 +307,73 @@ prChain @{config} (More fuel) branch =
              mapFst (prForBranch ::) <$> prChain fuel prForBranch.baseRef
 
 public export
-data ShellFormat = Pretty | Plain
+data RenderFormat = Markdown | Shell
 
-public export
-data RenderFormat = Markdown | Shell ShellFormat
-
-||| Render a PR tree.
-|||
-||| If you pass `branch`, that is the leaf of the tree. All PRs between that
-||| and the terminal branch should be passed as the next argument. Then the
-||| terminal branch (e.g. the `mainBranch` of the repo, usually) gets passed in
-||| last.
 export
-renderPrTree : Theme -> RenderFormat -> (org : String) -> (repo : String) -> (branch : Maybe String) -> (title : Maybe String) -> List PullRequest -> (terminalBranch : String) -> String
-renderPrTree t format org repo branch title prs terminalBranch = 
-  (formattedBranchLine 0 terminus terminalBranch Nothing)  ++ "\n" ++ go 1 (reverse prs) branch
+data PrTreeNode : Type where
+  Branch : (symbol : String) -> (name : String) -> (title : Maybe String) -> PrTreeNode
+  PR : (symbol : String) -> PullRequest -> PrTreeNode
+
+||| Generate a PR tree.
+|||
+||| If you pass `branch` (and optionally a presumptive PR title for that
+||| branch), that is the leaf of the tree. All PRs between that and the
+||| terminal branch should be passed as the next argument. Then the terminal
+||| branch (e.g. the `mainBranch` of the repo, usually) gets passed in last.
+export
+prTree : (branch : Maybe String) -> (title : Maybe String) -> List PullRequest -> (terminalBranch : String) -> List PrTreeNode
+prTree branch title prs terminalBranch = 
+  (Branch terminus terminalBranch Nothing) :: go (reverse prs)
 
   where
-    indentIncrement : Nat
-    indentIncrement = 4
-
     terminus : String
     terminus = "⨀"
 
     arrow : String
     arrow = "↖"
 
-    renderPretty : Doc AnsiStyle -> String
-    renderPretty doc =
-      let formatFn = case format of
-                          (Shell Pretty) => id
-                          _ => unAnnotate
-      in renderString . layoutUnbounded $ formatFn doc
+    go : List PullRequest -> List PrTreeNode
+    go [] = case branch of
+                 (Just branch) => [Branch arrow branch title]
+                 Nothing => []
+    go (pr :: prs) =
+      PR arrow pr :: go prs
 
+||| Render a PR tree.
+export
+renderPrTree : Config => RenderFormat -> List PrTreeNode -> String
+renderPrTree @{config} format = 
+  snd . foldl renderNode (0, "")
+
+  where
     mdIndent : Nat -> String -> String
     mdIndent i = (replicate (S i) '>' ++ " " ++)
 
-    formattedBranchLine : (indentation : Nat) -> (symbol : String) -> (branch : String) -> (title : Maybe String) -> String
-    formattedBranchLine idnt symbol branch title =
-      let title' = maybe "" (\t => "\n" ++ mdIndent idnt "**\{t}**") title
-      in case format of
-              Markdown => mdIndent idnt "\{symbol} `\{branch}`\{title'}"
-              Shell _ => renderPretty $ 
-                           indent (cast $ 1 + idnt * indentIncrement) $ 
-                             (pretty symbol) <++> (theme' Special $ pretty branch)
+    shellIndent : Nat -> Doc ann -> Doc ann
+    shellIndent i = indent (cast $ 1 + i * 4)
 
-    formattedPrLines : (indentation : Nat) -> PullRequest -> String
-    formattedPrLines idnt pr =
-      case format of
-           Markdown => mdIndent idnt "\{arrow} `\{pr.headRef}` (\{webURI' org repo pr})" ++ "\n" ++
-                      mdIndent idnt "**\{pr.title}**"
-           Shell _  => renderPretty $
-                         indent (cast $ 1 + idnt * indentIncrement) $
-                           vsep [ (pretty arrow) <++> (theme' Data (pretty pr.title))
-                                , indent 2 $ "└" <++> annotate italic (pretty $ webURI' org repo pr)
-                                ]
-
-    go : (indentation : Nat) -> List PullRequest -> (maybeBranch : Maybe String) -> String
-    go idnt [] maybeBranch = case maybeBranch of
-                                  (Just branch) => formattedBranchLine idnt arrow branch title
-                                  Nothing => ""
-    go idnt (pr :: prs) branch =
-      (formattedPrLines idnt pr) ++ "\n" ++ go (idnt + 1) prs branch
+    renderNode : (Nat, String) -> PrTreeNode -> (Nat, String)
+    renderNode (idx, acc) (Branch symbol name title) =
+      let title' = maybe "" (\t => "\n" ++ mdIndent idx "**\{t}**") title
+          next = \str => (S idx, acc ++ str ++ "\n")
+      in next $ 
+        case format of
+             Markdown => mdIndent idx "\{symbol} `\{name}`\{title'}"
+             Shell    => renderString $ 
+                           shellIndent idx $ 
+                             (pretty symbol) <++> (theme' Special $ pretty name)
+    renderNode (idx, acc) (PR symbol pr) =
+      let next = \str => (S idx, acc ++ str ++ "\n")
+          uri = webURI' config.org config.repo pr
+      in next $
+        case format of
+             Markdown => mdIndent idx "\{symbol} `\{pr.headRef}` (\{uri})" ++ "\n" ++
+                        mdIndent idx "**\{pr.title}**"
+             Shell    => renderString $
+                           shellIndent idx $
+                             vsep [ (pretty symbol) <++> (theme' Data (pretty pr.title))
+                                  , indent 2 $ "└" <++> annotate italic (pretty uri)
+                                  ]
 
 githubInferredBranchInfo : Config => Octokit => (branch : String) -> (baseBranch : String) -> Promise' BranchInferredData
 githubInferredBranchInfo @{config} branch baseBranch =
@@ -392,14 +397,8 @@ githubInferredBranchInfo @{config} branch baseBranch =
     maybePrTree issue =
       if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
          then do (prs, terminalBranch) <- prChain (limit 10) baseBranch
-                 let tree = renderPrTree config.theme 
-                                         Markdown
-                                         config.org
-                                         config.repo
-                                         (Just branch)
-                                         (Just issue.title)
-                                         prs
-                                         terminalBranch
+                 let nodes = prTree (Just branch) (Just issue.title) prs terminalBranch
+                 let tree = renderPrTree Markdown nodes
                  pure """
                       ## PR Tree
                       \{tree}

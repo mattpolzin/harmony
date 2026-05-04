@@ -198,15 +198,8 @@ pr @{config} args = do
     printPrTree : PullRequest -> Promise' ()
     printPrTree pr = do
       (prs, terminalBranch) <- prChain (limit 10) pr.baseRef
-      let format = if config.colors then Pretty else Plain
-      putStrLn $ renderPrTree config.theme
-                              (Shell format)
-                              config.org
-                              config.repo
-                              Nothing
-                              Nothing
-                              (pr :: prs)
-                              terminalBranch
+      let nodes = prTree Nothing Nothing (pr :: prs) terminalBranch
+      putStrLn $ renderPrTree Shell nodes
 
 ||| Request review from the given teams & users as reviewers when the user executes
 ||| `harmony request ...`.
