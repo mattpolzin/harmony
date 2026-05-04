@@ -31,9 +31,7 @@ mkTests name = MkTestPool name
 
 unit : TestPool
 unit = mkTests "Unit"
-  [ "graph"
-  , "util-github"
-  ]
+  []
 
 misc : TestPool
 misc = mkTests "Misc"

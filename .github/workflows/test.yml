@@ -14,24 +14,30 @@ jobs:
     strategy:
       matrix:
         version:
-          - 0.8.0
-          - nightly
+          - latest
     runs-on: ubuntu-latest
-    container: mattpolzin2/idris-docker:${{ matrix.version }}
+    env:
+      PACK_USER_DIR: /root/.config/pack
+      PACK_STATE_DIR: /root/.local/state/pack
+      PACK_CACHE_DIR: /root/.cache/pack
+      PACK_BIN_DIR: /root/.local/bin
+    container: ghcr.io/stefan-hoeck/idris2-pack:${{ matrix.version }}
 
     steps:
       - name: Install Dependencies
-        run: apt-get update && apt-get -y install git
+        run: apt-get update && apt-get -y install git nodejs npm
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
       - name: Build
         shell: bash
         run: |
           echo ''
           echo 'Building with Idris 2 version:'
           idris2 --version
+          make deps
+          idris2 --list-packages
           echo ''
-          make
+          make all
       - name: Test
         shell: bash
         run: |

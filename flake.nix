@@ -27,12 +27,12 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          buildIdris = packageset.buildIdris'.${system};
+          buildIdris' = packageset.buildIdris'.${system};
           type-test = type-test-pkg.packages.${system}.default;
           type-testApi = type-test-pkg.packages.${system}.type-testApi;
         in
         {
-          harmony = pkgs.callPackage ./default.nix { inherit buildIdris type-test type-testApi; };
+          harmony = pkgs.callPackage ./default.nix { inherit buildIdris' type-test type-testApi; };
 
           default = self.packages.${system}.harmony;
         }
@@ -55,7 +55,7 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          inherit (packageset.packages.${system}) idris2 idris2Lsp;
+          inherit (packageset.packages.${system}) idris2 idris2Lsp idris2Packages;
           type-test = type-test-pkg.packages.${system}.default;
         in
         {
@@ -65,6 +65,7 @@
               idris2
               idris2Lsp
               type-test
+              idris2Packages.pack
             ];
           };
         }
