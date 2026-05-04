@@ -33,7 +33,7 @@ deps: pack.toml
 export IDRIS2_DATA
 export IDRIS2_PACKAGE_PATH
 build: ./node_modules/
-	@$(idris2) --build harmony.ipkg
+	$(idris2) --build harmony.ipkg
 	@cp ./build/exec/harmony ./harmony
 	@chmod +x ./harmony
 

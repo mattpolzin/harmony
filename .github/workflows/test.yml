@@ -16,6 +16,11 @@ jobs:
         version:
           - latest
     runs-on: ubuntu-latest
+    env:
+      PACK_USER_DIR: /root/.config/pack
+      PACK_STATE_DIR: /root/.local/state/pack
+      PACK_CACHE_DIR: /root/.cache/pack
+      PACK_BIN_DIR: /root/.local/bin
     container: ghcr.io/stefan-hoeck/idris2-pack:${{ matrix.version }}
 
     steps:
@@ -29,8 +34,10 @@ jobs:
           echo ''
           echo 'Building with Idris 2 version:'
           idris2 --version
+          make deps
+          idris2 --list-packages
           echo ''
-          make
+          make all
       - name: Test
         shell: bash
         run: |
