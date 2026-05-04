@@ -30,8 +30,10 @@ deps: pack.toml
 ./build/ttc:
 	make build
 
+export IDRIS2_DATA
+export IDRIS2_PACKAGE_PATH
 build: ./node_modules/
-	@IDRIS2_DATA=$(IDRIS2_DATA) IDRIS2_PACKAGE_PATH=$(IDRIS2_PACKAGE_PATH) $(idris2) --build harmony.ipkg
+	@$(idris2) --build harmony.ipkg
 	@cp ./build/exec/harmony ./harmony
 	@chmod +x ./harmony
 

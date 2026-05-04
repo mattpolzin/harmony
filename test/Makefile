@@ -27,4 +27,3 @@ test: build/exec/test
 
 clean:
 	rm -rf ./build
-	rm -rf ./graph/build
