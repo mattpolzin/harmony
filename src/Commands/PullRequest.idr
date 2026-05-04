@@ -361,7 +361,7 @@ renderPrTree @{config} format =
              Markdown => mdIndent idx "\{symbol} `\{name}`\{title'}"
              Shell    => renderString $ 
                            shellIndent idx $ 
-                             (pretty symbol) <++> (theme' Special $ pretty name)
+                             (pretty symbol) <++> (theme' Special $ pretty $ fromMaybe name title)
     renderNode (idx, acc) (PR symbol pr) =
       let next = \str => (S idx, acc ++ str ++ "\n")
           uri = webURI' config.org config.repo pr

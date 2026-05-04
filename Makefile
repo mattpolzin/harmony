@@ -17,7 +17,7 @@ else
 	ised = sed -I ''
 endif
 
-.PHONY: all deps build test nix-build install package publish clean version readme manpage changelog harmony
+.PHONY: all deps build test type-test nix-build install package publish clean version readme manpage changelog harmony
 
 all: build
 
@@ -94,6 +94,10 @@ test: ./build/ttc
 	mkdir -p ./test/depends/harmony-0
 	cp -R ./build/ttc/* ./test/depends/harmony-0/
 	$(MAKE) -C test test
+
+type-test:
+	find src -name 'Test.idr' | \
+    xargs type-test --find-ipkg
 
 clean:
 	rm -rf ./build

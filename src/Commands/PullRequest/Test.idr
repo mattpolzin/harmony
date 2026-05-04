@@ -1,5 +1,6 @@
 module Commands.PullRequest.Test
 
+import Data.Config
 import Data.Date
 import Data.PullRequest
 import Data.Theme
@@ -16,36 +17,90 @@ namespace PrCreationUrl
   withIntoBranch = Refl
 
 namespace RenderPrTree
-  noPrs : renderPrTree Dark Markdown "org" "repo" (Just "feature-1") Nothing [] "main"
+  config : Config
+  config =
+      MkConfig {
+          updatedAt            = 0
+        , org                  = "org"
+        , repo                 = "repo"
+        , defaultRemote        = "origin"
+        , mainBranch           = "main"
+        , requestTeams         = True
+        , requestUsers         = True
+        , teamSlugs            = []
+        , repoLabels           = []
+        , commentOnRequest     = None
+        , branchParsing        = None
+        , addPrTreeDescription = True
+        , orgMembers           = []
+        , ignoredPRs           = []
+        , githubPAT            = Nothing
+        , githubUser           = Nothing
+        , theme                = Dark
+        , ephemeral            = MkEphem "path/to/repo" False 200 Nothing
+        }
+
+  noPrs : renderPrTree @{RenderPrTree.config} Markdown (prTree (Just "feature-1") Nothing [] "main")
             ==> """
                 > ⨀ `main`
                 >> ↖ `feature-1`
+                
                 """
   noPrs = MkTTest
+
+  noPrsShell : renderPrTree @{RenderPrTree.config} Shell (prTree (Just "feature-1") Nothing [] "main")
+            ==> """
+                 ⨀ main
+                     ↖ feature-1
+                
+                """
+  noPrsShell = MkTTest
 
   mkPr : Integer -> String -> PullRequest
   mkPr num headRef = MkPullRequest num "Fancy PR" (MkDate 2025 01 01) False "" Open [] headRef ""
 
-  onePr : renderPrTree Dark Markdown "org" "repo"  (Just "feature-2") Nothing [mkPr 123 "feature-1"] "main"
+  onePr : renderPrTree @{RenderPrTree.config} Markdown (prTree (Just "feature-2") Nothing [mkPr 123 "feature-1"] "main")
             ==> """
                 > ⨀ `main`
                 >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
                 >> **Fancy PR**
                 >>> ↖ `feature-2`
+
                 """
   onePr = MkTTest
 
-  onePrPlusTitle : renderPrTree Dark Markdown "org" "repo"  (Just "feature-2") (Just "Title") [mkPr 123 "feature-1"] "main"
+  onePrShell : renderPrTree @{RenderPrTree.config} Shell (prTree (Just "feature-2") Nothing [mkPr 123 "feature-1"] "main")
+            ==> """
+                 ⨀ main
+                     ↖ Fancy PR
+                       └ https://github.com/org/repo/pull/123
+                         ↖ feature-2
+
+                """
+  onePrShell = MkTTest
+
+  onePrPlusTitle : renderPrTree @{RenderPrTree.config} Markdown (prTree (Just "feature-2") (Just "Title") [mkPr 123 "feature-1"] "main")
             ==> """
                 > ⨀ `main`
                 >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
                 >> **Fancy PR**
                 >>> ↖ `feature-2`
                 >>> **Title**
+
                 """
   onePrPlusTitle = MkTTest
 
-  onePrNoLeaf : renderPrTree Dark Markdown "org" "repo" Nothing Nothing [mkPr 123 "feature-1"] "main"
+  onePrPlusTitleShell : renderPrTree @{RenderPrTree.config} Shell (prTree (Just "feature-2") (Just "Title") [mkPr 123 "feature-1"] "main")
+            ==> """
+                 ⨀ main
+                     ↖ Fancy PR
+                       └ https://github.com/org/repo/pull/123
+                         ↖ Title
+
+                """
+  onePrPlusTitleShell = MkTTest
+
+  onePrNoLeaf : renderPrTree @{RenderPrTree.config} Markdown (prTree Nothing Nothing [mkPr 123 "feature-1"] "main")
                   ==> """
                       > ⨀ `main`
                       >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
@@ -53,4 +108,13 @@ namespace RenderPrTree
 
                       """
   onePrNoLeaf = MkTTest
+
+  onePrNoLeafShell : renderPrTree @{RenderPrTree.config} Shell (prTree Nothing Nothing [mkPr 123 "feature-1"] "main")
+                  ==> """
+                       ⨀ main
+                           ↖ Fancy PR
+                             └ https://github.com/org/repo/pull/123
+
+                      """
+  onePrNoLeafShell = MkTTest
 
