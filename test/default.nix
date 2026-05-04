@@ -1,6 +1,5 @@
 {
-  buildIdris',
-  harmony-lib
+  buildIdris'
 }:
 let
 pkg = buildIdris' {
@@ -9,8 +8,6 @@ pkg = buildIdris' {
     path = ./.;
     name = "harmony-tests-src";
   };
-
-  extraIdrisLibraries = [ harmony-lib ];
 
   postInstall = ''
     wrapProgram $out/bin/harmony-test \

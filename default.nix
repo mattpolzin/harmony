@@ -1,9 +1,7 @@
 {
   fetchFromGitHub,
   git,
-  buildIdris,
   buildIdris',
-  packdb,
   lib,
   installShellFiles,
   makeBinaryWrapper,
@@ -49,23 +47,18 @@ let
     '';
   };
 
-  harmony-test = import ./test { inherit buildIdris'; harmony-lib = pkg.library'; };
+  harmony-test = import ./test { inherit buildIdris'; };
 
-  pkg = buildIdris {
+  harmony = buildIdris' {
   ipkgName = "harmony";
   src = builtins.path {
     path = ./.;
     name = "harmony-pkg-src";
   };
 
-  idrisLibraries = [
+  extraIdrisLibraries = [
     idrisAdds
     type-testApi
-    packdb.elab-util
-    packdb.parser
-    packdb.parser-json
-    packdb.json
-    packdb.hedgehog
   ];
 
   nativeBuildInputs = [
@@ -82,7 +75,7 @@ let
   IDRIS2_DATA = "./support";
 };
 in
-pkg.executable.overrideAttrs {
+harmony.overrideAttrs {
   postBuild = ''
     make manpage
 
