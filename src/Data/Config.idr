@@ -134,7 +134,7 @@ record Config where
   ||| names and use that in the PR body.
   branchParsing : ParseBranchStrategy
   ||| If set, prefix new PR titles (by default suggestion only) with the given
-  ||| string. For example, '[fix] '.
+  ||| string. For example, '[fix]'.
   bugfixPRTitlePrefix : Maybe String
   ||| Add a PR tree/chain to the PR body when creating a new PR that is not
   ||| `--into` the `mainBranch`.
@@ -208,6 +208,13 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     to automatically add to a new PR's title or body to link the PR and \
     issue/ticket.
     """
+  BugfixPRTitlePrefix : SettableProp
+    "bugfixPRTitlePrefix"
+    """
+    [string] A string to prefix default PR titles with when the branch the PR \
+    is being created from is determined to be a bugfix branch (branch name \
+    starts with 'bugfix'). For example, a common prefix is '[fix]'.
+    """
   AddPrTreeDescription : SettableProp
     "addPrTreeDescription"
     """
@@ -253,6 +260,7 @@ settablePropNamed : (name : String) -> Maybe (Exists (SettableProp name))
 settablePropNamed "requestTeams"         = Just $ Evidence _ RequestTeams
 settablePropNamed "commentOnRequest"     = Just $ Evidence _ CommentOnRequest
 settablePropNamed "branchParsing"        = Just $ Evidence _ ParseBranchStrategy
+settablePropNamed "bugfixPRTitlePrefix"  = Just $ Evidence _ BugfixPRTitlePrefix
 settablePropNamed "addPrTreeDescription" = Just $ Evidence _ AddPrTreeDescription
 settablePropNamed "defaultRemote"        = Just $ Evidence _ DefaultRemote
 settablePropNamed "mainBranch"           = Just $ Evidence _ MainBranch
@@ -275,6 +283,7 @@ settableProps = [
   , (_ ** _ ** RequestUsers)
   , (_ ** _ ** CommentOnRequest)
   , (_ ** _ ** ParseBranchStrategy)
+  , (_ ** _ ** BugfixPRTitlePrefix)
   , (_ ** _ ** AddPrTreeDescription)
   , (_ ** _ ** DefaultRemote)
   , (_ ** _ ** MainBranch)

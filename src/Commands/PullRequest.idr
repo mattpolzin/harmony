@@ -408,7 +408,7 @@ githubInferredBranchInfo @{config} branch baseBranch =
     titlePrefix : String
     titlePrefix =
       if isBugfixBranch branch
-         then maybe "" (" " ++) config.bugfixPRTitlePrefix
+         then maybe "" (++ " ") config.bugfixPRTitlePrefix
          else ""
 
     issueDescriptionPrefix : Issue -> Promise' String

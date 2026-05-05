@@ -137,6 +137,7 @@ propSetter RequestTeams         = update parseBool (\b => { requestTeams := b })
 propSetter RequestUsers         = update parseBool (\b => { requestUsers := b })
 propSetter CommentOnRequest     = update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
 propSetter ParseBranchStrategy  = update (parseBranchConfig . toLower) (\s => { branchParsing := s })
+propSetter BugfixPRTitlePrefix  = update Just (\s => { bugfixPRTitlePrefix := Just s })
 propSetter AddPrTreeDescription = update parseBool (\b => { addPrTreeDescription := b })
 propSetter DefaultRemote        = update Just (\s => { defaultRemote := s })
 propSetter MainBranch           = update Just (\s => { mainBranch := s })
@@ -162,6 +163,7 @@ propGetter RequestTeams         = show . requestTeams
 propGetter RequestUsers         = show . requestUsers
 propGetter CommentOnRequest     = show . commentOnRequest
 propGetter ParseBranchStrategy  = show . branchParsing
+propGetter BugfixPRTitlePrefix  = show . bugfixPRTitlePrefix
 propGetter AddPrTreeDescription = show . addPrTreeDescription
 propGetter DefaultRemote        = show . defaultRemote
 propGetter MainBranch           = show . mainBranch
