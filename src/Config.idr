@@ -270,6 +270,10 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
      repoLabels <- listRepoLabels org repo
      githubUser <- login <$> getSelf
      let addPrTreeDescription = False
+     let bugfixPRTitlePrefix = Nothing
+     let ignoredPRs = []
+     let githubPAT = hide <$> configPAT
+     let githubUser = Just githubUser
      let config = MkConfig {
          updatedAt
        , org
@@ -280,13 +284,14 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
        , requestUsers
        , commentOnRequest
        , branchParsing
+       , bugfixPRTitlePrefix
        , addPrTreeDescription
        , teamSlugs
        , repoLabels
        , orgMembers
-       , ignoredPRs = []
-       , githubPAT = hide <$> configPAT
-       , githubUser = Just githubUser
+       , ignoredPRs
+       , githubPAT
+       , githubUser
        , theme
        , ephemeral
        }

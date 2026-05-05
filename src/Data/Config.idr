@@ -133,6 +133,9 @@ record Config where
   ||| If set to Github, attempt to extract a Github issue number from branch
   ||| names and use that in the PR body.
   branchParsing : ParseBranchStrategy
+  ||| If set, prefix new PR titles (by default suggestion only) with the given
+  ||| string. For example, '[fix]'.
+  bugfixPRTitlePrefix : Maybe String
   ||| Add a PR tree/chain to the PR body when creating a new PR that is not
   ||| `--into` the `mainBranch`.
   |||
@@ -342,6 +345,7 @@ Show Config where
     , "        requestUsers: \{show config.requestUsers}"
     , "    commentOnRequest: \{show config.commentOnRequest}"
     , "       branchParsing: \{show config.branchParsing}"
+    , " bugfixPRTitlePrefix: \{show config.bugfixPRTitlePrefix}"
     , "addPrTreeDescription: \{show config.addPrTreeDescription}"
     , "           teamSlugs: \{show config.teamSlugs}"
     , "          repoLabels: \{show config.repoLabels}"
@@ -361,15 +365,15 @@ Show Config where
 export
 json : Config -> JSON
 json (MkConfig updatedAt org repo defaultRemote mainBranch
-               requestTeams requestUsers commentOnRequest
-               branchParsing addPrTreeDescription teamSlugs
-               repoLabels orgMembers ignoredPRs githubPAT
-               githubUser theme _) =
+               requestTeams requestUsers commentOnRequest branchParsing
+               bugfixPRTitlePrefix addPrTreeDescription teamSlugs repoLabels
+               orgMembers ignoredPRs githubPAT githubUser theme _) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
     , ("commentOnRequest"     , JString $ show commentOnRequest)
     , ("branchParsing"        , JString $ show branchParsing)
+    , ("bugfixPRTitlePrefix"  , maybe JNull JString bugfixPRTitlePrefix)
     , ("addPrTreeDescription" , JBool addPrTreeDescription)
     , ("org"                  , JString org)
     , ("repo"                 , JString repo)
@@ -427,6 +431,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeGithubUser = lookup "githubUser" config
                                           let maybeBranchParsing = lookup "branchParsing" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
+                                          let maybeBugfixPrefix = lookup "bugfixPRTitlePrefix" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
@@ -447,6 +452,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           gu <- maybe (Right Nothing) (optional string) maybeGithubUser
+                                          bf <- maybe (Right Nothing) (optional string) maybeBugfixPrefix
                                           -- TODO 7.0.0: Make githubUser required part of config file (default to Nothing)
                                           --             githubUser lookup can be moved to the required lookupAll above.
                                           th <- (stringy "dark or light" parseString) theme
@@ -462,6 +468,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , repoLabels           = rl
                                             , commentOnRequest     = ca
                                             , branchParsing        = bp
+                                            , bugfixPRTitlePrefix  = bf
                                             , addPrTreeDescription = prt
                                             , orgMembers           = om
                                             , ignoredPRs           = ip
@@ -505,6 +512,7 @@ simpleDefaults =
       , repoLabels           = []
       , commentOnRequest     = None
       , branchParsing        = None
+      , bugfixPRTitlePrefix  = Nothing
       , addPrTreeDescription = False
       , orgMembers           = []
       , ignoredPRs           = []
