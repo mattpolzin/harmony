@@ -57,8 +57,7 @@ export
 syncIfOld : Octokit => Config -> Promise' Config
 syncIfOld config =
   if config.updatedAt < !oneDayAgo
-     then do -- putStrLn "Syncing config file..."
-             syncConfig False
+     then syncConfig False
      else pure config
   where
     oneDayAgo : HasIO io => io Data.Config.Timestamp
