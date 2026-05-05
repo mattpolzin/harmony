@@ -182,13 +182,13 @@ data SettableProp : (name : String) -> (help : String) -> Type where
   RequestTeams     : SettableProp
     "requestTeams"
     """
-    [true/false] Determines whether or not to request reviews from teams when \
+    [true/false]  Determines whether or not to request reviews from teams when \
     requesting individual reviewers from a team.
     """
   RequestUsers     : SettableProp
     "requestUsers"
     """
-    [true/false] Determines whether or not to request reviews from an individual \
+    [true/false]  Determines whether or not to request reviews from an individual \
     user based on Harmony's heuristics when requestin review from teams. You \
     might want to disable `requestUsers` to allow GitHub to pick users to \
     request based on the team. This setting does not affect the ability to \
@@ -211,14 +211,14 @@ data SettableProp : (name : String) -> (help : String) -> Type where
   BugfixPRTitlePrefix : SettableProp
     "bugfixPRTitlePrefix"
     """
-    [string] A string to prefix default PR titles with when the branch the PR \
+    [string]      A string to prefix default PR titles with when the branch the PR \
     is being created from is determined to be a bugfix branch (branch name \
     starts with 'bugfix'). For example, a common prefix is '[fix]'.
     """
   AddPrTreeDescription : SettableProp
     "addPrTreeDescription"
     """
-    [true/false] Determines whether to add a tree of PRs to the description \
+    [true/false]  Determines whether to add a tree of PRs to the description \
     for any PR that is into a branch other than the `mainBranch` configured.
         This looks like:
           > ⨀ `main`
@@ -238,7 +238,7 @@ data SettableProp : (name : String) -> (help : String) -> Type where
   GithubPAT       : SettableProp
     "githubPAT"
     """
-    [string]     The Personal Access Token Harmony should use to authenticate \
+    [string]      The Personal Access Token Harmony should use to authenticate \
     with GitHub. You can leave this unset if you want to set a PAT via the \
     GITHUB_PAT or GH_TOKEN environment variable.
     """
