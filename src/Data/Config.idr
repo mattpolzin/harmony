@@ -137,9 +137,10 @@ record Config where
   ||| `--into` the `mainBranch`.
   |||
   ||| This looks like e.g.
-  ||| `main`
-  |||   ↖ `feature-1`
-  |||       ↖ `feature-2`
+  |||   > ⨀ `main`
+  |||   >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
+  |||   >> **Fancy PR**
+  |||   >>> ↖ `feature-2`
   addPrTreeDescription : Bool
   ||| Local cache of GitHub teams within the configured org.
   teamSlugs     : List String
