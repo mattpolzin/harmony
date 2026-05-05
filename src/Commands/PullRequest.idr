@@ -402,7 +402,6 @@ githubInferredBranchInfo @{config} branch baseBranch =
                  pure """
                       ## PR Tree
                       \{tree}
-
                       """
          else pure ""
 
