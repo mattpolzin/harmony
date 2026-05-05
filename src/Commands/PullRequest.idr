@@ -384,7 +384,7 @@ githubInferredBranchInfo @{config} branch baseBranch =
       pure $ 
         MkInferredData Nothing 
                        (Just $ !(issueDescriptionPrefix issue) ++ "\n\n" ++ (relatedToPrefix issueNum))
-                       (Just issue.title)
+                       (Just $ titlePrefix ++ issue.title)
 
   where
     issueNumber : Maybe String
@@ -404,6 +404,12 @@ githubInferredBranchInfo @{config} branch baseBranch =
                       \{tree}
                       """
          else pure ""
+
+    titlePrefix : String
+    titlePrefix =
+      if isBugfixBranch branch
+         then maybe "" (" " ++) config.bugfixPRTitlePrefix
+         else ""
 
     issueDescriptionPrefix : Issue -> Promise' String
     issueDescriptionPrefix issue = do

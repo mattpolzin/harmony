@@ -1,6 +1,12 @@
 module Util.Github
 
+import Data.String
+
 %default total
+
+export
+isBugfixBranch : String -> Bool
+isBugfixBranch branch = "bugfix" `isPrefixOf` branch
 
 ||| If possible, extract a Github issue number from the given string.
 |||
