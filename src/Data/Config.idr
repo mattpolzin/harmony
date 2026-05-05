@@ -134,7 +134,7 @@ record Config where
   ||| names and use that in the PR body.
   branchParsing : ParseBranchStrategy
   ||| If set, prefix new PR titles (by default suggestion only) with the given
-  ||| string. For example, '[fix]'.
+  ||| string. For example, '[fix] '.
   bugfixPRTitlePrefix : Maybe String
   ||| Add a PR tree/chain to the PR body when creating a new PR that is not
   ||| `--into` the `mainBranch`.
