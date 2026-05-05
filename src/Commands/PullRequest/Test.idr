@@ -19,26 +19,7 @@ namespace PrCreationUrl
 namespace RenderPrTree
   config : Config
   config =
-      MkConfig {
-          updatedAt            = 0
-        , org                  = "org"
-        , repo                 = "repo"
-        , defaultRemote        = "origin"
-        , mainBranch           = "main"
-        , requestTeams         = True
-        , requestUsers         = True
-        , teamSlugs            = []
-        , repoLabels           = []
-        , commentOnRequest     = None
-        , branchParsing        = None
-        , addPrTreeDescription = True
-        , orgMembers           = []
-        , ignoredPRs           = []
-        , githubPAT            = Nothing
-        , githubUser           = Nothing
-        , theme                = Dark
-        , ephemeral            = MkEphem "path/to/repo" False 200 Nothing
-        }
+    { addPrTreeDescription := True } simpleDefaults
 
   noPrs : renderPrTree @{RenderPrTree.config} Markdown (prTree (Just "feature-1") Nothing [] "main")
             ==> """

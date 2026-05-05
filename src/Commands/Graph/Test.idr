@@ -11,26 +11,10 @@ import TTest
 
 config : Config
 config =
-    MkConfig {
-        updatedAt            = 0
-      , org                  = "org"
-      , repo                 = "repo"
-      , defaultRemote        = "origin"
-      , mainBranch           = "main"
-      , requestTeams         = True
-      , requestUsers         = True
-      , teamSlugs            = ["team1", "team2"]
-      , repoLabels           = ["label1", "label2", "label3"]
-      , commentOnRequest     = None
-      , branchParsing        = None
-      , addPrTreeDescription = False
-      , orgMembers           = ["sam", "gretta", "florence"]
-      , ignoredPRs           = []
-      , githubPAT            = Nothing
-      , githubUser           = Nothing
-      , theme                = Dark
-      , ephemeral            = MkEphem "path/to/repo" False 200 Nothing
-      }
+    { teamSlugs  := ["team1", "team2"]
+    , repoLabels := ["label1", "label2", "label3"]
+    , orgMembers := ["sam", "gretta", "florence"]
+    } simpleDefaults
 
 namespace ReviewsGraph
 
