@@ -1,3 +1,15 @@
+# 6.5.0 (Pack it up)
+Published: 2026-05-06T02:01:20Z
+
+## What's Changed
+* Switch to using pack for non-nix builds
+* bugfix prefix (https://github.com/mattpolzin/harmony/pull/277)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.4.0...6.5.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 6.4.0 (To The Center Of The Earth)
 Published: 2026-05-02T03:12:30Z
 
