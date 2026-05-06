@@ -55,6 +55,7 @@ version:
 	$(ised) "s/Version [^ ]*/Version ${v}/" ./docs/_0_0_MANPAGE_HEADER.md
 	@npm update
 	@find . -name '*.nix' | xargs $(nix) fmt
+	$(MAKE) readme
 	$(MAKE) manpage
 
 README_FILES = $(wildcard docs/*.md)

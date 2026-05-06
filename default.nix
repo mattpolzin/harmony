@@ -36,7 +36,7 @@ let
         ./man/harmony.1
       ];
     };
-    npmDepsHash = "sha256-oOh7+9rufZ69xcq9yzTrM4RLu9WGRyLxxdEXvv4j/eA=";
+    npmDepsHash = "sha256-SfBZKkw7lUBggAve7VSWA5012u3HZRG7cJFjWL+yFTo=";
     dontNpmBuild = true;
     dontBuild = true;
 
@@ -50,30 +50,30 @@ let
   harmony-test = import ./test { inherit buildIdris'; };
 
   harmony = buildIdris' {
-  ipkgName = "harmony";
-  src = builtins.path {
-    path = ./.;
-    name = "harmony-pkg-src";
+    ipkgName = "harmony";
+    src = builtins.path {
+      path = ./.;
+      name = "harmony-pkg-src";
+    };
+
+    extraIdrisLibraries = [
+      idrisAdds
+      type-testApi
+    ];
+
+    nativeBuildInputs = [
+      installShellFiles
+      makeBinaryWrapper
+      pandoc
+    ]
+    ++ lib.optionals stdenv.isDarwin [ zsh ];
+    buildInputs = [
+      nodejs
+      git
+    ];
+
+    IDRIS2_DATA = "./support";
   };
-
-  extraIdrisLibraries = [
-    idrisAdds
-    type-testApi
-  ];
-
-  nativeBuildInputs = [
-    installShellFiles
-    makeBinaryWrapper
-    pandoc
-  ]
-  ++ lib.optionals stdenv.isDarwin [ zsh ];
-  buildInputs = [
-    nodejs
-    git
-  ];
-
-  IDRIS2_DATA = "./support";
-};
 in
 harmony.overrideAttrs {
   postBuild = ''

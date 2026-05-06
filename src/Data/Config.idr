@@ -133,6 +133,9 @@ record Config where
   ||| If set to Github, attempt to extract a Github issue number from branch
   ||| names and use that in the PR body.
   branchParsing : ParseBranchStrategy
+  ||| If set, prefix new PR titles (by default suggestion only) with the given
+  ||| string. For example, '[fix]'.
+  bugfixPRTitlePrefix : Maybe String
   ||| Add a PR tree/chain to the PR body when creating a new PR that is not
   ||| `--into` the `mainBranch`.
   |||
@@ -179,13 +182,13 @@ data SettableProp : (name : String) -> (help : String) -> Type where
   RequestTeams     : SettableProp
     "requestTeams"
     """
-    [true/false] Determines whether or not to request reviews from teams when \
+    [true/false]  Determines whether or not to request reviews from teams when \
     requesting individual reviewers from a team.
     """
   RequestUsers     : SettableProp
     "requestUsers"
     """
-    [true/false] Determines whether or not to request reviews from an individual \
+    [true/false]  Determines whether or not to request reviews from an individual \
     user based on Harmony's heuristics when requestin review from teams. You \
     might want to disable `requestUsers` to allow GitHub to pick users to \
     request based on the team. This setting does not affect the ability to \
@@ -205,10 +208,17 @@ data SettableProp : (name : String) -> (help : String) -> Type where
     to automatically add to a new PR's title or body to link the PR and \
     issue/ticket.
     """
+  BugfixPRTitlePrefix : SettableProp
+    "bugfixPRTitlePrefix"
+    """
+    [string]      A string to prefix default PR titles with when the branch the PR \
+    is being created from is determined to be a bugfix branch (branch name \
+    starts with 'bugfix'). For example, a common prefix is '[fix]'.
+    """
   AddPrTreeDescription : SettableProp
     "addPrTreeDescription"
     """
-    [true/false] Determines whether to add a tree of PRs to the description \
+    [true/false]  Determines whether to add a tree of PRs to the description \
     for any PR that is into a branch other than the `mainBranch` configured.
         This looks like:
           > ⨀ `main`
@@ -228,7 +238,7 @@ data SettableProp : (name : String) -> (help : String) -> Type where
   GithubPAT       : SettableProp
     "githubPAT"
     """
-    [string]     The Personal Access Token Harmony should use to authenticate \
+    [string]      The Personal Access Token Harmony should use to authenticate \
     with GitHub. You can leave this unset if you want to set a PAT via the \
     GITHUB_PAT or GH_TOKEN environment variable.
     """
@@ -250,6 +260,7 @@ settablePropNamed : (name : String) -> Maybe (Exists (SettableProp name))
 settablePropNamed "requestTeams"         = Just $ Evidence _ RequestTeams
 settablePropNamed "commentOnRequest"     = Just $ Evidence _ CommentOnRequest
 settablePropNamed "branchParsing"        = Just $ Evidence _ ParseBranchStrategy
+settablePropNamed "bugfixPRTitlePrefix"  = Just $ Evidence _ BugfixPRTitlePrefix
 settablePropNamed "addPrTreeDescription" = Just $ Evidence _ AddPrTreeDescription
 settablePropNamed "defaultRemote"        = Just $ Evidence _ DefaultRemote
 settablePropNamed "mainBranch"           = Just $ Evidence _ MainBranch
@@ -272,6 +283,7 @@ settableProps = [
   , (_ ** _ ** RequestUsers)
   , (_ ** _ ** CommentOnRequest)
   , (_ ** _ ** ParseBranchStrategy)
+  , (_ ** _ ** BugfixPRTitlePrefix)
   , (_ ** _ ** AddPrTreeDescription)
   , (_ ** _ ** DefaultRemote)
   , (_ ** _ ** MainBranch)
@@ -342,6 +354,7 @@ Show Config where
     , "        requestUsers: \{show config.requestUsers}"
     , "    commentOnRequest: \{show config.commentOnRequest}"
     , "       branchParsing: \{show config.branchParsing}"
+    , " bugfixPRTitlePrefix: \{show config.bugfixPRTitlePrefix}"
     , "addPrTreeDescription: \{show config.addPrTreeDescription}"
     , "           teamSlugs: \{show config.teamSlugs}"
     , "          repoLabels: \{show config.repoLabels}"
@@ -361,15 +374,15 @@ Show Config where
 export
 json : Config -> JSON
 json (MkConfig updatedAt org repo defaultRemote mainBranch
-               requestTeams requestUsers commentOnRequest
-               branchParsing addPrTreeDescription teamSlugs
-               repoLabels orgMembers ignoredPRs githubPAT
-               githubUser theme _) =
+               requestTeams requestUsers commentOnRequest branchParsing
+               bugfixPRTitlePrefix addPrTreeDescription teamSlugs repoLabels
+               orgMembers ignoredPRs githubPAT githubUser theme _) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
     , ("commentOnRequest"     , JString $ show commentOnRequest)
     , ("branchParsing"        , JString $ show branchParsing)
+    , ("bugfixPRTitlePrefix"  , maybe JNull JString bugfixPRTitlePrefix)
     , ("addPrTreeDescription" , JBool addPrTreeDescription)
     , ("org"                  , JString org)
     , ("repo"                 , JString repo)
@@ -427,6 +440,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeGithubUser = lookup "githubUser" config
                                           let maybeBranchParsing = lookup "branchParsing" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
+                                          let maybeBugfixPrefix = lookup "bugfixPRTitlePrefix" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
@@ -447,6 +461,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           gu <- maybe (Right Nothing) (optional string) maybeGithubUser
+                                          bf <- maybe (Right Nothing) (optional string) maybeBugfixPrefix
                                           -- TODO 7.0.0: Make githubUser required part of config file (default to Nothing)
                                           --             githubUser lookup can be moved to the required lookupAll above.
                                           th <- (stringy "dark or light" parseString) theme
@@ -462,6 +477,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , repoLabels           = rl
                                             , commentOnRequest     = ca
                                             , branchParsing        = bp
+                                            , bugfixPRTitlePrefix  = bf
                                             , addPrTreeDescription = prt
                                             , orgMembers           = om
                                             , ignoredPRs           = ip
@@ -505,6 +521,7 @@ simpleDefaults =
       , repoLabels           = []
       , commentOnRequest     = None
       , branchParsing        = None
+      , bugfixPRTitlePrefix  = Nothing
       , addPrTreeDescription = False
       , orgMembers           = []
       , ignoredPRs           = []

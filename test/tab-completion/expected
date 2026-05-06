@@ -21,6 +21,7 @@ requestTeams
 requestUsers
 commentOnRequest
 branchParsing
+bugfixPRTitlePrefix
 addPrTreeDescription
 defaultRemote
 mainBranch
