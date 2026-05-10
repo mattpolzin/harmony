@@ -95,6 +95,11 @@ allRequestCmdOpts s = completionResult <$> allRequestCmdOptsAndDescriptions
 
 allSettableProps : (s : CompletionStyle) -> List CompletionResult
 allSettableProps s = completionResult <$> settablePropNamesAndHelp
+
+allSettableValuesForProp : (s : CompletionStyle) -> (propName : String) -> List CompletionResult
+allSettableValuesForProp s n with (settablePropNamed n)
+  _ | Nothing = []
+  _ | Just p = describe "" <$> (propOptions $ snd $ reifyProp p)
  
 ||| Attempt to handle completions for root commands but
 ||| if we ar not currently on the root command (at least
@@ -164,9 +169,11 @@ cmdOpts s "graph" "-"  _ = all (allGraphCmdOpts s)
 cmdOpts s "graph" partialArg _ =
   someWithPrefixOrNothing partialArg (allGraphCmdOpts s)
 
-cmdOpts s "config" "--"        "config" = all (allSettableProps s)
-cmdOpts s "config" partialProp "config" = someWithPrefix partialProp (allSettableProps s)
-cmdOpts _ "config" _           _        = Just []
+cmdOpts s "config" "--"         "config" = all (allSettableProps s)
+cmdOpts s "config" partialProp  "config" = someWithPrefix partialProp (allSettableProps s)
+cmdOpts s "config" "--"         settableProp = all (allSettableValuesForProp s settableProp)
+cmdOpts s "config" partialValue settableProp =
+  someWithPrefix partialValue (allSettableValuesForProp s settableProp)
 
 -- anything else requires configuration being loaded
 cmdOpts _ _ _ _ = Nothing
