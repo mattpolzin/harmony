@@ -53,6 +53,7 @@ version:
 	$(ised) "s/appVersion = \".*\"/appVersion = \"${v}\"/" ./src/AppVersion.idr
 	$(ised) "s/\"version\": \".*\"/\"version\": \"${v}\"/" ./package.json
 	$(ised) "s/Version [^ ]*/Version ${v}/" ./docs/_0_0_MANPAGE_HEADER.md
+	$(ised) 's/npmDepsHash = "[^"]*"/npmDepsHash = ""/' ./default.nix
 	@npm update
 	@find . -name '*.nix' | xargs $(nix) fmt
 	$(MAKE) readme
