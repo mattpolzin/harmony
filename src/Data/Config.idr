@@ -177,71 +177,109 @@ record Config where
 -- Settable Properties Setup
 --
 
+data Options = Enum (List String) | Any String
+
+(.strValue) : Options -> String
+(.strValue) (Enum strs) = concat $ intersperse "/" strs
+(.strValue) (Any str) = str
+
+(.enumeratedOptions) : Options -> List String
+(.enumeratedOptions) (Enum strs) = strs
+(.enumeratedOptions) (Any str) = []
+--                               ^
+-- The string here describes the type of option so it is not itself one of the options.
+
+booleanOptions : Options
+booleanOptions = Enum ["true", "false"]
+
+Help : Type
+Help = (Options, String)
+
 public export
-data SettableProp : (name : String) -> (help : String) -> Type where
+data SettableProp : (name : String) -> (help : Help) -> Type where
   RequestTeams     : SettableProp
     "requestTeams"
-    """
-    [true/false]  Determines whether or not to request reviews from teams when \
-    requesting individual reviewers from a team.
-    """
+    ( Config.booleanOptions
+    , """
+      Determines whether or not to request reviews from teams when \
+      requesting individual reviewers from a team.
+      """
+    )
   RequestUsers     : SettableProp
     "requestUsers"
-    """
-    [true/false]  Determines whether or not to request reviews from an individual \
-    user based on Harmony's heuristics when requestin review from teams. You \
-    might want to disable `requestUsers` to allow GitHub to pick users to \
-    request based on the team. This setting does not affect the ability to \
-    request reviews from individual users withe Harmony's `+<username>` \
-    syntax.
-    """
+    ( Config.booleanOptions
+    , """
+      Determines whether or not to request reviews from an individual \
+      user based on Harmony's heuristics when requestin review from teams. You \
+      might want to disable `requestUsers` to allow GitHub to pick users to \
+      request based on the team. This setting does not affect the ability to \
+      request reviews from individual users withe Harmony's `+<username>` \
+      syntax.
+      """
+    )
   CommentOnRequest : SettableProp
     "commentOnRequest"
-    """
-    [none/name/at-mention] Determines whether- and how to comment on PR \
-    indicating that Harmony chose a reviewer.
-    """
+    ( (Enum ["none", "name", "at-mention"])
+    , """
+      Determines whether- and how to comment on PR \
+      indicating that Harmony chose a reviewer.
+      """
+    )
   ParseBranchStrategy : SettableProp
     "branchParsing"
-    """
-    [none/jira/github] Determines whether- and how to parse branch names for a prefix \
-    to automatically add to a new PR's title or body to link the PR and \
-    issue/ticket.
-    """
+    ( (Enum ["none", "jira", "github"])
+    , """
+      Determines whether- and how to parse branch names for a prefix \
+      to automatically add to a new PR's title or body to link the PR and \
+      issue/ticket.
+      """
+    )
   BugfixPRTitlePrefix : SettableProp
     "bugfixPRTitlePrefix"
-    """
-    [string]      A string to prefix default PR titles with when the branch the PR \
-    is being created from is determined to be a bugfix branch (branch name \
-    starts with 'bugfix'). For example, a common prefix is '[fix]'.
-    """
+    ( (Any "string")
+    , """
+      A string to prefix default PR titles with when the branch the PR \
+      is being created from is determined to be a bugfix branch (branch name \
+      starts with 'bugfix'). For example, a common prefix is '[fix]'.
+      """
+    )
   AddPrTreeDescription : SettableProp
     "addPrTreeDescription"
-    """
-    [true/false]  Determines whether to add a tree of PRs to the description \
-    for any PR that is into a branch other than the `mainBranch` configured.
-        This looks like:
-          > ⨀ `main`
-          >> ↖ `feature-1` (https://github.com/org/repo/pull/1234)
-          >> **The first feature**
-          >>>> ↖ `feature-2`
-    """
+    ( Config.booleanOptions
+    , """
+      Determines whether to add a tree of PRs to the description \
+      for any PR that is into a branch other than the `mainBranch` configured.
+          This looks like:
+            > ⨀ `main`
+            >> ↖ `feature-1` (https://github.com/org/repo/pull/1234)
+            >> **The first feature**
+            >>>> ↖ `feature-2`
+      """
+    )
   DefaultRemote   : SettableProp
     "defaultRemote"
-    "[string]     The name of the default Git remote to use (e.g. 'origin')."
+    ( (Any "string")
+    , "The name of the default Git remote to use (e.g. 'origin')."
+    )
   MainBranch      : SettableProp
     "mainBranch"
-    "[string]     The name of the default Git base branch for new PRs."
+    ( (Any "string")
+    , "The name of the default Git base branch for new PRs."
+    )
   ThemeProp       : SettableProp
     "theme"
-    "[dark/light]"
+    ( (Enum ["dark", "light"])
+    , ""
+    )
   GithubPAT       : SettableProp
     "githubPAT"
-    """
-    [string]      The Personal Access Token Harmony should use to authenticate \
-    with GitHub. You can leave this unset if you want to set a PAT via the \
-    GITHUB_PAT or GH_TOKEN environment variable.
-    """
+    ( (Any "string")
+    , """
+      The Personal Access Token Harmony should use to authenticate \
+      with GitHub. You can leave this unset if you want to set a PAT via the \
+      GITHUB_PAT or GH_TOKEN environment variable.
+      """
+    )
 
 public export
 SomeSettableProp : Type
@@ -253,7 +291,11 @@ propName x = n
 
 public export
 propHelp : {h : _} -> SettableProp n h -> String
-propHelp x = h
+propHelp x = "[\{(fst h).strValue}] " ++ (snd h)
+
+public export
+propOptions : {h : _} -> SettableProp n h -> List String
+propOptions x = (fst h).enumeratedOptions
 
 export
 settablePropNamed : (name : String) -> Maybe (Exists (SettableProp name))
@@ -276,6 +318,19 @@ namespace SettablePropNamedProperties
       check $ elabCase `( prop ) `( Data.Config.SettableProp n h )
                        cons (\name => (MkClause name `( Refl )))
     )
+
+export
+reifyProp : Exists (SettableProp name) -> (h ** SettableProp name h)
+reifyProp (Evidence _ RequestTeams) = (_ ** RequestTeams)
+reifyProp (Evidence _ RequestUsers) = (_ ** RequestUsers)
+reifyProp (Evidence _ CommentOnRequest) = (_ ** CommentOnRequest)
+reifyProp (Evidence _ ParseBranchStrategy) = (_ ** ParseBranchStrategy)
+reifyProp (Evidence _ BugfixPRTitlePrefix) = (_ ** BugfixPRTitlePrefix)
+reifyProp (Evidence _ AddPrTreeDescription) = (_ ** AddPrTreeDescription)
+reifyProp (Evidence _ DefaultRemote) = (_ ** DefaultRemote)
+reifyProp (Evidence _ MainBranch) = (_ ** MainBranch)
+reifyProp (Evidence _ ThemeProp) = (_ **  ThemeProp)
+reifyProp (Evidence _ GithubPAT) = (_ ** GithubPAT)
 
 settableProps : List SomeSettableProp
 settableProps = [

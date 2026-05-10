@@ -11,6 +11,18 @@ echo ''
 echo 'no args suggests all settable props:'
 $harmony --bash-completion config -- config
 
+echo ''
+echo 'options for requestTeams config:'
+$harmony --bash-completion config -- requestTeams
+
+echo ''
+echo 'options for commentOnRequest config:'
+$harmony --bash-completion config -- commentOnRequest
+
+echo ''
+echo 'options for bugfixPRTitlePrefix config:'
+$harmony --bash-completion config -- bugfixPRTitlePrefix
+
 #
 # pr command
 #
