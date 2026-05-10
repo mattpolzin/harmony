@@ -96,6 +96,26 @@ parsePrimResult : (parser : String -> Either String a)
                -> Promise String a
 parsePrimResult parser action = either . parser =<< (ignoreStatus $ promiseIO action)
 
+%foreign okit_ffi "get_repo_graphql_id"
+prim__getRepoGraphQLId : Ptr OctokitRef
+                      -> (owner : String)
+                      -> (repo : String)
+                      -> (onSuccess : String -> PrimIO ())
+                      -> (onFailure : String -> PrimIO ())
+                      -> PrimIO ()
+
+||| Get a Repo GraphQL Id.
+||| This is an opaque value only needed by select Harmony FFI functions
+||| currently.
+export
+getRepoGraphQLId : Octokit =>
+                   (owner : String)
+                -> (repo : String)
+                -> Promise String OctokitGraphQlId
+getRepoGraphQLId @{Kit ptr} owner repo = 
+  mapSnd GQLId . ignoreStatus . promiseIO $ prim__getRepoGraphQLId ptr owner repo
+
+
 %foreign okit_ffi "get_repo_default_branch"
 prim__getRepoDefaultBranch : Ptr OctokitRef
                           -> (owner : String)
@@ -244,13 +264,22 @@ getIssue @{Kit ptr} owner repo issueNumber =
 
 %foreign okit_ffi "create_issue"
 prim__createIssue : Ptr OctokitRef 
-                 -> (owner : String) 
-                 -> (repo : String) 
+                 -> (opaqueGraphQlRepoId : String) 
                  -> (title : String) 
                  -> (body : String) 
                  -> (onSuccess : String -> PrimIO ()) 
                  -> (onFailure : String -> PrimIO ()) 
                  -> PrimIO ()
+
+export
+createIssue' : Octokit => 
+             (repo : OctokitGraphQlId) 
+          -> (title : String) 
+          -> (body : String) 
+          -> Promise String Issue
+createIssue' @{Kit ptr} (GQLId repoId) title body =
+  parsePrimResult parseIssueString $
+    prim__createIssue ptr repoId title body
 
 export
 createIssue : Octokit => 
@@ -259,9 +288,9 @@ createIssue : Octokit =>
          -> (title : String) 
          -> (body : String) 
          -> Promise String Issue
-createIssue @{Kit ptr} owner repo title body =
-  parsePrimResult parseIssueString $
-    prim__createIssue ptr owner repo title body
+createIssue owner repo title body = do
+  repoId <- getRepoGraphQLId owner repo
+  createIssue' repoId title body
 
 %foreign okit_ffi "create_comment"
 prim__createComment : Ptr OctokitRef 
