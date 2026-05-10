@@ -1,3 +1,14 @@
+# 6.6.0 (Look mom, no hands)
+Published: 2026-05-10T17:52:58Z
+
+## What's Changed
+* add shell completion for settable configs that accept an enumeration of values (https://github.com/mattpolzin/harmony/pull/280)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.5.0...6.6.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 6.5.0 (Pack it up)
 Published: 2026-05-06T02:01:20Z
 
