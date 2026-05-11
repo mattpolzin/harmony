@@ -39,6 +39,22 @@ const from_comma_delimited = str => {
   return str.split(',')
 }
 
+// get the repo's id
+const okit_get_repo_graphql_id = (octokit, owner, repo, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.graphql({
+      query: `query getRepo($owner: String!, $repo: String!) {
+        repository(owner: $owner, name: $repo) {
+          id
+        }
+      }`,
+      owner,
+      repo
+    }),
+    r => onSuccess(r.repository.id),
+    onFailure
+  )
+
 // get repo default branch
 const digDefaultBranch = repoJson =>
   repoJson.default_branch
@@ -286,15 +302,6 @@ const digIssue = issue => {
 const digIssues = issueJson =>
   issueJson.map(digIssue)
 
-// Create Issue
-// Executes callback with stringified JSON {"issue_number": Int, "author": String, "created_at": Date, "title": String, "body": String?, "assignee": String?}
-const okit_create_issue = (octokit, owner, repo, title, body, onSuccess, onFailure) =>
-  idris__okit_unpromisify(
-    octokit.rest.issues.create({ owner, repo, title, body }),
-    r => onSuccess(JSON.stringify(digIssue(r.data))),
-    onFailure
-  )
-
 // Get a single Issue
 // Executes callback with stringified JSON {"issue_number": Int, "author": String, "created_at": Date, "title": String, "body": String?, "assignee": String?}
 const okit_get_issue = (octokit, owner, repo, issue_number, onSuccess, onFailure) =>
@@ -358,6 +365,26 @@ const okit_list_open_issues_graphql = (octokit, owner, repo, onSuccess, onFailur
       repo
     }),
     r => onSuccess(JSON.stringify(digGraphQlIssues(r.repository.issues.nodes))),
+    onFailure
+  )
+
+// Create Issue
+const okit_create_issue = (octokit, opaque_repo_graphql_id, title, body, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.graphql({
+      query: `mutation createIssue($opaque_repo_graphql_id: ID!, $title: String!, $body: String!) {
+        createIssue(input: {repositoryId: $opaque_repo_graphql_id, title: $title, body: $body}) {
+          issue {
+            ${graphql_issue_selections}
+          }
+        }
+      }
+      `,
+      opaque_repo_graphql_id,
+      title,
+      body
+    }),
+    r => onSuccess(JSON.stringify(digGraphQlIssue(r.createIssue.issue))),
     onFailure
   )
 
