@@ -29,9 +29,6 @@ parseState "CHANGES_REQUESTED" = Right Approved
 parseState "DISMISSED"         = Right Approved
 parseState _ = Left "Failed to parse Review State."
 
-parseDateTime : String -> Either String Date
-parseDateTime = maybeToEither "Failed to parse Date" . parseDateTimeString
-
 export
 parseReview : JSON -> Either String Review
 parseReview json =

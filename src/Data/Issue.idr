@@ -75,9 +75,6 @@ issue.baseBranchGuess = go . lines $ issue.body
     go [] = Nothing
     go (line :: lines) = getBaseFromLine line <|> go lines
 
-parseDateTime : String -> Either String Date
-parseDateTime = maybeToEither "Failed to parse Date" . parseDateTimeString
-
 export
 parseIssue : JSON -> Either String Issue
 parseIssue json =
@@ -102,7 +99,7 @@ parseIssue json =
       , linkedPRCount
       }
 
-||| Parse a single user from a JSON String
+||| Parse a single issue from a JSON String
 export
 parseIssueString : String -> Either String Issue
 parseIssueString =

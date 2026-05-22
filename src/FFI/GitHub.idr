@@ -1,8 +1,9 @@
 module FFI.GitHub
 
+import Data.Issue
+import Data.Project
 import Data.Promise
 import Data.PullRequest
-import Data.Issue
 import Data.Review
 import Data.String
 import Data.String.Extra
@@ -559,6 +560,34 @@ prim__listTeamMembers : Ptr OctokitRef
                      -> (onSuccess : String -> PrimIO ()) 
                      -> (onFailure : String -> PrimIO ()) 
                      -> PrimIO ()
+
+%foreign okit_ffi "list_projects"
+prim__listProjects : Ptr OctokitRef 
+                 -> (owner : String) 
+                 -> (repo : String) 
+                 -> (onSuccess : String -> PrimIO ()) 
+                 -> (onFailure : String -> PrimIO ())
+                 -> PrimIO ()
+
+export
+listProjectsJsonStr : Octokit =>
+                     (owner : String) 
+                  -> (repo : String) 
+                  -> Promise String String
+listProjectsJsonStr @{Kit ptr} owner repo = 
+  ignoreStatus . promiseIO $ prim__listProjects ptr owner repo
+
+||| List the projects related to the given repository
+|||
+||| @owner       The repository owner (a.k.a. org name).
+||| @repo        The repository name.
+export
+listProjects : Octokit => 
+               (owner : String) 
+            -> (repo : String) 
+            -> Promise String (List Project)
+listProjects @{Kit ptr} owner repo = 
+  either . parseProjectsString =<< listProjectsJsonStr owner repo
 
 export
 listTeamMembers : Octokit => 
