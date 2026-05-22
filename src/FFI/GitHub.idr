@@ -570,11 +570,11 @@ prim__listProjects : Ptr OctokitRef
                  -> PrimIO ()
 
 export
-listProjectsJsonStr : Octokit =>
-                     (owner : String) 
-                  -> (repo : String) 
-                  -> Promise String String
-listProjectsJsonStr @{Kit ptr} owner repo = 
+listRepoProjectsJsonStr : Octokit =>
+                          (owner : String) 
+                       -> (repo : String) 
+                       -> Promise String String
+listRepoProjectsJsonStr @{Kit ptr} owner repo = 
   ignoreStatus . promiseIO $ prim__listProjects ptr owner repo
 
 ||| List the projects related to the given repository
@@ -582,12 +582,12 @@ listProjectsJsonStr @{Kit ptr} owner repo =
 ||| @owner       The repository owner (a.k.a. org name).
 ||| @repo        The repository name.
 export
-listProjects : Octokit => 
-               (owner : String) 
-            -> (repo : String) 
-            -> Promise String (List Project)
-listProjects @{Kit ptr} owner repo = 
-  either . parseProjectsString =<< listProjectsJsonStr owner repo
+listRepoProjects : Octokit => 
+                   (owner : String) 
+                -> (repo : String) 
+                -> Promise String (List Project)
+listRepoProjects @{Kit ptr} owner repo = 
+  either . parseProjectsString =<< listRepoProjectsJsonStr owner repo
 
 export
 listTeamMembers : Octokit => 
