@@ -1,7 +1,8 @@
 module Data.Date
 
-import Data.Nat
+import Data.Either
 import Data.List1
+import Data.Nat
 import Data.String
 
 %default total
@@ -117,3 +118,6 @@ export
 parseDateTimeString : String -> Maybe Date
 parseDateTimeString = parseDateString . head . split (== 'T')
 
+export
+parseDateTime : String -> Either String Date
+parseDateTime = maybeToEither "Failed to parse Date" . parseDateTimeString

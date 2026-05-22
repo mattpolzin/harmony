@@ -101,9 +101,6 @@ parseState False "closed" = Right Closed
 parseState True  "closed" = Right Merged
 parseState _ str = Left "Failed to parse a Pull Request State (open/closed). Found \{str}."
 
-parseDateTime : String -> Either String Date
-parseDateTime = maybeToEither "Failed to parse Date" . parseDateTimeString
-
 export
 json : PullRequest -> JSON
 json (MkPullRequest number title createdAt isDraft author state reviewers headRef baseRef) =

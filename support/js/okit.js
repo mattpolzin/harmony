@@ -275,7 +275,7 @@ const okit_mark_pr_ready = (octokit, opaque_pr_graphql_id, onSuccess, onFailure)
     octokit.graphql({
       query: `mutation convertToReady($opaque_pr_graphql_id: ID!) {
         markPullRequestReadyForReview(input: {pullRequestId: $opaque_pr_graphql_id}) {
-          pullRequest  {
+          pullRequest {
             ${graphql_pr_selections}
           }
         }
@@ -410,6 +410,50 @@ const okit_create_issue = (octokit, opaque_repo_graphql_id, title, body, onSucce
       body
     }),
     r => onSuccess(JSON.stringify(digGraphQlIssue(r.createIssue.issue))),
+    onFailure
+  )
+
+// Get GraphQL ProjectV2 Data
+const digGraphQlProject = project => {
+    return {
+      graphql_id: project.id,
+      number: project.number,
+      creator: project.creator.login,
+      closed: project.closed,
+      created_at: project.createdAt,
+      short_description: project.shortDescription,
+      title: project.title
+    }
+  }
+const digGraphQlProjects = projectJson =>
+  projectJson.map(digGraphQlProject)
+
+const graphql_project_selections = `
+            id
+            number
+            creator { ... on Actor { login } }
+            closed
+            createdAt
+            shortDescription
+            title
+`
+
+const okit_list_projects = (octokit, owner, repo, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.graphql({
+      query: `query getProjects($owner: String!, $repo: String!) {
+        repository(owner: $owner, name: $repo) {
+          projectsV2(first: 100) {
+            nodes { ... on ProjectV2 {
+              ${graphql_project_selections}
+            }}
+          }
+        }
+      }`,
+      owner,
+      repo
+    }),
+    r => onSuccess(JSON.stringify(digGraphQlProjects(r.repository.projectsV2.nodes))),
     onFailure
   )
 
