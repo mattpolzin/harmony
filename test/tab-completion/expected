@@ -39,21 +39,31 @@ at-mention
 
 options for bugfixPRTitlePrefix config:
 
-no args suggests print-tree, into, ready, and draft args:
+no args suggests print-tree, into, output, ready, and draft args:
 --ready
 --draft
 --print-tree
+--output
 --into
 
-draft pr suggests into and print-tree args:
+draft pr suggests into, output, and print-tree args:
 --print-tree
+--output
 --into
 
-into pr suggests draft and print-tree args:
+into pr suggests draft, output, and print-tree args:
 --draft
 --print-tree
+--output
 
-ready pr only suggests into and print-tree args:
+ready pr suggests into, output, and print-tree args:
+--print-tree
+--output
+--into
+
+output last arg suggests draft, into, and print-tree args:
+--ready
+--draft
 --print-tree
 --into
 

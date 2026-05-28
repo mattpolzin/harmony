@@ -81,7 +81,9 @@ prUsageError =
 
 data IntoOpt = Branch (Exists String.NonEmpty)
 
-data PrArg = Draft | Ready | PrintTree | Into IntoOpt | Label String
+data OutputFormat = Shell | Markdown
+
+data PrArg = Draft | Ready | PrintTree | Output OutputFormat | Into IntoOpt | Label String
 
 (<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
 (<||>) f g x = f x <|> g x
@@ -95,8 +97,10 @@ parsePrArgs [] = Right []
 parsePrArgs args =
   let (intoArgs, rest) = recombineIntoArgs args
       intoArgs' = Into <$> intoArgs
-      rest' = (traverse (parseReadyFlag <||> parseDraftFlag <||> parsePrintTreeFlag <||> parseLabelArg) rest)
-      in  maybeToEither prUsageError ((intoArgs' ++) <$> rest')
+      (outputArgs, rest') = recombineOutputArgs rest
+      outputArgs' = Output <$> outputArgs
+      rest'' = (traverse (parseReadyFlag <||> parseDraftFlag <||> parsePrintTreeFlag <||> parseLabelArg) rest')
+      in  maybeToEither prUsageError ((intoArgs' ++ outputArgs' ++) <$> rest'')
   where
     parseDraftFlag : String -> Maybe PrArg
     parseDraftFlag "--draft" = Just Draft
@@ -139,6 +143,29 @@ parsePrArgs args =
            Just opt => mapFst (opt ::) (recombineIntoArgs xs)
            Nothing  => mapSnd (\xs' => "--into" :: x :: xs') (recombineIntoArgs xs)
     recombineIntoArgs (x :: xs) = mapSnd (x ::) (recombineIntoArgs xs)
+
+    parseOutputFormat : String -> Maybe OutputFormat
+    parseOutputFormat "markdown" = Just Markdown
+    parseOutputFormat "shell"    = Just Shell
+    parseOutputFormat _ = Nothing
+
+    -- the -o/--output option takes the next argument as its input so we will
+    -- take two consecutive list elements and combine them for that option.
+    -- The options will be returned separately and the rest will be left for
+    -- later.
+    recombineOutputArgs : List String -> (List OutputFormat, List String)
+    recombineOutputArgs [] = ([], [])
+    recombineOutputArgs ("-o" :: []) = ([], ["-o"])
+    recombineOutputArgs ("--output" :: []) = ([], ["--output"])
+    recombineOutputArgs ("-o" :: (x :: xs)) =
+      case parseOutputFormat x of
+           Just opt => mapFst (opt ::) (recombineOutputArgs xs)
+           Nothing  => mapSnd (\xs' => "-o" :: x :: xs') (recombineOutputArgs xs)
+    recombineOutputArgs ("--output" :: (x :: xs)) =
+      case parseOutputFormat x of
+           Just opt => mapFst (opt ::) (recombineOutputArgs xs)
+           Nothing  => mapSnd (\xs' => "--output" :: x :: xs') (recombineOutputArgs xs)
+    recombineOutputArgs (x :: xs) = mapSnd (x ::) (recombineOutputArgs xs)
 
 ||| Print the URI for the current branch's PR or create a new PR if one
 ||| does not exist when the user executes `harmony pr`. Supports creation
@@ -195,11 +222,20 @@ pr @{config} args = do
     printTree : Bool
     printTree = isJust $ find (\case PrintTree => True; _ => False) args
 
+    firstFormat : PrArg -> Maybe RenderFormat -> Maybe RenderFormat
+    firstFormat _                 f@(Just _) = f
+    firstFormat (Output Shell)    _          = Just Shell
+    firstFormat (Output Markdown) _          = Just Markdown
+    firstFormat _                 y          = y
+
+    renderFormat : RenderFormat
+    renderFormat = maybe Shell id $ foldr firstFormat Nothing args
+
     printPrTree : PullRequest -> Promise' ()
     printPrTree pr = do
       (prs, terminalBranch) <- prChain (limit 10) pr.baseRef
       let nodes = prTree Nothing Nothing (pr :: prs) terminalBranch
-      putStrLn $ renderPrTree Shell nodes
+      putStrLn $ renderPrTree renderFormat nodes
 
 ||| Request review from the given teams & users as reviewers when the user executes
 ||| `harmony request ...`.

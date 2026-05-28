@@ -135,7 +135,7 @@ organization.
 
 Running `harmony list <team>` will list the members of the given GitHub Team.
 
-## `pr [--draft | --ready] [-i/--into {<branch-name>}] [--print-tree] [#label, ...]`
+## `pr [--draft | --ready] [-i/--into {<branch-name>}] [-o/--output {format}] [--print-tree] [#label, ...]`
 With a branch checked out will reach out to GitHub to determine if there is an
 open PR for that branch. If there is a PR, Harmony will print a URI that can be
 used to view the PR. If there is not a PR, Harmony will help you create one. The
@@ -145,6 +145,10 @@ the current branch's PR. New and existing PRs can be marked as drafts by
 specifying the `--draft` flag with the `pr` command or they can be marked as
 ready for review with the `--ready` flag. The default behavior for new PRs is to
 mark them ready.
+
+By default this command outputs to a shell format that is colored (if supported)
+but you can use the `--output markdown` option to output to a markdown syntax
+instead.
 
 If you need to create a PR still, you will be prompted for a branch to open the
 PR against (merge into, eventually), a title for the PR, and a description for

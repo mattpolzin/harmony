@@ -77,6 +77,7 @@ subcommandHelp' n@"pr" = subcommand n [ argument False "--ready"
                                       , argument False "--draft"
                                       , argument False "-i/--into {<branch-name>}"
                                       , argument False "--print-result"
+                                      , argument False "-o/--output {format}"
                                       , argument False "#<label>"
                                       , argument False "..."] $
   [ reflow "Identify an existing PR or create a new one for the current branch."
@@ -85,6 +86,7 @@ subcommandHelp' n@"pr" = subcommand n [ argument False "--ready"
   , reflow "Optionally mark an existing PR as ready for review with the --ready flag."
   , reflow "Optionally specify the branch to merge into with the --into option."
   , reflow "Optionally print a pr tree with the --print-tree flag."
+  , reflow "Optionally output in markdown or shell (default) format."
   ]
 subcommandHelp' n@"contribute" = subcommand n [argument False "-c/--checkout | -l/--list", argument False "-<num>", argument False "-i/--ignore {<uri>/<pr-number>}"]
   [ reflow """

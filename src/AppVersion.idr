@@ -4,7 +4,7 @@ module AppVersion
 
 export
 appVersion : String
-appVersion = "6.6.0"
+appVersion = "6.7.0"
 
 export
 printVersion : HasIO io => io ()
