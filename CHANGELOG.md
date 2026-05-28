@@ -1,3 +1,15 @@
+# 6.7.0 (Mark me down for Matt)
+Published: 2026-05-28T01:26:14Z
+
+## What's Changed
+* Switch off of deprecated issues api (https://github.com/mattpolzin/harmony/pull/287)
+* add a `--output` format option to the pr command (https://github.com/mattpolzin/harmony/pull/293)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.6.0...6.7.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 6.6.0 (Look mom, no hands)
 Published: 2026-05-10T17:52:58Z
 
