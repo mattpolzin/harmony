@@ -29,9 +29,10 @@ branchNameSuggestion = toLower . dasherize
 
 createNewIssue : Config =>
                  Octokit =>
-                 (issueTitle : Maybe String)
+                 (baseBranchGuess : String)
+              -> (issueTitle : Maybe String)
               -> Promise' Issue
-createNewIssue @{config} issueTitle' = do
+createNewIssue @{config} baseBranchGuess issueTitle' = do
   putStrLn "Creating a new GitHub issue and branch."
   putStrLn ""
 
@@ -42,10 +43,17 @@ createNewIssue @{config} issueTitle' = do
             putStrLn "What would you like the issue title to be?"
             trim <$> getLine
 
+  -- the beginning and end tags of the html comment are intentionally on their
+  -- given lines here to make parsing as low overhead as possible.
+  let bodyPrefix = """
+                   \{Issue.baseBranchComment baseBranchGuess}
+
+                   """
+
   issueBody <- case config.editor of
-                    Nothing => inlineDescription issuePrompt ""
+                    Nothing => inlineDescription issuePrompt bodyPrefix
                     Just ed => either (const "") id <$>
-                                 editorDescription ed Nothing ""
+                                 editorDescription ed Nothing bodyPrefix
 
   createIssue config.org config.repo issueTitle issueBody
     where
@@ -65,9 +73,14 @@ quickStartNewWork : Config =>
                  -> (issueIdent : IssueIdent)
                  -> Promise' ()
 quickStartNewWork @{config} issueCategory issueIdent = do
+  -- We guess that the base branch is possibly the branch
+  -- checked out when the new issue is being created.
+  baseBranchGuess <- currentBranch
+  let createIssue = createNewIssue baseBranchGuess
+
   issue <- case issueIdent of
-                NoInfo                 => createNewIssue Nothing
-                IssueTitle  issueTitle => createNewIssue (Just issueTitle)
+                NoInfo                 => createIssue Nothing
+                IssueTitle  issueTitle => createIssue (Just issueTitle)
                 IssueNumber issueNum   => getIssue config.org config.repo issueNum
 
   let branchTemplate = "\{branchPrefix}/\{show issue.number}/"
