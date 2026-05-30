@@ -54,8 +54,8 @@ issue.baseBranchGuess = go . lines $ issue.body
   where
     getBaseFromLine : String -> Maybe String
     getBaseFromLine line =
-      if "base-branch: " `isPrefixOf` line
-         then Just (pack . drop 13 $ unpack line)
+      if "<!-- base-branch: " `isPrefixOf` line
+         then Just (pack . drop 18 $ unpack line)
          else Nothing
 
     go : List String -> Maybe String

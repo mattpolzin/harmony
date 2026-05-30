@@ -17,7 +17,7 @@ mockIssue = MkIssue
   }
 
 namespace BaseBranchGuess
-  testBaseBranchParsing : mockIssue.baseBranchGuess ==> Nothing
+  testBaseBranchParsing : Test.mockIssue.baseBranchGuess ==> Nothing
   testBaseBranchParsing = MkTTest
 
   bodyWithBaseBranch : String
@@ -30,6 +30,6 @@ namespace BaseBranchGuess
   mockIssue2 : Issue
   mockIssue2 = { body := bodyWithBaseBranch } mockIssue
 
-  testBaseBranchParsing2 : mockIssue2.baseBranchGuess ==> Just "feature/1234/cool-stuff"
+  testBaseBranchParsing2 : BaseBranchGuess.mockIssue2.baseBranchGuess ==> Just "feature/1234/cool-stuff"
   testBaseBranchParsing2 = MkTTest
 
