@@ -285,9 +285,12 @@ record BranchInferredData where
   ||| The default title is an option the user may choose to avoid needing to
   ||| specify a title now when one can be borrowed from a GitHub issue.
   defaultTitle : Maybe String
+  ||| A best guess of the base branch for the new PR based on information that
+  ||| might be stored in an issue.
+  baseBranchGuess : Maybe String
 
 noInferredData : BranchInferredData
-noInferredData = MkInferredData Nothing Nothing Nothing
+noInferredData = MkInferredData Nothing Nothing Nothing Nothing
 
 ||| Get the chain of PRs that lead from the given branch to the given
 ||| baseBranch and eventually to the configured mainBranch. The list will be in
@@ -385,6 +388,7 @@ githubInferredBranchInfo @{config} branch =
         MkInferredData Nothing 
                        (Just $ buildBodyPrefix issue)
                        (Just $ titlePrefix ++ issue.title)
+                       issue.baseBranchGuess
 
   where
     issueNumber : Maybe String
@@ -452,7 +456,7 @@ githubInferredBranchInfo @{config} branch =
 getInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
 getInferredBranchInfo @{config} branch =
     case config.branchParsing of
-         Jira   => pure (MkInferredData ((++ " - ") <$> parseJiraSlug branch) Nothing Nothing)
+         Jira   => pure (MkInferredData ((++ " - ") <$> parseJiraSlug branch) Nothing Nothing Nothing)
          --               ^ Jira slugs become a title prefix
          Github => githubInferredBranchInfo branch
          None   => pure noInferredData
@@ -511,15 +515,21 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
                yesNoPrompt "Would you like to continue creating a Pull Request anyway?"
              Nothing => pure True
 
-      getBaseBranch : Promise' String
-      getBaseBranch =
-        case intoBranch of
-             Just branch => do
-               putStrLn "Will merge into \{branch}."
-               pure branch
-             Nothing => do
-              putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
-              orIfEmpty (Just config.mainBranch) . trim <$> getLine
+      promptForBaseBranch : Promise' String
+      promptForBaseBranch = do
+         putStrLn "What branch are you merging into (ENTER for default: \{config.mainBranch})?"
+         orIfEmpty (Just config.mainBranch) . trim <$> getLine
+
+      getBaseBranch : (intoBranch : Maybe String) -> (baseBranchGuess : Maybe String) -> Promise' String
+      getBaseBranch (Just branch) _ = do
+         putStrLn "Will merge into \{branch}."
+         pure branch
+      getBaseBranch Nothing (Just branchGuess) = do
+        True <- yesNoPrompt "Do you want to merge into \{branchGuess}?"
+          | False => promptForBaseBranch
+        pure branchGuess
+      getBaseBranch Nothing Nothing =
+        promptForBaseBranch
 
       inlineDescriptionPrompt : String
       inlineDescriptionPrompt =
@@ -563,9 +573,10 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
 
         -- proceed to creating a PR
         putStrLn "Creating a new PR for the current branch (\{branch})."
-        baseBranch <- getBaseBranch
-
         inferredBranchInfo <- getInferredBranchInfo branch
+
+        baseBranch <- getBaseBranch intoBranch inferredBranchInfo.baseBranchGuess
+
         let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
         bodyPrefix <- maybe (pure "") ($ baseBranch) inferredBranchInfo.buildBodyPrefix
 
