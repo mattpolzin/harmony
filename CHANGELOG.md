@@ -1,3 +1,14 @@
+# 6.8.0 (Based)
+Published: 2026-05-30T18:51:39Z
+
+## What's Changed
+* store base branch for quick issues (https://github.com/mattpolzin/harmony/pull/295)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.7.0...6.8.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 6.7.0 (Mark me down for Matt)
 Published: 2026-05-28T01:26:14Z
 
