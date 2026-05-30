@@ -415,6 +415,9 @@ githubInferredBranchInfo @{config} branch =
          then maybe "" (++ " ") config.bugfixPRTitlePrefix
          else ""
 
+    removeCommentCloseTags : String -> String
+    removeCommentCloseTags = unlines . filter (/= "-->") . lines
+
     issueDescriptionPrefix : Issue -> (baseBranch : String) -> Promise' String
     issueDescriptionPrefix issue baseBranch = do
       maybeTree <- maybePrTree issue baseBranch
@@ -424,7 +427,7 @@ githubInferredBranchInfo @{config} branch =
         ## GitHub Issue
         \{issue.title}
         --
-        \{issue.body}
+        \{removeCommentCloseTags issue.body}
         -->
         """
 
