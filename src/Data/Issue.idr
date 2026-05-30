@@ -48,14 +48,25 @@ isAssignee : String -> Issue -> Bool
 isAssignee login (MkIssue _ _ _ _ _ Nothing _) = False
 isAssignee login (MkIssue _ _ _ _ _ (Just assignee) _) = login == assignee
 
+baseBranchCommentPrefix : String
+baseBranchCommentPrefix = "<!-- base-branch: "
+
+export
+baseBranchComment : (baseBranch : String) -> String
+baseBranchComment baseBranch =
+  """
+  \{baseBranchCommentPrefix}\{baseBranch}
+  -->
+  """
+
 export
 (.baseBranchGuess) : Issue -> Maybe String
 issue.baseBranchGuess = go . lines $ issue.body
   where
     getBaseFromLine : String -> Maybe String
     getBaseFromLine line =
-      if "<!-- base-branch: " `isPrefixOf` line
-         then Just (pack . drop 18 $ unpack line)
+      if baseBranchCommentPrefix `isPrefixOf` line
+         then Just (pack . drop (length baseBranchCommentPrefix) $ unpack line)
          else Nothing
 
     go : List String -> Maybe String

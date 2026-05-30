@@ -46,8 +46,7 @@ createNewIssue @{config} baseBranchGuess issueTitle' = do
   -- the beginning and end tags of the html comment are intentionally on their
   -- given lines here to make parsing as low overhead as possible.
   let bodyPrefix = """
-                   <!-- base-branch: \{baseBranchGuess}
-                   -->
+                   \{Issue.baseBranchComment baseBranchGuess}
 
                    """
 
