@@ -233,8 +233,9 @@ pr @{config} args = do
 
     printPrTree : PullRequest -> Promise' ()
     printPrTree pr = do
-      (prs, terminalBranch) <- prChain (limit 10) pr.baseRef
-      let nodes = prTree Nothing Nothing (pr :: prs) terminalBranch
+      (upstreamPrs, terminalBranch) <- upstreamPrChain (limit 10) pr.baseRef
+      downstreamPrs <- downstreamPrChain (limit 10) pr.headRef
+      let nodes = prTree Nothing Nothing downstreamPrs (pr :: upstreamPrs) terminalBranch
       putStrLn $ renderPrTree renderFormat nodes
 
 ||| Request review from the given teams & users as reviewers when the user executes

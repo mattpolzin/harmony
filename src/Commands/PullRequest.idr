@@ -292,22 +292,38 @@ record BranchInferredData where
 noInferredData : BranchInferredData
 noInferredData = MkInferredData Nothing Nothing Nothing Nothing
 
-||| Get the chain of PRs that lead from the given branch to the given
-||| baseBranch and eventually to the configured mainBranch. The list will be in
+||| Get the chain of PRs that lead from the given branch to the configured
+||| mainBranch or any other terminal branch along the way. The list will be in
 ||| merge-order. The list does not contain the mainBranch (or any other branch
 ||| along the way that has no PRs open against it) but such a terminal branch
 ||| is the second element of the returned tuple.
 |||
 ||| @return (list of PRs, terminal branch)
 export
-prChain : Config => Octokit => Fuel -> (branch : String) -> Promise' (List PullRequest, String)
-prChain Dry branch = pure ([], branch)
-prChain @{config} (More fuel) branch =
+upstreamPrChain : Config => Octokit => Fuel -> (branch : String) -> Promise' (List PullRequest, String)
+upstreamPrChain Dry branch = pure ([], branch)
+upstreamPrChain @{config} (More fuel) branch =
   if branch == config.mainBranch
      then pure ([], branch)
      else do (prForBranch :: _) <- listPRsForBranch config.org config.repo branch
                | [] => pure ([], branch)
-             mapFst (prForBranch ::) <$> prChain fuel prForBranch.baseRef
+             mapFst (prForBranch ::) <$> upstreamPrChain fuel prForBranch.baseRef
+
+||| Get the chain of PRs that lead from the given branch to some downstream PR
+||| with no PRs based off of it. The branch given is not included.
+|||
+||| There can be more than one downstream PR for any given PR but this function
+||| currently just takes the first one and continues on ignoring all others.
+||| That is a limitation, not a desired behavior.
+|||
+||| @return list of PRs
+export
+downstreamPrChain : Config => Octokit => Fuel -> (branch : String) -> Promise' (List PullRequest)
+downstreamPrChain Dry _ = pure []
+downstreamPrChain @{config} (More fuel) branch = do
+  (prForBranch :: _) <- listPRsForBaseBranch config.org config.repo branch
+    | [] => pure []
+  (prForBranch ::) <$> downstreamPrChain fuel prForBranch.headRef
 
 public export
 data RenderFormat = Markdown | Shell
@@ -315,7 +331,7 @@ data RenderFormat = Markdown | Shell
 export
 data PrTreeNode : Type where
   Branch : (symbol : String) -> (name : String) -> (title : Maybe String) -> PrTreeNode
-  PR : (symbol : String) -> PullRequest -> PrTreeNode
+  PR : {default False marked : Bool} -> (symbol : String) -> PullRequest -> PrTreeNode
 
 ||| Generate a PR tree.
 |||
@@ -323,10 +339,19 @@ data PrTreeNode : Type where
 ||| branch), that is the leaf of the tree. All PRs between that and the
 ||| terminal branch should be passed as the next argument. Then the terminal
 ||| branch (e.g. the `mainBranch` of the repo, usually) gets passed in last.
+|||
+||| The "current" PR is part of the `prs` list with any PRs based off of the
+||| current PR being in the `downstreamPrs` list. You can always pass an empty
+||| `downstreamPrs` to print only from the current PR down to the main branch.
 export
-prTree : (branch : Maybe String) -> (title : Maybe String) -> List PullRequest -> (terminalBranch : String) -> List PrTreeNode
-prTree branch title prs terminalBranch = 
-  (Branch terminus terminalBranch Nothing) :: go (reverse prs)
+prTree : (branch : Maybe String)
+      -> (title : Maybe String)
+      -> (downstreamPrs : List PullRequest)
+      -> List PullRequest
+      -> (terminalBranch : String)
+      -> List PrTreeNode
+prTree branch title downstreamPrs prs terminalBranch = 
+  (Branch terminus terminalBranch Nothing) :: go True (reverse prs) ++ go False downstreamPrs
 
   where
     terminus : String
@@ -335,12 +360,15 @@ prTree branch title prs terminalBranch =
     arrow : String
     arrow = "↖"
 
-    go : List PullRequest -> List PrTreeNode
-    go [] = case branch of
+    go : (markLast : Bool) -> List PullRequest -> List PrTreeNode
+    go _ [] = case branch of
                  (Just branch) => [Branch arrow branch title]
                  Nothing => []
-    go (pr :: prs) =
-      PR arrow pr :: go prs
+    go mark (pr :: prs) =
+      -- we special case the last PR in the list to mark it as "current" unless there is a branch specified.
+      if mark && null prs && isNothing branch
+         then [PR {marked = True} arrow pr]
+         else PR arrow pr :: go mark prs
 
 ||| Render a PR tree.
 export
@@ -400,8 +428,8 @@ githubInferredBranchInfo @{config} branch =
     maybePrTree : Issue -> (baseBranch : String) -> Promise' String
     maybePrTree issue baseBranch =
       if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
-         then do (prs, terminalBranch) <- prChain (limit 10) baseBranch
-                 let nodes = prTree (Just branch) (Just issue.title) prs terminalBranch
+         then do (prs, terminalBranch) <- upstreamPrChain (limit 10) baseBranch
+                 let nodes = prTree (Just branch) (Just issue.title) [] prs terminalBranch
                  let tree = renderPrTree Markdown nodes
                  pure """
                       ## PR Tree
