@@ -387,6 +387,10 @@ renderPrTree @{config} format =
     marker False = ""
     marker True = theme' Current "▪ "
 
+    markerLines : (marked : Bool) -> List String
+    markerLines False = []
+    markerLines True = ["**[[** _you are here_ **]]**"]
+
     renderNode : (Nat, String) -> PrTreeNode -> (Nat, String)
     renderNode (idx, acc) (Branch symbol name title) =
       let title' = maybe "" (\t => "\n" ++ mdIndent idx "**\{t}**") title
@@ -403,8 +407,11 @@ renderPrTree @{config} format =
       in next $
         case format of
              Markdown => 
-               mdIndent idx "\{symbol} `\{pr.headRef}` (\{uri})" ++ "\n" ++
-                 mdIndent idx "**\{pr.title}**"
+               joinBy "\n" $
+                 mdIndent idx <$> (("\{symbol} `\{pr.headRef}` (\{uri})") ::
+                                   (markerLines marked)
+                                   `snoc` "**\{pr.title}**"
+                                  )
              Shell    => 
                renderString $
                  shellIndent idx $
