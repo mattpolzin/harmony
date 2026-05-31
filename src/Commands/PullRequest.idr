@@ -409,6 +409,7 @@ renderPrTree @{config} format =
                renderString $
                  shellIndent idx $
                    vsep [ (pretty symbol) <++> (marker marked) <+> (theme' Data (pretty pr.title))
+                        , indent 2 $ "├" <++> (pretty pr.headRef)
                         , indent 2 $ "└" <++> annotate italic (pretty uri)
                         ]
 
