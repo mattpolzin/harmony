@@ -383,6 +383,9 @@ renderPrTree @{config} format =
     shellIndent : Nat -> Doc ann -> Doc ann
     shellIndent i = indent (cast $ 1 + i * 4)
 
+    markerLineSpacer : Nat -> Doc ann
+    markerLineSpacer i = pretty $ replicate (3 + i * 12) '𜸍'
+
     renderNode : (Nat, String) -> PrTreeNode -> (Nat, String)
     renderNode (idx, acc) (Branch symbol name title) =
       let title' = maybe "" (\t => "\n" ++ mdIndent idx "**\{t}**") title
@@ -393,18 +396,25 @@ renderPrTree @{config} format =
              Shell    => renderString $ 
                            shellIndent idx $ 
                              (pretty symbol) <++> (theme' Special $ pretty $ fromMaybe name title)
-    renderNode (idx, acc) (PR symbol pr) =
+    renderNode (idx, acc) (PR {marked} symbol pr) =
       let next = \str => (S idx, acc ++ str ++ "\n")
           uri = webURI' config.org config.repo pr
       in next $
         case format of
-             Markdown => mdIndent idx "\{symbol} `\{pr.headRef}` (\{uri})" ++ "\n" ++
-                        mdIndent idx "**\{pr.title}**"
-             Shell    => renderString $
-                           shellIndent idx $
-                             vsep [ (pretty symbol) <++> (theme' Data (pretty pr.title))
-                                  , indent 2 $ "└" <++> annotate italic (pretty uri)
-                                  ]
+             Markdown => 
+               mdIndent idx "\{symbol} `\{pr.headRef}` (\{uri})" ++ "\n" ++
+                 mdIndent idx "**\{pr.title}**"
+             Shell    => 
+               let marker = if marked 
+                               then [shellIndent ((idx + 1) `div` 3) (markerLineSpacer idx)] 
+                               else []
+               in  renderString $
+                     vsep ([
+                       shellIndent idx $
+                         vsep [ (pretty symbol) <++> (theme' Data (pretty pr.title))
+                              , indent 2 $ "└" <++> annotate italic (pretty uri)
+                              ]
+                       ] ++ marker)
 
 githubInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
 githubInferredBranchInfo @{config} branch =
