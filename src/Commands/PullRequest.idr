@@ -383,8 +383,9 @@ renderPrTree @{config} format =
     shellIndent : Nat -> Doc ann -> Doc ann
     shellIndent i = indent (cast $ 1 + i * 4)
 
-    markerLineSpacer : Nat -> Doc ann
-    markerLineSpacer i = pretty $ replicate (3 + i * 12) '𜸍'
+    marker : (marked : Bool) -> Doc AnsiStyle
+    marker False = ""
+    marker True = theme' Current "▪ "
 
     renderNode : (Nat, String) -> PrTreeNode -> (Nat, String)
     renderNode (idx, acc) (Branch symbol name title) =
@@ -405,16 +406,11 @@ renderPrTree @{config} format =
                mdIndent idx "\{symbol} `\{pr.headRef}` (\{uri})" ++ "\n" ++
                  mdIndent idx "**\{pr.title}**"
              Shell    => 
-               let marker = if marked 
-                               then [shellIndent ((idx + 1) `div` 3) (markerLineSpacer idx)] 
-                               else []
-               in  renderString $
-                     vsep ([
-                       shellIndent idx $
-                         vsep [ (pretty symbol) <++> (theme' Data (pretty pr.title))
-                              , indent 2 $ "└" <++> annotate italic (pretty uri)
-                              ]
-                       ] ++ marker)
+               renderString $
+                 shellIndent idx $
+                   vsep [ (pretty symbol) <++> (marker marked) <+> (theme' Data (pretty pr.title))
+                        , indent 2 $ "└" <++> annotate italic (pretty uri)
+                        ]
 
 githubInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
 githubInferredBranchInfo @{config} branch =
