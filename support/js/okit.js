@@ -150,6 +150,9 @@ const digGraphQlPr = pr => {
     }
   }
 
+const digGraphQlPrs = prsJson =>
+  prosJson.map(digGraphQlPr)
+
 const graphql_pr_selections = `
             id
             number
@@ -179,6 +182,26 @@ const okit_get_pr_graphql_id = (octokit, owner, repo, pull_number, onSuccess, on
       pull_number: Number(pull_number)
     }),
     r => onSuccess(digGraphQlPr(r.repository.pullRequest).graphql_id),
+    onFailure
+  )
+
+const okit_list_pull_requests_for_base_branch = (octokit, owner, repo, base_branch, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.graphql({
+      query: `query getPrs($owner: String!, $repo: String!, $base_branch: String!) {
+        repository(owner: $owner, name: $repo) {
+          pullRequests(baseRefName: $base_branch) {
+            nodes { ... on PullRequest {
+              ${graphql_pr_selections}
+            }}
+          }
+        }
+      }`,
+      owner,
+      repo,
+      base_branch
+    }),
+    r => onSuccess(digGraphQlPrs(r.repository.pullRequests.nodes)),
     onFailure
   )
 

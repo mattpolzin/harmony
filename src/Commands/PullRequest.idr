@@ -292,22 +292,38 @@ record BranchInferredData where
 noInferredData : BranchInferredData
 noInferredData = MkInferredData Nothing Nothing Nothing Nothing
 
-||| Get the chain of PRs that lead from the given branch to the given
-||| baseBranch and eventually to the configured mainBranch. The list will be in
+||| Get the chain of PRs that lead from the given branch to the configured
+||| mainBranch or any other terminal branch along the way. The list will be in
 ||| merge-order. The list does not contain the mainBranch (or any other branch
 ||| along the way that has no PRs open against it) but such a terminal branch
 ||| is the second element of the returned tuple.
 |||
 ||| @return (list of PRs, terminal branch)
 export
-prChain : Config => Octokit => Fuel -> (branch : String) -> Promise' (List PullRequest, String)
-prChain Dry branch = pure ([], branch)
-prChain @{config} (More fuel) branch =
+upstreamPrChain : Config => Octokit => Fuel -> (branch : String) -> Promise' (List PullRequest, String)
+upstreamPrChain Dry branch = pure ([], branch)
+upstreamPrChain @{config} (More fuel) branch =
   if branch == config.mainBranch
      then pure ([], branch)
      else do (prForBranch :: _) <- listPRsForBranch config.org config.repo branch
                | [] => pure ([], branch)
-             mapFst (prForBranch ::) <$> prChain fuel prForBranch.baseRef
+             mapFst (prForBranch ::) <$> upstreamPrChain fuel prForBranch.baseRef
+
+||| Get the chain of PRs that lead from the given branch to some downstream PR
+||| with no PRs based off of it. The branch given is not included.
+|||
+||| There can be more than one downstream PR for any given PR but this function
+||| currently just takes the first one and continues on ignoring all others.
+||| That is a limitation, not a desired behavior.
+|||
+||| @return list of PRs
+export
+downstreamPrChain : Config => Octokit => Fuel -> (branch : String) -> Promise' (List PullRequest)
+downstreamPrChain Dry _ = pure []
+downstreamPrChain @{config} (More fuel) branch = do
+  (prForBranch :: _) <- listPRsForBaseBranch config.org config.repo branch
+    | [] => pure []
+  (prForBranch ::) <$> downstreamPrChain fuel prForBranch.headRef
 
 public export
 data RenderFormat = Markdown | Shell
@@ -400,7 +416,7 @@ githubInferredBranchInfo @{config} branch =
     maybePrTree : Issue -> (baseBranch : String) -> Promise' String
     maybePrTree issue baseBranch =
       if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
-         then do (prs, terminalBranch) <- prChain (limit 10) baseBranch
+         then do (prs, terminalBranch) <- upstreamPrChain (limit 10) baseBranch
                  let nodes = prTree (Just branch) (Just issue.title) prs terminalBranch
                  let tree = renderPrTree Markdown nodes
                  pure """
