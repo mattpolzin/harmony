@@ -8,6 +8,8 @@
 # NAME
 Harmony - Harmonize with coworkers around GitHub reviewing
 
+throwaway change
+
 # SYNOPSIS
 `harmony branch` \
 `harmony config {property} [value]` \
