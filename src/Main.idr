@@ -9,6 +9,7 @@ import Data.Promise
 import Data.PullRequest
 import Data.String
 import Data.User
+import Data.Fuel
 
 import AppVersion
 import Config
@@ -98,6 +99,12 @@ handleAuthenticatedArgs : Config => Octokit =>
                        -> Promise' ()
 
 -- internal-use commands for forking process:
+handleAuthenticatedArgs ["upstreamPrs", "--json", branch] = do
+  prChain <- upstreamPrsJsonStr (limit 10) branch
+  putStr prChain
+handleAuthenticatedArgs ["downstreamPrs", "--json", branch] = do
+  prChain <- downstreamPrsJsonStr (limit 10) branch
+  putStr prChain
 handleAuthenticatedArgs @{config} ["reviews", "--json", prNumber] =
   whenJust (parsePositive prNumber) $ \pr => do
     reviewsJsonStr <- listPullReviewsJsonStr config.org config.repo pr

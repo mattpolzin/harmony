@@ -239,6 +239,35 @@ pr @{config} args = do
       let nodes = prTree Nothing Nothing downstreamPrs (pr :: upstreamPrs) terminalBranch
       putStrLn $ renderPrTree renderFormat nodes
 
+||| Get Pull Requests that are upstream of the given
+||| branch's PR. This is an internal-only command at the
+||| moment.
+||| Produces an object with a `prs` entry that is a JSON
+||| array of PRs and a `terminalBranch` entry. See the
+||| description of the
+||| Commands.PullRequest.upstreamPrChain function for
+||| details.
+export
+upstreamPrsJsonStr : Config => Octokit => Fuel -> (branch : String) -> Promise' String
+upstreamPrsJsonStr fuel branch = do
+  (prs, terminalBranch) <- upstreamPrChain fuel branch
+  let json = JObject [ ("prs", JArray $ json <$> prs)
+                     , ("terminalBranch", JString terminalBranch)
+                     ]
+  pure (show json)
+
+||| Get Pull Requests that are downstream of the given
+||| branch's PR. This is an internal-only command at the
+||| moment.
+|||
+||| Produces a JSON array of PRs
+export
+downstreamPrsJsonStr : Config => Octokit => Fuel -> (branch : String) -> Promise' String
+downstreamPrsJsonStr fuel branch = do
+  prs <- downstreamPrChain fuel branch
+  let json = JArray $ json <$> prs
+  pure (show json)
+
 ||| Request review from the given teams & users as reviewers when the user executes
 ||| `harmony request ...`.
 export

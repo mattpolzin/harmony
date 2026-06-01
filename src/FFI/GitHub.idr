@@ -331,10 +331,6 @@ createComment : Octokit =>
 createComment @{Kit ptr} owner repo issueOrPrNumber message =
   ignore . ignoreStatus . promiseIO $ prim__createComment ptr owner repo issueOrPrNumber message
 
-Show GitHubPRState where
-  show Open   = "open"
-  show Closed = "closed"
-
 pullRequestStateFilter : Maybe GitHubPRState -> String
 pullRequestStateFilter Nothing = "all"
 pullRequestStateFilter (Just s) = show s
