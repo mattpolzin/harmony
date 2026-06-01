@@ -351,7 +351,7 @@ prTree : (branch : Maybe String)
       -> (terminalBranch : String)
       -> List PrTreeNode
 prTree branch title downstreamPrs prs terminalBranch = 
-  (Branch terminus terminalBranch Nothing) :: go True (reverse prs) ++ go False downstreamPrs
+  (Branch terminus terminalBranch Nothing) :: go True branch (reverse prs) ++ go False Nothing downstreamPrs
 
   where
     terminus : String
@@ -360,15 +360,14 @@ prTree branch title downstreamPrs prs terminalBranch =
     arrow : String
     arrow = "↖"
 
-    go : (markLast : Bool) -> List PullRequest -> List PrTreeNode
-    go _ [] = case branch of
-                 (Just branch) => [Branch arrow branch title]
-                 Nothing => []
-    go mark (pr :: prs) =
+    go : (markLast : Bool) -> (branch : Maybe String) -> List PullRequest -> List PrTreeNode
+    go _ (Just branch) [] = [Branch arrow branch title]
+    go _ Nothing       [] = []
+    go mark branch (pr :: prs) =
       -- we special case the last PR in the list to mark it as "current" unless there is a branch specified.
       if mark && null prs && isNothing branch
          then [PR {marked = True} arrow pr]
-         else PR arrow pr :: go mark prs
+         else PR arrow pr :: go mark branch prs
 
 ||| Render a PR tree.
 export
