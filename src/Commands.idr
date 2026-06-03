@@ -233,7 +233,6 @@ pr @{config} args = do
 
     printPrTree : PullRequest -> Promise' ()
     printPrTree pr = do
-      -- TODO: perform the following two in parallel
       (upstreamPrs, terminalBranch) <- upstreamPrChain (limit 10) pr.baseRef
       downstreamPrs <- downstreamPrChain (limit 10) pr.headRef
       let nodes = prTree Nothing Nothing downstreamPrs (pr :: upstreamPrs) terminalBranch
