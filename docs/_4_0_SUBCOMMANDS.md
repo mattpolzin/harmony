@@ -140,11 +140,11 @@ With a branch checked out will reach out to GitHub to determine if there is an
 open PR for that branch. If there is a PR, Harmony will print a URI that can be
 used to view the PR. If there is not a PR, Harmony will help you create one. The
 `--print-tree` flag will print a tree of PRs for branches between the current
-one and the `mainBranch` of the repository instead of just printing the URI for
-the current branch's PR. New and existing PRs can be marked as drafts by
-specifying the `--draft` flag with the `pr` command or they can be marked as
-ready for review with the `--ready` flag. The default behavior for new PRs is to
-mark them ready.
+one and the `mainBranch` of the repository and between the current PR and any
+downstream PRs instead of just printing the URI for the current branch's PR. New
+and existing PRs can be marked as drafts by specifying the `--draft` flag with
+the `pr` command or they can be marked as ready for review with the `--ready`
+flag. The default behavior for new PRs is to mark them ready.
 
 By default this command outputs to a shell format that is colored (if supported)
 but you can use the `--output markdown` option to output to a markdown syntax
