@@ -21,7 +21,7 @@ namespace RenderPrTree
   config =
     { addPrTreeDescription := True } simpleDefaults
 
-  noPrs : renderPrTree @{RenderPrTree.config} Markdown (prTree (Just "feature-1") Nothing [] "main")
+  noPrs : renderPrTree @{RenderPrTree.config} Markdown (prTree (Just "feature-1") Nothing [] [] "main")
             ==> """
                 > ⨀ `main`
                 >> ↖ `feature-1`
@@ -29,7 +29,7 @@ namespace RenderPrTree
                 """
   noPrs = MkTTest
 
-  noPrsShell : renderPrTree @{RenderPrTree.config} Shell (prTree (Just "feature-1") Nothing [] "main")
+  noPrsShell : renderPrTree @{RenderPrTree.config} Shell (prTree (Just "feature-1") Nothing [] [] "main")
             ==> """
                  ⨀ main
                      ↖ feature-1
@@ -40,7 +40,7 @@ namespace RenderPrTree
   mkPr : Integer -> String -> PullRequest
   mkPr num headRef = MkPullRequest num "Fancy PR" (MkDate 2025 01 01) False "" Open [] headRef ""
 
-  onePr : renderPrTree @{RenderPrTree.config} Markdown (prTree (Just "feature-2") Nothing [mkPr 123 "feature-1"] "main")
+  onePr : renderPrTree @{RenderPrTree.config} Markdown (prTree (Just "feature-2") Nothing [] [mkPr 123 "feature-1"] "main")
             ==> """
                 > ⨀ `main`
                 >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
@@ -50,17 +50,18 @@ namespace RenderPrTree
                 """
   onePr = MkTTest
 
-  onePrShell : renderPrTree @{RenderPrTree.config} Shell (prTree (Just "feature-2") Nothing [mkPr 123 "feature-1"] "main")
+  onePrShell : renderPrTree @{RenderPrTree.config} Shell (prTree (Just "feature-2") Nothing [] [mkPr 123 "feature-1"] "main")
             ==> """
                  ⨀ main
                      ↖ Fancy PR
+                       ├ feature-1
                        └ https://github.com/org/repo/pull/123
                          ↖ feature-2
 
                 """
   onePrShell = MkTTest
 
-  onePrPlusTitle : renderPrTree @{RenderPrTree.config} Markdown (prTree (Just "feature-2") (Just "Title") [mkPr 123 "feature-1"] "main")
+  onePrPlusTitle : renderPrTree @{RenderPrTree.config} Markdown (prTree (Just "feature-2") (Just "Title") [] [mkPr 123 "feature-1"] "main")
             ==> """
                 > ⨀ `main`
                 >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
@@ -71,31 +72,59 @@ namespace RenderPrTree
                 """
   onePrPlusTitle = MkTTest
 
-  onePrPlusTitleShell : renderPrTree @{RenderPrTree.config} Shell (prTree (Just "feature-2") (Just "Title") [mkPr 123 "feature-1"] "main")
+  onePrPlusTitleShell : renderPrTree @{RenderPrTree.config} Shell (prTree (Just "feature-2") (Just "Title") [] [mkPr 123 "feature-1"] "main")
             ==> """
                  ⨀ main
                      ↖ Fancy PR
+                       ├ feature-1
                        └ https://github.com/org/repo/pull/123
                          ↖ Title
 
                 """
   onePrPlusTitleShell = MkTTest
 
-  onePrNoLeaf : renderPrTree @{RenderPrTree.config} Markdown (prTree Nothing Nothing [mkPr 123 "feature-1"] "main")
+  onePrNoLeaf : renderPrTree @{RenderPrTree.config} Markdown (prTree Nothing Nothing [] [mkPr 123 "feature-1"] "main")
                   ==> """
                       > ⨀ `main`
                       >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
+                      >> **[[** _you are here_ **]]**
                       >> **Fancy PR**
 
                       """
   onePrNoLeaf = MkTTest
 
-  onePrNoLeafShell : renderPrTree @{RenderPrTree.config} Shell (prTree Nothing Nothing [mkPr 123 "feature-1"] "main")
+  onePrNoLeafShell : renderPrTree @{RenderPrTree.config} Shell (prTree Nothing Nothing [] [mkPr 123 "feature-1"] "main")
                   ==> """
                        ⨀ main
-                           ↖ Fancy PR
+                           ↖ ▪ Fancy PR
+                             ├ feature-1
                              └ https://github.com/org/repo/pull/123
 
                       """
   onePrNoLeafShell = MkTTest
+
+  onePrAboveOneBelowNoLeaf : renderPrTree @{RenderPrTree.config} Markdown (prTree Nothing Nothing [mkPr 456 "feature-2"] [mkPr 123 "feature-1"] "main")
+                  ==> """
+                      > ⨀ `main`
+                      >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
+                      >> **[[** _you are here_ **]]**
+                      >> **Fancy PR**
+                      >>> ↖ `feature-2` (https://github.com/org/repo/pull/456)
+                      >>> **Fancy PR**
+
+                      """
+  onePrAboveOneBelowNoLeaf = MkTTest
+
+  onePrAboveOneBelowNoLeafShell : renderPrTree @{RenderPrTree.config} Shell (prTree Nothing Nothing [mkPr 456 "feature-2"] [mkPr 123 "feature-1"] "main")
+                  ==> """
+                       ⨀ main
+                           ↖ ▪ Fancy PR
+                             ├ feature-1
+                             └ https://github.com/org/repo/pull/123
+                               ↖ Fancy PR
+                                 ├ feature-2
+                                 └ https://github.com/org/repo/pull/456
+
+                      """
+  onePrAboveOneBelowNoLeafShell = MkTTest
 

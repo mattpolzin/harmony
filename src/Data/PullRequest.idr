@@ -15,6 +15,11 @@ namespace FFI
   public export
   data GitHubPRState = Open | Closed
 
+  export
+  Show GitHubPRState where
+    show Open = "open"
+    show Closed = "closed"
+
 public export
 data PRState = Open | Closed | Merged
 
@@ -29,6 +34,10 @@ toGHState : PRState -> GitHubPRState
 toGHState Open   = Open
 toGHState Closed = Closed
 toGHState Merged = Closed
+
+isMerged : PRState -> Bool
+isMerged Merged = True
+isMerged _      = False
 
 export
 Eq PRState where
@@ -94,6 +103,22 @@ parseState _ str = Left "Failed to parse a Pull Request State (open/closed). Fou
 
 parseDateTime : String -> Either String Date
 parseDateTime = maybeToEither "Failed to parse Date" . parseDateTimeString
+
+export
+json : PullRequest -> JSON
+json (MkPullRequest number title createdAt isDraft author state reviewers headRef baseRef) =
+  JObject [
+    ("pull_number", JInteger number)
+  , ("title"      , JString title)
+  , ("author"     , JString author)
+  , ("state"      , JString (show $ toGHState state))
+  , ("created_at" , JString (show createdAt))
+  , ("merged"     , JBool $ isMerged state)
+  , ("draft"      , JBool isDraft)
+  , ("reviewers"  , JArray $ JString <$> reviewers)
+  , ("head_ref"   , JString headRef)
+  , ("base_ref"   , JString baseRef)
+  ]
 
 export
 parsePR : JSON -> Either String PullRequest

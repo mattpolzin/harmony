@@ -150,6 +150,9 @@ const digGraphQlPr = pr => {
     }
   }
 
+const digGraphQlPrs = prsJson =>
+  prsJson.map(digGraphQlPr)
+
 const graphql_pr_selections = `
             id
             number
@@ -179,6 +182,28 @@ const okit_get_pr_graphql_id = (octokit, owner, repo, pull_number, onSuccess, on
       pull_number: Number(pull_number)
     }),
     r => onSuccess(digGraphQlPr(r.repository.pullRequest).graphql_id),
+    onFailure
+  )
+
+// IMPORTANT: This currently arbitrarily only gets 10 PRs. That should be way
+// more than needed, but it IS arbitrary.
+const okit_list_pull_requests_for_base_branch = (octokit, owner, repo, base_branch, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.graphql({
+      query: `query getPrs($owner: String!, $repo: String!, $base_branch: String!) {
+        repository(owner: $owner, name: $repo) {
+          pullRequests(baseRefName: $base_branch, first: 10) {
+            nodes { ... on PullRequest {
+              ${graphql_pr_selections}
+            }}
+          }
+        }
+      }`,
+      owner,
+      repo,
+      base_branch
+    }),
+    r => onSuccess(JSON.stringify(digGraphQlPrs(r.repository.pullRequests.nodes))),
     onFailure
   )
 

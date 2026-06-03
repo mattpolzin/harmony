@@ -199,6 +199,25 @@ listPRsForBranch @{Kit ptr} owner repo branch =
   parsePrimResult parsePullRequestsString $
     prim__listPRsForBranch ptr owner repo branch
 
+%foreign okit_ffi "list_pull_requests_for_base_branch"
+prim__listPRsForBaseBranch : Ptr OctokitRef 
+                          -> (owner : String) 
+                          -> (repo : String) 
+                          -> (baseBranch : String) 
+                          -> (onSuccess : String -> PrimIO ()) 
+                          -> (onFailure : String -> PrimIO ()) 
+                          -> PrimIO ()
+
+export
+listPRsForBaseBranch : Octokit => 
+                       (owner : String) 
+                    -> (repo : String) 
+                    -> (baseBranch : String) 
+                    -> Promise String (List PullRequest)
+listPRsForBaseBranch @{Kit ptr} owner repo baseBranch = 
+  parsePrimResult parsePullRequestsString $
+    prim__listPRsForBaseBranch ptr owner repo baseBranch
+
 %foreign okit_ffi "create_pr"
 prim__createPR : Ptr OctokitRef 
               -> (owner : String) 
@@ -311,10 +330,6 @@ createComment : Octokit =>
              -> Promise String ()
 createComment @{Kit ptr} owner repo issueOrPrNumber message =
   ignore . ignoreStatus . promiseIO $ prim__createComment ptr owner repo issueOrPrNumber message
-
-Show GitHubPRState where
-  show Open   = "open"
-  show Closed = "closed"
 
 pullRequestStateFilter : Maybe GitHubPRState -> String
 pullRequestStateFilter Nothing = "all"
