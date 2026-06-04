@@ -1,3 +1,14 @@
+# 6.9.1 (Don't tell me what to do. I know what to do)
+Published: 2026-06-04T15:10:00Z
+
+## What's Changed
+* omit branch annotation if main branch (https://github.com/mattpolzin/harmony/pull/302)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.9.0...6.9.1
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 6.9.0 (Look Both Ways)
 Published: 2026-06-04T01:45:43Z
 
