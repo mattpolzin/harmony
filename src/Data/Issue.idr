@@ -48,6 +48,8 @@ isAssignee : String -> Issue -> Bool
 isAssignee login (MkIssue _ _ _ _ _ Nothing _) = False
 isAssignee login (MkIssue _ _ _ _ _ (Just assignee) _) = login == assignee
 
+-- the beginning and end tags of the html comment are intentionally on their
+-- given lines here to make parsing as low overhead as possible.
 baseBranchCommentPrefix : String
 baseBranchCommentPrefix = "<!-- base-branch: "
 
