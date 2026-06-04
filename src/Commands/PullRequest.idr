@@ -419,6 +419,15 @@ renderPrTree @{config} format =
                         , indent 2 $ "└" <++> annotate italic (pretty uri)
                         ]
 
+removeCommentOpenTag : String -> String
+removeCommentOpenTag str =
+  if "<!--" `isPrefixOf` str
+     then drop 4 str
+     else str
+
+removeCommentTags : String -> String
+removeCommentTags = unlines . map removeCommentOpenTag . filter (/= "-->") . lines
+
 githubInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
 githubInferredBranchInfo @{config} branch =
   case issueNumber of
@@ -456,9 +465,6 @@ githubInferredBranchInfo @{config} branch =
          then maybe "" (++ " ") config.bugfixPRTitlePrefix
          else ""
 
-    removeCommentCloseTags : String -> String
-    removeCommentCloseTags = unlines . filter (/= "-->") . lines
-
     issueDescriptionPrefix : Issue -> (baseBranch : String) -> Promise' String
     issueDescriptionPrefix issue baseBranch = do
       maybeTree <- maybePrTree issue baseBranch
@@ -468,7 +474,7 @@ githubInferredBranchInfo @{config} branch =
         ## GitHub Issue
         \{issue.title}
         --
-        \{removeCommentCloseTags issue.body}
+        \{removeCommentTags issue.body}
         -->
         """
 

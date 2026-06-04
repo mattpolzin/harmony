@@ -16,6 +16,13 @@ namespace PrCreationUrl
   withIntoBranch : prCreationUrl "org" "repo" "branch" (Just "main") === "https://github.com/org/repo/compare/main...branch?expand=1"
   withIntoBranch = Refl
 
+namespace RemoveCommentTags
+  withoutTags : removeCommentTags "Hello.\nHi Hello\n" ==> "Hello.\nHi Hello\n"
+  withoutTags = MkTTest
+
+  withTags : removeCommentTags "<!-- Hello.\nHi Hello\n-->\n" ==> " Hello.\nHi Hello\n"
+  withTags = MkTTest
+
 namespace RenderPrTree
   config : Config
   config =
