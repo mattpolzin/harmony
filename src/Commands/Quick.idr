@@ -43,12 +43,7 @@ createNewIssue @{config} baseBranchGuess issueTitle' = do
             putStrLn "What would you like the issue title to be?"
             trim <$> getLine
 
-  -- the beginning and end tags of the html comment are intentionally on their
-  -- given lines here to make parsing as low overhead as possible.
-  let bodyPrefix = """
-                   \{Issue.baseBranchComment baseBranchGuess}
-
-                   """
+  let bodyPrefix = baseBranchComment
 
   issueBody <- case config.editor of
                     Nothing => inlineDescription issuePrompt bodyPrefix
@@ -59,6 +54,15 @@ createNewIssue @{config} baseBranchGuess issueTitle' = do
     where
       issuePrompt : String
       issuePrompt = "What would you like the issue description to be (two blank lines to finish)?"
+
+      baseBranchComment : String
+      baseBranchComment =
+        if baseBranchGuess /= config.mainBranch
+           then """
+                \{Issue.baseBranchComment baseBranchGuess}
+
+                """
+           else ""
 
 public export
 data IssueIdent = NoInfo
