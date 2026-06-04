@@ -1,3 +1,14 @@
+# 6.9.0 (Look Both Ways)
+Published: 2026-06-04T01:45:43Z
+
+## What's Changed
+* when printing the PR tree for the current branch, look up as well as down (https://github.com/mattpolzin/harmony/pull/298)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.8.0...6.9.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 6.8.0 (Based)
 Published: 2026-05-30T18:51:39Z
 
