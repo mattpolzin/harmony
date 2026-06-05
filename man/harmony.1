@@ -165,6 +165,23 @@ documented below: \f[CR]config\f[R], \f[CR]branch\f[R], \f[CR]pr\f[R],
 \f[CR]reflect\f[R], \f[CR]list\f[R], \f[CR]graph\f[R],
 \f[CR]health\f[R], and \f[CR]sync\f[R].
 .PP
+Some of Harmony\(cqs features will request you to enter titles,
+descriptions, etc.
+at the CLI.
+You can walk through these prompts and enter values interactively from
+the shell, but the experience of entering longer descriptions via a text
+editor is much more pleasant.
+Make sure you have the \f[CR]$EDITOR\f[R] environment variable set to
+your preferred editor if you want Harmony to redirect you to the editor
+to enter longer text values.
+This is highly recommended.
+.PP
+\f[B]Example \f[CB]$EDITOR\f[B] Values:\f[R]
+.IP \(bu 2
+Vim: \f[CR]export EDITOR=vim\f[R]
+.IP \(bu 2
+VS Code: \f[CR]export EDITOR=\(aqcode \-\-new\-window \-\-wait\(aq\f[R]
+.PP
 \f[B]Note on color output:\f[R] Harmony uses colored output for some
 commands.
 You can adjust these colors slightly with the \f[CR]theme\f[R]
