@@ -3,7 +3,12 @@ Once configured, Harmony supports the following commands that are documented
 below: `config`, `branch`, `pr`, `quick`, `label`, `request` (also aliased to
 `rq`), `contribute`, `whoami`, `reflect`, `list`, `graph`, `health`, and `sync`.
 
-Some of Harmony's features will request you to enter titles, descriptions, etc. at the CLI. You can walk through these prompts and enter values interactively from the shell, but the experience of entering longer descriptions via a text editor is much more pleasant. Make sure you have the `$EDITOR` environment variable set to your preferred editor if you want Harmony to redirect you to the editor to enter longer text values. This is highly recommended.
+Some of Harmony's features will request you to enter titles, descriptions, etc.
+at the CLI. You can walk through these prompts and enter values interactively
+from the shell, but the experience of entering longer descriptions via a text
+editor is much more pleasant. Make sure you have the `$EDITOR` environment
+variable set to your preferred editor if you want Harmony to redirect you to
+the editor to enter longer text values. This is highly recommended.
 
 **Example `$EDITOR` Values:**
 
