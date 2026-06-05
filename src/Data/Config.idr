@@ -3,6 +3,7 @@ module Data.Config
 import Data.Either
 import Data.List
 import Data.List.Elem
+import Data.Project
 import Data.String
 import Data.Theme
 import Data.Vect
@@ -149,6 +150,8 @@ record Config where
   teamSlugs     : List String
   ||| Local cache of GitHub labels for the configured repo.
   repoLabels    : List String
+  ||| Local cache of GitHub projects for the configured repo.
+  repoProjects  : List ProjectRef
   ||| Local cache of GitHub members within the configured org.
   orgMembers    : List String
   ||| A list of Pull Request numbers that should be ignored (specifically when
@@ -413,6 +416,7 @@ Show Config where
     , "addPrTreeDescription: \{show config.addPrTreeDescription}"
     , "           teamSlugs: \{show config.teamSlugs}"
     , "          repoLabels: \{show config.repoLabels}"
+    , "        repoProjects: \{show config.repoProjects}"
     , "          orgMembers: \{show config.orgMembers}"
     , "          ignoredPRs: \{show config.ignoredPRs}"
     , "           githubPAT: \{personalAccessToken}"
@@ -431,7 +435,7 @@ json : Config -> JSON
 json (MkConfig updatedAt org repo defaultRemote mainBranch
                requestTeams requestUsers commentOnRequest branchParsing
                bugfixPRTitlePrefix addPrTreeDescription teamSlugs repoLabels
-               orgMembers ignoredPRs githubPAT githubUser theme _) =
+               repoProjects orgMembers ignoredPRs githubPAT githubUser theme _) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
@@ -447,6 +451,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch
     , ("orgMembers"           , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"            , JArray $ JString <$> sort teamSlugs)
     , ("repoLabels"           , JArray $ JString <$> sort repoLabels)
+    , ("repoProjects"         , JArray $ (JString . show) <$> sort repoProjects)
     , ("ignoredPRs"           , JArray $ JInteger . cast <$> sort ignoredPRs)
     , ("githubPAT"            , maybe JNull (JString . expose) githubPAT)
     , ("githubUser"           , maybe JNull JString githubUser)
@@ -496,6 +501,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeBranchParsing = lookup "branchParsing" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
                                           let maybeBugfixPrefix = lookup "bugfixPRTitlePrefix" config
+                                          let maybeRepoProjects = lookup "repoProjects" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
@@ -508,8 +514,11 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           -- TODO 7.0.0: Make branchParsing required part of config file (default to none)
                                           --             branchParsing lookup can be moved to the required lookupAll above.
                                           prt <- maybe (Right False) bool maybePrTree
-                                          -- TODO 7.0.0: Make addPrTreeDescription required part of config file (default to false)
+                                          -- TODO 8.0.0: Make addPrTreeDescription required part of config file (default to false)
                                           --             addPrTreeDescription lookup can be moved to the required lookupAll above.
+                                          rp <- maybe (Right []) (array parseProjectRef) maybeRepoProjects
+                                          -- TODO 8.0.0: Make repoProjects required part of config file (default to [])
+                                          --             repoProjects lookup can be moved to the required lookupAll above.
                                           ts <- array string teamSlugs
                                           rl <- array string repoLabels
                                           om <- array string orgMembers
@@ -530,6 +539,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , requestUsers         = au
                                             , teamSlugs            = ts
                                             , repoLabels           = rl
+                                            , repoProjects         = rp
                                             , commentOnRequest     = ca
                                             , branchParsing        = bp
                                             , bugfixPRTitlePrefix  = bf
@@ -574,6 +584,7 @@ simpleDefaults =
       , requestUsers         = True
       , teamSlugs            = []
       , repoLabels           = []
+      , repoProjects         = []
       , commentOnRequest     = None
       , branchParsing        = None
       , bugfixPRTitlePrefix  = Nothing

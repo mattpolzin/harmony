@@ -5,6 +5,7 @@ import Data.Either
 import Data.List
 import Data.List.PrefixSuffix
 import Data.List1
+import Data.Project
 import Data.Promise
 import Data.String
 import Data.Theme
@@ -39,13 +40,15 @@ syncConfig @{config} echo =
  do teamSlugs  <- nonOrgFallback [] $ listTeams config.org
     orgMembers <- nonOrgFallback [] $ listOrgMembers config.org
     labelNames <- listRepoLabels config.org config.repo
+    repoProjects <- map reference <$> listRepoProjects config.org config.repo
     githubUser <- login <$> getSelf
     updatedAt  <- cast {to=Data.Config.Timestamp} <$> time
-    let config' = { updatedAt  := updatedAt
-                  , teamSlugs  := teamSlugs
-                  , repoLabels := labelNames
-                  , orgMembers := orgMembers
-                  , githubUser := Just githubUser
+    let config' = { updatedAt    := updatedAt
+                  , teamSlugs    := teamSlugs
+                  , repoLabels   := labelNames
+                  , repoProjects := repoProjects
+                  , orgMembers   := orgMembers
+                  , githubUser   := Just githubUser
                   } config
     ignore $ writeConfig config'
     when echo $
@@ -266,10 +269,11 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     , columns  = terminalColumns
     , editor
     }
-  do teamSlugs  <- nonOrgFallback [] $ listTeams org
-     orgMembers <- nonOrgFallback [] $ listOrgMembers org
-     repoLabels <- listRepoLabels org repo
-     githubUser <- login <$> getSelf
+  do teamSlugs    <- nonOrgFallback [] $ listTeams org
+     orgMembers   <- nonOrgFallback [] $ listOrgMembers org
+     repoLabels   <- listRepoLabels org repo
+     repoProjects <- map reference <$> listRepoProjects org repo
+     githubUser   <- login <$> getSelf
      let addPrTreeDescription = False
      let bugfixPRTitlePrefix = Nothing
      let ignoredPRs = []
@@ -289,6 +293,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
        , addPrTreeDescription
        , teamSlugs
        , repoLabels
+       , repoProjects
        , orgMembers
        , ignoredPRs
        , githubPAT
