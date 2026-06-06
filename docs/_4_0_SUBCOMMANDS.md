@@ -135,7 +135,7 @@ organization.
 
 Running `harmony list <team>` will list the members of the given GitHub Team.
 
-## `pr [--draft | --ready] [-i/--into {<branch-name>}] [-o/--output {format}] [--print-tree] [#label, ...]`
+## `pr [--draft | --ready] [--issue] [-i/--into {<branch-name>}] [-o/--output {format}] [--print-tree] [#label, ...]`
 With a branch checked out will reach out to GitHub to determine if there is an
 open PR for that branch. If there is a PR, Harmony will print a URI that can be
 used to view the PR. If there is not a PR, Harmony will help you create one. The
@@ -145,6 +145,11 @@ downstream PRs instead of just printing the URI for the current branch's PR. New
 and existing PRs can be marked as drafts by specifying the `--draft` flag with
 the `pr` command or they can be marked as ready for review with the `--ready`
 flag. The default behavior for new PRs is to mark them ready.
+
+When creating a new PR interactively, `--issue` creates a GitHub issue first,
+uses its title as the default PR title, and adds the usual `Related to #N` link
+to the PR body. `--issue` only works for new PRs; existing PRs need issue
+association handled separately for now.
 
 By default this command outputs to a shell format that is colored (if supported)
 but you can use the `--output markdown` option to output to a markdown syntax
@@ -173,7 +178,8 @@ For example, `harmony pr #backport #bugfix` would create a PR and apply the
 
 If you are using harmony from a script or some other environment without TTY
 support, harmony will print a GitHub URL that can be used to create the PR. This
-mode of operation will ignore the `--draft` and `#label` options.
+mode of operation will ignore the `--draft` and `#label` options. `--issue` is
+interactive-only because it prompts for issue details.
 
 Many operating systems have an `open` command (though the name "open" is not
 ubiquitous); this means you can run something like `open $(harmony pr)` to open
@@ -194,6 +200,11 @@ Create a pull request that will merge into the hypothetical pre-existing
 `release/2_0` branch:
 ```shell
 harmony pr --into release/2_0
+```
+
+Create a GitHub issue and then create a PR linked to that issue:
+```shell
+harmony pr --issue
 ```
 
 ## `quick [--bugfix] [issue-title | #<issue-number>] [...]`
@@ -286,4 +297,3 @@ Print Harmony's version.
 
 ## `whoami`
 Print information about the currently configured and authenticated user.
-

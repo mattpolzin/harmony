@@ -349,7 +349,7 @@ configured GitHub organization.
 .PP
 Running \f[CR]harmony list <team>\f[R] will list the members of the
 given GitHub Team.
-.SS \f[CR]pr [\-\-draft | \-\-ready] [\-i/\-\-into {<branch\-name>}] [\-o/\-\-output {format}] [\-\-print\-tree] [#label, ...]\f[R]
+.SS \f[CR]pr [\-\-draft | \-\-ready] [\-\-issue] [\-i/\-\-into {<branch\-name>}] [\-o/\-\-output {format}] [\-\-print\-tree] [#label, ...]\f[R]
 With a branch checked out will reach out to GitHub to determine if there
 is an open PR for that branch.
 If there is a PR, Harmony will print a URI that can be used to view the
@@ -363,6 +363,12 @@ New and existing PRs can be marked as drafts by specifying the
 \f[CR]\-\-draft\f[R] flag with the \f[CR]pr\f[R] command or they can be
 marked as ready for review with the \f[CR]\-\-ready\f[R] flag.
 The default behavior for new PRs is to mark them ready.
+.PP
+When creating a new PR interactively, \f[CR]\-\-issue\f[R] creates a
+GitHub issue first, uses its title as the default PR title, and adds the
+usual \f[CR]Related to #N\f[R] link to the PR body.
+\f[CR]\-\-issue\f[R] only works for new PRs; existing PRs need issue
+association handled separately for now.
 .PP
 By default this command outputs to a shell format that is colored (if
 supported) but you can use the \f[CR]\-\-output markdown\f[R] option to
@@ -399,6 +405,8 @@ TTY support, harmony will print a GitHub URL that can be used to create
 the PR.
 This mode of operation will ignore the \f[CR]\-\-draft\f[R] and
 \f[CR]#label\f[R] options.
+\f[CR]\-\-issue\f[R] is interactive\-only because it prompts for issue
+details.
 .PP
 Many operating systems have an \f[CR]open\f[R] command (though the name
 \(lqopen\(rq is not ubiquitous); this means you can run something like
@@ -422,6 +430,12 @@ pre\-existing \f[CR]release/2_0\f[R] branch:
 .IP
 .EX
 harmony pr \-\-into release/2_0
+.EE
+.PP
+Create a GitHub issue and then create a PR linked to that issue:
+.IP
+.EX
+harmony pr \-\-issue
 .EE
 .SS \f[CR]quick [\-\-bugfix] [issue\-title | #<issue\-number>] [...]\f[R]
 Helps you create a new GitHub issue and a branch to work on that issue

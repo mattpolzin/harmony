@@ -56,6 +56,7 @@ allPrCmdOptsAndDescriptions : List (String, String)
 allPrCmdOptsAndDescriptions =
   [ ("--ready"     , "mark the new or existing PR as ready for review")
   , ("--draft"     , "mark the new or existing PR as a draft")
+  , ("--issue"     , "create and link a GitHub Issue")
   , ("--print-tree", "print a tree of PRs between the current branch and the main branch")
   , ("--output"    , "output in the given format (at least for non-error responses)")
   , ("--into"      , "set the branch to merge your PR into")
@@ -160,10 +161,15 @@ cmdOpts s "pr" partialArg    "pr" =
         then Nothing -- <- falls through to handle with config below.
         else Just []
 cmdOpts s "pr" partialArg "--draft" =
-  someWithPrefixOrNothing partialArg (filter (\c => matches "--output" c || matches "--into" c || matches "--print-tree" c) (allPrCmdOpts s)) <|>
+  someWithPrefixOrNothing partialArg (filter (\c => matches "--output" c || matches "--into" c || matches "--issue" c || matches "--print-tree" c) (allPrCmdOpts s)) <|>
     if isHashPrefix partialArg
        then Nothing -- <- falls through to handle with config below.
        else Just [] 
+cmdOpts s "pr" partialArg "--issue" =
+  someWithPrefixOrNothing partialArg (filter (\c => matches "--output" c || matches "--into" c || matches "--draft" c || matches "--print-tree" c) (allPrCmdOpts s)) <|>
+    if isHashPrefix partialArg
+       then Nothing -- <- falls through to handle with config below.
+       else Just []
 cmdOpts s "pr" partialArg lastArg =
   let prefixMatch = 
     if isJust $ List.find (== lastArg) (fst <$> allOutputFormatOptsAndDescriptions)
@@ -364,4 +370,3 @@ githubOpts @{config} gh _ "quick" partialArg _ = do
              issues
   pure (str . mapSnd describer <$> sortBy sorter issues')
 githubOpts _ _ _ _ _ = pure []
-
