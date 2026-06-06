@@ -27,13 +27,15 @@ dasherize = pack . replaceOn ' ' '-' . unpack
 branchNameSuggestion : String -> String
 branchNameSuggestion = toLower . dasherize
 
-createNewIssue : Config =>
-                 Octokit =>
-                 (baseBranchGuess : String)
-              -> (issueTitle : Maybe String)
-              -> Promise' Issue
-createNewIssue @{config} baseBranchGuess issueTitle' = do
-  putStrLn "Creating a new GitHub issue and branch."
+export
+createNewIssueWithMessage : Config =>
+                            Octokit =>
+                            (message : String)
+                         -> (baseBranchGuess : String)
+                         -> (issueTitle : Maybe String)
+                         -> Promise' Issue
+createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' = do
+  putStrLn message
   putStrLn ""
 
   issueTitle <-
@@ -63,6 +65,14 @@ createNewIssue @{config} baseBranchGuess issueTitle' = do
 
                 """
            else ""
+
+export
+createNewIssue : Config =>
+                 Octokit =>
+                 (baseBranchGuess : String)
+              -> (issueTitle : Maybe String)
+              -> Promise' Issue
+createNewIssue = createNewIssueWithMessage "Creating a new GitHub issue and branch."
 
 public export
 data IssueIdent = NoInfo
@@ -99,4 +109,3 @@ quickStartNewWork @{config} issueCategory issueIdent = do
   where
     branchPrefix : String
     branchPrefix = toLower $ show issueCategory
-

@@ -292,6 +292,46 @@ record BranchInferredData where
 noInferredData : BranchInferredData
 noInferredData = MkInferredData Nothing Nothing Nothing Nothing
 
+export
+relatedToPrefix : (issueNumber : String) -> String
+relatedToPrefix issueNumber = "Related to #\{issueNumber}"
+
+titlePrefixForBranch : Config => (branch : String) -> String
+titlePrefixForBranch @{config} branch =
+  if isBugfixBranch branch
+     then maybe "" (++ " ") config.bugfixPRTitlePrefix
+     else ""
+
+removeCommentOpenTag : String -> String
+removeCommentOpenTag str =
+  if "<!--" `isPrefixOf` str
+     then drop 4 str
+     else str
+
+removeCommentTags : String -> String
+removeCommentTags = unlines . map removeCommentOpenTag . filter (/= "-->") . lines
+
+issueDescriptionPrefix : (maybeTree : String) -> Issue -> String
+issueDescriptionPrefix maybeTree issue =
+  """
+  <!--
+  \{maybeTree}
+  ## GitHub Issue
+  \{issue.title}
+  --
+  \{removeCommentTags issue.body}
+  -->
+  """
+
+export
+issueBodyPrefix : (maybeTree : String) -> Issue -> String
+issueBodyPrefix maybeTree issue =
+  """
+  \{issueDescriptionPrefix maybeTree issue}
+
+  \{relatedToPrefix (show issue.number)}
+  """
+
 ||| Get the chain of PRs that lead from the given branch to the configured
 ||| mainBranch or any other terminal branch along the way. The list will be in
 ||| merge-order. The list does not contain the mainBranch (or any other branch
@@ -419,14 +459,23 @@ renderPrTree @{config} format =
                         , indent 2 $ "└" <++> annotate italic (pretty uri)
                         ]
 
-removeCommentOpenTag : String -> String
-removeCommentOpenTag str =
-  if "<!--" `isPrefixOf` str
-     then drop 4 str
-     else str
+maybePrTree : Config => Octokit => (branch : String) -> Issue -> (baseBranch : String) -> Promise' String
+maybePrTree @{config} branch issue baseBranch =
+  if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
+     then do (prs, terminalBranch) <- upstreamPrChain (limit 10) baseBranch
+             let nodes = prTree (Just branch) (Just issue.title) [] prs terminalBranch
+             let tree = renderPrTree Markdown nodes
+             pure """
+                  ## PR Tree
+                  \{tree}
+                  """
+     else pure ""
 
-removeCommentTags : String -> String
-removeCommentTags = unlines . map removeCommentOpenTag . filter (/= "-->") . lines
+export
+buildIssueBodyPrefix : Config => Octokit => (branch : String) -> Issue -> (baseBranch : String) -> Promise' String
+buildIssueBodyPrefix branch issue baseBranch = do
+  tree <- maybePrTree branch issue baseBranch
+  pure $ issueBodyPrefix tree issue
 
 githubInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
 githubInferredBranchInfo @{config} branch =
@@ -436,57 +485,13 @@ githubInferredBranchInfo @{config} branch =
       issue <- getIssue config.org config.repo issueNum
       pure $ 
         MkInferredData Nothing 
-                       (Just $ buildBodyPrefix issue)
-                       (Just $ titlePrefix ++ issue.title)
+                       (Just $ buildIssueBodyPrefix branch issue)
+                       (Just $ titlePrefixForBranch branch ++ issue.title)
                        issue.baseBranchGuess
 
   where
     issueNumber : Maybe String
     issueNumber = parseGithubIssueNumber branch
-
-    relatedToPrefix : (issueNumber : String) -> String
-    relatedToPrefix issueNumber = "Related to #\{issueNumber}"
-
-    maybePrTree : Issue -> (baseBranch : String) -> Promise' String
-    maybePrTree issue baseBranch =
-      if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
-         then do (prs, terminalBranch) <- upstreamPrChain (limit 10) baseBranch
-                 let nodes = prTree (Just branch) (Just issue.title) [] prs terminalBranch
-                 let tree = renderPrTree Markdown nodes
-                 pure """
-                      ## PR Tree
-                      \{tree}
-                      """
-         else pure ""
-
-    titlePrefix : String
-    titlePrefix =
-      if isBugfixBranch branch
-         then maybe "" (++ " ") config.bugfixPRTitlePrefix
-         else ""
-
-    issueDescriptionPrefix : Issue -> (baseBranch : String) -> Promise' String
-    issueDescriptionPrefix issue baseBranch = do
-      maybeTree <- maybePrTree issue baseBranch
-      pure """
-        <!--
-        \{maybeTree}
-        ## GitHub Issue
-        \{issue.title}
-        --
-        \{removeCommentTags issue.body}
-        -->
-        """
-
-    buildBodyPrefix : Issue -> (baseBranch : String) -> Promise' String
-    buildBodyPrefix issue baseBranch = do
-      part1 <- issueDescriptionPrefix issue baseBranch
-      let part2 = relatedToPrefix (show issue.number)
-      pure $ """
-             \{part1}
-
-             \{part2}
-             """
 
 ||| Get any inferred title prefix, body prefix, or default title from the
 ||| current branch.
@@ -644,4 +649,3 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
         putStrLn branch
 
         GitHub.createPR {markAsDraft} config.org config.repo branch baseBranch title description
-
