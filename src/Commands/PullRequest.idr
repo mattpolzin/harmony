@@ -1,6 +1,7 @@
 module Commands.PullRequest
 
 import Commands.Reviewer
+import Commands.Quick
 
 import Data.Config
 import Data.Either
@@ -541,15 +542,23 @@ prCreationUrl org repo branch intoBranch =
 export
 identifyOrCreatePR : Config => Octokit => 
                      {default False markAsDraft : Bool}
+                  -> {default False createIssueForPR : Bool}
                   -> {default Nothing intoBranch : Maybe String}
                   -> (branch : String) 
                   -> Promise' CreatePRResult
-identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
+identifyOrCreatePR @{config} {markAsDraft} {createIssueForPR} {intoBranch} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
-    | [] => case !(isTTY stdout) of
-               True  => Actual Created <$> createPR
-               False => pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
+    | [] => do
+        when (createIssueForPR && isJust (parseGithubIssueNumber branch)) $
+          reject "The current branch already appears to reference a GitHub issue; --issue would create a duplicate issue."
+        case !(isTTY stdout) of
+             True  => Actual Created <$> createPR
+             False => if createIssueForPR
+                         then reject "The --issue option requires an interactive terminal because Harmony needs to prompt for issue details."
+                         else pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
     | _  => reject "Multiple PRs for the current brach. Harmony only handles 1 PR per branch currently."
+  when createIssueForPR $
+    reject "The --issue option is only supported when creating a new PR."
   pure (Actual Identified openPr)
     where
       continueGivenUncommittedChanges : Promise' Bool
@@ -632,10 +641,23 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
 
         baseBranch <- getBaseBranch intoBranch inferredBranchInfo.baseBranchGuess
 
-        let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
-        bodyPrefix <- maybe (pure "") ($ baseBranch) inferredBranchInfo.buildBodyPrefix
+        let issueForPrPromise : Promise' (Maybe Issue)
+            issueForPrPromise =
+              if createIssueForPR
+                 then Just <$> createNewIssueWithMessage "Creating a new GitHub issue for this PR." baseBranch Nothing
+                 else pure Nothing
+        issueForPr <- issueForPrPromise
 
-        title <- (titlePrefix ++) <$> (prTitlePrompt inferredBranchInfo.defaultTitle)
+        let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
+        bodyPrefix <- case issueForPr of
+                           Just issue => buildIssueBodyPrefix branch issue baseBranch
+                           Nothing => maybe (pure "") ($ baseBranch) inferredBranchInfo.buildBodyPrefix
+
+        let defaultTitle = case issueForPr of
+                                Just issue => Just issue.title
+                                Nothing => inferredBranchInfo.defaultTitle
+
+        title <- (titlePrefix ++) <$> (prTitlePrompt defaultTitle)
 
         -- either get the description at the command line or open an editor
         -- with a template if available

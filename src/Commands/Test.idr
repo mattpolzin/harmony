@@ -16,8 +16,14 @@ namespace ParsePrArgs
   parsesJustReadyFlag : parsePrArgs ["--ready"] === Right [Ready]
   parsesJustReadyFlag = Refl
 
+  parsesJustIssueFlag : parsePrArgs ["--issue"] === Right [CreateIssue]
+  parsesJustIssueFlag = Refl
+
   parsesJustLabels : parsePrArgs ["#one", "#two"] === Right [Label "one", Label "two"]
   parsesJustLabels = Refl
+
+  parsesIssueFlagWithDraftAndLabel : parsePrArgs ["--issue", "--draft", "#one"] === Right [CreateIssue, Draft, Label "one"]
+  parsesIssueFlagWithDraftAndLabel = Refl
 
   parsesIntoOption : parsePrArgs ["--into", "a"] === Right [Into (Branch (Evidence "a" (IsNonEmpty "a")))]
   parsesIntoOption = Refl
