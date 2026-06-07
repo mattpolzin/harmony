@@ -182,8 +182,6 @@ pr : Config => Octokit =>
 pr @{config} args = do
   when conflictingDraftReadyArgs $
     reject "You cannot set a PR as ready for review and mark it as a draft at the same time."
-  when conflictingIssueReadyArgs $
-    reject "You cannot create an issue for a new PR and mark an existing PR ready for review at the same time."
   Actual actionTaken pr <- identifyOrCreatePR {markAsDraft} {createIssueForPR} {intoBranch} !currentBranch
     | Hypothetical url => putStrLn url
   case actionTaken of
@@ -220,9 +218,6 @@ pr @{config} args = do
 
     conflictingDraftReadyArgs : Bool
     conflictingDraftReadyArgs = markAsDraft && markAsReady
-
-    conflictingIssueReadyArgs : Bool
-    conflictingIssueReadyArgs = createIssueForPR && markAsReady
 
     labelSlugs : List String
     labelSlugs = foldr (\case (Label l) => (l ::); _ => id) [] args

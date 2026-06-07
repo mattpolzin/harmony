@@ -39,7 +39,7 @@ echo 'into pr suggests draft, issue, output, and print-tree args:'
 $harmony --bash-completion pr -- main
 
 echo ''
-echo 'ready pr suggests into, output, and print-tree args:'
+echo 'ready pr suggests issue, into, output, and print-tree args:'
 $harmony --bash-completion pr -- --ready
 
 echo ''

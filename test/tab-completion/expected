@@ -59,7 +59,8 @@ into pr suggests draft, issue, output, and print-tree args:
 --print-tree
 --output
 
-ready pr suggests into, output, and print-tree args:
+ready pr suggests issue, into, output, and print-tree args:
+--issue
 --print-tree
 --output
 --into

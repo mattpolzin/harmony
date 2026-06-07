@@ -154,7 +154,7 @@ cmdOpts s "pr" "--"          "pr"       = all (allPrCmdOpts s)
 cmdOpts s "pr" "-"           "pr"       = someWithPrefix "--" (allPrCmdOpts s)
 cmdOpts _ "pr" partialBranch "--into"   = Nothing -- <- falls through to handle with config below.
 cmdOpts s "pr" partialFormat "--output" = someWithPrefix partialFormat (allOutputFormatOpts s)
-cmdOpts s "pr" _             "--ready"  = someFrom ["--print-tree", "--into", "--output"] (allPrCmdOpts s) -- The ready flag does not work with the --draft flag.
+cmdOpts s "pr" _             "--ready"  = someFrom ["--issue", "--print-tree", "--into", "--output"] (allPrCmdOpts s) -- The ready flag does not work with the --draft flag.
 cmdOpts s "pr" partialArg    "pr" = 
   someWithPrefixOrNothing partialArg (allPrCmdOpts s) <|> 
     if isHashPrefix partialArg 
@@ -166,7 +166,7 @@ cmdOpts s "pr" partialArg "--draft" =
        then Nothing -- <- falls through to handle with config below.
        else Just [] 
 cmdOpts s "pr" partialArg "--issue" =
-  someWithPrefixOrNothing partialArg (filter (\c => matches "--output" c || matches "--into" c || matches "--draft" c || matches "--print-tree" c) (allPrCmdOpts s)) <|>
+  someWithPrefixOrNothing partialArg (filter (\c => matches "--output" c || matches "--into" c || matches "--ready" c || matches "--draft" c || matches "--print-tree" c) (allPrCmdOpts s)) <|>
     if isHashPrefix partialArg
        then Nothing -- <- falls through to handle with config below.
        else Just []

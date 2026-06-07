@@ -293,7 +293,6 @@ record BranchInferredData where
 noInferredData : BranchInferredData
 noInferredData = MkInferredData Nothing Nothing Nothing Nothing
 
-export
 relatedToPrefix : (issueNumber : String) -> String
 relatedToPrefix issueNumber = "Related to #\{issueNumber}"
 
@@ -324,7 +323,6 @@ issueDescriptionPrefix maybeTree issue =
   -->
   """
 
-export
 issueBodyPrefix : (maybeTree : String) -> Issue -> String
 issueBodyPrefix maybeTree issue =
   """
@@ -460,23 +458,22 @@ renderPrTree @{config} format =
                         , indent 2 $ "└" <++> annotate italic (pretty uri)
                         ]
 
-maybePrTree : Config => Octokit => (branch : String) -> Issue -> (baseBranch : String) -> Promise' String
-maybePrTree @{config} branch issue baseBranch =
-  if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
-     then do (prs, terminalBranch) <- upstreamPrChain (limit 10) baseBranch
-             let nodes = prTree (Just branch) (Just issue.title) [] prs terminalBranch
-             let tree = renderPrTree Markdown nodes
-             pure """
-                  ## PR Tree
-                  \{tree}
-                  """
-     else pure ""
-
-export
 buildIssueBodyPrefix : Config => Octokit => (branch : String) -> Issue -> (baseBranch : String) -> Promise' String
-buildIssueBodyPrefix branch issue baseBranch = do
-  tree <- maybePrTree branch issue baseBranch
+buildIssueBodyPrefix @{config} branch issue baseBranch = do
+  tree <- maybePrTree
   pure $ issueBodyPrefix tree issue
+  where
+    maybePrTree : Promise' String
+    maybePrTree =
+      if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
+         then do (prs, terminalBranch) <- upstreamPrChain (limit 10) baseBranch
+                 let nodes = prTree (Just branch) (Just issue.title) [] prs terminalBranch
+                 let tree = renderPrTree Markdown nodes
+                 pure """
+                      ## PR Tree
+                      \{tree}
+                      """
+         else pure ""
 
 githubInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
 githubInferredBranchInfo @{config} branch =
