@@ -1,3 +1,17 @@
+# 6.10.0 (Here's the issue with that)
+Published: 2026-06-08T02:04:55Z
+
+## What's Changed
+* Creates issue alongside pr by @TimDurward in https://github.com/mattpolzin/harmony/pull/305
+
+## New Contributors
+* @TimDurward made their first contribution in https://github.com/mattpolzin/harmony/pull/305
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.9.1...6.10.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 6.9.1 (Don't tell me what to do. I know what to do)
 Published: 2026-06-04T15:10:00Z
 
