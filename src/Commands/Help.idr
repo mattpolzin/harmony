@@ -75,8 +75,9 @@ subcommandHelp' n@"config" = subcommand n [argument True "<property>", argument 
   ]
 subcommandHelp' n@"pr" = subcommand n [ argument False "--ready"
                                       , argument False "--draft"
+                                      , argument False "--issue"
                                       , argument False "-i/--into {<branch-name>}"
-                                      , argument False "--print-result"
+                                      , argument False "--print-tree"
                                       , argument False "-o/--output {format}"
                                       , argument False "#<label>"
                                       , argument False "..."] $
@@ -84,6 +85,7 @@ subcommandHelp' n@"pr" = subcommand n [ argument False "--ready"
   , reflow "Optionally apply any number of labels by prefixing them with '#'."
   , reflow "Optionally mark a new or existing PR as a draft with the --draft flag."
   , reflow "Optionally mark an existing PR as ready for review with the --ready flag."
+  , reflow "Optionally create and link a GitHub Issue with --issue."
   , reflow "Optionally specify the branch to merge into with the --into option."
   , reflow "Optionally print a pr tree with the --print-tree flag."
   , reflow "Optionally output in markdown or shell (default) format."
@@ -221,4 +223,3 @@ help useDecorations terminalColumns =
   let decorate = if useDecorations then id else unAnnotate
   in  renderString . layoutPretty (optionsWithBestWidth terminalColumns) $
         decorate helpDocs
-

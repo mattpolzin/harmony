@@ -77,13 +77,13 @@ label @{config} labels =
 
 prUsageError  : String
 prUsageError = 
-  "pr's arguments must be #<label>, --into <branch-name>, --ready, or --draft to create a draft PR."
+  "pr's arguments must be #<label>, --into <branch-name>, --ready, --draft, or --issue."
 
 data IntoOpt = Branch (Exists String.NonEmpty)
 
 data OutputFormat = Shell | Markdown
 
-data PrArg = Draft | Ready | PrintTree | Output OutputFormat | Into IntoOpt | Label String
+data PrArg = Draft | Ready | CreateIssue | PrintTree | Output OutputFormat | Into IntoOpt | Label String
 
 (<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
 (<||>) f g x = f x <|> g x
@@ -99,7 +99,7 @@ parsePrArgs args =
       intoArgs' = Into <$> intoArgs
       (outputArgs, rest') = recombineOutputArgs rest
       outputArgs' = Output <$> outputArgs
-      rest'' = (traverse (parseReadyFlag <||> parseDraftFlag <||> parsePrintTreeFlag <||> parseLabelArg) rest')
+      rest'' = (traverse (parseReadyFlag <||> parseDraftFlag <||> parseIssueFlag <||> parsePrintTreeFlag <||> parseLabelArg) rest')
       in  maybeToEither prUsageError ((intoArgs' ++ outputArgs' ++) <$> rest'')
   where
     parseDraftFlag : String -> Maybe PrArg
@@ -109,6 +109,10 @@ parsePrArgs args =
     parseReadyFlag : String -> Maybe PrArg
     parseReadyFlag "--ready" = Just Ready
     parseReadyFlag _ = Nothing
+
+    parseIssueFlag : String -> Maybe PrArg
+    parseIssueFlag "--issue" = Just CreateIssue
+    parseIssueFlag _ = Nothing
 
     parsePrintTreeFlag : String -> Maybe PrArg
     parsePrintTreeFlag "--print-tree" = Just PrintTree
@@ -178,7 +182,7 @@ pr : Config => Octokit =>
 pr @{config} args = do
   when conflictingDraftReadyArgs $
     reject "You cannot set a PR as ready for review and mark it as a draft at the same time."
-  Actual actionTaken pr <- identifyOrCreatePR {markAsDraft} {intoBranch} !currentBranch
+  Actual actionTaken pr <- identifyOrCreatePR {markAsDraft} {createIssueForPR} {intoBranch} !currentBranch
     | Hypothetical url => putStrLn url
   case actionTaken of
        Identified => if printTree then printPrTree pr else putStrLn pr.webURI
@@ -208,6 +212,9 @@ pr @{config} args = do
 
     markAsReady : Bool
     markAsReady = isJust $ find (\case Ready => True; _ => False) args
+
+    createIssueForPR : Bool
+    createIssueForPR = isJust $ find (\case CreateIssue => True; _ => False) args
 
     conflictingDraftReadyArgs : Bool
     conflictingDraftReadyArgs = markAsDraft && markAsReady

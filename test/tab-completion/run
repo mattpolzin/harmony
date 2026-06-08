@@ -27,23 +27,23 @@ $harmony --bash-completion config -- bugfixPRTitlePrefix
 # pr command
 #
 echo ''
-echo 'no args suggests print-tree, into, output, ready, and draft args:'
+echo 'no args suggests print-tree, into, output, ready, draft, and issue args:'
 $harmony --bash-completion pr -- pr
 
 echo ''
-echo 'draft pr suggests into, output, and print-tree args:'
+echo 'draft pr suggests into, issue, output, and print-tree args:'
 $harmony --bash-completion pr -- --draft
 
 echo ''
-echo 'into pr suggests draft, output, and print-tree args:'
+echo 'into pr suggests draft, issue, output, and print-tree args:'
 $harmony --bash-completion pr -- main
 
 echo ''
-echo 'ready pr suggests into, output, and print-tree args:'
+echo 'ready pr suggests issue, into, output, and print-tree args:'
 $harmony --bash-completion pr -- --ready
 
 echo ''
-echo 'output last arg suggests draft, into, and print-tree args:'
+echo 'output last arg suggests draft, issue, into, and print-tree args:'
 $harmony --bash-completion pr -- markdown
 
 #

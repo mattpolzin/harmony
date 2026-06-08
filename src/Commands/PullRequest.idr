@@ -1,6 +1,7 @@
 module Commands.PullRequest
 
 import Commands.Reviewer
+import Commands.Quick
 
 import Data.Config
 import Data.Either
@@ -292,6 +293,44 @@ record BranchInferredData where
 noInferredData : BranchInferredData
 noInferredData = MkInferredData Nothing Nothing Nothing Nothing
 
+relatedToPrefix : (issueNumber : String) -> String
+relatedToPrefix issueNumber = "Related to #\{issueNumber}"
+
+titlePrefixForBranch : Config => (branch : String) -> String
+titlePrefixForBranch @{config} branch =
+  if isBugfixBranch branch
+     then maybe "" (++ " ") config.bugfixPRTitlePrefix
+     else ""
+
+removeCommentOpenTag : String -> String
+removeCommentOpenTag str =
+  if "<!--" `isPrefixOf` str
+     then drop 4 str
+     else str
+
+removeCommentTags : String -> String
+removeCommentTags = unlines . map removeCommentOpenTag . filter (/= "-->") . lines
+
+issueDescriptionPrefix : (maybeTree : String) -> Issue -> String
+issueDescriptionPrefix maybeTree issue =
+  """
+  <!--
+  \{maybeTree}
+  ## GitHub Issue
+  \{issue.title}
+  --
+  \{removeCommentTags issue.body}
+  -->
+  """
+
+issueBodyPrefix : (maybeTree : String) -> Issue -> String
+issueBodyPrefix maybeTree issue =
+  """
+  \{issueDescriptionPrefix maybeTree issue}
+
+  \{relatedToPrefix (show issue.number)}
+  """
+
 ||| Get the chain of PRs that lead from the given branch to the configured
 ||| mainBranch or any other terminal branch along the way. The list will be in
 ||| merge-order. The list does not contain the mainBranch (or any other branch
@@ -419,36 +458,13 @@ renderPrTree @{config} format =
                         , indent 2 $ "└" <++> annotate italic (pretty uri)
                         ]
 
-removeCommentOpenTag : String -> String
-removeCommentOpenTag str =
-  if "<!--" `isPrefixOf` str
-     then drop 4 str
-     else str
-
-removeCommentTags : String -> String
-removeCommentTags = unlines . map removeCommentOpenTag . filter (/= "-->") . lines
-
-githubInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
-githubInferredBranchInfo @{config} branch =
-  case issueNumber of
-    Nothing => pure noInferredData
-    Just issueNum => do
-      issue <- getIssue config.org config.repo issueNum
-      pure $ 
-        MkInferredData Nothing 
-                       (Just $ buildBodyPrefix issue)
-                       (Just $ titlePrefix ++ issue.title)
-                       issue.baseBranchGuess
-
+buildIssueBodyPrefix : Config => Octokit => (branch : String) -> Issue -> (baseBranch : String) -> Promise' String
+buildIssueBodyPrefix @{config} branch issue baseBranch = do
+  tree <- maybePrTree
+  pure $ issueBodyPrefix tree issue
   where
-    issueNumber : Maybe String
-    issueNumber = parseGithubIssueNumber branch
-
-    relatedToPrefix : (issueNumber : String) -> String
-    relatedToPrefix issueNumber = "Related to #\{issueNumber}"
-
-    maybePrTree : Issue -> (baseBranch : String) -> Promise' String
-    maybePrTree issue baseBranch =
+    maybePrTree : Promise' String
+    maybePrTree =
       if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
          then do (prs, terminalBranch) <- upstreamPrChain (limit 10) baseBranch
                  let nodes = prTree (Just branch) (Just issue.title) [] prs terminalBranch
@@ -459,34 +475,21 @@ githubInferredBranchInfo @{config} branch =
                       """
          else pure ""
 
-    titlePrefix : String
-    titlePrefix =
-      if isBugfixBranch branch
-         then maybe "" (++ " ") config.bugfixPRTitlePrefix
-         else ""
+githubInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
+githubInferredBranchInfo @{config} branch =
+  case issueNumber of
+    Nothing => pure noInferredData
+    Just issueNum => do
+      issue <- getIssue config.org config.repo issueNum
+      pure $ 
+        MkInferredData Nothing 
+                       (Just $ buildIssueBodyPrefix branch issue)
+                       (Just $ titlePrefixForBranch branch ++ issue.title)
+                       issue.baseBranchGuess
 
-    issueDescriptionPrefix : Issue -> (baseBranch : String) -> Promise' String
-    issueDescriptionPrefix issue baseBranch = do
-      maybeTree <- maybePrTree issue baseBranch
-      pure """
-        <!--
-        \{maybeTree}
-        ## GitHub Issue
-        \{issue.title}
-        --
-        \{removeCommentTags issue.body}
-        -->
-        """
-
-    buildBodyPrefix : Issue -> (baseBranch : String) -> Promise' String
-    buildBodyPrefix issue baseBranch = do
-      part1 <- issueDescriptionPrefix issue baseBranch
-      let part2 = relatedToPrefix (show issue.number)
-      pure $ """
-             \{part1}
-
-             \{part2}
-             """
+  where
+    issueNumber : Maybe String
+    issueNumber = parseGithubIssueNumber branch
 
 ||| Get any inferred title prefix, body prefix, or default title from the
 ||| current branch.
@@ -536,15 +539,23 @@ prCreationUrl org repo branch intoBranch =
 export
 identifyOrCreatePR : Config => Octokit => 
                      {default False markAsDraft : Bool}
+                  -> {default False createIssueForPR : Bool}
                   -> {default Nothing intoBranch : Maybe String}
                   -> (branch : String) 
                   -> Promise' CreatePRResult
-identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
+identifyOrCreatePR @{config} {markAsDraft} {createIssueForPR} {intoBranch} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
-    | [] => case !(isTTY stdout) of
-               True  => Actual Created <$> createPR
-               False => pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
+    | [] => do
+        when (createIssueForPR && isJust (parseGithubIssueNumber branch)) $
+          reject "The current branch already appears to reference a GitHub issue; --issue would create a duplicate issue."
+        case !(isTTY stdout) of
+             True  => Actual Created <$> createPR
+             False => if createIssueForPR
+                         then reject "The --issue option requires an interactive terminal because Harmony needs to prompt for issue details."
+                         else pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
     | _  => reject "Multiple PRs for the current brach. Harmony only handles 1 PR per branch currently."
+  when createIssueForPR $
+    reject "The --issue option is only supported when creating a new PR."
   pure (Actual Identified openPr)
     where
       continueGivenUncommittedChanges : Promise' Bool
@@ -627,10 +638,23 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
 
         baseBranch <- getBaseBranch intoBranch inferredBranchInfo.baseBranchGuess
 
-        let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
-        bodyPrefix <- maybe (pure "") ($ baseBranch) inferredBranchInfo.buildBodyPrefix
+        let issueForPrPromise : Promise' (Maybe Issue)
+            issueForPrPromise =
+              if createIssueForPR
+                 then Just <$> createNewIssueWithMessage "Creating a new GitHub issue for this PR." baseBranch Nothing
+                 else pure Nothing
+        issueForPr <- issueForPrPromise
 
-        title <- (titlePrefix ++) <$> (prTitlePrompt inferredBranchInfo.defaultTitle)
+        let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
+        bodyPrefix <- case issueForPr of
+                           Just issue => buildIssueBodyPrefix branch issue baseBranch
+                           Nothing => maybe (pure "") ($ baseBranch) inferredBranchInfo.buildBodyPrefix
+
+        let defaultTitle = case issueForPr of
+                                Just issue => Just issue.title
+                                Nothing => inferredBranchInfo.defaultTitle
+
+        title <- (titlePrefix ++) <$> (prTitlePrompt defaultTitle)
 
         -- either get the description at the command line or open an editor
         -- with a template if available
@@ -644,4 +668,3 @@ identifyOrCreatePR @{config} {markAsDraft} {intoBranch} branch = do
         putStrLn branch
 
         GitHub.createPR {markAsDraft} config.org config.repo branch baseBranch title description
-

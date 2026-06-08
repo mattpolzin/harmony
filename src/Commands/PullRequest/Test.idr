@@ -23,6 +23,10 @@ namespace RemoveCommentTags
   withTags : removeCommentTags "<!-- Hello.\nHi Hello\n-->\n" ==> " Hello.\nHi Hello\n"
   withTags = MkTTest
 
+namespace IssueBodyPrefix
+  relatedToPrefixTest : relatedToPrefix "123" === "Related to #123"
+  relatedToPrefixTest = Refl
+
 namespace RenderPrTree
   config : Config
   config =
@@ -134,4 +138,3 @@ namespace RenderPrTree
 
                       """
   onePrAboveOneBelowNoLeafShell = MkTTest
-
