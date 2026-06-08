@@ -607,7 +607,7 @@ identifyOrCreatePR @{config} {markAsDraft} {createIssueForPR} {intoBranch} branc
               "PR title cannot be an empty string."
               "Did not find a non-empty value for a PR title. Will use '\{fallbackTitle}'"
               fallbackTitle
-              (notEmptyString <$> getLineEnterForDefault "What would you like the title to be?"
+              (notEmptyString <$> getLineEnterForDefault "What would you like the PR title to be?"
                                                          defaultTitle)
 
       createPR : Promise' PullRequest

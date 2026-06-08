@@ -1,6 +1,6 @@
 {
   "name": "@mattpolzin/harmony",
-  "version": "6.9.1",
+  "version": "6.10.0",
   "engines": {
     "node": ">=18.0.0"
   },
