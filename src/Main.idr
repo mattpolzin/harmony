@@ -251,8 +251,11 @@ main =
      -- drop 1 for `harmony.js`
      args <- drop 1 <$> getArgs
      -- short circuit for help
-     when (args == [] || args == ["help"] || args == ["--help"]) $ do
-       putStrLn (help terminalColors terminalColumns)
+     when (args == []) $ do
+       putStrLn (help terminalColors False terminalColumns)
+       exitSuccess
+     when (args == ["help"] || args == ["--help"]) $ do
+       putStrLn (help terminalColors True terminalColumns)
        exitSuccess
      when (head' args == Just "help") $ do
        putStrLn (subcommandHelp terminalColors terminalColumns $ fromMaybe "" . head' $ drop 1 args)

@@ -1,0 +1,4 @@
+. ../setup.sh
+
+# with no arguments harmony should output a brief help
+$harmony

@@ -3,6 +3,7 @@ module Commands.Help
 import Data.Config
 import Data.String
 
+import CommandStubs
 import Util
 
 import Text.PrettyPrint.Prettyprinter
@@ -150,27 +151,24 @@ subcommandHelp useDecorations terminalColumns subcommand =
   in  renderString . layoutPretty (optionsWithBestWidth terminalColumns) $
         decorate (subcommandHelp' subcommand)
 
+briefHelp : Doc AnsiStyle
+briefHelp = vsep
+  [ "harmony" <++> subcommand' "<subcommand>"
+  , heading "Subcommands" . vsep $ subcommandSummary <$> allCommands
+  ]
+  where
+    subcommandSummary : Command -> Doc AnsiStyle
+    subcommandSummary cmd =
+      let name = cmd.name
+          desc = cmd.shortDescription
+          nameLength = length name
+          idt = longestCommandName `minus` nameLength
+      in subcommand' name <++> indent (cast idt) (pretty desc)
+
 helpDocs : Doc AnsiStyle
 helpDocs = vsep
   [ "harmony" <++> subcommand' "<subcommand>"
-  , heading "Subcommands" $ vsep
-      [ subcommandHelp' "branch"
-      , subcommandHelp' "config"
-      , subcommandHelp' "contribute"
-      , subcommandHelp' "graph"
-      , subcommandHelp' "health"
-      , subcommandHelp' "help"
-      , subcommandHelp' "label"
-      , subcommandHelp' "list"
-      , subcommandHelp' "pr"
-      , subcommandHelp' "quick"
-      , subcommandHelp' "reflect"
-      , subcommandHelp' "request"
-      , subcommandHelp' "rq"
-      , subcommandHelp' "sync"
-      , subcommandHelp' "version"
-      , subcommandHelp' "whoami"
-      ]
+  , heading "Subcommands" . vsep $ subcommandHelp' . name <$> allCommands
   , heading "Authentication" $ vsep
     [ reflow """
         Authentication with GitHub uses a Personal Access Token. You can
@@ -218,8 +216,9 @@ helpDocs = vsep
 
 ||| The Help string for Harmony.
 export
-help : (useDecorations : Bool) -> (terminalColumns : Nat) -> String
-help useDecorations terminalColumns =
+help : (useDecorations : Bool) -> (longform : Bool) -> (terminalColumns : Nat) -> String
+help useDecorations longform terminalColumns =
   let decorate = if useDecorations then id else unAnnotate
+      docs : Doc AnsiStyle = if longform then helpDocs else briefHelp
   in  renderString . layoutPretty (optionsWithBestWidth terminalColumns) $
-        decorate helpDocs
+        decorate docs
