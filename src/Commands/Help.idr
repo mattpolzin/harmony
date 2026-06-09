@@ -168,24 +168,7 @@ briefHelp = vsep
 helpDocs : Doc AnsiStyle
 helpDocs = vsep
   [ "harmony" <++> subcommand' "<subcommand>"
-  , heading "Subcommands" $ vsep
-      [ subcommandHelp' "branch"
-      , subcommandHelp' "config"
-      , subcommandHelp' "contribute"
-      , subcommandHelp' "graph"
-      , subcommandHelp' "health"
-      , subcommandHelp' "help"
-      , subcommandHelp' "label"
-      , subcommandHelp' "list"
-      , subcommandHelp' "pr"
-      , subcommandHelp' "quick"
-      , subcommandHelp' "reflect"
-      , subcommandHelp' "request"
-      , subcommandHelp' "rq"
-      , subcommandHelp' "sync"
-      , subcommandHelp' "version"
-      , subcommandHelp' "whoami"
-      ]
+  , heading "Subcommands" . vsep $ subcommandHelp' . name <$> allCommands
   , heading "Authentication" $ vsep
     [ reflow """
         Authentication with GitHub uses a Personal Access Token. You can
