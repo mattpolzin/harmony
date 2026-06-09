@@ -7,6 +7,7 @@ import Data.Maybe
 import Data.Promise
 import Data.String
 
+import CommandStubs
 import ShellCompletion.Util
 import Util
 
@@ -20,26 +21,11 @@ import System.Git
 
 ||| All available harmony subcommands (can be
 ||| specified as first argument to harmony).
-export
 allRootCmdsAndDescriptions : List (String, String)
-allRootCmdsAndDescriptions = 
-  [ ("request"   , "request review for the current branch (creating a PR if needed)")
-  , ("rq"        , "request review for the current branch (creating a PR if needed)")
-  , ("branch"    , "print a GitHub URI for the current branch")
-  , ("config"    , "get or set configuration options")
-  , ("contribute", "get one or more PRs awaiting your review")
-  , ("graph"     , "graph data about recent PR review activity for a team")
-  , ("health"    , "show open PR count by-month")
-  , ("help"      , "show harmony usage and help")
-  , ("label"     , "add one or more labels to a PR for the current branch, creating the PR if needed")
-  , ("list"      , "list teams or list team members on a particular team")
-  , ("pr"        , "get the current branch's PR or create one if needed")
-  , ("reflect"   , "show detailed information about your own review activity")
-  , ("sync"      , "pull labels, teams, etc. from GitHub and cache locally")
-  , ("version"   , "show harmony version information")
-  , ("whoami"    , "show information about the authenticated user")
-  , ("quick"     , "create a new GitHub issue and branch quickly")
-  ]
+allRootCmdsAndDescriptions = map unpack allCommands
+  where
+    unpack : Command -> (String, String)
+    unpack (C name shortDescription) = (name, shortDescription)
 
 allRootCmds : (s : CompletionStyle) -> List CompletionResult
 allRootCmds s = completionResult <$> allRootCmdsAndDescriptions

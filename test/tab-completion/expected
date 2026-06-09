@@ -1,6 +1,4 @@
 no subcommand:
-request
-rq
 branch
 config
 contribute
@@ -10,11 +8,13 @@ help
 label
 list
 pr
+quick
 reflect
+request
+rq
 sync
 version
 whoami
-quick
 
 no args suggests all settable props:
 requestTeams
