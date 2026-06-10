@@ -297,3 +297,4 @@ Print Harmony's version.
 
 ## `whoami`
 Print information about the currently configured and authenticated user.
+

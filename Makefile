@@ -59,14 +59,14 @@ version:
 	$(MAKE) readme
 	$(MAKE) manpage
 
-README_FILES = $(wildcard docs/*.md)
+DOC_FILES = $(wildcard docs/*.md)
 
-README.md: $(README_FILES)
+README.md: $(DOC_FILES)
 	bash ./scripts/generate-readme.sh
 
 readme: README.md
 
-man/harmony.1: $(README_FILES)
+man/harmony.1: $(DOC_FILES)
 	bash ./scripts/generate-manpage.sh
 
 manpage: man/harmony.1
