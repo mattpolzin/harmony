@@ -98,7 +98,7 @@ namespace RenderPrTree
                   ==> """
                       > ⨀ `main`
                       >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
-                      >> **[[** _you are here_ **]]**
+                      >> **[[** -> _you are here_ <- **]]**
                       >> **Fancy PR**
 
                       """
@@ -118,7 +118,7 @@ namespace RenderPrTree
                   ==> """
                       > ⨀ `main`
                       >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
-                      >> **[[** _you are here_ **]]**
+                      >> **[[** -> _you are here_ <- **]]**
                       >> **Fancy PR**
                       >>> ↖ `feature-2` (https://github.com/org/repo/pull/456)
                       >>> **Fancy PR**

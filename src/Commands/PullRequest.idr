@@ -427,7 +427,7 @@ renderPrTree @{config} format =
 
     markerLines : (marked : Bool) -> List String
     markerLines False = []
-    markerLines True = ["**[[** _you are here_ **]]**"]
+    markerLines True = ["**[[** -> _you are here_ <- **]]**"]
 
     renderNode : (Nat, String) -> PrTreeNode -> (Nat, String)
     renderNode (idx, acc) (Branch symbol name title) =
