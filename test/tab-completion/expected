@@ -72,5 +72,12 @@ output last arg suggests draft, issue, into, and print-tree args:
 --print-tree
 --into
 
+suggests output options for both -o and --output:
+shell
+markdown
+
+shell
+markdown
+
 bugfix flag partial match:
 --bugfix

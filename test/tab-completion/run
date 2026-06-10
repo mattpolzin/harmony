@@ -46,6 +46,12 @@ echo ''
 echo 'output last arg suggests draft, issue, into, and print-tree args:'
 $harmony --bash-completion pr -- markdown
 
+echo ''
+echo 'suggests output options for both -o and --output:'
+$harmony --bash-completion pr -- --output 
+echo ''
+$harmony --bash-completion pr -- -o
+
 #
 # quick command
 #
