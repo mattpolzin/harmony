@@ -8,6 +8,16 @@
 # NAME
 Harmony - Harmonize with coworkers around GitHub reviewing
 
+# INDEX
+
+- [NAME](#NAME)
+- [SYNOPSIS](#SYNOPSIS)
+- [DESCRIPTION](#DESCRIPTION)
+- [Dependencies](#Dependencies)
+- [Installation](#Installation)
+- [Usage](#Usage)
+- [SUBCOMMANDS](#SUBCOMMANDS)
+
 # SYNOPSIS
 `harmony branch` \
 `harmony config {property} [value]` \
