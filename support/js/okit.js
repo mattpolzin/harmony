@@ -192,7 +192,7 @@ const okit_list_pull_requests_for_base_branch = (octokit, owner, repo, base_bran
     octokit.graphql({
       query: `query getPrs($owner: String!, $repo: String!, $base_branch: String!) {
         repository(owner: $owner, name: $repo) {
-          pullRequests(baseRefName: $base_branch, first: 10) {
+          pullRequests(baseRefName: $base_branch, states: [OPEN], first: 10) {
             nodes { ... on PullRequest {
               ${graphql_pr_selections}
             }}
