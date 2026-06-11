@@ -1,3 +1,18 @@
+# 6.10.1 (The open road)
+Published: 2026-06-11T01:47:10Z
+
+## What's Changed
+* Short help (https://github.com/mattpolzin/harmony/pull/310)
+* make "you are here" text in PR description trees more visible (https://github.com/mattpolzin/harmony/pull/312)
+* add an author section to the manpage (https://github.com/mattpolzin/harmony/pull/313)
+* [fix] PR Tree includes closed PRs (https://github.com/mattpolzin/harmony/pull/316)
+
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.10.0...6.10.1
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 6.10.0 (Here's the issue with that)
 Published: 2026-06-08T02:04:55Z
 
