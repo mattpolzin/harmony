@@ -17,3 +17,5 @@ result
 
 test/**/output
 test/harmony-test.json.tmp
+
+docs/_1_9_INDEX.md
