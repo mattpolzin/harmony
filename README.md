@@ -504,3 +504,16 @@ Print Harmony's version.
 ## `whoami`
 Print information about the currently configured and authenticated user.
 
+# INDEX
+
+- [NAME](#NAME)
+- [SYNOPSIS](#SYNOPSIS)
+- [DESCRIPTION](#DESCRIPTION)
+- [Dependencies](#Dependencies)
+- [Installation](#Installation)
+- [Bash completion](#Bash-completion)
+- [Zsh completion](#Zsh-completion)
+- [Initial configuration](#Initial-configuration)
+- [Usage](#Usage)
+- [SUBCOMMANDS](#SUBCOMMANDS)
+
