@@ -495,11 +495,13 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , teamSlugs
                                             , orgMembers
                                             , defaultRemote
+                                            , bugfixPrefix
                                             , repoLabels
                                             , ignoredPRs
                                             , requestTeams
                                             , requestUsers
                                             , commentOnRequest
+                                            , branchParsing
                                             , theme
                                             ] <-
                                             lookupAll [
@@ -510,18 +512,18 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               , "teamSlugs"
                                               , "orgMembers"
                                               , "defaultRemote"
+                                              , "bugfixPRTitlePrefix"
                                               , "repoLabels"
                                               , "ignoredPRs"
                                               , "requestTeams"
                                               , "requestUsers"
                                               , "commentOnRequest"
+                                              , "branchParsing"
                                               , "theme"
                                               ] config
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           let maybeGithubUser = lookup "githubUser" config
-                                          let maybeBranchParsing = lookup "branchParsing" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
-                                          let maybeBugfixPrefix = lookup "bugfixPRTitlePrefix" config
                                           let maybeRepoProjects = lookup "repoProjects" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
@@ -531,14 +533,12 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           at <- bool requestTeams
                                           au <- bool requestUsers
                                           ca <- commentConfig commentOnRequest
-                                          bp <- maybe (Right Jira) branchConfig maybeBranchParsing
-                                          -- TODO 7.0.0: Make branchParsing required part of config file (default to none)
-                                          --             branchParsing lookup can be moved to the required lookupAll above.
+                                          bp <- branchConfig branchParsing
                                           prt <- maybe (Right False) bool maybePrTree
                                           -- TODO 8.0.0: Make addPrTreeDescription required part of config file (default to false)
                                           --             addPrTreeDescription lookup can be moved to the required lookupAll above.
                                           rp <- maybe (Right []) (array parseProjectRef) maybeRepoProjects
-                                          -- TODO 8.0.0: Make repoProjects required part of config file (default to [])
+                                          -- TODO 9.0.0: Make repoProjects required part of config file (default to [])
                                           --             repoProjects lookup can be moved to the required lookupAll above.
                                           ts <- array string teamSlugs
                                           rl <- array string repoLabels
@@ -546,9 +546,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           gu <- maybe (Right Nothing) (optional string) maybeGithubUser
-                                          bf <- maybe (Right Nothing) (optional string) maybeBugfixPrefix
-                                          -- TODO 7.0.0: Make githubUser required part of config file (default to Nothing)
-                                          --             githubUser lookup can be moved to the required lookupAll above.
+                                          bf <- optional string bugfixPrefix
                                           th <- (stringy "dark or light" parseString) theme
                                           pure $ MkConfig {
                                               updatedAt            = ua
