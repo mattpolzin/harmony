@@ -14,7 +14,7 @@ HEADINGS="$(cat "${OUTPUT_FILE}" | sed -nE 's/^##? ([A-Za-z ]+)$/\1/p' | sed 's/
 
 INDEX="$(
   for HEADING in ${HEADINGS}; do
-    LINK="$(echo "${HEADING}" | sed 's/#/-/g')"
+    LINK="$(echo "${HEADING}" | sed 's/#/-/g' | tr '[:upper:]' '[:lower:]')"
     NAME="$(echo "${HEADING}" | sed 's/#/ /g')"
     echo "- [${NAME}](#${LINK})"
   done

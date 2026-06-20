@@ -506,14 +506,14 @@ Print information about the currently configured and authenticated user.
 
 # INDEX
 
-- [NAME](#NAME)
-- [SYNOPSIS](#SYNOPSIS)
-- [DESCRIPTION](#DESCRIPTION)
-- [Dependencies](#Dependencies)
-- [Installation](#Installation)
-- [Bash completion](#Bash-completion)
-- [Zsh completion](#Zsh-completion)
-- [Initial configuration](#Initial-configuration)
-- [Usage](#Usage)
-- [SUBCOMMANDS](#SUBCOMMANDS)
+- [NAME](#name)
+- [SYNOPSIS](#synopsis)
+- [DESCRIPTION](#description)
+- [Dependencies](#dependencies)
+- [Installation](#installation)
+- [Bash completion](#bash-completion)
+- [Zsh completion](#zsh-completion)
+- [Initial configuration](#initial-configuration)
+- [Usage](#usage)
+- [SUBCOMMANDS](#subcommands)
 
