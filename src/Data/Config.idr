@@ -404,27 +404,48 @@ Show Config where
   show config = unlines [
       "           updatedAt: \{show config.updatedAt}"
     , "               theme: \{show config.theme}"
-    , "         org or user: \{show config.org}"
-    , "                repo: \{show config.repo}"
-    , "       defaultRemote: \{show config.defaultRemote}"
-    , "          mainBranch: \{show config.mainBranch}"
+    , "         org or user: \{config.org}"
+    , "                repo: \{config.repo}"
+    , "       defaultRemote: \{config.defaultRemote}"
+    , "          mainBranch: \{config.mainBranch}"
     , "        requestTeams: \{show config.requestTeams}"
     , "        requestUsers: \{show config.requestUsers}"
     , "    commentOnRequest: \{show config.commentOnRequest}"
     , "       branchParsing: \{show config.branchParsing}"
-    , " bugfixPRTitlePrefix: \{show config.bugfixPRTitlePrefix}"
+    , " bugfixPRTitlePrefix: \{maybe "Not set" show config.bugfixPRTitlePrefix}"
     , "addPrTreeDescription: \{show config.addPrTreeDescription}"
-    , "           teamSlugs: \{show config.teamSlugs}"
-    , "          repoLabels: \{show config.repoLabels}"
-    , "        repoProjects: \{show config.repoProjects}"
-    , "          orgMembers: \{show config.orgMembers}"
-    , "          ignoredPRs: \{show config.ignoredPRs}"
+    , "           teamSlugs: \{newlineList config.teamSlugs}"
+    , "          repoLabels: \{newlineList $ show <$> config.repoLabels}"
+    , "        repoProjects: \{newlineList $ show <$> config.repoProjects}"
+    , "          orgMembers: \{newlineList $ config.orgMembers}"
+    , "          ignoredPRs: \{newlineList $ show <$> config.ignoredPRs}"
     , "           githubPAT: \{personalAccessToken}"
-    , "          githubUser: \{show config.githubUser}"
+    , "          githubUser: \{maybe "Not set" id config.githubUser}"
     ]
       where
         personalAccessToken : String
         personalAccessToken = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show config.githubPAT
+
+        spacer : String
+        spacer = "                      "
+
+        newlineList : List String -> String
+        newlineList []   = "None"
+        newlineList strs =
+          let maxLength = foldr (max . String.length) 0 strs
+              padding = 2 + maxLength
+          in go padding strs
+
+          where
+            go : Nat -> List String -> String
+            go _ [] = ""
+            go _ [str] = str
+            go padding (str1 :: str2 :: rest) = 
+              let between = replicate (padding `minus` (length str1)) ' '
+                  line = "\{str1}\{between}\{str2}"
+              in  case rest of
+                       [] => line
+                       _ => line ++ "\n\{spacer}" ++ (go padding rest)
 
 --
 -- JSON Serialization
@@ -451,7 +472,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch
     , ("orgMembers"           , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"            , JArray $ JString <$> sort teamSlugs)
     , ("repoLabels"           , JArray $ JString <$> sort repoLabels)
-    , ("repoProjects"         , JArray $ (JString . show) <$> sort repoProjects)
+    , ("repoProjects"         , JArray $ json <$> sort repoProjects)
     , ("ignoredPRs"           , JArray $ JInteger . cast <$> sort ignoredPRs)
     , ("githubPAT"            , maybe JNull (JString . expose) githubPAT)
     , ("githubUser"           , maybe JNull JString githubUser)
