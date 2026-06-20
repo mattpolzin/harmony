@@ -10,13 +10,13 @@ cat ${FILES} > "${OUTPUT_FILE}"
 
 # Generate index
 INDEX_FILE_NAME='./docs/_1_9_INDEX.md'
-HEADINGS="$(cat "${OUTPUT_FILE}" | sed -nE 's/^##? ([A-Za-z ]+)$/\1/p')"
+HEADINGS="$(cat "${OUTPUT_FILE}" | sed -nE 's/^##? ([A-Za-z ]+)$/\1/p' | sed 's/ /#/g')"
 
 INDEX="$(
-  IFS=$'\n'
   for HEADING in ${HEADINGS}; do
-    LINK="$(echo "$HEADING" | sed -E 's/ /-/g')"
-    echo "- [${HEADING}](#${LINK})"
+    LINK="$(echo "${HEADING}" | sed 's/#/-/g')"
+    NAME="$(echo "${HEADING}" | sed 's/#/ /g')"
+    echo "- [${NAME}](#${LINK})"
   done
 )"
 
