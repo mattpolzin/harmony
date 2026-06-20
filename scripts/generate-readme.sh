@@ -25,7 +25,7 @@ echo "" >> "${INDEX_FILE_NAME}"
 echo "${INDEX}" >> "${INDEX_FILE_NAME}"
 echo "" >> "${INDEX_FILE_NAME}"
 
-NEW_FILES="$(echo $FILES "${INDEX_FILE_NAME}" | sort)"
+NEW_FILES="$(echo $FILES "${INDEX_FILE_NAME}" | xargs -n1 echo | sort)"
 
 # Regenerate with index
 cat ${NEW_FILES} > "${OUTPUT_FILE}"

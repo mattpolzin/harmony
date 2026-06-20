@@ -8,6 +8,19 @@
 # NAME
 Harmony - Harmonize with coworkers around GitHub reviewing
 
+# INDEX
+
+- [NAME](#name)
+- [SYNOPSIS](#synopsis)
+- [DESCRIPTION](#description)
+- [Dependencies](#dependencies)
+- [Installation](#installation)
+- [Bash completion](#bash-completion)
+- [Zsh completion](#zsh-completion)
+- [Initial configuration](#initial-configuration)
+- [Usage](#usage)
+- [SUBCOMMANDS](#subcommands)
+
 # SYNOPSIS
 `harmony branch` \
 `harmony config {property} [value]` \
@@ -503,17 +516,4 @@ Print Harmony's version.
 
 ## `whoami`
 Print information about the currently configured and authenticated user.
-
-# INDEX
-
-- [NAME](#name)
-- [SYNOPSIS](#synopsis)
-- [DESCRIPTION](#description)
-- [Dependencies](#dependencies)
-- [Installation](#installation)
-- [Bash completion](#bash-completion)
-- [Zsh completion](#zsh-completion)
-- [Initial configuration](#initial-configuration)
-- [Usage](#usage)
-- [SUBCOMMANDS](#subcommands)
 
