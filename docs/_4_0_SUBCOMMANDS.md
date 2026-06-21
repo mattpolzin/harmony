@@ -7,9 +7,9 @@ Many operating systems have an `open` command (though the name "open" is not
 ubiquitous); this means you can run something like `open $(harmony branch)` to
 open a web browser to the current branch on GitHub.
 
-## `config {property} [value]`
-Read the given configuration property. `harmony config <property> <value>` will
-set the configuration property.
+## `config [property] [value]`
+Read a given configuration property or show all current configuration.
+`harmony config <property> <value>` will set the configuration property.
 
 Not all configuration properties can be read/set with this command.
 
