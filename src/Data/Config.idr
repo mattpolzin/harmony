@@ -15,6 +15,9 @@ import public Data.DPair
 import Language.Reflection
 import Util.Reflection
 
+import Text.PrettyPrint.Prettyprinter
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
+
 %language ElabReflection
 
 %default total
@@ -252,11 +255,6 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
     , """
       Determines whether to add a tree of PRs to the description \
       for any PR that is into a branch other than the `mainBranch` configured.
-          This looks like:
-            > ⨀ `main`
-            >> ↖ `feature-1` (https://github.com/org/repo/pull/1234)
-            >> **The first feature**
-            >>>> ↖ `feature-2`
       """
     )
   DefaultRemote   : SettableProp
@@ -396,32 +394,32 @@ export
 config.editor = config.ephemeral.editor
 
 --
--- Show
+-- Show / Pretty
 --
 
-export
-Show Config where
-  show config = unlines [
-      "           updatedAt: \{show config.updatedAt}"
-    , "               theme: \{show config.theme}"
-    , "         org or user: \{config.org}"
-    , "                repo: \{config.repo}"
-    , "       defaultRemote: \{config.defaultRemote}"
-    , "          mainBranch: \{config.mainBranch}"
-    , "        requestTeams: \{show config.requestTeams}"
-    , "        requestUsers: \{show config.requestUsers}"
-    , "    commentOnRequest: \{show config.commentOnRequest}"
-    , "       branchParsing: \{show config.branchParsing}"
-    , " bugfixPRTitlePrefix: \{maybe "Not set" show config.bugfixPRTitlePrefix}"
-    , "addPrTreeDescription: \{show config.addPrTreeDescription}"
-    , "           teamSlugs: \{newlineList config.teamSlugs}"
-    , "          repoLabels: \{newlineList $ show <$> config.repoLabels}"
-    , "        repoProjects: \{newlineList $ show <$> config.repoProjects}"
-    , "          orgMembers: \{newlineList $ config.orgMembers}"
-    , "          ignoredPRs: \{newlineList $ show <$> config.ignoredPRs}"
-    , "           githubPAT: \{personalAccessToken}"
-    , "          githubUser: \{maybe "Not set" id config.githubUser}"
-    ]
+export 
+render : Config -> Doc AnsiStyle
+render config = vsep
+  [ "           updatedAt:" <++> (pretty $ show config.updatedAt)
+  , "               theme:" <++> (pretty $ show config.theme)
+  , "         org or user:" <++> (pretty $ config.org)
+  , "                repo:" <++> (pretty $ config.repo)
+  , "       defaultRemote:" <++> (pretty $ config.defaultRemote)
+  , "          mainBranch:" <++> (pretty $ config.mainBranch)
+  , "        requestTeams:" <++> (pretty $ show config.requestTeams)
+  , "        requestUsers:" <++> (pretty $ show config.requestUsers)
+  , "    commentOnRequest:" <++> (pretty $ show config.commentOnRequest)
+  , "       branchParsing:" <++> (pretty $ show config.branchParsing)
+  , " bugfixPRTitlePrefix:" <++> (pretty $ maybe "Not set" show config.bugfixPRTitlePrefix)
+  , "addPrTreeDescription:" <++> (pretty $ show config.addPrTreeDescription)
+  , "           teamSlugs:" <++> (pretty $ newlineList config.teamSlugs)
+  , "          repoLabels:" <++> (pretty $ newlineList $ show <$> config.repoLabels)
+  , "        repoProjects:" <++> (pretty $ newlineList $ show <$> config.repoProjects)
+  , "          orgMembers:" <++> (pretty $ newlineList $ config.orgMembers)
+  , "          ignoredPRs:" <++> (pretty $ newlineList $ show <$> config.ignoredPRs)
+  , "           githubPAT:" <++> (pretty $ personalAccessToken)
+  , "          githubUser:" <++> (pretty $ maybe "Not set" id config.githubUser)
+  ]
       where
         personalAccessToken : String
         personalAccessToken = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show config.githubPAT
@@ -446,6 +444,10 @@ Show Config where
               in  case rest of
                        [] => line
                        _ => line ++ "\n\{spacer}" ++ (go padding rest)
+
+export
+Show Config where
+  show = renderString . layoutUnbounded . unAnnotate . render
 
 --
 -- JSON Serialization

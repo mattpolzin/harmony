@@ -191,11 +191,16 @@ handleConfiguredArgs : Config =>
                        (envGithubPAT : Maybe String)
                     -> List String
                     -> Promise' ()
-handleConfiguredArgs _ ["config"] =
-  reject $ "The config command expects one or two arguments. "
-        ++ "Specify a property to read it out or specify both a property and a value to set it to."
-        ++ "\n\n"
-        ++ settablePropsWithHelp
+handleConfiguredArgs @{config} _ ["config"] =
+  renderIO $
+    vsep [ "Specify a property to read it out or specify both a property and a value to set it to."
+         , ""
+         , annotate underline "Settable Properties:"
+         , settablePropsWithHelp
+         , ""
+         , annotate underline "Current Configuration:"
+         , render config
+         ]
 handleConfiguredArgs _ ["config", prop] =
   do value <- getConfig prop
      putStrLn value

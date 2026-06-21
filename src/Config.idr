@@ -19,6 +19,7 @@ import System.Git
 import Util
 
 import Text.PrettyPrint.Prettyprinter
+import Text.PrettyPrint.Prettyprinter.Util
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
@@ -182,11 +183,13 @@ getConfig @{config} prop with (settablePropNamed prop)
   getConfig @{config} prop | (Just (Evidence _ p)) = pure $ (propGetter p) config
 
 export
-settablePropsWithHelp : Config => String
-settablePropsWithHelp = renderString . vsep $ help <$> settablePropNamesAndHelp
+settablePropsWithHelp : Config => Doc AnsiStyle
+settablePropsWithHelp = vsep $ help <$> settablePropNamesAndHelp
   where
     help : (String, String) -> Doc AnsiStyle
-    help (n, h) = (annotate (color Green) $ pretty n) <+> pretty ": \{replicate (longestSettablePropName `minus` (length n)) ' ' ++ h}"
+    help (n, h) =
+      let padding : Int := cast $ longestSettablePropName `minus` (length n)
+      in  (annotate (color Green) $ pretty n) <+> pretty ":" <++> indent padding (reflow h)
 
 ||| Look for "origin" in a list of remote names or else
 ||| fallback to the first name.
