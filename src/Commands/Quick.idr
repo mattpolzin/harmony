@@ -82,7 +82,7 @@ data IssueIdent = NoInfo
                 | IssueTitle String
                 | IssueNumber String
 
-||| Quickly create a branch to go along with a new GitHub or existing issue.
+||| Quickly create a branch to go along with a new or existing GitHub issue.
 export
 quickStartNewWork : Config =>
                     Octokit =>
