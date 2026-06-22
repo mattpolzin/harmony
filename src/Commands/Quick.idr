@@ -5,6 +5,7 @@ import Data.Issue
 import Data.List
 import Data.Promise
 import Data.String
+import public Data.Project
 
 import FFI.GitHub
 import Util
@@ -33,8 +34,9 @@ createNewIssueWithMessage : Config =>
                             (message : String)
                          -> (baseBranchGuess : String)
                          -> (issueTitle : Maybe String)
+                         -> (project : Maybe ProjectRef)
                          -> Promise' Issue
-createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' = do
+createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project = do
   putStrLn message
   putStrLn ""
 
@@ -52,7 +54,7 @@ createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' = do
                     Just ed => either (const "") id <$>
                                  editorDescription ed Nothing bodyPrefix
 
-  createIssue config.org config.repo issueTitle issueBody
+  createIssue config.org config.repo project issueTitle issueBody
     where
       issuePrompt : String
       issuePrompt = "What would you like the issue description to be (two blank lines to finish)?"
@@ -71,6 +73,7 @@ createNewIssue : Config =>
                  Octokit =>
                  (baseBranchGuess : String)
               -> (issueTitle : Maybe String)
+              -> (project : Maybe ProjectRef)
               -> Promise' Issue
 createNewIssue = createNewIssueWithMessage "Creating a new GitHub issue and branch."
 
@@ -85,16 +88,17 @@ quickStartNewWork : Config =>
                     Octokit =>
                     IssueCategory
                  -> (issueIdent : IssueIdent)
+                 -> {default Nothing project : Maybe ProjectRef}
                  -> Promise' ()
-quickStartNewWork @{config} issueCategory issueIdent = do
+quickStartNewWork @{config} issueCategory issueIdent {project} = do
   -- We guess that the base branch is possibly the branch
   -- checked out when the new issue is being created.
   baseBranchGuess <- currentBranch
   let createIssue = createNewIssue baseBranchGuess
 
   issue <- case issueIdent of
-                NoInfo                 => createIssue Nothing
-                IssueTitle  issueTitle => createIssue (Just issueTitle)
+                NoInfo                 => createIssue Nothing project
+                IssueTitle  issueTitle => createIssue (Just issueTitle) project
                 IssueNumber issueNum   => getIssue config.org config.repo issueNum
 
   let branchTemplate = "\{branchPrefix}/\{show issue.number}/"

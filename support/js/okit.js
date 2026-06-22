@@ -394,11 +394,11 @@ const okit_list_open_issues_graphql = (octokit, owner, repo, onSuccess, onFailur
   )
 
 // Create Issue
-const okit_create_issue = (octokit, opaque_repo_graphql_id, title, body, onSuccess, onFailure) =>
+const okit_create_issue = (octokit, opaque_repo_graphql_id, opaque_project_v2_graphql_id, title, body, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.graphql({
-      query: `mutation createIssue($opaque_repo_graphql_id: ID!, $title: String!, $body: String!) {
-        createIssue(input: {repositoryId: $opaque_repo_graphql_id, title: $title, body: $body}) {
+      query: `mutation createIssue($opaque_repo_graphql_id: ID!, $projectIds: ID, $title: String!, $body: String!) {
+        createIssue(input: {repositoryId: $opaque_repo_graphql_id, projectV2Ids: $projectIds, title: $title, body: $body}) {
           issue {
             ${graphql_issue_selections}
           }
@@ -406,6 +406,7 @@ const okit_create_issue = (octokit, opaque_repo_graphql_id, title, body, onSucce
       }
       `,
       opaque_repo_graphql_id,
+      opaque_project_v2_graphql_id: opaque_project_v2_graphql_id ? [opaque_project_v2_graphql_id] : [],
       title,
       body
     }),

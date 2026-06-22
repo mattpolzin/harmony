@@ -28,6 +28,9 @@ data Octokit = Kit (Ptr OctokitRef)
 export
 data OctokitGraphQlId = GQLId String
 
+gqlId : OctokitGraphQlId -> String
+gqlId (GQLId str) = str
+
 %foreign okit_ffi "octokit"
 prim__octokit : (authToken : String) -> PrimIO (Ptr OctokitRef)
 
@@ -285,6 +288,7 @@ getIssue @{Kit ptr} owner repo issueNumber =
 %foreign okit_ffi "create_issue"
 prim__createIssue : Ptr OctokitRef 
                  -> (opaqueGraphQlRepoId : String) 
+                 -> (opaqueGraphQlProjectId : Maybe String) 
                  -> (title : String) 
                  -> (body : String) 
                  -> (onSuccess : String -> PrimIO ()) 
@@ -294,23 +298,25 @@ prim__createIssue : Ptr OctokitRef
 export
 createIssue' : Octokit => 
              (repo : OctokitGraphQlId) 
+          -> (project : Maybe OctokitGraphQlId) 
           -> (title : String) 
           -> (body : String) 
           -> Promise String Issue
-createIssue' @{Kit ptr} (GQLId repoId) title body =
+createIssue' @{Kit ptr} (GQLId repoId) project title body =
   parsePrimResult parseIssueString $
-    prim__createIssue ptr repoId title body
+    prim__createIssue ptr repoId (gqlId <$> project) title body
 
 export
 createIssue : Octokit => 
             (owner : String) 
          -> (repo : String) 
+         -> (project : Maybe ProjectRef)
          -> (title : String) 
          -> (body : String) 
          -> Promise String Issue
-createIssue owner repo title body = do
+createIssue owner repo project title body = do
   repoId <- getRepoGraphQLId owner repo
-  createIssue' repoId title body
+  createIssue' repoId (GQLId . graphQlId <$> project) title body
 
 %foreign okit_ffi "create_comment"
 prim__createComment : Ptr OctokitRef 

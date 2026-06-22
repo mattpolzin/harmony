@@ -13,35 +13,39 @@ import Language.JSON.Accessors
 public export
 record ProjectRef where
   constructor MkProjectRef
-  ||| The project's "number" (as seen in URIs referring to the project).
+  ||| The project's opaque GraphQL identifier
+  graphQlId        : String
+  ||| The project's "number" (as seen in URIs referring to the project)
   number           : Integer
   ||| The project's title
   title            : String
 
 export
 Show ProjectRef where
-  show (MkProjectRef number title) = 
+  show (MkProjectRef graphQlId number title) = 
     "[\{show number}] \{title}"
 
 export
 Eq ProjectRef where
-  (MkProjectRef n1 t1) == (MkProjectRef n2 t2) = n1 == n2 && t1 == t2
+  (MkProjectRef id1 n1 t1) == (MkProjectRef id2 n2 t2) = id1 == id2 && n1 == n2 && t1 == t2
 
 export
 Ord ProjectRef where
-  (MkProjectRef n1 t1) > (MkProjectRef n2 t2) = n1 > n2 || (n1 == n2 && t1 > t2)
+  (MkProjectRef _ n1 t1) > (MkProjectRef _ n2 t2) = n1 > n2 || (n1 == n2 && t1 > t2)
 
-  (MkProjectRef n1 t1) < (MkProjectRef n2 t2) = n1 < n2 || (n1 == n2 && t1 < t2)
+  (MkProjectRef _ n1 t1) < (MkProjectRef _ n2 t2) = n1 < n2 || (n1 == n2 && t1 < t2)
 
 export
 parseProjectRef : JSON -> Either String ProjectRef
 parseProjectRef json =
  do projectRef <- object json
-    [projectNumber, projectTitle] <- lookupAll ["number", "title"] projectRef
+    [id, projectNumber, projectTitle] <- lookupAll ["graphQlId", "number", "title"] projectRef
+    graphQlId   <- string id
     number      <- integer projectNumber
     title       <- string projectTitle
     pure $ MkProjectRef {
-        number
+        graphQlId
+      , number
       , title
       }
 
@@ -59,7 +63,7 @@ parseProjectRefsString =
 
 export
 json : ProjectRef -> JSON
-json (MkProjectRef number title) = JObject [("number", JInteger number), ("title", JString title)]
+json (MkProjectRef graphQlId number title) = JObject [("graphQlId", JString graphQlId), ("number", JInteger number), ("title", JString title)]
 
 public export
 record Project where
@@ -88,7 +92,7 @@ Show Project where
 
 export
 (.reference) : Project -> ProjectRef
-p.reference = MkProjectRef p.number p.title
+p.reference = MkProjectRef p.graphQlId p.number p.title
 
 export
 reference : Project -> ProjectRef
