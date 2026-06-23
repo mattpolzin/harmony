@@ -10,6 +10,8 @@ import public Data.Project
 import FFI.GitHub
 import Util
 
+import ShellCompletion.Util
+
 import System.Git
 import System.File
 
@@ -24,6 +26,24 @@ Show IssueCategory where
 
 dasherize : String -> String
 dasherize = pack . replaceOn ' ' '-' . unpack
+
+||| In order to support tab completion of multi-word project titles, spaces
+||| have been turned into another character to "slugify" the labels. Still, it
+||| is possible the user has entered a project title that literally contains
+||| the character used during slugification, so to unslugify, we first see if a
+||| project appears in the configured list of projects. If it does then we use
+||| it exactly but if it doesn't then we unslugify it before using it.
+export
+projectFromUnsluggifiedTitle : (configProjectRefs : List ProjectRef)
+                            -> (slugifiedTitle : String)
+                            -> Maybe ProjectRef
+projectFromUnsluggifiedTitle configProjects slugifiedTitle =
+  case findByTitle slugifiedTitle of
+       Just project => Just project
+       Nothing      => findByTitle $ unslugify slugifiedTitle
+  where
+    findByTitle : String -> Maybe ProjectRef
+    findByTitle title = find (\p => (p.title == title)) configProjects 
 
 branchNameSuggestion : String -> String
 branchNameSuggestion = toLower . dasherize

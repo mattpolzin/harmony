@@ -532,20 +532,35 @@ branch @{config} = do
   let uri = "https://github.com/\{org}/\{repo}/tree/\{branch}"
   putStrLn uri
 
+data ProjectArg = Num Integer | Title String
+
 export
-data QuickArg = ABugfix | IssueNumOrTitle String
+data QuickArg = ABugfix | AProject ProjectArg | IssueNumOrTitle String
 
 export
 parseQuickArgs : List String -> List QuickArg
 parseQuickArgs [] = []
 parseQuickArgs ("--bugfix" :: xs) = ABugfix :: parseQuickArgs xs
+parseQuickArgs ("--project" :: numOrTitle :: xs) = 
+  case parseInteger numOrTitle of
+       Just n => AProject (Num n) :: parseQuickArgs xs
+       Nothing => AProject (Title numOrTitle) :: parseQuickArgs xs
 parseQuickArgs (titleStr :: xs) = IssueNumOrTitle titleStr :: parseQuickArgs xs
+
+projectArgs : List QuickArg -> List ProjectArg
+projectArgs = foldl go []
+  where
+    go : List ProjectArg -> QuickArg -> List ProjectArg
+    go ps ABugfix = ps
+    go ps (IssueNumOrTitle _) = ps
+    go ps (AProject p) = p :: ps
 
 titleArg : List QuickArg -> Maybe String
 titleArg = foldl go Nothing
   where
     go : Maybe String -> QuickArg -> Maybe String
     go mstr ABugfix = mstr
+    go mstr (AProject _) = mstr
     go Nothing (IssueNumOrTitle str) = Just str
     go (Just x) (IssueNumOrTitle str) = Just $ "\{x} \{str}"
 
@@ -570,4 +585,21 @@ quick : Config =>
         Octokit =>
         (args : List QuickArg)
      -> Promise' ()
-quick args = quickStartNewWork (issueCategory args) (titleOrNumberArg args)
+quick @{config} args = do
+  project <- maybeProject
+  quickStartNewWork (issueCategory args)
+                    (titleOrNumberArg args)
+                    {project}
+
+  where
+    projectFromChoices : ProjectArg -> Maybe ProjectRef
+    projectFromChoices (Num   i) = find ((i ==) . number) config.repoProjects
+    projectFromChoices (Title t) = projectFromUnsluggifiedTitle config.repoProjects t
+
+    maybeProject : Promise' (Maybe ProjectRef)
+    maybeProject =
+      case projectArgs args of
+           (_ :: _ :: _) => reject "Only one project per new issue is currently supported"
+           [arg] => pure $ projectFromChoices arg
+           []    => pure Nothing
+
