@@ -52,7 +52,7 @@ addPrTreeDescription: False
                       "enhancement"       "good first issue"
                       "help wanted"       "invalid"
                       "question"          "wontfix"
-        repoProjects: None
+        repoProjects: [456] test project
           orgMembers: None
           ignoredPRs: None
            githubPAT: Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)

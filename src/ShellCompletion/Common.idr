@@ -4,6 +4,7 @@ import Data.CompletionStyle
 import Data.Config
 import Data.Issue
 import Data.Maybe
+import Data.Project
 import Data.Promise
 import Data.String
 
@@ -32,11 +33,25 @@ allRootCmds s = completionResult <$> allRootCmdsAndDescriptions
 
 allQuickCmdOptsAndDescriptions : List (String, String)
 allQuickCmdOptsAndDescriptions =
-  [ ("--bugfix", "create a bugfix branch for the new issue")
+  [ ("--bugfix" , "create a bugfix branch for the new issue")
+  , ("--project", "associate an existing project with the new issue")
   ]
 
 allQuickCmdOpts : (s : CompletionStyle) -> List CompletionResult
 allQuickCmdOpts s = completionResult <$> allQuickCmdOptsAndDescriptions
+
+allProjectOptsAndDescriptions : Config -> List (String, String)
+allProjectOptsAndDescriptions config =
+  config.repoProjects >>= numAndTitle
+  
+  where
+    numAndTitle : ProjectRef -> List (String, String)
+    numAndTitle proj = [ (show proj.number, proj.title)
+                       , (slugify proj.title, "\{config.repo} project")
+                       ]
+
+allProjectOpts : (s : CompletionStyle) -> Config -> List CompletionResult
+allProjectOpts s config = completionResult <$> allProjectOptsAndDescriptions config
 
 allPrCmdOptsAndDescriptions : List (String, String)
 allPrCmdOptsAndDescriptions =
@@ -129,9 +144,10 @@ cmdOpts _ "version" _ _ = Just []
 cmdOpts s "help" "--"       "help" = all (allRootCmds s)
 cmdOpts s "help" partialArg "help" = someWithPrefix partialArg (allRootCmds s)
 
-cmdOpts s "quick" "--"       "quick" = all (allQuickCmdOpts s)
-cmdOpts s "quick" "-"        "quick" = someWithPrefix "--" (allQuickCmdOpts s)
-cmdOpts s "quick" partialArg "quick" = 
+cmdOpts s "quick" "--"       "quick"     = all (allQuickCmdOpts s)
+cmdOpts s "quick" "-"        "quick"     = someWithPrefix "--" (allQuickCmdOpts s)
+cmdOpts s "quick" _          "--project" = Nothing -- <- fall through to handle project autocompletion
+cmdOpts s "quick" partialArg "quick"     =
   if isHashPrefix partialArg
      then Nothing -- <- falls through to handle with config below.
      else someWithPrefix partialArg (allQuickCmdOpts s)
@@ -191,7 +207,7 @@ cmdOpts s "config" "--"         settableProp = all (allSettableValuesForProp s s
 cmdOpts s "config" partialValue settableProp =
   someWithPrefix partialValue (allSettableValuesForProp s settableProp)
 
--- anything else requires configuration being loaded
+-- anything else requires configuration being loaded, FFI, or GitHub requests
 cmdOpts _ _ _ _ = Nothing
 
 optsForPrIntoOption : HasIO io => (partialBranch : String) -> io (Maybe (List String))
@@ -228,6 +244,10 @@ optsForRequestCmd @{config} s partialArg =
                    else config.teamSlugs
 
 ||| opts for which completion requires full harmony configuration.
+|||
+||| In many cases, the config file is more of a cache file used by completion
+||| to populate results without needing to make HTTP requests just to offer up
+||| suggestions at the CLI.
 export
 configuredOpts : Config => 
        (s : CompletionStyle)
@@ -238,7 +258,13 @@ configuredOpts : Config =>
 -- we assume we are not handling a root command (see @cmdOpts@ which
 -- should have already been called).
 
--- and the label command
+-- the quick command
+configuredOpts @{config} s "quick" "--" "--project" = 
+  stringify' (allProjectOpts s config)
+configuredOpts @{config} s "quick" partialProjectRef "--project" =
+  withPrefix partialProjectRef (allProjectOpts s config)
+
+-- the label command
 configuredOpts @{config} _ "label" "--"         _ = 
   let labels := describe "\{config.repo} label" . slugify <$> config.repoLabels
   in  name <$> labels
@@ -247,7 +273,7 @@ configuredOpts @{config} _ "label" partialLabel _ =
       filteredLabels := filter (isPrefixOf partialLabel) labels
   in  name <$> filteredLabels
 
--- then list, which only accepts a single team slug:
+-- list, which only accepts a single team slug:
 configuredOpts @{config} _ "list" "--"            "list" = 
   let teams := describe "\{config.repo} team" <$> config.teamSlugs
   in  name <$> teams
@@ -257,7 +283,7 @@ configuredOpts @{config} _ "list" partialTeamName "list" =
   in  name <$> filteredTeams
 configuredOpts @{config} _ "list" "--" _ = []
 
--- then graph, which only accepts a single team slug
+-- graph, which only accepts a single team slug
 configuredOpts @{config} _ "graph" "--"            "graph"       = "--completed" :: config.teamSlugs
 configuredOpts @{config} _ "graph" "--"            "--completed" = config.teamSlugs
 configuredOpts @{config} _ "graph" partialTeamName previous =
@@ -265,7 +291,7 @@ configuredOpts @{config} _ "graph" partialTeamName previous =
      then name <$> (filter (isPrefixOf partialTeamName) $ describe "\{config.repo} team" <$> config.teamSlugs)
      else []
 
--- then pr (handled partially above, but when labels are specified, handled here)
+-- pr (handled partially above, but when labels are specified, handled here)
 configuredOpts @{config} _ "pr" partialArg _ =
   if isHashPrefix partialArg
      then hashify . slugify <$> config.repoLabels
@@ -340,6 +366,7 @@ compareIssues u (MkIssue _ _ _ _ _ assignee1 (Just _)) (MkIssue _ _ _ _ _ assign
 compareIssues u (MkIssue _ _ _ _ _ assignee1 Nothing) (MkIssue _ _ _ _ _ assignee2 Nothing) =
   compareAssignees u assignee1 assignee2
 
+||| Opts for which completion requires reaching out to GitHub.
 export
 githubOpts : Config =>
              Lazy Octokit

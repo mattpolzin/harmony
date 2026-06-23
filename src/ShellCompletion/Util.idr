@@ -58,7 +58,7 @@ withPrefix prefixStr = stringify' . filter (isPrefixOf prefixStr)
 
 export
 someWithPrefix : (s : CompletionStyle) => (prefixStr : String) -> List (CompletionResult @{s}) -> Maybe (List String)
-someWithPrefix prefixStr = Just . stringify' . filter (isPrefixOf prefixStr)
+someWithPrefix = Just .: withPrefix
 
 ||| Like someWithPrefix except returns Nothing if it would have otherwise
 ||| returned Just [].

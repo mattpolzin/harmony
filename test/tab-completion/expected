@@ -79,5 +79,16 @@ markdown
 shell
 markdown
 
-bugfix flag partial match:
+bugfix or project flag partial match:
 --bugfix
+--project
+
+project all opts:
+456
+test◌project
+
+project opt partial match:
+456
+------
+------
+test◌project
