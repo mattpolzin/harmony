@@ -28,8 +28,9 @@ data Octokit = Kit (Ptr OctokitRef)
 export
 data OctokitGraphQlId = GQLId String
 
-gqlId : OctokitGraphQlId -> String
-gqlId (GQLId str) = str
+gqlIdStr : Maybe OctokitGraphQlId -> String
+gqlIdStr (Just (GQLId str)) = str
+gqlIdStr Nothing = "null"
 
 %foreign okit_ffi "octokit"
 prim__octokit : (authToken : String) -> PrimIO (Ptr OctokitRef)
@@ -288,7 +289,7 @@ getIssue @{Kit ptr} owner repo issueNumber =
 %foreign okit_ffi "create_issue"
 prim__createIssue : Ptr OctokitRef 
                  -> (opaqueGraphQlRepoId : String) 
-                 -> (opaqueGraphQlProjectId : Maybe String) 
+                 -> (opaqueGraphQlProjectId : String) 
                  -> (title : String) 
                  -> (body : String) 
                  -> (onSuccess : String -> PrimIO ()) 
@@ -304,7 +305,7 @@ createIssue' : Octokit =>
           -> Promise String Issue
 createIssue' @{Kit ptr} (GQLId repoId) project title body =
   parsePrimResult parseIssueString $
-    prim__createIssue ptr repoId (gqlId <$> project) title body
+    prim__createIssue ptr repoId (gqlIdStr project) title body
 
 export
 createIssue : Octokit => 
