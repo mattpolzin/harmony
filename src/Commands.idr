@@ -534,6 +534,10 @@ branch @{config} = do
 
 data ProjectArg = Num Integer | Title String
 
+Show ProjectArg where
+  show (Num i) = "number \{show i}"
+  show (Title str) = "\"\{str}\""
+
 export
 data QuickArg = ABugfix | AProject ProjectArg | IssueNumOrTitle String
 
@@ -600,6 +604,8 @@ quick @{config} args = do
     maybeProject =
       case projectArgs args of
            (_ :: _ :: _) => reject "Only one project per new issue is currently supported"
-           [arg] => pure $ projectFromChoices arg
+           [arg] => maybe (reject "The specified project (\{show arg}) could not be found. Perhaps you need to run `harmony sync` to pick up a very new project?")
+                          (pure . Just)
+                          (projectFromChoices arg)
            []    => pure Nothing
 
