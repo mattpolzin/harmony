@@ -91,7 +91,10 @@ subcommandHelp' n@"pr" = subcommand n [ argument False "--ready"
   , reflow "Optionally print a pr tree with the --print-tree flag."
   , reflow "Optionally output in markdown or shell (default) format."
   ]
-subcommandHelp' n@"contribute" = subcommand n [argument False "-c/--checkout | -l/--list", argument False "-<num>", argument False "-i/--ignore {<uri>/<pr-number>}"]
+subcommandHelp' n@"contribute" = subcommand n [ argument False "-c/--checkout | -l/--list"
+                                              , argument False "-<num>"
+                                              , argument False "-i/--ignore {<uri> | <pr-number>}"
+                                              ]
   [ reflow """
       Contribute to an open PR. Prints a URL. Prioritizes PRs you are
       requested to review but will also return other PRs.
@@ -116,7 +119,11 @@ subcommandHelp' n@"graph"   = subcommand n [argument False "-c/--completed", arg
   [reflow "Graph the relative review workload of the members of the given GitHub Team."]
 subcommandHelp' n@"help"    = subcommand n [argument False "<subcommand>"] ["Print help"]
 subcommandHelp' n@"version" = subcommand n [] ["Print version"]
-subcommandHelp' n@"quick"   = subcommand n [argument False "--bugfix", argument False "<title> | #<issue-number>", argument False "..."] [
+subcommandHelp' n@"quick"   = subcommand n [ argument False "--bugfix"
+                                           , argument False "--project {<project-number> | <project-title>}"
+                                           , argument False "<title> | #<issue-number>"
+                                           , argument False "..."
+                                           ] [
     hcat [ reflow "Quickly spin up new work with a GitHub issue and associated feature branch. If you have harmony configured to parse GitHub issue numbers ("
          ,  shell "harmony config branchParsing github"
          , reflow ") then any PR created from the new branch will automatically link to the new ticket in its description."
@@ -126,12 +133,19 @@ subcommandHelp' n@"quick"   = subcommand n [argument False "--bugfix", argument 
       --bugfix flag is specified, the 'bugfix' prefix will be used.
       """
   , reflow """
+      By default the issue created will not be associated with any projects. If you
+      specify the --project option with either a project number or project title
+      then that project will be looked up and associated with the new issue. You
+      cannot create new projects this way; only existing projects are supported.
+      """
+  , reflow """
       If your only argument (possibly in addition to the bugfix flag) is
       #<issue-number> for an existing GitHub issue then the new branch will
       point at that existing issue. Otherwise, all additional arguments other
-      than --bugfix will be used as the issue title. If you don't give any
-      arguments then you will be prompted to enter the issue title
-      interactively. You will also be prompted for the issue description.
+      than --bugfix and --project will be used as the issue title. If you don't
+      specify the title as CLI arguments, you will be prompted to enter the
+      issue title interactively. You will also be prompted for the issue
+      description interactively regardless.
       """
   ]
 subcommandHelp' n@"sync"    = subcommand n [] ["Synchronize local config with information from GitHub."]

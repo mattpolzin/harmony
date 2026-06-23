@@ -437,7 +437,7 @@ Create a GitHub issue and then create a PR linked to that issue:
 .EX
 harmony pr \-\-issue
 .EE
-.SS \f[CR]quick [\-\-bugfix] [issue\-title | #<issue\-number>] [...]\f[R]
+.SS \f[CR]quick [\-\-bugfix] [\-\-project {<project\-number> | <project\-title>}] [issue\-title | #<issue\-number>] [...]\f[R]
 Helps you create a new GitHub issue and a branch to work on that issue
 all in one go.
 The branch name will be structured such that if you have GitHub branch
@@ -448,14 +448,22 @@ By default the branch created will be prefixed with \f[CR]feature\f[R]
 but if you specify the \f[CR]\-\-bugfix\f[R] flag then the branch\(cqs
 prefix will be \f[CR]bugfix\f[R].
 .PP
+By default the issue created will not be associated with any projects.
+If you specify the \f[CR]\-\-project\f[R] option with either a project
+number or project title then that project will be looked up and
+associated with the new issue.
+You cannot create new projects this way; only existing projects are
+supported.
+.PP
 If your only argument (possibly in addition to the bugfix flag) is
 \f[CR]#<issue\-number>\f[R] for an existing GitHub issue then the new
 branch will point at that existing issue.
-Otherwise, all additional arguments other than \f[CR]\-\-bugfix\f[R]
-will be used as the issue title.
-If you don\(cqt give any arguments then you will be prompted to enter
-the issue title interactively.
-You will also be prompted for the issue description.
+Otherwise, all additional arguments other than \f[CR]\-\-bugfix\f[R] and
+\f[CR]\-\-project {ref}\f[R] will be used as the issue title.
+If you don\(cqt specify a title at the CLI then you will be prompted to
+enter the issue title interactively.
+You will also be prompted for the issue description interactively
+regardless.
 .SS \f[CR]reflect\f[R]
 Show a summary of your review requests and authored pull requests.
 .SS \f[CR]request {team\-slug | +user\-login} [options]\f[R]
