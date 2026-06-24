@@ -1,3 +1,26 @@
+# 7.0.0 (Project Optimism)
+Published: 2026-06-24T05:39:03Z
+
+## What's Changed
+* Add an Index section to the README (https://github.com/mattpolzin/harmony/pull/317)
+* allow setting the project for a new issue created by harmony's quick command (https://github.com/mattpolzin/harmony/pull/292)
+* the `config` command now considers no arguments to be valid. It will print options that can be read/set and also list out the current state of all configured options.
+* the output format of the current config state after running `harmony sync` (and, as of v7.0.0, `harmony config` with no additional  options) has been updated to be easier to read.
+
+### Breaking Changes
+The GitHub API Token used with Harmony must now have the `read:project` scope in addition to the previously required scopes.
+
+There are some previously optional configuration entries that are now required in `harmony.json` files. If you were not already running a `6.x` release of Harmony, update to Harmony v6.10.1 and run `harmony sync` before updating to v7.0.0. Your config file will automatically be brought up to date.
+
+#### Now-Required Config entries
+- `bugfixPRTitlePrefix` [optional string]. Set this to `null` if you don't want to have a prefix. If set, harmony will prefix new PR titles (by default suggestion only) with the given string. For example, '[fix]'.
+- `branchParsing` [string]. Defaults to `'none'`. If set to `'jira'`, attempt to extract a Jira slug from branch names and use that in the PR title. If set to `'github'`, attempt to extract a Github issue number from branch names and use that in the PR body.
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/6.10.1...7.0.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 6.10.1 (The open road)
 Published: 2026-06-11T01:47:10Z
 
