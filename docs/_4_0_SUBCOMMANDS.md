@@ -45,7 +45,7 @@ Not all configuration properties can be read/set with this command.
 `githubPAT` (optional string) 
 : If the `$GITHUB_PAT` and `$GH_TOKEN` environment variables are not set, this Personal Access Token is used to authenticate with GitHub.
 
-## `contribute [options]`
+## `contribute [-c/--checkout | -l/--list] [-<num>] [-i/--ignore {<uri> | <pr-number>}]`
 Print the URI of the oldest non-draft PR waiting for your review. If you are not
 requested for review on any PRs, Harmony will suggest a PR that your review is
 not requested on.
@@ -173,8 +173,10 @@ You can specify the branch to merge into via the `--into` CLI argument if you
 want to as an alternative to the interactive prompt.
 
 You can also specify any number of labels to apply by prefixing them with '#'.
-For example, `harmony pr #backport #bugfix` would create a PR and apply the
-`backport` and `bugfix` labels.
+For example, `harmony pr \#backport \#bugfix` would create a PR and apply the
+`backport` and `bugfix` labels. Note that some shells will require you to escape
+the `#` or else it will be considered a comment and not passed to harmony as an
+argument.
 
 If you are using harmony from a script or some other environment without TTY
 support, harmony will print a GitHub URL that can be used to create the PR. This
@@ -193,7 +195,7 @@ harmony pr --draft
 
 Create a PR for the current branch and add the `urgent` label:
 ```shell
-harmony pr #urgent
+harmony pr \#urgent
 ```
 
 Create a pull request that will merge into the hypothetical pre-existing
@@ -229,13 +231,34 @@ title at the CLI then you will be prompted to enter the issue title
 interactively. You will also be prompted for the issue description interactively
 regardless.
 
+### Examples
+Create an issue and bugfix branch:
+```shell
+harmony quick --bugfix
+```
+
+Create an issue with the title 'widget fails to create' and bugfix branch:
+```shell
+harmony quick --bugfix widget fails to create
+```
+
+Create a branch for the existing issue with GitHub issue number `345`:
+```shell
+harmony quick \#345
+```
+
+Create an issue (and branch) and associate it with the 'Cool Features' project:
+```shell
+harmony quick --project "Cool Features"
+```
+
 ## `reflect`
 Show a summary of your review requests and authored pull requests.
 
 <!-- image location is intentionally relative to repository root -->
 ![Reflect Screenshot](./docs/images/reflect.png)
 
-## `request {team-slug | +user-login} [options]`
+## `request {<team-slug> | +<user-login>} [#<label>] [...]`
 Helps you create a PR if one does not exist yet and then it will request reviews
 from teams and/or users.
 

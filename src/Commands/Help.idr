@@ -66,7 +66,7 @@ subcommandHelp' n@"request" = subcommand n [argument True "<team-slug> | +<user-
       """
   , reflow "Optionally apply any number of labels by prefixing them with '#'."
   ]
-subcommandHelp' n@"config" = subcommand n [argument True "<property>", argument False "<value>"] $
+subcommandHelp' n@"config" = subcommand n [argument False "<property>", argument False "<value>"] $
   [ reflow """
       Get or set the value of a configuration property. Not all properties
       can be set and read via this subcommand.
@@ -83,13 +83,13 @@ subcommandHelp' n@"pr" = subcommand n [ argument False "--ready"
                                       , argument False "#<label>"
                                       , argument False "..."] $
   [ reflow "Identify an existing PR or create a new one for the current branch."
-  , reflow "Optionally apply any number of labels by prefixing them with '#'."
-  , reflow "Optionally mark a new or existing PR as a draft with the --draft flag."
-  , reflow "Optionally mark an existing PR as ready for review with the --ready flag."
-  , reflow "Optionally create and link a GitHub Issue with --issue."
-  , reflow "Optionally specify the branch to merge into with the --into option."
-  , reflow "Optionally print a pr tree with the --print-tree flag."
-  , reflow "Optionally output in markdown or shell (default) format."
+  , reflow "Apply any number of labels by prefixing them with '#'."
+  , reflow "Mark a new or existing PR as a draft with the --draft flag."
+  , reflow "Mark an existing PR as ready for review with the --ready flag."
+  , reflow "Create and link a GitHub Issue with --issue."
+  , reflow "Specify the branch to merge into with the --into option."
+  , reflow "Print a pr tree with the --print-tree flag."
+  , reflow "Output in markdown or shell (default) format."
   ]
 subcommandHelp' n@"contribute" = subcommand n [ argument False "-c/--checkout | -l/--list"
                                               , argument False "-<num>"
@@ -205,6 +205,7 @@ helpDocs = vsep
         """
     , bullet $ hsep [argument' "repo", "(Full control of private repositories)"]
     , bullet $ hsep [argument' "read:org", "(Read org and team membership, read org projects)"]
+    , bullet $ argument' "read:project"
     , bullet $ argument' "read:user"
     , bullet $ argument' "user:email"
     , bullet $ argument' "read:discussion"

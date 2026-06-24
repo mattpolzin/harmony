@@ -8,7 +8,7 @@ Harmony \- Harmonize with coworkers around GitHub reviewing
 .PD 0
 .P
 .PD
-\f[CR]harmony config {property} [value]\f[R]
+\f[CR]harmony config [property] [value]\f[R]
 .PD 0
 .P
 .PD
@@ -255,7 +255,7 @@ Use colors suited better for either a dark or light Terminal background.
 If the \f[CR]$GITHUB_PAT\f[R] and \f[CR]$GH_TOKEN\f[R] environment
 variables are not set, this Personal Access Token is used to
 authenticate with GitHub.
-.SS \f[CR]contribute [options]\f[R]
+.SS \f[CR]contribute [\-c/\-\-checkout | \-l/\-\-list] [\-<num>] [\-i/\-\-ignore {<uri> | <pr\-number>}]\f[R]
 Print the URI of the oldest non\-draft PR waiting for your review.
 If you are not requested for review on any PRs, Harmony will suggest a
 PR that your review is not requested on.
@@ -397,8 +397,12 @@ argument if you want to as an alternative to the interactive prompt.
 .PP
 You can also specify any number of labels to apply by prefixing them
 with `#'.
-For example, \f[CR]harmony pr #backport #bugfix\f[R] would create a PR
-and apply the \f[CR]backport\f[R] and \f[CR]bugfix\f[R] labels.
+For example, \f[CR]harmony pr \(rs#backport \(rs#bugfix\f[R] would
+create a PR and apply the \f[CR]backport\f[R] and \f[CR]bugfix\f[R]
+labels.
+Note that some shells will require you to escape the \f[CR]#\f[R] or
+else it will be considered a comment and not passed to harmony as an
+argument.
 .PP
 If you are using harmony from a script or some other environment without
 TTY support, harmony will print a GitHub URL that can be used to create
@@ -422,7 +426,7 @@ harmony pr \-\-draft
 Create a PR for the current branch and add the \f[CR]urgent\f[R] label:
 .IP
 .EX
-harmony pr #urgent
+harmony pr \(rs#urgent
 .EE
 .PP
 Create a pull request that will merge into the hypothetical
@@ -464,9 +468,36 @@ If you don\(cqt specify a title at the CLI then you will be prompted to
 enter the issue title interactively.
 You will also be prompted for the issue description interactively
 regardless.
+.SS Examples
+Create an issue and bugfix branch:
+.IP
+.EX
+harmony quick \-\-bugfix
+.EE
+.PP
+Create an issue with the title `widget fails to create' and bugfix
+branch:
+.IP
+.EX
+harmony quick \-\-bugfix widget fails to create
+.EE
+.PP
+Create a branch for the existing issue with GitHub issue number
+\f[CR]345\f[R]:
+.IP
+.EX
+harmony quick \(rs#345
+.EE
+.PP
+Create an issue (and branch) and associate it with the `Cool Features'
+project:
+.IP
+.EX
+harmony quick \-\-project \(dqCool Features\(dq
+.EE
 .SS \f[CR]reflect\f[R]
 Show a summary of your review requests and authored pull requests.
-.SS \f[CR]request {team\-slug | +user\-login} [options]\f[R]
+.SS \f[CR]request {<team\-slug> | +<user\-login>} [#<label>] [...]\f[R]
 Helps you create a PR if one does not exist yet and then it will request
 reviews from teams and/or users.
 .PP

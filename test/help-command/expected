@@ -3,7 +3,7 @@ harmony <subcommand>
 Subcommands:
   branch 
       Print the GitHub URI for the currently checked out branch.
-  config {<property>} [<value>]
+  config [<property>] [<value>]
       Get or set the value of a configuration property. Not all properties can
       be set and read via this subcommand.
       properties: requestTeams, requestUsers, commentOnRequest, branchParsing,
@@ -39,19 +39,19 @@ Subcommands:
   pr [--ready] [--draft] [--issue] [-i/--into {<branch-name>}] [--print-tree] [-o/--output {format}] [#<label>] [...]
       Identify an existing PR or create a new one for the current branch.
 
-      Optionally apply any number of labels by prefixing them with '#'.
+      Apply any number of labels by prefixing them with '#'.
 
-      Optionally mark a new or existing PR as a draft with the --draft flag.
+      Mark a new or existing PR as a draft with the --draft flag.
 
-      Optionally mark an existing PR as ready for review with the --ready flag.
+      Mark an existing PR as ready for review with the --ready flag.
 
-      Optionally create and link a GitHub Issue with --issue.
+      Create and link a GitHub Issue with --issue.
 
-      Optionally specify the branch to merge into with the --into option.
+      Specify the branch to merge into with the --into option.
 
-      Optionally print a pr tree with the --print-tree flag.
+      Print a pr tree with the --print-tree flag.
 
-      Optionally output in markdown or shell (default) format.
+      Output in markdown or shell (default) format.
   quick [--bugfix] [--project {<project-number> | <project-title>}] [<title> | #<issue-number>] [...]
       Quickly spin up new work with a GitHub issue and associated feature
       branch. If you have harmony configured to parse GitHub issue numbers
@@ -104,6 +104,7 @@ Authentication:
   Your Personal Access Token should have the following permissions:
   - repo (Full control of private repositories)
   - read:org (Read org and team membership, read org projects)
+  - read:project
   - read:user
   - user:email
   - read:discussion
