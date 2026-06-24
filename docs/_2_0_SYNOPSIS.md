@@ -1,6 +1,6 @@
 # SYNOPSIS
 `harmony branch` \
-`harmony config {property} [value]` \
+`harmony config [property] [value]` \
 `harmony contribute [options]` \
 `harmony graph [options] {team-slug}` \
 `harmony health` \
