@@ -641,7 +641,7 @@ identifyOrCreatePR @{config} {markAsDraft} {createIssueForPR} {intoBranch} branc
         let issueForPrPromise : Promise' (Maybe Issue)
             issueForPrPromise =
               if createIssueForPR
-                 then Just <$> createNewIssueWithMessage "Creating a new GitHub issue for this PR." baseBranch Nothing
+                 then Just <$> createNewIssueWithMessage "Creating a new GitHub issue for this PR." baseBranch Nothing Nothing
                  else pure Nothing
         issueForPr <- issueForPrPromise
 

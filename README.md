@@ -148,6 +148,7 @@ For most things harmony does, you need to have a GitHub
 Your Personal Access Token should have the following permissions:
 - `repo` (Full control of private repositories)
 - `read:org` (Read org and team membership, read org projects)
+- `read:project`
 - `read:user`
 - `user:email`
 - `read:discussion`
@@ -226,9 +227,9 @@ Many operating systems have an `open` command (though the name "open" is not
 ubiquitous); this means you can run something like `open $(harmony branch)` to
 open a web browser to the current branch on GitHub.
 
-## `config {property} [value]`
-Read the given configuration property. `harmony config <property> <value>` will
-set the configuration property.
+## `config [property] [value]`
+Read a given configuration property or show all current configuration.
+`harmony config <property> <value>` will set the configuration property.
 
 Not all configuration properties can be read/set with this command.
 
@@ -426,7 +427,7 @@ Create a GitHub issue and then create a PR linked to that issue:
 harmony pr --issue
 ```
 
-## `quick [--bugfix] [issue-title | #<issue-number>] [...]`
+## `quick [--bugfix] [--project {<project-number> | <project-title>}] [issue-title | #<issue-number>] [...]`
 Helps you create a new GitHub issue and a branch to work on that issue all in
 one go. The branch name will be structured such that if you have GitHub branch
 parsing on then the PR you create for the branch later on will refer to the
@@ -435,12 +436,18 @@ issue created now.
 By default the branch created will be prefixed with `feature` but if you specify
 the `--bugfix` flag then the branch's prefix will be `bugfix`.
 
+By default the issue created will not be associated with any projects. If you
+specify the `--project` option with either a project number or project title
+then that project will be looked up and associated with the new issue. You
+cannot create new projects this way; only existing projects are supported.
+
 If your only argument (possibly in addition to the bugfix flag) is
 `#<issue-number>` for an existing GitHub issue then the new branch will point at
 that existing issue. Otherwise, all additional arguments other than `--bugfix`
-will be used as the issue title. If you don't give any arguments then you will
-be prompted to enter the issue title interactively. You will also be prompted
-for the issue description.
+and `--project {ref}` will be used as the issue title. If you don't specify a
+title at the CLI then you will be prompted to enter the issue title
+interactively. You will also be prompted for the issue description interactively
+regardless.
 
 ## `reflect`
 Show a summary of your review requests and authored pull requests.

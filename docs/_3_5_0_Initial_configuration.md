@@ -5,6 +5,7 @@ For most things harmony does, you need to have a GitHub
 Your Personal Access Token should have the following permissions:
 - `repo` (Full control of private repositories)
 - `read:org` (Read org and team membership, read org projects)
+- `read:project`
 - `read:user`
 - `user:email`
 - `read:discussion`

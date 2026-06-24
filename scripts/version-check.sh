@@ -7,6 +7,7 @@ readmeversion="$(cat docs/_0_0_MANPAGE_HEADER.md | sed -n 's/.*Version \([^ ]*\)
 manpageversion="$(cat man/harmony.1 | sed -n 's/.*"Version \([^"]*\)".*/\1/p')"
 
 if [ "$pkgversion" = "$npmversion" ] && [ "$pkgversion" = "$idrversion" ] && [ "$pkgversion" = "$readmeversion" ] && [ "$pkgversion" = "$manpageversion" ]; then
+  echo 'Versions are all aligned'
   exit 0
 else
   echo "Idris package manifest version (${pkgversion}), in-source version (${idrversion}), README version (${readmeversion}), manpage version (${manpageversion}), and NPM package version (${npmversion}) do not agree!"

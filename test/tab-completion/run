@@ -56,7 +56,21 @@ $harmony --bash-completion pr -- -o
 # quick command
 #
 echo ''
-echo 'bugfix flag partial match:'
+echo 'bugfix or project flag partial match:'
 $harmony --bash-completion quick - quick
+
+echo ''
+echo 'project all opts:'
+$harmony --bash-completion quick -- --project
+
+echo ''
+echo 'project opt partial match:'
+$harmony --bash-completion quick 4 --project
+# no match:
+echo '------'
+$harmony --bash-completion quick 49 --project
+echo '------'
+# title match:
+$harmony --bash-completion quick test --project
 
 . ./cleanup.sh

@@ -5,9 +5,12 @@ import Data.Issue
 import Data.List
 import Data.Promise
 import Data.String
+import public Data.Project
 
 import FFI.GitHub
 import Util
+
+import ShellCompletion.Util
 
 import System.Git
 import System.File
@@ -24,6 +27,24 @@ Show IssueCategory where
 dasherize : String -> String
 dasherize = pack . replaceOn ' ' '-' . unpack
 
+||| In order to support tab completion of multi-word project titles, spaces
+||| have been turned into another character to "slugify" the labels. Still, it
+||| is possible the user has entered a project title that literally contains
+||| the character used during slugification, so to unslugify, we first see if a
+||| project appears in the configured list of projects. If it does then we use
+||| it exactly but if it doesn't then we unslugify it before using it.
+export
+projectFromUnsluggifiedTitle : (configProjectRefs : List ProjectRef)
+                            -> (slugifiedTitle : String)
+                            -> Maybe ProjectRef
+projectFromUnsluggifiedTitle configProjects slugifiedTitle =
+  case findByTitle slugifiedTitle of
+       Just project => Just project
+       Nothing      => findByTitle $ unslugify slugifiedTitle
+  where
+    findByTitle : String -> Maybe ProjectRef
+    findByTitle title = find (\p => (p.title == title)) configProjects 
+
 branchNameSuggestion : String -> String
 branchNameSuggestion = toLower . dasherize
 
@@ -33,8 +54,9 @@ createNewIssueWithMessage : Config =>
                             (message : String)
                          -> (baseBranchGuess : String)
                          -> (issueTitle : Maybe String)
+                         -> (project : Maybe ProjectRef)
                          -> Promise' Issue
-createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' = do
+createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project = do
   putStrLn message
   putStrLn ""
 
@@ -52,7 +74,7 @@ createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' = do
                     Just ed => either (const "") id <$>
                                  editorDescription ed Nothing bodyPrefix
 
-  createIssue config.org config.repo issueTitle issueBody
+  createIssue config.org config.repo project issueTitle issueBody
     where
       issuePrompt : String
       issuePrompt = "What would you like the issue description to be (two blank lines to finish)?"
@@ -71,6 +93,7 @@ createNewIssue : Config =>
                  Octokit =>
                  (baseBranchGuess : String)
               -> (issueTitle : Maybe String)
+              -> (project : Maybe ProjectRef)
               -> Promise' Issue
 createNewIssue = createNewIssueWithMessage "Creating a new GitHub issue and branch."
 
@@ -79,22 +102,23 @@ data IssueIdent = NoInfo
                 | IssueTitle String
                 | IssueNumber String
 
-||| Quickly create a branch to go along with a new GitHub or existing issue.
+||| Quickly create a branch to go along with a new or existing GitHub issue.
 export
 quickStartNewWork : Config =>
                     Octokit =>
                     IssueCategory
                  -> (issueIdent : IssueIdent)
+                 -> {default Nothing project : Maybe ProjectRef}
                  -> Promise' ()
-quickStartNewWork @{config} issueCategory issueIdent = do
+quickStartNewWork @{config} issueCategory issueIdent {project} = do
   -- We guess that the base branch is possibly the branch
   -- checked out when the new issue is being created.
   baseBranchGuess <- currentBranch
   let createIssue = createNewIssue baseBranchGuess
 
   issue <- case issueIdent of
-                NoInfo                 => createIssue Nothing
-                IssueTitle  issueTitle => createIssue (Just issueTitle)
+                NoInfo                 => createIssue Nothing project
+                IssueTitle  issueTitle => createIssue (Just issueTitle) project
                 IssueNumber issueNum   => getIssue config.org config.repo issueNum
 
   let branchTemplate = "\{branchPrefix}/\{show issue.number}/"

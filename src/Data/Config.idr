@@ -3,6 +3,7 @@ module Data.Config
 import Data.Either
 import Data.List
 import Data.List.Elem
+import Data.Project
 import Data.String
 import Data.Theme
 import Data.Vect
@@ -13,6 +14,9 @@ import public Data.DPair
 
 import Language.Reflection
 import Util.Reflection
+
+import Text.PrettyPrint.Prettyprinter
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %language ElabReflection
 
@@ -149,6 +153,8 @@ record Config where
   teamSlugs     : List String
   ||| Local cache of GitHub labels for the configured repo.
   repoLabels    : List String
+  ||| Local cache of GitHub projects for the configured repo.
+  repoProjects  : List ProjectRef
   ||| Local cache of GitHub members within the configured org.
   orgMembers    : List String
   ||| A list of Pull Request numbers that should be ignored (specifically when
@@ -249,11 +255,6 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
     , """
       Determines whether to add a tree of PRs to the description \
       for any PR that is into a branch other than the `mainBranch` configured.
-          This looks like:
-            > ⨀ `main`
-            >> ↖ `feature-1` (https://github.com/org/repo/pull/1234)
-            >> **The first feature**
-            >>>> ↖ `feature-2`
       """
     )
   DefaultRemote   : SettableProp
@@ -393,34 +394,60 @@ export
 config.editor = config.ephemeral.editor
 
 --
--- Show
+-- Show / Pretty
 --
 
-export
-Show Config where
-  show config = unlines [
-      "           updatedAt: \{show config.updatedAt}"
-    , "               theme: \{show config.theme}"
-    , "         org or user: \{show config.org}"
-    , "                repo: \{show config.repo}"
-    , "       defaultRemote: \{show config.defaultRemote}"
-    , "          mainBranch: \{show config.mainBranch}"
-    , "        requestTeams: \{show config.requestTeams}"
-    , "        requestUsers: \{show config.requestUsers}"
-    , "    commentOnRequest: \{show config.commentOnRequest}"
-    , "       branchParsing: \{show config.branchParsing}"
-    , " bugfixPRTitlePrefix: \{show config.bugfixPRTitlePrefix}"
-    , "addPrTreeDescription: \{show config.addPrTreeDescription}"
-    , "           teamSlugs: \{show config.teamSlugs}"
-    , "          repoLabels: \{show config.repoLabels}"
-    , "          orgMembers: \{show config.orgMembers}"
-    , "          ignoredPRs: \{show config.ignoredPRs}"
-    , "           githubPAT: \{personalAccessToken}"
-    , "          githubUser: \{show config.githubUser}"
-    ]
+export 
+render : Config -> Doc AnsiStyle
+render config = vsep
+  [ "           updatedAt:" <++> (pretty $ show config.updatedAt)
+  , "               theme:" <++> (pretty $ show config.theme)
+  , "         org or user:" <++> (pretty $ config.org)
+  , "                repo:" <++> (pretty $ config.repo)
+  , "       defaultRemote:" <++> (pretty $ config.defaultRemote)
+  , "          mainBranch:" <++> (pretty $ config.mainBranch)
+  , "        requestTeams:" <++> (pretty $ show config.requestTeams)
+  , "        requestUsers:" <++> (pretty $ show config.requestUsers)
+  , "    commentOnRequest:" <++> (pretty $ show config.commentOnRequest)
+  , "       branchParsing:" <++> (pretty $ show config.branchParsing)
+  , " bugfixPRTitlePrefix:" <++> (pretty $ maybe "Not set" show config.bugfixPRTitlePrefix)
+  , "addPrTreeDescription:" <++> (pretty $ show config.addPrTreeDescription)
+  , "           teamSlugs:" <++> (pretty $ newlineList config.teamSlugs)
+  , "          repoLabels:" <++> (pretty $ newlineList $ show <$> config.repoLabels)
+  , "        repoProjects:" <++> (pretty $ newlineList $ show <$> config.repoProjects)
+  , "          orgMembers:" <++> (pretty $ newlineList $ config.orgMembers)
+  , "          ignoredPRs:" <++> (pretty $ newlineList $ show <$> config.ignoredPRs)
+  , "           githubPAT:" <++> (pretty $ personalAccessToken)
+  , "          githubUser:" <++> (pretty $ maybe "Not set" id config.githubUser)
+  ]
       where
         personalAccessToken : String
         personalAccessToken = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show config.githubPAT
+
+        spacer : String
+        spacer = "                      "
+
+        newlineList : List String -> String
+        newlineList []   = "None"
+        newlineList strs =
+          let maxLength = foldr (max . String.length) 0 strs
+              padding = 2 + maxLength
+          in go padding strs
+
+          where
+            go : Nat -> List String -> String
+            go _ [] = ""
+            go _ [str] = str
+            go padding (str1 :: str2 :: rest) = 
+              let between = replicate (padding `minus` (length str1)) ' '
+                  line = "\{str1}\{between}\{str2}"
+              in  case rest of
+                       [] => line
+                       _ => line ++ "\n\{spacer}" ++ (go padding rest)
+
+export
+Show Config where
+  show = renderString . layoutUnbounded . unAnnotate . render
 
 --
 -- JSON Serialization
@@ -431,7 +458,7 @@ json : Config -> JSON
 json (MkConfig updatedAt org repo defaultRemote mainBranch
                requestTeams requestUsers commentOnRequest branchParsing
                bugfixPRTitlePrefix addPrTreeDescription teamSlugs repoLabels
-               orgMembers ignoredPRs githubPAT githubUser theme _) =
+               repoProjects orgMembers ignoredPRs githubPAT githubUser theme _) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
@@ -447,6 +474,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch
     , ("orgMembers"           , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"            , JArray $ JString <$> sort teamSlugs)
     , ("repoLabels"           , JArray $ JString <$> sort repoLabels)
+    , ("repoProjects"         , JArray $ json <$> sort repoProjects)
     , ("ignoredPRs"           , JArray $ JInteger . cast <$> sort ignoredPRs)
     , ("githubPAT"            , maybe JNull (JString . expose) githubPAT)
     , ("githubUser"           , maybe JNull JString githubUser)
@@ -469,11 +497,13 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , teamSlugs
                                             , orgMembers
                                             , defaultRemote
+                                            , bugfixPrefix
                                             , repoLabels
                                             , ignoredPRs
                                             , requestTeams
                                             , requestUsers
                                             , commentOnRequest
+                                            , branchParsing
                                             , theme
                                             ] <-
                                             lookupAll [
@@ -484,18 +514,19 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               , "teamSlugs"
                                               , "orgMembers"
                                               , "defaultRemote"
+                                              , "bugfixPRTitlePrefix"
                                               , "repoLabels"
                                               , "ignoredPRs"
                                               , "requestTeams"
                                               , "requestUsers"
                                               , "commentOnRequest"
+                                              , "branchParsing"
                                               , "theme"
                                               ] config
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           let maybeGithubUser = lookup "githubUser" config
-                                          let maybeBranchParsing = lookup "branchParsing" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
-                                          let maybeBugfixPrefix = lookup "bugfixPRTitlePrefix" config
+                                          let maybeRepoProjects = lookup "repoProjects" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
@@ -504,21 +535,20 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           at <- bool requestTeams
                                           au <- bool requestUsers
                                           ca <- commentConfig commentOnRequest
-                                          bp <- maybe (Right Jira) branchConfig maybeBranchParsing
-                                          -- TODO 7.0.0: Make branchParsing required part of config file (default to none)
-                                          --             branchParsing lookup can be moved to the required lookupAll above.
+                                          bp <- branchConfig branchParsing
                                           prt <- maybe (Right False) bool maybePrTree
-                                          -- TODO 7.0.0: Make addPrTreeDescription required part of config file (default to false)
+                                          -- TODO 8.0.0: Make addPrTreeDescription required part of config file (default to false)
                                           --             addPrTreeDescription lookup can be moved to the required lookupAll above.
+                                          rp <- maybe (Right []) (array parseProjectRef) maybeRepoProjects
+                                          -- TODO 9.0.0: Make repoProjects required part of config file (default to [])
+                                          --             repoProjects lookup can be moved to the required lookupAll above.
                                           ts <- array string teamSlugs
                                           rl <- array string repoLabels
                                           om <- array string orgMembers
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           gu <- maybe (Right Nothing) (optional string) maybeGithubUser
-                                          bf <- maybe (Right Nothing) (optional string) maybeBugfixPrefix
-                                          -- TODO 7.0.0: Make githubUser required part of config file (default to Nothing)
-                                          --             githubUser lookup can be moved to the required lookupAll above.
+                                          bf <- optional string bugfixPrefix
                                           th <- (stringy "dark or light" parseString) theme
                                           pure $ MkConfig {
                                               updatedAt            = ua
@@ -530,6 +560,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , requestUsers         = au
                                             , teamSlugs            = ts
                                             , repoLabels           = rl
+                                            , repoProjects         = rp
                                             , commentOnRequest     = ca
                                             , branchParsing        = bp
                                             , bugfixPRTitlePrefix  = bf
@@ -574,6 +605,7 @@ simpleDefaults =
       , requestUsers         = True
       , teamSlugs            = []
       , repoLabels           = []
+      , repoProjects         = []
       , commentOnRequest     = None
       , branchParsing        = None
       , bugfixPRTitlePrefix  = Nothing

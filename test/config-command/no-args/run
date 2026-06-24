@@ -3,6 +3,7 @@
 
 set +e
 
-$harmony config 2>&1
+$harmony config 2>&1 | \
+  sed 's/updatedAt: .*$/updatedAt: ***/'
 
 . ../cleanup.sh

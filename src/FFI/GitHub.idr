@@ -1,8 +1,9 @@
 module FFI.GitHub
 
+import Data.Issue
+import Data.Project
 import Data.Promise
 import Data.PullRequest
-import Data.Issue
 import Data.Review
 import Data.String
 import Data.String.Extra
@@ -26,6 +27,10 @@ data Octokit = Kit (Ptr OctokitRef)
 
 export
 data OctokitGraphQlId = GQLId String
+
+gqlIdStr : Maybe OctokitGraphQlId -> String
+gqlIdStr (Just (GQLId str)) = str
+gqlIdStr Nothing = "null"
 
 %foreign okit_ffi "octokit"
 prim__octokit : (authToken : String) -> PrimIO (Ptr OctokitRef)
@@ -284,6 +289,7 @@ getIssue @{Kit ptr} owner repo issueNumber =
 %foreign okit_ffi "create_issue"
 prim__createIssue : Ptr OctokitRef 
                  -> (opaqueGraphQlRepoId : String) 
+                 -> (opaqueGraphQlProjectId : String) 
                  -> (title : String) 
                  -> (body : String) 
                  -> (onSuccess : String -> PrimIO ()) 
@@ -293,23 +299,25 @@ prim__createIssue : Ptr OctokitRef
 export
 createIssue' : Octokit => 
              (repo : OctokitGraphQlId) 
+          -> (project : Maybe OctokitGraphQlId) 
           -> (title : String) 
           -> (body : String) 
           -> Promise String Issue
-createIssue' @{Kit ptr} (GQLId repoId) title body =
+createIssue' @{Kit ptr} (GQLId repoId) project title body =
   parsePrimResult parseIssueString $
-    prim__createIssue ptr repoId title body
+    prim__createIssue ptr repoId (gqlIdStr project) title body
 
 export
 createIssue : Octokit => 
             (owner : String) 
          -> (repo : String) 
+         -> (project : Maybe ProjectRef)
          -> (title : String) 
          -> (body : String) 
          -> Promise String Issue
-createIssue owner repo title body = do
+createIssue owner repo project title body = do
   repoId <- getRepoGraphQLId owner repo
-  createIssue' repoId title body
+  createIssue' repoId (GQLId . graphQlId <$> project) title body
 
 %foreign okit_ffi "create_comment"
 prim__createComment : Ptr OctokitRef 
@@ -559,6 +567,34 @@ prim__listTeamMembers : Ptr OctokitRef
                      -> (onSuccess : String -> PrimIO ()) 
                      -> (onFailure : String -> PrimIO ()) 
                      -> PrimIO ()
+
+%foreign okit_ffi "list_projects"
+prim__listProjects : Ptr OctokitRef 
+                 -> (owner : String) 
+                 -> (repo : String) 
+                 -> (onSuccess : String -> PrimIO ()) 
+                 -> (onFailure : String -> PrimIO ())
+                 -> PrimIO ()
+
+export
+listRepoProjectsJsonStr : Octokit =>
+                          (owner : String) 
+                       -> (repo : String) 
+                       -> Promise String String
+listRepoProjectsJsonStr @{Kit ptr} owner repo = 
+  ignoreStatus . promiseIO $ prim__listProjects ptr owner repo
+
+||| List the projects related to the given repository
+|||
+||| @owner       The repository owner (a.k.a. org name).
+||| @repo        The repository name.
+export
+listRepoProjects : Octokit => 
+                   (owner : String) 
+                -> (repo : String) 
+                -> Promise String (List Project)
+listRepoProjects @{Kit ptr} owner repo = 
+  either . parseProjectsString =<< listRepoProjectsJsonStr owner repo
 
 export
 listTeamMembers : Octokit => 
