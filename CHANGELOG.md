@@ -1,3 +1,15 @@
+# 7.2.0 (The Short Version Is...)
+Published: 2026-06-25T23:07:38Z
+
+## What's Changed
+* Add short version output by @mattpolzin in https://github.com/mattpolzin/harmony/pull/340
+
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.1.0...7.2.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 7.1.0 (Beforehand Is Good)
 Published: 2026-06-25T21:20:11Z
 
