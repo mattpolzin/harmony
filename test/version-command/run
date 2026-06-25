@@ -1,0 +1,8 @@
+. ../setup.sh
+
+echo 'long'
+$harmony version | sed 's/ v.\..\../ vx.x.x/'
+
+echo 'short'
+$harmony version -s | sed 's/^.\..\../x.x.x/'
+$harmony version --short | sed 's/^.\..\../x.x.x/'

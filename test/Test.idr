@@ -35,7 +35,8 @@ unit = mkTests "Unit"
 
 misc : TestPool
 misc = mkTests "Misc"
-  [ "brief-help"
+  [ "version-command"
+  , "brief-help"
   , "help-command"
   , "branch-command"
   , "tab-completion"

@@ -248,7 +248,7 @@ main =
      editor <- getEnv "EDITOR"
      -- drop 1 for `harmony.js`
      args <- drop 1 <$> getArgs
-     -- short circuit for help
+     -- short circuit for help, version commands
      when (args == []) $ do
        putStrLn (help terminalColors False terminalColumns)
        exitSuccess
@@ -259,7 +259,10 @@ main =
        putStrLn (subcommandHelp terminalColors terminalColumns $ fromMaybe "" . head' $ drop 1 args)
        exitSuccess
      when (args == ["version"] || args == ["--version"]) $ do
-       printVersion
+       printVersion True
+       exitSuccess
+     when (args == ["version", "-s"] || args == ["version", "--short"]) $ do
+       printVersion False
        exitSuccess
      envPAT <- pure $ !(getEnv "GITHUB_PAT") <|> !(getEnv "GH_TOKEN")
      handleArgs envPAT tty terminalColors terminalColumns editor args
