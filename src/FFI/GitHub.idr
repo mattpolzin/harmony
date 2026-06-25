@@ -41,6 +41,7 @@ octokit : (authToken : String) -> IO Octokit
 octokit authToken = Kit <$> (primIO $ prim__octokit authToken)
 
 data ErrorCode = NotFound
+               | BadRequest
                | InternalError
                | OtherStatus Integer
 
@@ -53,10 +54,9 @@ internalError : String -> OctokitError
 internalError = MkError InternalError
 
 statusCode : Integer -> ErrorCode
-statusCode code =
-  if code == 404
-     then NotFound
-     else OtherStatus code
+statusCode 404 = NotFound
+statusCode 422 = BadRequest
+statusCode code = OtherStatus code
 
 parseError : String -> Either OctokitError OctokitError
 parseError str = do
@@ -64,8 +64,8 @@ parseError str = do
   mapFst internalError $ parse json
 
   where
-    unexpectedPayload : a -> OctokitError
-    unexpectedPayload = const $ internalError "Unexpected error JSON: \{str}"
+    unexpectedPayload : ParseError Void -> OctokitError
+    unexpectedPayload e = internalError "Unexpected error (\{e}) JSON: \{str}"
 
     parse : JSON -> Either String OctokitError
     parse (JObject err) =
@@ -87,10 +87,11 @@ parseOctokitError = either id id . parseError
 public export
 data OrgError = NotAnOrg | Msg String
 
--- for non-orgs (i.e. individual users) GitHub 404s on API
--- routes that are only supported for orgs.
+-- for non-orgs (i.e. individual users) GitHub 404s on RESTful API routes and
+-- 422s on GraphQL API routes that are only supported for orgs.
 orgError : OctokitError -> OrgError
 orgError (MkError NotFound error) = NotAnOrg
+orgError (MkError BadRequest error) = NotAnOrg
 orgError (MkError InternalError error) = Msg error
 orgError (MkError (OtherStatus i) error) = Msg error
 
@@ -98,9 +99,10 @@ mapOrgError : Promise String a -> Promise OrgError a
 mapOrgError = mapError (orgError . parseOctokitError)
 
 parsePrimResult : (parser : String -> Either String a)
+               -> (transform : Promise String String -> Promise String String)
                -> (action : (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ())
                -> Promise String a
-parsePrimResult parser action = either . parser =<< (ignoreStatus $ promiseIO action)
+parsePrimResult parser transform action = either . parser =<< (transform $ promiseIO action)
 
 %foreign okit_ffi "get_repo_graphql_id"
 prim__getRepoGraphQLId : Ptr OctokitRef
@@ -184,8 +186,8 @@ prim__listTeamsDetailed : Ptr OctokitRef
 
 export
 listTeamsDetailed : Octokit => (org : String) -> Promise OrgError (List Team)
-listTeamsDetailed @{Kit ptr} org =  ?hole
-  parsePrimResult parseTeamsString $
+listTeamsDetailed @{Kit ptr} org =
+  mapOrgError . parsePrimResult parseTeamsString id $
     prim__listTeamsDetailed ptr org
 
 %foreign okit_ffi "list_my_teams"
@@ -215,7 +217,7 @@ listPRsForBranch : Octokit =>
                 -> (branch : String) 
                 -> Promise String (List PullRequest)
 listPRsForBranch @{Kit ptr} owner repo branch = 
-  parsePrimResult parsePullRequestsString $
+  parsePrimResult parsePullRequestsString ignoreStatus $
     prim__listPRsForBranch ptr owner repo branch
 
 %foreign okit_ffi "list_pull_requests_for_base_branch"
@@ -234,7 +236,7 @@ listPRsForBaseBranch : Octokit =>
                     -> (baseBranch : String) 
                     -> Promise String (List PullRequest)
 listPRsForBaseBranch @{Kit ptr} owner repo baseBranch = 
-  parsePrimResult parsePullRequestsString $
+  parsePrimResult parsePullRequestsString ignoreStatus $
     prim__listPRsForBaseBranch ptr owner repo baseBranch
 
 %foreign okit_ffi "create_pr"
@@ -261,7 +263,7 @@ createPR : Octokit =>
         -> (description : String) 
         -> Promise String PullRequest
 createPR @{Kit ptr} {markAsDraft} owner repo head base title description =
-  parsePrimResult parsePullRequestString $
+  parsePrimResult parsePullRequestString ignoreStatus $
     prim__createPR ptr owner repo head base title description markAsDraft
 
 %foreign okit_ffi "list_open_issues_graphql"
@@ -278,7 +280,7 @@ listIssues : Octokit =>
           -> (repo : String) 
           -> Promise String (List Issue)
 listIssues @{Kit ptr} owner repo =
-  parsePrimResult parseIssuesString $
+  parsePrimResult parseIssuesString ignoreStatus $
     prim__listIssues ptr owner repo
 
 %foreign okit_ffi "get_issue"
@@ -297,7 +299,7 @@ getIssue : Octokit =>
         -> (issueNumber : String) 
         -> Promise String Issue
 getIssue @{Kit ptr} owner repo issueNumber =
-  parsePrimResult parseIssueString $
+  parsePrimResult parseIssueString ignoreStatus $
     prim__getIssue ptr owner repo issueNumber
 
 %foreign okit_ffi "create_issue"
@@ -318,7 +320,7 @@ createIssue' : Octokit =>
           -> (body : String) 
           -> Promise String Issue
 createIssue' @{Kit ptr} (GQLId repoId) project title body =
-  parsePrimResult parseIssueString $
+  parsePrimResult parseIssueString ignoreStatus $
     prim__createIssue ptr repoId (gqlIdStr project) title body
 
 export
@@ -466,7 +468,7 @@ markPullRequestDraft : Octokit =>
                        (graphQlId : OctokitGraphQlId) 
                     -> Promise String PullRequest
 markPullRequestDraft @{Kit ptr} (GQLId id) = do
-  parsePrimResult parsePullRequestString $
+  parsePrimResult parsePullRequestString ignoreStatus $
     prim__markPullRequestDraft ptr id
 
 %foreign okit_ffi "mark_pr_ready"
@@ -484,7 +486,7 @@ markPullRequestReady : Octokit =>
                        (graphQlId : OctokitGraphQlId) 
                     -> Promise String PullRequest
 markPullRequestReady @{Kit ptr} (GQLId id) = do
-  parsePrimResult parsePullRequestString $
+  parsePrimResult parsePullRequestString ignoreStatus $
     prim__markPullRequestReady ptr id
 
 -- reviewers and teamReviewers should be comma separated values encoded in a string.
@@ -650,7 +652,7 @@ prim__getUser : Ptr OctokitRef
 
 export
 getUser : Octokit => (username : String) -> Promise String User
-getUser @{Kit ptr} = parsePrimResult parseUserString . prim__getUser ptr
+getUser @{Kit ptr} = parsePrimResult parseUserString ignoreStatus . prim__getUser ptr
 
 %foreign okit_ffi "get_self"
 prim__getSelf : Ptr OctokitRef 
@@ -660,5 +662,5 @@ prim__getSelf : Ptr OctokitRef
 
 export
 getSelf : Octokit => Promise String User
-getSelf @{Kit ptr} = parsePrimResult parseUserString $ prim__getSelf ptr
+getSelf @{Kit ptr} = parsePrimResult parseUserString ignoreStatus $ prim__getSelf ptr
 

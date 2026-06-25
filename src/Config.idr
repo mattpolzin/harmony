@@ -8,6 +8,7 @@ import Data.List1
 import Data.Project
 import Data.Promise
 import Data.String
+import Data.Team
 import Data.Theme
 import Data.User
 import Decidable.Equality
@@ -243,26 +244,21 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     getLineEnterForDefault
       "What GitHub remote repo would you like to use harmony for?"
       (Just remoteGuess)
-  
   putStrLn ""
   commentOnRequest <- commentConfigPrompt 
 
   putStrLn ""
   branchParsing <- branchParsingPrompt
 
-  putStrLn ""
-  requestTeams <-
-    yesNoPrompt "Would you like harmony to request reviews from teams when it requests reviewers?"
+  _ <- liftIO $ octokit pat
+  teamDetails <- nonOrgFallback [] $ listTeamsDetailed org
 
-  putStrLn ""
-  requestUsers <-
-    yesNoPrompt "Would you like harmony to request reviews from individual users when it requests a teams review?"
+  (requestTeams, requestUsers) <- prRequestPrompts teamDetails
 
   putStrLn ""
   theme <- themePrompt
 
   putStrLn ""
-  _ <- liftIO $ octokit pat
   putStrLn "Creating config..."
   mainBranch <- getRepoDefaultBranch org repo
   updatedAt  <- cast <$> time
@@ -272,7 +268,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     , columns  = terminalColumns
     , editor
     }
-  do teamSlugs    <- nonOrgFallback [] $ listTeamNames org
+  do let teamSlugs = slug <$> teamDetails
      orgMembers   <- nonOrgFallback [] $ listOrgMembers org
      repoLabels   <- listRepoLabels org repo
      repoProjects <- map reference <$> listRepoProjects org repo
@@ -345,6 +341,38 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
                  "Could not parse the input as a valid option; will use 'none' for now."
                  None $
                    parseBranchConfig . orIfEmpty (Just "none") . trim <$> getLine
+
+    ||| Ask whether to request users and request teams when picking a team from
+    ||| harmony.
+    prRequestPrompts : HasIO io => (teamDetails : List Team) -> io (Bool, Bool)
+    prRequestPrompts teams = 
+      case filter reviewDelegationDisabled teams of
+           []    => promptEach
+           teams' => do
+             putStrLn "The following teams are configured for automatic GitHub review requests:"
+             printAutoReviewRequestSummaries teams'
+             putStrLn ""
+             False <- yesNoPrompt "Would you like harmony to defer to GitHub for automatically picking peer reviewers?"
+               | True => pure (True, False)
+             promptEach
+
+    where
+      promptEach : io (Bool, Bool)
+      promptEach = do
+        putStrLn ""
+        requestTeams <-
+          yesNoPrompt "Would you like harmony to request reviews from teams when it requests reviewers?"
+
+        putStrLn ""
+        requestUsers <-
+          yesNoPrompt "Would you like harmony to request reviews from individual users when it requests a teams review?"
+
+        pure (requestTeams, requestUsers)
+
+      printAutoReviewRequestSummaries : List Team -> io ()
+      printAutoReviewRequestSummaries teams =
+        for_ teams $ \team =>
+          putStrLn "\{team.name}: \{show team.reviewRequestDelegation}"
 
 data ConfigError = File FileError
                  | Parse String

@@ -13,6 +13,12 @@ import Language.JSON.Accessors
 public export
 data ReviewRequestDelegation = Disabled | RoundRobin | LoadBalanced
 
+export
+Show ReviewRequestDelegation where
+  show Disabled = "Disabled"
+  show RoundRobin = "Round Robin"
+  show LoadBalanced = "Load Balanced"
+
 graphQlStr : ReviewRequestDelegation -> Maybe String
 graphQlStr Disabled = Nothing
 graphQlStr RoundRobin = Just "ROUND_ROBIN"
@@ -35,6 +41,11 @@ record Team where
   reviewRequestDelegation : ReviewRequestDelegation
 
 %name Data.Team.Team team
+
+export
+reviewDelegationDisabled : Team -> Bool
+reviewDelegationDisabled (MkTeam _ _ _ _ _ _ Disabled) = True
+reviewDelegationDisabled _ = False
 
 export
 Show Team where
