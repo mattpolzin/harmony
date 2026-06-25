@@ -320,9 +320,10 @@ auto-completion for Harmony. This sync is also performed automatically the first
 time you run Harmony after more than a day without the configuration being
 synced.
 
-## `version`
+## `version [-s/--short]`
 Print Harmony's version.
 
+To print a shortened output more useful from scripts, pass `-s` or `--short`.
 
 ## `whoami`
 Print information about the currently configured and authenticated user.

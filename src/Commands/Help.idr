@@ -118,7 +118,7 @@ subcommandHelp' n@"contribute" = subcommand n [ argument False "-c/--checkout | 
 subcommandHelp' n@"graph"   = subcommand n [argument False "-c/--completed", argument True "<team-slug>"]
   [reflow "Graph the relative review workload of the members of the given GitHub Team."]
 subcommandHelp' n@"help"    = subcommand n [argument False "<subcommand>"] ["Print help"]
-subcommandHelp' n@"version" = subcommand n [] ["Print version"]
+subcommandHelp' n@"version" = subcommand n [argument False "-s/--short"] ["Print version"]
 subcommandHelp' n@"quick"   = subcommand n [ argument False "--bugfix"
                                            , argument False "--project {<project-number> | <project-title>}"
                                            , argument False "<title> | #<issue-number>"

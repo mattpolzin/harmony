@@ -16,6 +16,9 @@ sync
 version
 whoami
 
+-s
+--short
+
 no args suggests all settable props:
 requestTeams
 requestUsers

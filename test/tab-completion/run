@@ -5,6 +5,12 @@ echo 'no subcommand:'
 $harmony --bash-completion -- -- harmony
 
 #
+# version command
+#
+echo ''
+$harmony --bash-completion version -- version
+
+#
 # config command
 #
 echo ''
