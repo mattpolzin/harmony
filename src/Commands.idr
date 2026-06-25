@@ -304,7 +304,7 @@ export
 listOrgTeams : Config => Octokit =>
        Promise' ()
 listOrgTeams @{config} =
-  do teamNames <- sort <$> forceListTeams config.org
+  do teamNames <- sort <$> forceListTeamNames config.org
      renderIO . vsep $ annotate italic . pretty <$> teamNames
 
 ||| List members of a given team when the user executes

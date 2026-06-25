@@ -38,7 +38,7 @@ nonOrgFallback x p = bindError p (\case NotAnOrg => pure x; Msg err => reject er
 export
 syncConfig : Config => Octokit => (echo : Bool) -> Promise' Config
 syncConfig @{config} echo =
- do teamSlugs  <- nonOrgFallback [] $ listTeams config.org
+ do teamSlugs  <- nonOrgFallback [] $ listTeamNames config.org
     orgMembers <- nonOrgFallback [] $ listOrgMembers config.org
     labelNames <- listRepoLabels config.org config.repo
     repoProjects <- map reference <$> listRepoProjects config.org config.repo
@@ -272,7 +272,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     , columns  = terminalColumns
     , editor
     }
-  do teamSlugs    <- nonOrgFallback [] $ listTeams org
+  do teamSlugs    <- nonOrgFallback [] $ listTeamNames org
      orgMembers   <- nonOrgFallback [] $ listOrgMembers org
      repoLabels   <- listRepoLabels org repo
      repoProjects <- map reference <$> listRepoProjects org repo

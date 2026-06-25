@@ -7,6 +7,7 @@ import Data.PullRequest
 import Data.Review
 import Data.String
 import Data.String.Extra
+import Data.Team
 import Data.User
 import Data.Vect
 import FFI
@@ -153,26 +154,39 @@ listRepoLabels @{Kit ptr} owner repo =
   lines <$> (ignoreStatus . promiseIO $ prim__listRepoLabels ptr owner repo)
 
 %foreign okit_ffi "list_teams"
-prim__listTeams : Ptr OctokitRef
-               -> (org : String) 
-               -> (onSuccess : String -> PrimIO ()) 
-               -> (onFailure : String -> PrimIO ()) 
-               -> PrimIO ()
+prim__listTeamNames : Ptr OctokitRef
+                   -> (org : String) 
+                   -> (onSuccess : String -> PrimIO ()) 
+                   -> (onFailure : String -> PrimIO ()) 
+                   -> PrimIO ()
 
 export
-listTeams : Octokit => (org : String) -> Promise OrgError (List String)
-listTeams @{Kit ptr} org = 
-  lines <$> (mapOrgError . promiseIO $ prim__listTeams ptr org)
+listTeamNames : Octokit => (org : String) -> Promise OrgError (List String)
+listTeamNames @{Kit ptr} org = 
+  lines <$> (mapOrgError . promiseIO $ prim__listTeamNames ptr org)
 
 export
-forceListTeams : Octokit =>
-                 (org : String)
-              -> Promise' (List String)
-forceListTeams = mapError errString . listTeams
+forceListTeamNames : Octokit =>
+                     (org : String)
+                  -> Promise' (List String)
+forceListTeamNames = mapError errString . listTeamNames
   where
     errString : OrgError -> String
     errString NotAnOrg = "You can only list teams for repositories belonging to GitHub organizations"
     errString (Msg str) = str
+
+%foreign okit_ffi "list_teams_graphql"
+prim__listTeamsDetailed : Ptr OctokitRef
+                       -> (org : String) 
+                       -> (onSuccess : String -> PrimIO ()) 
+                       -> (onFailure : String -> PrimIO ()) 
+                       -> PrimIO ()
+
+export
+listTeamsDetailed : Octokit => (org : String) -> Promise OrgError (List Team)
+listTeamsDetailed @{Kit ptr} org =  ?hole
+  parsePrimResult parseTeamsString $
+    prim__listTeamsDetailed ptr org
 
 %foreign okit_ffi "list_my_teams"
 prim__listMyTeams : Ptr OctokitRef

@@ -144,13 +144,13 @@ parsePR json =
       , baseRef
       }
 
-||| Parse a single user from a JSON String
+||| Parse a single pull request from a JSON String
 export
 parsePullRequestString : String -> Either String PullRequest
 parsePullRequestString =
   (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> parsePR
 
-||| Parse a list of users from a JSON String
+||| Parse a list of pull requests from a JSON String
 export
 parsePullRequestsString : String -> Either String (List PullRequest)
 parsePullRequestsString =
