@@ -1,3 +1,5 @@
+USAGE: harmony config [property] [value]
+
 Specify a property to read it out or specify both a property and a value to set it to.
 
 Settable Properties:
@@ -46,14 +48,14 @@ Current Configuration:
        branchParsing: github
  bugfixPRTitlePrefix: Not set
 addPrTreeDescription: False
-           teamSlugs: None
+           teamSlugs: none
           repoLabels: "WIP"               "bug"
                       "documentation"     "duplicate"
                       "enhancement"       "good first issue"
                       "help wanted"       "invalid"
                       "question"          "wontfix"
         repoProjects: [456] test project
-          orgMembers: None
-          ignoredPRs: None
-           githubPAT: Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)
-          githubUser: Not set
+          orgMembers: none
+          ignoredPRs: none
+           githubPAT: not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)
+          githubUser: not set

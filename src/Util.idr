@@ -131,6 +131,16 @@ namespace Prompting
   orIfEmpty (Just y) "" = y
   orIfEmpty (Just _) x  = x
 
+  ||| Wait for the user to hit the ENTER key and then continue.
+  |||
+  ||| The description you pass in should be what to expect when enter is
+  ||| pressed. For example, "continue".
+  export
+  waitForEnter : HasIO io => String -> io ()
+  waitForEnter description = do
+    putStr "Hit ENTER to \{description} (CTRL+c to abort)"
+    ignore getLine
+
   export
   enterForDefaultStr : String -> String
   enterForDefaultStr str = " (ENTER for default: \{str})"

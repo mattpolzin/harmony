@@ -34,10 +34,32 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
+||| Sync the cached data in the config file (used for auto-completion, mostly).
 export
 sync : Config => Octokit =>
        Promise' ()
 sync = ignore $ syncConfig True
+
+export
+printConfig : Config => Promise' ()
+printConfig @{config} = do
+  renderIO $
+    vsep [ "USAGE: harmony config [property] [value]"
+         , ""
+         , "Specify a property to read it out or specify both a property and a value to set it to."
+         , ""
+         , annotate underline "Settable Properties:"
+         , settablePropsWithHelp
+         , ""
+         ]
+  if config.ttyStdout
+     then do waitForEnter "print the current configuration"
+             putStrLn ""
+     else pure ()
+  renderIO $
+    vsep [ annotate underline "Current Configuration:"
+         , render config
+         ]
 
 ||| Provide information about who the current user is when
 ||| they execute `harmony whoami`.
@@ -304,7 +326,7 @@ export
 listOrgTeams : Config => Octokit =>
        Promise' ()
 listOrgTeams @{config} =
-  do teamNames <- sort <$> forceListTeams config.org
+  do teamNames <- sort <$> forceListTeamNames config.org
      renderIO . vsep $ annotate italic . pretty <$> teamNames
 
 ||| List members of a given team when the user executes

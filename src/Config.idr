@@ -8,6 +8,7 @@ import Data.List1
 import Data.Project
 import Data.Promise
 import Data.String
+import Data.Team
 import Data.Theme
 import Data.User
 import Decidable.Equality
@@ -38,7 +39,7 @@ nonOrgFallback x p = bindError p (\case NotAnOrg => pure x; Msg err => reject er
 export
 syncConfig : Config => Octokit => (echo : Bool) -> Promise' Config
 syncConfig @{config} echo =
- do teamSlugs  <- nonOrgFallback [] $ listTeams config.org
+ do teamSlugs  <- nonOrgFallback [] $ listTeamNames config.org
     orgMembers <- nonOrgFallback [] $ listOrgMembers config.org
     labelNames <- listRepoLabels config.org config.repo
     repoProjects <- map reference <$> listRepoProjects config.org config.repo
@@ -200,11 +201,12 @@ preferOriginRemote names =
        Nothing => fromMaybe "origin" (head' names)
 
 createConfig : (envGithubPAT : Maybe String)
+            -> (ttyStdout : Bool)
             -> (terminalColors : Bool)
             -> (terminalColumns : Nat)
             -> (editor : Maybe String)
             -> Promise' Config
-createConfig envGithubPAT terminalColors terminalColumns editor = do
+createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   putStrLn "Creating a new configuration (storing in \{Config.filename})..."
   putStrLn ""
 
@@ -243,72 +245,69 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     getLineEnterForDefault
       "What GitHub remote repo would you like to use harmony for?"
       (Just remoteGuess)
-  
   putStrLn ""
   commentOnRequest <- commentConfigPrompt 
 
   putStrLn ""
   branchParsing <- branchParsingPrompt
 
-  putStrLn ""
-  requestTeams <-
-    yesNoPrompt "Would you like harmony to request reviews from teams when it requests reviewers?"
+  _ <- liftIO $ octokit pat
+  teamDetails <- nonOrgFallback [] $ listTeamsDetailed org
 
-  putStrLn ""
-  requestUsers <-
-    yesNoPrompt "Would you like harmony to request reviews from individual users when it requests a teams review?"
+  (requestTeams, requestUsers) <- prRequestPrompts teamDetails
 
   putStrLn ""
   theme <- themePrompt
 
   putStrLn ""
-  _ <- liftIO $ octokit pat
   putStrLn "Creating config..."
   mainBranch <- getRepoDefaultBranch org repo
   updatedAt  <- cast <$> time
   let ephemeral = MkEphem {
       filepath = "./\{Config.filename}"
+    , ttyStdout
     , colors   = terminalColors
     , columns  = terminalColumns
     , editor
     }
-  do teamSlugs    <- nonOrgFallback [] $ listTeams org
-     orgMembers   <- nonOrgFallback [] $ listOrgMembers org
-     repoLabels   <- listRepoLabels org repo
-     repoProjects <- map reference <$> listRepoProjects org repo
-     githubUser   <- login <$> getSelf
-     let addPrTreeDescription = False
-     let bugfixPRTitlePrefix = Nothing
-     let ignoredPRs = []
-     let githubPAT = hide <$> configPAT
-     let githubUser = Just githubUser
-     let config = MkConfig {
-         updatedAt
-       , org
-       , repo
-       , defaultRemote
-       , mainBranch
-       , requestTeams
-       , requestUsers
-       , commentOnRequest
-       , branchParsing
-       , bugfixPRTitlePrefix
-       , addPrTreeDescription
-       , teamSlugs
-       , repoLabels
-       , repoProjects
-       , orgMembers
-       , ignoredPRs
-       , githubPAT
-       , githubUser
-       , theme
-       , ephemeral
-       }
-     ignore $ writeConfig config
-     putStrLn "Your new configuration is:"
-     printLn config
-     either renderIO pure (checkConfigConsistency config)
-     pure config
+  let teamSlugs = slug <$> teamDetails
+  orgMembers   <- nonOrgFallback [] $ listOrgMembers org
+  repoLabels   <- listRepoLabels org repo
+  repoProjects <- map reference <$> listRepoProjects org repo
+  githubUser   <- login <$> getSelf
+  let addPrTreeDescription = False
+  let bugfixPRTitlePrefix = Nothing
+  let ignoredPRs = []
+  let githubPAT = hide <$> configPAT
+  let githubUser = Just githubUser
+  let config = MkConfig {
+      updatedAt
+    , org
+    , repo
+    , defaultRemote
+    , mainBranch
+    , requestTeams
+    , requestUsers
+    , commentOnRequest
+    , branchParsing
+    , bugfixPRTitlePrefix
+    , addPrTreeDescription
+    , teamSlugs
+    , repoLabels
+    , repoProjects
+    , orgMembers
+    , ignoredPRs
+    , githubPAT
+    , githubUser
+    , theme
+    , ephemeral
+    }
+  ignore $ writeConfig config
+  putStrLn "Your new configuration is:"
+  printLn config
+  either renderIO pure (checkConfigConsistency config)
+  pure config
+
   where
     org : Maybe GitRemote -> Maybe String
     org = map (.org)
@@ -346,6 +345,39 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
                  None $
                    parseBranchConfig . orIfEmpty (Just "none") . trim <$> getLine
 
+    ||| Ask whether to request users and request teams when picking a team from
+    ||| harmony.
+    prRequestPrompts : HasIO io => (teamDetails : List Team) -> io (Bool, Bool)
+    prRequestPrompts teams = 
+      case filter reviewDelegationEnabled teams of
+           []    => promptEach
+           teams' => do
+             putStrLn ""
+             putStrLn "The following teams are configured for automatic GitHub review requests:"
+             printAutoReviewRequestSummaries teams'
+             putStrLn ""
+             False <- yesNoPrompt "Would you like harmony to defer to GitHub for automatically picking peer reviewers?"
+               | True => pure (True, False)
+             promptEach
+
+    where
+      promptEach : io (Bool, Bool)
+      promptEach = do
+        putStrLn ""
+        requestTeams <-
+          yesNoPrompt "Would you like harmony to request reviews from teams when it requests reviewers?"
+
+        putStrLn ""
+        requestUsers <-
+          yesNoPrompt "Would you like harmony to request reviews from individual users when it requests a teams review?"
+
+        pure (requestTeams, requestUsers)
+
+      printAutoReviewRequestSummaries : List Team -> io ()
+      printAutoReviewRequestSummaries teams =
+        for_ teams $ \team =>
+          putStrLn "\{team.name}: \{show team.reviewRequestDelegation}"
+
 data ConfigError = File FileError
                  | Parse String
 
@@ -364,27 +396,29 @@ findConfig startDir (More fuel) =
 export
 covering
 loadConfig : HasIO io => 
-             (terminalColors : Bool)
+             (ttyStdout : Bool)
+          -> (terminalColors : Bool)
           -> (terminalColumns : Nat)
           -> (editor : Maybe String)
           -> io (Either ConfigError Config)
-loadConfig terminalColors terminalColumns editor = let (>>=) = (>>=) @{Monad.Compose} in
+loadConfig ttyStdout terminalColors terminalColumns editor = let (>>=) = (>>=) @{Monad.Compose} in
   do location   <- mapFst File . maybeToEither FileNotFound <$>
                      findConfig "." (limit 10)
      configFile <- mapFst File <$> 
                      readFile location
-     pure . mapFst Parse $ parseConfig (MkEphem location terminalColors terminalColumns editor) configFile
+     pure . mapFst Parse $ parseConfig (MkEphem location ttyStdout terminalColors terminalColumns editor) configFile
 
 export
 covering
 loadOrCreateConfig : (envGithubPAT : Maybe String)
+                  -> (ttyStdout : Bool)
                   -> (terminalColors : Bool)
                   -> (terminalColumns : Nat)
                   -> (editor : Maybe String)
                   -> Promise' Config
-loadOrCreateConfig envGithubPAT terminalColors terminalColumns editor = do
-  Right config <- loadConfig terminalColors terminalColumns editor
-    | Left (File FileNotFound) => createConfig envGithubPAT terminalColors terminalColumns editor
+loadOrCreateConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
+  Right config <- loadConfig ttyStdout terminalColors terminalColumns editor
+    | Left (File FileNotFound) => createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor
     | Left err => reject "Error loading \{Config.filename}: \{show err}."
   pure config
 

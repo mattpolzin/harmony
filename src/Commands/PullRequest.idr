@@ -548,11 +548,11 @@ identifyOrCreatePR @{config} {markAsDraft} {createIssueForPR} {intoBranch} branc
     | [] => do
         when (createIssueForPR && isJust (parseGithubIssueNumber branch)) $
           reject "The current branch already appears to reference a GitHub issue; --issue would create a duplicate issue."
-        case !(isTTY stdout) of
-             True  => Actual Created <$> createPR
-             False => if createIssueForPR
-                         then reject "The --issue option requires an interactive terminal because Harmony needs to prompt for issue details."
-                         else pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
+        if config.ttyStdout
+             then Actual Created <$> createPR
+             else if createIssueForPR
+                     then reject "The --issue option requires an interactive terminal because Harmony needs to prompt for issue details."
+                     else pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
     | _  => reject "Multiple PRs for the current brach. Harmony only handles 1 PR per branch currently."
   when createIssueForPR $
     reject "The --issue option is only supported when creating a new PR."

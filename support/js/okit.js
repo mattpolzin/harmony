@@ -97,6 +97,51 @@ const okit_list_my_teams = (octokit, onSuccess, onFailure) =>
     onFailure
   )
 
+const digGraphQlTeams = teamsJson =>
+  teamsJson.map(team => {
+    return {
+      graphql_id: team.id,
+      slug: team.slug,
+      name: team.name,
+      description: team.description,
+      created_at: team.createdAt,
+      updated_at: team.updatedAt,
+      review_request_delegation_enabled: team.reviewRequestDelegationEnabled,
+      review_request_delegation_algorithm: team.reviewRequestDelegationAlgorithm,
+    }
+  })
+
+const graphql_team_selections = `
+            id
+            slug
+            name
+            description
+            createdAt
+            updatedAt
+            reviewRequestDelegationEnabled
+            reviewRequestDelegationAlgorithm
+`
+
+// IMPORTANT: This currently arbitrarily only gets 100 teams. That should be
+// enough, but it IS arbitrary.
+const okit_list_teams_graphql = (octokit, org, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.graphql({
+      query: `query getTeams($org: String!) {
+        organization(login: $org) {
+          teams(orderBy: {field: NAME, direction: ASC}, first: 100) {
+            nodes { ... on Team {
+              ${graphql_team_selections}
+            }}
+          }
+        }
+      }`,
+      org
+    }),
+    r => onSuccess(JSON.stringify(digGraphQlTeams(r.organization.teams.nodes))),
+    onFailure
+  )
+
 // list PRs for branch
 const digPr = pr => {
     return {

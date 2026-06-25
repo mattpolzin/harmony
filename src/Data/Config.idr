@@ -31,13 +31,15 @@ public export
 record Ephemeral where
   constructor MkEphem
   ||| The file path where the current configuration should be persisted.
-  filepath : String
+  filepath  : String
+  ||| True if the stdout file is a TTY terminal.
+  ttyStdout : Bool
   ||| True to use ANSI terminal colors.
-  colors   : Bool
+  colors    : Bool
   ||| The number of columns available in the terminal (at launch).
-  columns  : Nat
+  columns   : Nat
   ||| If set, a preferred editor to use for writing PR desriptions.
-  editor   : Maybe String
+  editor    : Maybe String
 
 export
 data Hidden a = Hide a
@@ -382,6 +384,10 @@ export
 config.filepath = config.ephemeral.filepath
 
 export
+(.ttyStdout) : Config -> Bool
+config.ttyStdout = config.ephemeral.ttyStdout
+
+export
 (.colors) : Config -> Bool
 config.colors = config.ephemeral.colors
 
@@ -418,17 +424,17 @@ render config = vsep
   , "          orgMembers:" <++> (pretty $ newlineList $ config.orgMembers)
   , "          ignoredPRs:" <++> (pretty $ newlineList $ show <$> config.ignoredPRs)
   , "           githubPAT:" <++> (pretty $ personalAccessToken)
-  , "          githubUser:" <++> (pretty $ maybe "Not set" id config.githubUser)
+  , "          githubUser:" <++> (pretty $ maybe "not set" id config.githubUser)
   ]
       where
         personalAccessToken : String
-        personalAccessToken = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show config.githubPAT
+        personalAccessToken = maybe "not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show config.githubPAT
 
         spacer : String
         spacer = "                      "
 
         newlineList : List String -> String
-        newlineList []   = "None"
+        newlineList []   = "none"
         newlineList strs =
           let maxLength = foldr (max . String.length) 0 strs
               padding = 2 + maxLength
@@ -615,6 +621,6 @@ simpleDefaults =
       , githubPAT            = Nothing
       , githubUser           = Nothing
       , theme                = Dark
-      , ephemeral            = MkEphem "path/to/repo" False 200 Nothing
+      , ephemeral            = MkEphem "path/to/repo" False False 200 Nothing
       }
 
