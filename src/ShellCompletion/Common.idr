@@ -31,6 +31,15 @@ allRootCmdsAndDescriptions = map unpack allCommands
 allRootCmds : (s : CompletionStyle) -> List CompletionResult
 allRootCmds s = completionResult <$> allRootCmdsAndDescriptions
 
+allVersionOptsAndDescriptions : List (String, String)
+allVersionOptsAndDescriptions =
+  [ ("-s"     , "print a shorter version more useful to scripting application")
+  , ("--short", "print a shorter version more useful to scripting application")
+  ]
+
+allVersionOpts : (s : CompletionStyle) -> List CompletionResult
+allVersionOpts s = completionResult <$> allVersionOptsAndDescriptions
+
 allQuickCmdOptsAndDescriptions : List (String, String)
 allQuickCmdOptsAndDescriptions =
   [ ("--bugfix" , "create a bugfix branch for the new issue")
@@ -138,9 +147,11 @@ cmdOpts _ "sync"    _ _ = Just []
 cmdOpts _ "health"  _ _ = Just []
 cmdOpts _ "--help"  _ _ = Just []
 cmdOpts _ "reflect" _ _ = Just []
-cmdOpts _ "version" _ _ = Just []
 
 -- next subcommands that have options with no configuration requirement:
+cmdOpts s "version" "--"       "version" = all (allVersionOpts s)
+cmdOpts s "version" partialArg "version" = someWithPrefix partialArg (allVersionOpts s)
+
 cmdOpts s "help" "--"       "help" = all (allRootCmds s)
 cmdOpts s "help" partialArg "help" = someWithPrefix partialArg (allRootCmds s)
 
