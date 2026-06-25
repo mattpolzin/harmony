@@ -43,9 +43,9 @@ record Team where
 %name Data.Team.Team team
 
 export
-reviewDelegationDisabled : Team -> Bool
-reviewDelegationDisabled (MkTeam _ _ _ _ _ _ Disabled) = True
-reviewDelegationDisabled _ = False
+reviewDelegationEnabled : Team -> Bool
+reviewDelegationEnabled (MkTeam _ _ _ _ _ _ Disabled) = False
+reviewDelegationEnabled _ = True
 
 export
 Show Team where

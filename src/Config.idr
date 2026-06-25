@@ -346,7 +346,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     ||| harmony.
     prRequestPrompts : HasIO io => (teamDetails : List Team) -> io (Bool, Bool)
     prRequestPrompts teams = 
-      case filter reviewDelegationDisabled teams of
+      case filter reviewDelegationEnabled teams of
            []    => promptEach
            teams' => do
              putStrLn "The following teams are configured for automatic GitHub review requests:"
