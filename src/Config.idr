@@ -268,43 +268,44 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
     , columns  = terminalColumns
     , editor
     }
-  do let teamSlugs = slug <$> teamDetails
-     orgMembers   <- nonOrgFallback [] $ listOrgMembers org
-     repoLabels   <- listRepoLabels org repo
-     repoProjects <- map reference <$> listRepoProjects org repo
-     githubUser   <- login <$> getSelf
-     let addPrTreeDescription = False
-     let bugfixPRTitlePrefix = Nothing
-     let ignoredPRs = []
-     let githubPAT = hide <$> configPAT
-     let githubUser = Just githubUser
-     let config = MkConfig {
-         updatedAt
-       , org
-       , repo
-       , defaultRemote
-       , mainBranch
-       , requestTeams
-       , requestUsers
-       , commentOnRequest
-       , branchParsing
-       , bugfixPRTitlePrefix
-       , addPrTreeDescription
-       , teamSlugs
-       , repoLabels
-       , repoProjects
-       , orgMembers
-       , ignoredPRs
-       , githubPAT
-       , githubUser
-       , theme
-       , ephemeral
-       }
-     ignore $ writeConfig config
-     putStrLn "Your new configuration is:"
-     printLn config
-     either renderIO pure (checkConfigConsistency config)
-     pure config
+  let teamSlugs = slug <$> teamDetails
+  orgMembers   <- nonOrgFallback [] $ listOrgMembers org
+  repoLabels   <- listRepoLabels org repo
+  repoProjects <- map reference <$> listRepoProjects org repo
+  githubUser   <- login <$> getSelf
+  let addPrTreeDescription = False
+  let bugfixPRTitlePrefix = Nothing
+  let ignoredPRs = []
+  let githubPAT = hide <$> configPAT
+  let githubUser = Just githubUser
+  let config = MkConfig {
+      updatedAt
+    , org
+    , repo
+    , defaultRemote
+    , mainBranch
+    , requestTeams
+    , requestUsers
+    , commentOnRequest
+    , branchParsing
+    , bugfixPRTitlePrefix
+    , addPrTreeDescription
+    , teamSlugs
+    , repoLabels
+    , repoProjects
+    , orgMembers
+    , ignoredPRs
+    , githubPAT
+    , githubUser
+    , theme
+    , ephemeral
+    }
+  ignore $ writeConfig config
+  putStrLn "Your new configuration is:"
+  printLn config
+  either renderIO pure (checkConfigConsistency config)
+  pure config
+
   where
     org : Maybe GitRemote -> Maybe String
     org = map (.org)
@@ -349,6 +350,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
       case filter reviewDelegationEnabled teams of
            []    => promptEach
            teams' => do
+             putStrLn ""
              putStrLn "The following teams are configured for automatic GitHub review requests:"
              printAutoReviewRequestSummaries teams'
              putStrLn ""
