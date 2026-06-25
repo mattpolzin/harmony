@@ -1,3 +1,16 @@
+# 7.1.0 (Beforehand Is Good)
+Published: 2026-06-25T21:20:11Z
+
+## What's Changed
+* Update help command output (https://github.com/mattpolzin/harmony/pull/337)
+* Add a new initial configuration prompt for GitHub round-robin setup (https://github.com/mattpolzin/harmony/pull/338)
+* Add an interactive pause in the output of the `config` command when no arguments are given
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.0.0...7.1.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 7.0.0 (Project Optimism)
 Published: 2026-06-24T05:39:03Z
 
