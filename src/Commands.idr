@@ -44,12 +44,20 @@ export
 printConfig : Config => Promise' ()
 printConfig @{config} = do
   renderIO $
-    vsep [ "Specify a property to read it out or specify both a property and a value to set it to."
+    vsep [ "USAGE: harmony config [property] [value]"
+         , ""
+         , "Specify a property to read it out or specify both a property and a value to set it to."
          , ""
          , annotate underline "Settable Properties:"
          , settablePropsWithHelp
          , ""
-         , annotate underline "Current Configuration:"
+         ]
+  if config.ttyStdout
+     then do waitForEnter "print the current configuration"
+             putStrLn ""
+     else pure ()
+  renderIO $
+    vsep [ annotate underline "Current Configuration:"
          , render config
          ]
 
