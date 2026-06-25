@@ -201,11 +201,12 @@ preferOriginRemote names =
        Nothing => fromMaybe "origin" (head' names)
 
 createConfig : (envGithubPAT : Maybe String)
+            -> (ttyStdout : Bool)
             -> (terminalColors : Bool)
             -> (terminalColumns : Nat)
             -> (editor : Maybe String)
             -> Promise' Config
-createConfig envGithubPAT terminalColors terminalColumns editor = do
+createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   putStrLn "Creating a new configuration (storing in \{Config.filename})..."
   putStrLn ""
 
@@ -264,6 +265,7 @@ createConfig envGithubPAT terminalColors terminalColumns editor = do
   updatedAt  <- cast <$> time
   let ephemeral = MkEphem {
       filepath = "./\{Config.filename}"
+    , ttyStdout
     , colors   = terminalColors
     , columns  = terminalColumns
     , editor
@@ -394,27 +396,29 @@ findConfig startDir (More fuel) =
 export
 covering
 loadConfig : HasIO io => 
-             (terminalColors : Bool)
+             (ttyStdout : Bool)
+          -> (terminalColors : Bool)
           -> (terminalColumns : Nat)
           -> (editor : Maybe String)
           -> io (Either ConfigError Config)
-loadConfig terminalColors terminalColumns editor = let (>>=) = (>>=) @{Monad.Compose} in
+loadConfig ttyStdout terminalColors terminalColumns editor = let (>>=) = (>>=) @{Monad.Compose} in
   do location   <- mapFst File . maybeToEither FileNotFound <$>
                      findConfig "." (limit 10)
      configFile <- mapFst File <$> 
                      readFile location
-     pure . mapFst Parse $ parseConfig (MkEphem location terminalColors terminalColumns editor) configFile
+     pure . mapFst Parse $ parseConfig (MkEphem location ttyStdout terminalColors terminalColumns editor) configFile
 
 export
 covering
 loadOrCreateConfig : (envGithubPAT : Maybe String)
+                  -> (ttyStdout : Bool)
                   -> (terminalColors : Bool)
                   -> (terminalColumns : Nat)
                   -> (editor : Maybe String)
                   -> Promise' Config
-loadOrCreateConfig envGithubPAT terminalColors terminalColumns editor = do
-  Right config <- loadConfig terminalColors terminalColumns editor
-    | Left (File FileNotFound) => createConfig envGithubPAT terminalColors terminalColumns editor
+loadOrCreateConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
+  Right config <- loadConfig ttyStdout terminalColors terminalColumns editor
+    | Left (File FileNotFound) => createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor
     | Left err => reject "Error loading \{Config.filename}: \{show err}."
   pure config
 

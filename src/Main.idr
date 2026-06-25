@@ -84,7 +84,7 @@ shellCompletion envPAT completionStyle subcommand curWord prevWord =
         | Just cs => pure cs
       Nothing <- liftIO ffiCompletions
         | Just cs => pure cs
-      Right config <- loadConfig False maximumLayoutWidth Nothing
+      Right config <- loadConfig False False maximumLayoutWidth Nothing
         | Left _ => pure []
       let [] = configuredOpts completionStyle subcommand curWord prevWord
         | cs => pure cs
@@ -192,15 +192,7 @@ handleConfiguredArgs : Config =>
                     -> List String
                     -> Promise' ()
 handleConfiguredArgs @{config} _ ["config"] =
-  renderIO $
-    vsep [ "Specify a property to read it out or specify both a property and a value to set it to."
-         , ""
-         , annotate underline "Settable Properties:"
-         , settablePropsWithHelp
-         , ""
-         , annotate underline "Current Configuration:"
-         , render config
-         ]
+  printConfig
 handleConfiguredArgs _ ["config", prop] =
   do value <- getConfig prop
      putStrLn value
@@ -225,32 +217,33 @@ handleConfiguredArgs @{config} envPAT args = do
 -- handling any other input.
 covering
 handleArgs : (envGithubPAT : Maybe String)
+          -> (ttyStdout : Bool)
           -> (terminalColors : Bool)
           -> (terminalColumns : Nat)
           -> (editor : Maybe String)
           -> List String 
           -> IO ()
-handleArgs envPAT _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = shellCompletion envPAT Cmds subcommand curWord prevWord
-handleArgs envPAT _ _ _ ["--zsh-completion", subcommand, curWord, prevWord] = shellCompletion envPAT CmdsAndDescriptions subcommand curWord prevWord
-handleArgs _ _ _ _ ["--bash-completion-script"] = putStrLn Bash.script
-handleArgs _ _ _ _ ["--zsh-completion-script"] = putStrLn Zsh.script
-handleArgs envPAT terminalColors terminalColumns editor args =
+handleArgs envPAT _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = shellCompletion envPAT Cmds subcommand curWord prevWord
+handleArgs envPAT _ _ _ _ ["--zsh-completion", subcommand, curWord, prevWord] = shellCompletion envPAT CmdsAndDescriptions subcommand curWord prevWord
+handleArgs _ _ _ _ _ ["--bash-completion-script"] = putStrLn Bash.script
+handleArgs _ _ _ _ _ ["--zsh-completion-script"] = putStrLn Zsh.script
+handleArgs envPAT ttyStdout terminalColors terminalColumns editor args =
   resolve'' $
     do -- create the config file before continuing if it does not exist yet
-       config <- loadOrCreateConfig envPAT terminalColors terminalColumns editor
+       config <- loadOrCreateConfig envPAT ttyStdout terminalColors terminalColumns editor
 
        handleConfiguredArgs envPAT args
 
-shouldUseColors : HasIO io => io Bool
-shouldUseColors = do
-  tty <- isTTY stdout
+shouldUseColors : HasIO io => (ttyStdout : Bool) -> io Bool
+shouldUseColors tty = do
   noColors <- getEnv "NO_COLOR"
   pure (isNothing noColors && tty)
 
 covering
 main : IO ()
 main =
-  do terminalColors <- shouldUseColors
+  do tty <- isTTY stdout
+     terminalColors <- shouldUseColors tty
      terminalColumns <- maybe maximumLayoutWidth id <$> termCols
      editor <- getEnv "EDITOR"
      -- drop 1 for `harmony.js`
@@ -269,5 +262,5 @@ main =
        printVersion
        exitSuccess
      envPAT <- pure $ !(getEnv "GITHUB_PAT") <|> !(getEnv "GH_TOKEN")
-     handleArgs envPAT terminalColors terminalColumns editor args
+     handleArgs envPAT tty terminalColors terminalColumns editor args
 

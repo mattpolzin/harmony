@@ -31,13 +31,15 @@ public export
 record Ephemeral where
   constructor MkEphem
   ||| The file path where the current configuration should be persisted.
-  filepath : String
+  filepath  : String
+  ||| True if the stdout file is a TTY terminal.
+  ttyStdout : Bool
   ||| True to use ANSI terminal colors.
-  colors   : Bool
+  colors    : Bool
   ||| The number of columns available in the terminal (at launch).
-  columns  : Nat
+  columns   : Nat
   ||| If set, a preferred editor to use for writing PR desriptions.
-  editor   : Maybe String
+  editor    : Maybe String
 
 export
 data Hidden a = Hide a
@@ -382,6 +384,10 @@ export
 config.filepath = config.ephemeral.filepath
 
 export
+(.ttyStdout) : Config -> Bool
+config.ttyStdout = config.ephemeral.ttyStdout
+
+export
 (.colors) : Config -> Bool
 config.colors = config.ephemeral.colors
 
@@ -615,6 +621,6 @@ simpleDefaults =
       , githubPAT            = Nothing
       , githubUser           = Nothing
       , theme                = Dark
-      , ephemeral            = MkEphem "path/to/repo" False 200 Nothing
+      , ephemeral            = MkEphem "path/to/repo" False False 200 Nothing
       }
 
