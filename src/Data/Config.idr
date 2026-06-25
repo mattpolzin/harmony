@@ -418,17 +418,17 @@ render config = vsep
   , "          orgMembers:" <++> (pretty $ newlineList $ config.orgMembers)
   , "          ignoredPRs:" <++> (pretty $ newlineList $ show <$> config.ignoredPRs)
   , "           githubPAT:" <++> (pretty $ personalAccessToken)
-  , "          githubUser:" <++> (pretty $ maybe "Not set" id config.githubUser)
+  , "          githubUser:" <++> (pretty $ maybe "not set" id config.githubUser)
   ]
       where
         personalAccessToken : String
-        personalAccessToken = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show config.githubPAT
+        personalAccessToken = maybe "not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show config.githubPAT
 
         spacer : String
         spacer = "                      "
 
         newlineList : List String -> String
-        newlineList []   = "None"
+        newlineList []   = "none"
         newlineList strs =
           let maxLength = foldr (max . String.length) 0 strs
               padding = 2 + maxLength
