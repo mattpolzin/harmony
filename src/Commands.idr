@@ -136,6 +136,9 @@ Show ProjectOpt where
   show (Num i) = "number \{show i}"
   show (Title str) = "\"\{str}\""
 
+projectOpts : (a -> Maybe ProjectOpt) -> List a -> List ProjectOpt
+projectOpts = catMaybes .: map
+
 projectFromChoices : Config => ProjectOpt -> Maybe ProjectRef
 projectFromChoices @{config} (Num   i) = find ((i ==) . number) config.repoProjects
 projectFromChoices @{config} (Title t) = projectFromUnsluggifiedTitle config.repoProjects t
@@ -239,9 +242,18 @@ pr : Config => Octokit =>
      (args : List PrArg)
   -> Promise' ()
 pr @{config} args = do
+  let markAsDraft = isJust $ find (\case Draft => True; _ => False) args
+  let markAsReady = isJust $ find (\case Ready => True; _ => False) args
+  let conflictingDraftReadyArgs = markAsDraft && markAsReady
   when conflictingDraftReadyArgs $
     reject "You cannot set a PR as ready for review and mark it as a draft at the same time."
-  issueTemplate <- issueTemplate
+
+  let projectOpts = projectOpts (\case (SetProject p) => Just p; _ => Nothing) args 
+  issueTemplate <- issueTemplate projectOpts
+  let projectWithoutIssue = isNothing issueTemplate && not (null projectOpts)
+  when projectWithoutIssue $
+    reject "You cannot currently set a project for a PR when not creating an issue. This limitation will be lifted later."
+
   Actual actionTaken pr <- identifyOrCreatePR {markAsDraft} {issueTemplate} {intoBranch} !currentBranch
     | Hypothetical url => putStrLn url
   case actionTaken of
@@ -267,26 +279,10 @@ pr @{config} args = do
     putStrLn "The PR for the current branch has been marked ready for review."
 
   where
-    markAsDraft : Bool
-    markAsDraft = isJust $ find (\case Draft => True; _ => False) args
-
-    markAsReady : Bool
-    markAsReady = isJust $ find (\case Ready => True; _ => False) args
-
-    projectArgs : List ProjectOpt
-    projectArgs = foldl go [] args
-      where
-        go : List ProjectOpt -> PrArg -> List ProjectOpt
-        go ps (SetProject p) = p :: ps
-        go ps _ = ps
-
-    issueTemplate : Promise' (Maybe IssueTemplate)
-    issueTemplate = sequence $
+    issueTemplate : List ProjectOpt -> Promise' (Maybe IssueTemplate)
+    issueTemplate projectArgs = sequence $
       (find (\case CreateIssue => True; _ => False) args)
         <&> \_ => MkIssueTemplate <$> maybeProject projectArgs
-
-    conflictingDraftReadyArgs : Bool
-    conflictingDraftReadyArgs = markAsDraft && markAsReady
 
     labelSlugs : List String
     labelSlugs = foldr (\case (Label l) => (l ::); _ => id) [] args
@@ -603,14 +599,6 @@ parseQuickArgs ("--project" :: numOrTitle :: xs) =
        Nothing => AProject (Title numOrTitle) :: parseQuickArgs xs
 parseQuickArgs (titleStr :: xs) = IssueNumOrTitle titleStr :: parseQuickArgs xs
 
-projectArgs : List QuickArg -> List ProjectOpt
-projectArgs = foldl go []
-  where
-    go : List ProjectOpt -> QuickArg -> List ProjectOpt
-    go ps ABugfix = ps
-    go ps (IssueNumOrTitle _) = ps
-    go ps (AProject p) = p :: ps
-
 titleArg : List QuickArg -> Maybe String
 titleArg = foldl go Nothing
   where
@@ -642,7 +630,7 @@ quick : Config =>
         (args : List QuickArg)
      -> Promise' ()
 quick @{config} args = do
-  project <- maybeProject (projectArgs args)
+  project <- maybeProject (projectOpts (\case (AProject p) => Just p; _ => Nothing) args)
   quickStartNewWork (issueCategory args)
                     (titleOrNumberArg args)
                     {project}
