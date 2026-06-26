@@ -204,7 +204,7 @@ pr : Config => Octokit =>
 pr @{config} args = do
   when conflictingDraftReadyArgs $
     reject "You cannot set a PR as ready for review and mark it as a draft at the same time."
-  Actual actionTaken pr <- identifyOrCreatePR {markAsDraft} {createIssueForPR} {intoBranch} !currentBranch
+  Actual actionTaken pr <- identifyOrCreatePR {markAsDraft} {issueTemplate} {intoBranch} !currentBranch
     | Hypothetical url => putStrLn url
   case actionTaken of
        Identified => if printTree then printPrTree pr else putStrLn pr.webURI
@@ -235,8 +235,9 @@ pr @{config} args = do
     markAsReady : Bool
     markAsReady = isJust $ find (\case Ready => True; _ => False) args
 
-    createIssueForPR : Bool
-    createIssueForPR = isJust $ find (\case CreateIssue => True; _ => False) args
+    issueTemplate : Maybe IssueTemplate
+    issueTemplate = const (MkIssueTemplate Nothing) <$>
+                      find (\case CreateIssue => True; _ => False) args
 
     conflictingDraftReadyArgs : Bool
     conflictingDraftReadyArgs = markAsDraft && markAsReady
