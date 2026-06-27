@@ -67,6 +67,7 @@ allPrCmdOptsAndDescriptions =
   [ ("--ready"     , "mark the new or existing PR as ready for review")
   , ("--draft"     , "mark the new or existing PR as a draft")
   , ("--issue"     , "create and link a GitHub Issue")
+  , ("--project"   , "associate an existing project with the new issue (only supported when --issue is used)")
   , ("--print-tree", "print a tree of PRs between the current branch and the main branch")
   , ("--output"    , "output in the given format (at least for non-error responses)")
   , ("--into"      , "set the branch to merge your PR into")
