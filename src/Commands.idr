@@ -466,6 +466,13 @@ parseContributeArgs args =
            (StrCons '-' skip) => map (Skip . cast) $ parsePositive skip
            _                  => Nothing
 
+    -- See Data.List1 in base library; extracted to allow public visibilty.
+    last : List1 a -> a
+    last (x ::: xs) = loop x xs where
+      loop : a -> List a -> a
+      loop x [] = x
+      loop _ (x :: xs) = loop x xs
+
     -- expect a Nat or else a URI here of the form: https://github.com/<org>/<repo>/pull/<pr-number>
     parseIgnoreOpt : String -> Maybe IgnoreOpt
     parseIgnoreOpt str =

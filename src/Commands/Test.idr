@@ -8,6 +8,7 @@ import Util.OptionParsing
 import Data.DPair
 import Data.Either
 import Data.List
+import Data.List1
 import Data.String
 import Data.String.Extra
 
@@ -76,6 +77,25 @@ namespace ParseQuickArgs
 
   testBugfixMiddle : parseQuickArgs ["a", "--bugfix", "bug"] === [IssueNumOrTitle "a", ABugfix, IssueNumOrTitle "bug"]
   testBugfixMiddle = Refl
+
+namespace ParseContributeArgs
+  testList : parseContributeArgs ["--list"] === Right [List]
+  testList = Refl
+
+  testCheckout : parseContributeArgs ["--checkout"] === Right [Checkout]
+  testCheckout = Refl
+
+  testSkip : parseContributeArgs ["-3"] === Right [Skip 3]
+  testSkip = Refl
+
+  testSkipAndCheckout : parseContributeArgs ["--checkout", "-3"] === Right [Checkout, Skip 3]
+  testSkipAndCheckout = Refl
+
+  testIgnoreNum : parseContributeArgs ["--ignore", "234"] === Right [Ignore (PRNum 234)]
+  testIgnoreNum = Refl
+
+  testIgnoreUri : parseContributeArgs ["--ignore", "https://github.com/mattpolzin/harmony/pull/234"] === Right [Ignore (PRNum 234)]
+  testIgnoreUri = Refl
 
 namespace TitleArg
   testConcatsTitleStrings : titleArg [IssueNumOrTitle "One", IssueNumOrTitle "Two"] === Just "One Two"
