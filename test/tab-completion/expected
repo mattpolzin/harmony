@@ -46,6 +46,7 @@ no args suggests print-tree, into, output, ready, draft, and issue args:
 --ready
 --draft
 --issue
+--project
 --print-tree
 --output
 --into
@@ -59,6 +60,7 @@ draft pr suggests into, issue, output, and print-tree args:
 into pr suggests draft, issue, output, and print-tree args:
 --draft
 --issue
+--project
 --print-tree
 --output
 
@@ -72,6 +74,7 @@ output last arg suggests draft, issue, into, and print-tree args:
 --ready
 --draft
 --issue
+--project
 --print-tree
 --into
 
