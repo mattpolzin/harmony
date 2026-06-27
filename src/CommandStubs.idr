@@ -1,5 +1,7 @@
 module CommandStubs
 
+%default total
+
 public export
 record Command where
   constructor C
@@ -45,5 +47,8 @@ allCommands =
 
 export
 longestCommandName : Nat
-longestCommandName = foldr (max . length . name) 0 allCommands
+longestCommandName = 10
+
+longestCommandNamePrf : CommandStubs.longestCommandName === foldr (Prelude.max . String.length . CommandStubs.Command.name) 0 CommandStubs.allCommands
+longestCommandNamePrf = Refl
 
