@@ -131,11 +131,6 @@ maybeProject args =
 
 data PrArg = Draft | Ready | CreateIssue | SetProject ProjectOpt | PrintTree | Output OutputFormat | Into IntoOpt | Label String
 
-(<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
-(<||>) f g x = f x <|> g x
-
-private infixr 2 <||>
-
 ||| Parse arguments to the pr subcommand.
 export
 parsePrArgs : List String -> Either String (List PrArg)

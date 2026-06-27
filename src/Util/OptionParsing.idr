@@ -27,3 +27,10 @@ parseAllOfOpt flags parse (arg :: moreArgs) =
       case remainingArgs of
            []            => ([], [flag])
            (opt :: rest) => parseOpt flag opt rest
+
+||| Chain alternative parsers of the shape (String -> Maybe a) together.
+public export
+(<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
+(<||>) f g x = f x <|> g x
+
+export infixr 2 <||>
