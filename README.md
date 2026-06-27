@@ -355,7 +355,7 @@ organization.
 
 Running `harmony list <team>` will list the members of the given GitHub Team.
 
-## `pr [--draft | --ready] [--issue] [-i/--into {<branch-name>}] [-o/--output {format}] [--print-tree] [#label, ...]`
+## `pr [--draft | --ready] [--issue] [--project {<project-number> | <project-title>}] [-i/--into {<branch-name>}] [-o/--output {format}] [--print-tree] [#label, ...]`
 With a branch checked out will reach out to GitHub to determine if there is an
 open PR for that branch. If there is a PR, Harmony will print a URI that can be
 used to view the PR. If there is not a PR, Harmony will help you create one. The
@@ -370,6 +370,9 @@ When creating a new PR interactively, `--issue` creates a GitHub issue first,
 uses its title as the default PR title, and adds the usual `Related to #N` link
 to the PR body. `--issue` only works for new PRs; existing PRs need issue
 association handled separately for now.
+
+When creating a new issue (see `--issue`), the `--project` option can be used to
+associate the new issue with an existing project.
 
 By default this command outputs to a shell format that is colored (if supported)
 but you can use the `--output markdown` option to output to a markdown syntax
