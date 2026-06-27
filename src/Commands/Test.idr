@@ -2,6 +2,8 @@ module Commands.Test
 
 import Commands
 import Util
+import Util.String
+import Util.OptionParsing
 
 import Data.DPair
 import Data.Either
@@ -27,6 +29,9 @@ namespace ParsePrArgs
 
   parsesIntoOption : parsePrArgs ["--into", "a"] === Right [Into (Branch (Evidence "a" (IsNonEmpty "a")))]
   parsesIntoOption = Refl
+
+  parsesProjectOption : parsePrArgs ["--project", "a"] === Right [SetProject (Title "a")]
+  parsesProjectOption = Refl
 
   errorsForJustIntoFlag : parsePrArgs ["--into"] === Left Commands.prUsageError
   errorsForJustIntoFlag = Refl

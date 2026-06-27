@@ -1,4 +1,4 @@
-module ShellCompletion.Util
+module Util.ShellCompletion
 
 import Data.CompletionStyle
 import Data.String

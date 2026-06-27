@@ -9,8 +9,8 @@ import Data.Promise
 import Data.String
 
 import CommandStubs
-import ShellCompletion.Util
-import Util
+import Util.ShellCompletion
+import Util.String
 
 import FFI.GitHub
 
