@@ -9,8 +9,8 @@ import Data.Promise
 import Data.String
 
 import CommandStubs
-import ShellCompletion.Util
-import Util
+import Util.ShellCompletion
+import Util.String
 
 import FFI.GitHub
 
@@ -49,24 +49,29 @@ allQuickCmdOptsAndDescriptions =
 allQuickCmdOpts : (s : CompletionStyle) -> List CompletionResult
 allQuickCmdOpts s = completionResult <$> allQuickCmdOptsAndDescriptions
 
-allProjectOptsAndDescriptions : Config -> List (String, String)
-allProjectOptsAndDescriptions config =
+allProjectOptsAndDescriptions : Config -> (projectNumbersToo : Bool) -> List (String, String)
+allProjectOptsAndDescriptions config projectNumbersToo =
   config.repoProjects >>= numAndTitle
   
   where
-    numAndTitle : ProjectRef -> List (String, String)
-    numAndTitle proj = [ (show proj.number, proj.title)
-                       , (slugify proj.title, "\{config.repo} project")
-                       ]
+    projectNumberOpt : ProjectRef -> List (String, String)
+    projectNumberOpt proj =
+      if projectNumbersToo
+         then [ (show proj.number, proj.title) ]
+         else []
 
-allProjectOpts : (s : CompletionStyle) -> Config -> List CompletionResult
-allProjectOpts s config = completionResult <$> allProjectOptsAndDescriptions config
+    numAndTitle : ProjectRef -> List (String, String)
+    numAndTitle proj = (slugify proj.title, "\{config.repo} project") :: projectNumberOpt proj
+
+allProjectOpts : (s : CompletionStyle) -> Config -> (projectNumbersToo : Bool) -> List CompletionResult
+allProjectOpts s = map completionResult .: allProjectOptsAndDescriptions
 
 allPrCmdOptsAndDescriptions : List (String, String)
 allPrCmdOptsAndDescriptions =
   [ ("--ready"     , "mark the new or existing PR as ready for review")
   , ("--draft"     , "mark the new or existing PR as a draft")
   , ("--issue"     , "create and link a GitHub Issue")
+  , ("--project"   , "associate an existing project with the new issue (only supported when --issue is used)")
   , ("--print-tree", "print a tree of PRs between the current branch and the main branch")
   , ("--output"    , "output in the given format (at least for non-error responses)")
   , ("--into"      , "set the branch to merge your PR into")
@@ -163,14 +168,15 @@ cmdOpts s "quick" partialArg "quick"     =
      then Nothing -- <- falls through to handle with config below.
      else someWithPrefix partialArg (allQuickCmdOpts s)
 
-cmdOpts s "pr" "--"          "pr"       = all (allPrCmdOpts s)
-cmdOpts s "pr" "-"           "pr"       = someWithPrefix "--" (allPrCmdOpts s)
-cmdOpts _ "pr" partialBranch "--into"   = Nothing -- <- falls through to handle with config below.
-cmdOpts s "pr" "--"          "--output" = all (allOutputFormatOpts s)
-cmdOpts s "pr" partialFormat "--output" = someWithPrefix partialFormat (allOutputFormatOpts s)
-cmdOpts s "pr" "--"          "-o"       = all (allOutputFormatOpts s)
-cmdOpts s "pr" partialFormat "-o"       = someWithPrefix partialFormat (allOutputFormatOpts s)
-cmdOpts s "pr" _             "--ready"  = someFrom ["--issue", "--print-tree", "--into", "--output"] (allPrCmdOpts s) -- The ready flag does not work with the --draft flag.
+cmdOpts s "pr" "--"          "pr"        = all (allPrCmdOpts s)
+cmdOpts s "pr" "-"           "pr"        = someWithPrefix "--" (allPrCmdOpts s)
+cmdOpts _ "pr" partialBranch "--project" = Nothing -- <- falls through to handle with config below.
+cmdOpts _ "pr" partialBranch "--into"    = Nothing -- <- falls through to handle with config below.
+cmdOpts s "pr" "--"          "--output"  = all (allOutputFormatOpts s)
+cmdOpts s "pr" partialFormat "--output"  = someWithPrefix partialFormat (allOutputFormatOpts s)
+cmdOpts s "pr" "--"          "-o"        = all (allOutputFormatOpts s)
+cmdOpts s "pr" partialFormat "-o"        = someWithPrefix partialFormat (allOutputFormatOpts s)
+cmdOpts s "pr" _             "--ready"   = someFrom ["--issue", "--print-tree", "--into", "--output"] (allPrCmdOpts s) -- The ready flag does not work with the --draft flag.
 cmdOpts s "pr" partialArg    "pr" = 
   someWithPrefixOrNothing partialArg (allPrCmdOpts s) <|> 
     if isHashPrefix partialArg 
@@ -271,9 +277,9 @@ configuredOpts : Config =>
 
 -- the quick command
 configuredOpts @{config} s "quick" "--" "--project" = 
-  stringify' (allProjectOpts s config)
+  stringify' (allProjectOpts s config False)
 configuredOpts @{config} s "quick" partialProjectRef "--project" =
-  withPrefix partialProjectRef (allProjectOpts s config)
+  withPrefix partialProjectRef (allProjectOpts s config True)
 
 -- the label command
 configuredOpts @{config} _ "label" "--"         _ = 
@@ -302,7 +308,11 @@ configuredOpts @{config} _ "graph" partialTeamName previous =
      then name <$> (filter (isPrefixOf partialTeamName) $ describe "\{config.repo} team" <$> config.teamSlugs)
      else []
 
--- pr (handled partially above, but when labels are specified, handled here)
+-- pr (handled partially above, but when a project or labels are specified, handled here)
+configuredOpts @{config} s "pr" "--" "--project" = 
+  stringify' (allProjectOpts s config False)
+configuredOpts @{config} s "pr" partialProjectRef "--project" =
+  withPrefix partialProjectRef (allProjectOpts s config True)
 configuredOpts @{config} _ "pr" partialArg _ =
   if isHashPrefix partialArg
      then hashify . slugify <$> config.repoLabels

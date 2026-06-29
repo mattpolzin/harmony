@@ -1,6 +1,6 @@
-module ShellCompletion.Util.Test
+module Util.ShellCompletion.Test
 
-import ShellCompletion.Util
+import Util.ShellCompletion
 
 import Data.CompletionStyle
 import Data.String

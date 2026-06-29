@@ -36,7 +36,7 @@ Subcommands:
       Labels that do not exist yet will be created automatically.
   list [<team-slug>]
       List all teams or the members of the given GitHub Team.
-  pr [--ready] [--draft] [--issue] [-i/--into {<branch-name>}] [--print-tree] [-o/--output {format}] [#<label>] [...]
+  pr [--ready] [--draft] [--issue] [--project {<project-number> | <project-title>}] [-i/--into {<branch-name>}] [--print-tree] [-o/--output {format}] [#<label>] [...]
       Identify an existing PR or create a new one for the current branch.
 
       Apply any number of labels by prefixing them with '#'.
@@ -46,6 +46,9 @@ Subcommands:
       Mark an existing PR as ready for review with the --ready flag.
 
       Create and link a GitHub Issue with --issue.
+
+      Associate an existing project with the new issue with --project (only
+      supported when --issue is used).
 
       Specify the branch to merge into with the --into option.
 

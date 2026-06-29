@@ -1,7 +1,7 @@
 module ShellCompletion.Common.Test
 
 import ShellCompletion.Common
-import ShellCompletion.Util
+import Util.ShellCompletion
 import Data.CompletionStyle
 
 import Data.String

@@ -349,7 +349,7 @@ configured GitHub organization.
 .PP
 Running \f[CR]harmony list <team>\f[R] will list the members of the
 given GitHub Team.
-.SS \f[CR]pr [\-\-draft | \-\-ready] [\-\-issue] [\-i/\-\-into {<branch\-name>}] [\-o/\-\-output {format}] [\-\-print\-tree] [#label, ...]\f[R]
+.SS \f[CR]pr [\-\-draft | \-\-ready] [\-\-issue] [\-\-project {<project\-number> | <project\-title>}] [\-i/\-\-into {<branch\-name>}] [\-o/\-\-output {format}] [\-\-print\-tree] [#label, ...]\f[R]
 With a branch checked out will reach out to GitHub to determine if there
 is an open PR for that branch.
 If there is a PR, Harmony will print a URI that can be used to view the
@@ -369,6 +369,10 @@ GitHub issue first, uses its title as the default PR title, and adds the
 usual \f[CR]Related to #N\f[R] link to the PR body.
 \f[CR]\-\-issue\f[R] only works for new PRs; existing PRs need issue
 association handled separately for now.
+.PP
+When creating a new issue (see \f[CR]\-\-issue\f[R]), the
+\f[CR]\-\-project\f[R] option can be used to associate the new issue
+with an existing project.
 .PP
 By default this command outputs to a shell format that is colored (if
 supported) but you can use the \f[CR]\-\-output markdown\f[R] option to

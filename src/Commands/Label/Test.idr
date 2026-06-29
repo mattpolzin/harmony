@@ -1,6 +1,6 @@
 module Commands.Label.Test
 
-import ShellCompletion.Util
+import Util.ShellCompletion
 import Commands.Label
 
 import Data.String

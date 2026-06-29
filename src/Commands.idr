@@ -21,11 +21,13 @@ import Data.SortedMap
 import Data.String
 import Data.User
 
-import ShellCompletion.Util
 import Config
 import FFI.Concurrency
 import FFI.GitHub
 import Util
+import Util.OptionParsing
+import Util.ShellCompletion
+import Util.String
 import System.Git
 
 import JSON.Parser
@@ -105,24 +107,43 @@ data IntoOpt = Branch (Exists String.NonEmpty)
 
 data OutputFormat = Shell | Markdown
 
-data PrArg = Draft | Ready | CreateIssue | PrintTree | Output OutputFormat | Into IntoOpt | Label String
+data ProjectOpt = Num Integer | Title String
 
-(<||>) : Alternative t => (a -> t b) -> (a -> t b) -> a -> t b
-(<||>) f g x = f x <|> g x
+Show ProjectOpt where
+  show (Num i) = "number \{show i}"
+  show (Title str) = "\"\{str}\""
 
-private infixr 2 <||>
+projectOpts : (a -> Maybe ProjectOpt) -> List a -> List ProjectOpt
+projectOpts = catMaybes .: map
+
+projectFromChoices : Config => ProjectOpt -> Maybe ProjectRef
+projectFromChoices @{config} (Num   i) = find ((i ==) . number) config.repoProjects
+projectFromChoices @{config} (Title t) = projectFromUnsluggifiedTitle config.repoProjects t
+
+maybeProject : Config => List ProjectOpt -> Promise' (Maybe ProjectRef)
+maybeProject args =
+  case args of
+       (_ :: _ :: _) => reject "Only one project per new issue is currently supported"
+       [arg] => maybe (reject "The specified project (\{show arg}) could not be found. Perhaps you need to run `harmony sync` to pick up a very new project?")
+                      (pure . Just)
+                      (projectFromChoices arg)
+       []    => pure Nothing
+
+data PrArg = Draft | Ready | CreateIssue | SetProject ProjectOpt | PrintTree | Output OutputFormat | Into IntoOpt | Label String
 
 ||| Parse arguments to the pr subcommand.
 export
 parsePrArgs : List String -> Either String (List PrArg)
 parsePrArgs [] = Right []
 parsePrArgs args =
-  let (intoArgs, rest) = recombineIntoArgs args
+  let (intoArgs, rest) = parseAllIntoArgs args
       intoArgs' = Into <$> intoArgs
-      (outputArgs, rest') = recombineOutputArgs rest
+      (outputArgs, rest') = parseAllOutputArgs rest
       outputArgs' = Output <$> outputArgs
+      (projectArgs, rest') = parseAllProjectArgs rest
+      projectArgs' = SetProject <$> projectArgs
       rest'' = (traverse (parseReadyFlag <||> parseDraftFlag <||> parseIssueFlag <||> parsePrintTreeFlag <||> parseLabelArg) rest')
-      in  maybeToEither prUsageError ((intoArgs' ++ outputArgs' ++) <$> rest'')
+      in  maybeToEither prUsageError ((intoArgs' ++ outputArgs' ++ projectArgs' ++) <$> rest'')
   where
     parseDraftFlag : String -> Maybe PrArg
     parseDraftFlag "--draft" = Just Draft
@@ -156,19 +177,8 @@ parsePrArgs args =
     -- take two consecutive list elements and combine them for that option.
     -- The options will be returned separately and the rest will be left for
     -- later.
-    recombineIntoArgs : List String -> (List IntoOpt, List String)
-    recombineIntoArgs [] = ([], [])
-    recombineIntoArgs ("-i" :: []) = ([], ["-i"])
-    recombineIntoArgs ("--into" :: []) = ([], ["--into"])
-    recombineIntoArgs ("-i" :: (x :: xs)) =
-      case parseIntoOpt x of
-           Just opt => mapFst (opt ::) (recombineIntoArgs xs)
-           Nothing  => mapSnd (\xs' => "-i" :: x :: xs') (recombineIntoArgs xs)
-    recombineIntoArgs ("--into" :: (x :: xs)) =
-      case parseIntoOpt x of
-           Just opt => mapFst (opt ::) (recombineIntoArgs xs)
-           Nothing  => mapSnd (\xs' => "--into" :: x :: xs') (recombineIntoArgs xs)
-    recombineIntoArgs (x :: xs) = mapSnd (x ::) (recombineIntoArgs xs)
+    parseAllIntoArgs : List String -> (List IntoOpt, List String)
+    parseAllIntoArgs = parseAllOfOpt ["-i", "--into"] parseIntoOpt
 
     parseOutputFormat : String -> Maybe OutputFormat
     parseOutputFormat "markdown" = Just Markdown
@@ -179,19 +189,21 @@ parsePrArgs args =
     -- take two consecutive list elements and combine them for that option.
     -- The options will be returned separately and the rest will be left for
     -- later.
-    recombineOutputArgs : List String -> (List OutputFormat, List String)
-    recombineOutputArgs [] = ([], [])
-    recombineOutputArgs ("-o" :: []) = ([], ["-o"])
-    recombineOutputArgs ("--output" :: []) = ([], ["--output"])
-    recombineOutputArgs ("-o" :: (x :: xs)) =
-      case parseOutputFormat x of
-           Just opt => mapFst (opt ::) (recombineOutputArgs xs)
-           Nothing  => mapSnd (\xs' => "-o" :: x :: xs') (recombineOutputArgs xs)
-    recombineOutputArgs ("--output" :: (x :: xs)) =
-      case parseOutputFormat x of
-           Just opt => mapFst (opt ::) (recombineOutputArgs xs)
-           Nothing  => mapSnd (\xs' => "--output" :: x :: xs') (recombineOutputArgs xs)
-    recombineOutputArgs (x :: xs) = mapSnd (x ::) (recombineOutputArgs xs)
+    parseAllOutputArgs : List String -> (List OutputFormat, List String)
+    parseAllOutputArgs = parseAllOfOpt ["-o", "--output"] parseOutputFormat
+
+    parseProjectOpt : String -> ProjectOpt
+    parseProjectOpt numOrTitle =
+      case parseInteger numOrTitle of
+           Just n => Num n
+           Nothing => Title numOrTitle
+
+    -- the --project option takes the next argument as its input so we will
+    -- take two consecutive list elements and combine them for that option.
+    -- The options will be returned separately and the rest will be left for
+    -- later.
+    parseAllProjectArgs : List String -> (List ProjectOpt, List String)
+    parseAllProjectArgs = parseAllOfOpt ["--project"] (Just . parseProjectOpt)
 
 ||| Print the URI for the current branch's PR or create a new PR if one
 ||| does not exist when the user executes `harmony pr`. Supports creation
@@ -202,9 +214,19 @@ pr : Config => Octokit =>
      (args : List PrArg)
   -> Promise' ()
 pr @{config} args = do
+  let markAsDraft = isJust $ find (\case Draft => True; _ => False) args
+  let markAsReady = isJust $ find (\case Ready => True; _ => False) args
+  let conflictingDraftReadyArgs = markAsDraft && markAsReady
   when conflictingDraftReadyArgs $
     reject "You cannot set a PR as ready for review and mark it as a draft at the same time."
-  Actual actionTaken pr <- identifyOrCreatePR {markAsDraft} {createIssueForPR} {intoBranch} !currentBranch
+
+  let projectOpts = projectOpts (\case (SetProject p) => Just p; _ => Nothing) args 
+  issueTemplate <- issueTemplate projectOpts
+  let projectWithoutIssue = isNothing issueTemplate && not (null projectOpts)
+  when projectWithoutIssue $
+    reject "You cannot currently set a project for a PR when not creating an issue. This limitation will be lifted later."
+
+  Actual actionTaken pr <- identifyOrCreatePR {markAsDraft} {issueTemplate} {intoBranch} !currentBranch
     | Hypothetical url => putStrLn url
   case actionTaken of
        Identified => if printTree then printPrTree pr else putStrLn pr.webURI
@@ -229,17 +251,10 @@ pr @{config} args = do
     putStrLn "The PR for the current branch has been marked ready for review."
 
   where
-    markAsDraft : Bool
-    markAsDraft = isJust $ find (\case Draft => True; _ => False) args
-
-    markAsReady : Bool
-    markAsReady = isJust $ find (\case Ready => True; _ => False) args
-
-    createIssueForPR : Bool
-    createIssueForPR = isJust $ find (\case CreateIssue => True; _ => False) args
-
-    conflictingDraftReadyArgs : Bool
-    conflictingDraftReadyArgs = markAsDraft && markAsReady
+    issueTemplate : List ProjectOpt -> Promise' (Maybe IssueTemplate)
+    issueTemplate projectArgs = sequence $
+      (find (\case CreateIssue => True; _ => False) args)
+        <&> \_ => MkIssueTemplate <$> maybeProject projectArgs
 
     labelSlugs : List String
     labelSlugs = foldr (\case (Label l) => (l ::); _ => id) [] args
@@ -425,7 +440,7 @@ export
 parseContributeArgs : List String -> Either String (List ContributeArg)
 parseContributeArgs [] = Right []
 parseContributeArgs args =
-  let (ignoreArgs, rest) = recombineIgnoreArgs args
+  let (ignoreArgs, rest) = parseAllIgnoreArgs args
       ignoreArgs' = Ignore <$> ignoreArgs
       rest' = (traverse (parseListFlag <||> parseSkipArg <||> parseCheckoutFlag) rest)
       in  maybeToEither contributeUsageError ((ignoreArgs' ++) <$> rest')
@@ -446,6 +461,13 @@ parseContributeArgs args =
            (StrCons '-' skip) => map (Skip . cast) $ parsePositive skip
            _                  => Nothing
 
+    -- See Data.List1 in base library; extracted to allow public visibilty.
+    last : List1 a -> a
+    last (x ::: xs) = loop x xs where
+      loop : a -> List a -> a
+      loop x [] = x
+      loop _ (x :: xs) = loop x xs
+
     -- expect a Nat or else a URI here of the form: https://github.com/<org>/<repo>/pull/<pr-number>
     parseIgnoreOpt : String -> Maybe IgnoreOpt
     parseIgnoreOpt str =
@@ -453,23 +475,12 @@ parseContributeArgs args =
           lastPart  = last parts
       in PRNum <$> parsePositive lastPart
 
-    -- the --ignore option takes the next argument as its input so we will
+    -- the -i/--ignore option takes the next argument as its input so we will
     -- take two consecutive list elements and combine them for that option.
     -- The options will be returned separately and the rest will be left for
     -- later.
-    recombineIgnoreArgs : List String -> (List IgnoreOpt, List String)
-    recombineIgnoreArgs [] = ([], [])
-    recombineIgnoreArgs ("-i" :: []) = ([], ["-i"])
-    recombineIgnoreArgs ("--ignore" :: []) = ([], ["--ignore"])
-    recombineIgnoreArgs ("-i" :: (x :: xs)) = 
-      case parseIgnoreOpt x of
-           Just opt => mapFst (opt ::) (recombineIgnoreArgs xs)
-           Nothing  => mapSnd (\xs' => "-i" :: x :: xs') (recombineIgnoreArgs xs)
-    recombineIgnoreArgs ("--ignore" :: (x :: xs)) =
-      case parseIgnoreOpt x of
-           Just opt => mapFst (opt ::) (recombineIgnoreArgs xs)
-           Nothing  => mapSnd (\xs' => "--ignore" :: x :: xs') (recombineIgnoreArgs xs)
-    recombineIgnoreArgs (x :: xs) = mapSnd (x ::) (recombineIgnoreArgs xs)
+    parseAllIgnoreArgs : List String -> (List IgnoreOpt, List String)
+    parseAllIgnoreArgs = parseAllOfOpt ["-i", "--ignore"] parseIgnoreOpt
 
 ||| Present the user with a PR to review when they execute
 ||| `harmony contribute`.
@@ -554,14 +565,8 @@ branch @{config} = do
   let uri = "https://github.com/\{org}/\{repo}/tree/\{branch}"
   putStrLn uri
 
-data ProjectArg = Num Integer | Title String
-
-Show ProjectArg where
-  show (Num i) = "number \{show i}"
-  show (Title str) = "\"\{str}\""
-
 export
-data QuickArg = ABugfix | AProject ProjectArg | IssueNumOrTitle String
+data QuickArg = ABugfix | AProject ProjectOpt | IssueNumOrTitle String
 
 export
 parseQuickArgs : List String -> List QuickArg
@@ -572,14 +577,6 @@ parseQuickArgs ("--project" :: numOrTitle :: xs) =
        Just n => AProject (Num n) :: parseQuickArgs xs
        Nothing => AProject (Title numOrTitle) :: parseQuickArgs xs
 parseQuickArgs (titleStr :: xs) = IssueNumOrTitle titleStr :: parseQuickArgs xs
-
-projectArgs : List QuickArg -> List ProjectArg
-projectArgs = foldl go []
-  where
-    go : List ProjectArg -> QuickArg -> List ProjectArg
-    go ps ABugfix = ps
-    go ps (IssueNumOrTitle _) = ps
-    go ps (AProject p) = p :: ps
 
 titleArg : List QuickArg -> Maybe String
 titleArg = foldl go Nothing
@@ -612,22 +609,8 @@ quick : Config =>
         (args : List QuickArg)
      -> Promise' ()
 quick @{config} args = do
-  project <- maybeProject
+  project <- maybeProject (projectOpts (\case (AProject p) => Just p; _ => Nothing) args)
   quickStartNewWork (issueCategory args)
                     (titleOrNumberArg args)
                     {project}
-
-  where
-    projectFromChoices : ProjectArg -> Maybe ProjectRef
-    projectFromChoices (Num   i) = find ((i ==) . number) config.repoProjects
-    projectFromChoices (Title t) = projectFromUnsluggifiedTitle config.repoProjects t
-
-    maybeProject : Promise' (Maybe ProjectRef)
-    maybeProject =
-      case projectArgs args of
-           (_ :: _ :: _) => reject "Only one project per new issue is currently supported"
-           [arg] => maybe (reject "The specified project (\{show arg}) could not be found. Perhaps you need to run `harmony sync` to pick up a very new project?")
-                          (pure . Just)
-                          (projectFromChoices arg)
-           []    => pure Nothing
 

@@ -529,6 +529,11 @@ prCreationUrl org repo branch intoBranch =
                   Just branch => "\{branch}..."
                   Nothing     => ""
 
+public export
+record IssueTemplate where
+  constructor MkIssueTemplate
+  project : Maybe ProjectRef
+
 ||| If a PR can be found on GitHub for the current branch, that PR is returned.
 |||
 ||| If no PR can be found on GitHub, the result depends on whether the current
@@ -539,22 +544,22 @@ prCreationUrl org repo branch intoBranch =
 export
 identifyOrCreatePR : Config => Octokit => 
                      {default False markAsDraft : Bool}
-                  -> {default False createIssueForPR : Bool}
+                  -> {default Nothing issueTemplate : Maybe IssueTemplate}
                   -> {default Nothing intoBranch : Maybe String}
                   -> (branch : String) 
                   -> Promise' CreatePRResult
-identifyOrCreatePR @{config} {markAsDraft} {createIssueForPR} {intoBranch} branch = do
+identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
     | [] => do
-        when (createIssueForPR && isJust (parseGithubIssueNumber branch)) $
+        when (isJust issueTemplate && isJust (parseGithubIssueNumber branch)) $
           reject "The current branch already appears to reference a GitHub issue; --issue would create a duplicate issue."
         if config.ttyStdout
              then Actual Created <$> createPR
-             else if createIssueForPR
+             else if isJust issueTemplate
                      then reject "The --issue option requires an interactive terminal because Harmony needs to prompt for issue details."
                      else pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
     | _  => reject "Multiple PRs for the current brach. Harmony only handles 1 PR per branch currently."
-  when createIssueForPR $
+  whenJust issueTemplate $ \_ =>
     reject "The --issue option is only supported when creating a new PR."
   pure (Actual Identified openPr)
     where
@@ -638,12 +643,9 @@ identifyOrCreatePR @{config} {markAsDraft} {createIssueForPR} {intoBranch} branc
 
         baseBranch <- getBaseBranch intoBranch inferredBranchInfo.baseBranchGuess
 
-        let issueForPrPromise : Promise' (Maybe Issue)
-            issueForPrPromise =
-              if createIssueForPR
-                 then Just <$> createNewIssueWithMessage "Creating a new GitHub issue for this PR." baseBranch Nothing Nothing
-                 else pure Nothing
-        issueForPr <- issueForPrPromise
+        issueForPr : Maybe Issue <-
+          sequence $ issueTemplate <&> 
+                       createNewIssueWithMessage "Creating a new GitHub issue for this PR." baseBranch Nothing . project
 
         let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
         bodyPrefix <- case issueForPr of

@@ -10,7 +10,7 @@ import public Data.Project
 import FFI.GitHub
 import Util
 
-import ShellCompletion.Util
+import Util.ShellCompletion
 
 import System.Git
 import System.File

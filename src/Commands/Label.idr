@@ -6,7 +6,7 @@ import Data.Promise
 import Data.PullRequest
 import Data.String
 
-import ShellCompletion
+import Util.ShellCompletion
 
 import FFI.GitHub
 

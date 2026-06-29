@@ -33,6 +33,8 @@ $harmony --bash-completion config -- bugfixPRTitlePrefix
 # pr command
 #
 echo ''
+echo 'pr command'
+echo ''
 echo 'no args suggests print-tree, into, output, ready, draft, and issue args:'
 $harmony --bash-completion pr -- pr
 
@@ -58,9 +60,24 @@ $harmony --bash-completion pr -- --output
 echo ''
 $harmony --bash-completion pr -- -o
 
+echo ''
+echo 'suggests project options for both --project:'
+$harmony --bash-completion pr -- --project
+echo ''
+echo 'project opt partial match:'
+$harmony --bash-completion pr 4 --project
+# no match:
+echo '------'
+$harmony --bash-completion pr 49 --project
+echo '------'
+# title match:
+$harmony --bash-completion pr test --project
+
 #
 # quick command
 #
+echo ''
+echo 'quick command'
 echo ''
 echo 'bugfix or project flag partial match:'
 $harmony --bash-completion quick - quick
