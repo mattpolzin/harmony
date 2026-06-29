@@ -72,7 +72,11 @@ man/harmony.1: $(DOC_FILES)
 manpage: man/harmony.1
 
 changelog:
+	git pull --tags
 	bash ./scripts/generate-changelog.sh
+
+CHANGELOG.md:
+	$(MAKE) changelog
 
 package: build README.md man/harmony.1
 	bash ./scripts/version-check.sh

@@ -2,6 +2,10 @@
 MODE=all
 if [ "$1" = 'latest' ]; then
   MODE=latest
+else
+  if [ "$1" != 'all' ] && [ "$(cat CHANGELOG.md)" != '' ]; then
+    MODE=latest
+  fi
 fi
 
 GIT_TAGS="$(git tag -l --sort -committerdate)"
