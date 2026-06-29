@@ -42,6 +42,8 @@ at-mention
 
 options for bugfixPRTitlePrefix config:
 
+pr command
+
 no args suggests print-tree, into, output, ready, draft, and issue args:
 --ready
 --draft
@@ -85,12 +87,22 @@ markdown
 shell
 markdown
 
+suggests project options for both --project:
+test◌project
+
+project opt partial match:
+456
+------
+------
+test◌project
+
+quick command
+
 bugfix or project flag partial match:
 --bugfix
 --project
 
 project all opts:
-456
 test◌project
 
 project opt partial match:
