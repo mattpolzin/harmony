@@ -4,5 +4,6 @@ alternatively Nix with flakes enabled.
 
 If you'd like to try Harmony out without even "installing" it and you have Nix
 installed with flakes enabled, you can run it as 
-`nix run github:mattpolzin/harmony`.
+`nix run github:mattpolzin/harmony`. This will take quite a while if you don't
+use the harmony binary cache (see the install section below).
 
