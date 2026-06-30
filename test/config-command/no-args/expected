@@ -29,6 +29,9 @@ defaultRemote:        [string] The name of the default Git remote to use (e.g.
                       'origin').
 mainBranch:           [string] The name of the default Git base branch for new
                       PRs.
+defaultProject:       [number] The project number of a default project to add
+                      new issues to. You can leave this unset if you don't want
+                      new issues added to any project.`
 theme:                [dark/light]
 githubPAT:            [string] The Personal Access Token Harmony should use to
                       authenticate with GitHub. You can leave this unset if you
@@ -42,6 +45,7 @@ Current Configuration:
                 repo: harmony
        defaultRemote: origin
           mainBranch: main
+      defaultProject: not set
         requestTeams: True
         requestUsers: False
     commentOnRequest: at-mention

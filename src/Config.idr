@@ -140,14 +140,21 @@ update f g c = map (flip g c) . f
 propSetter : SettableProp n h -> (Config -> String -> Maybe Config)
 propSetter RequestTeams         = update parseBool (\b => { requestTeams := b })
 propSetter RequestUsers         = update parseBool (\b => { requestUsers := b })
-propSetter CommentOnRequest     = update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
-propSetter ParseBranchStrategy  = update (parseBranchConfig . toLower) (\s => { branchParsing := s })
 propSetter BugfixPRTitlePrefix  = update Just (\s => { bugfixPRTitlePrefix := Just s })
 propSetter AddPrTreeDescription = update parseBool (\b => { addPrTreeDescription := b })
 propSetter DefaultRemote        = update Just (\s => { defaultRemote := s })
 propSetter MainBranch           = update Just (\s => { mainBranch := s })
 propSetter ThemeProp            = update parseString (\t => { theme := t })
 propSetter GithubPAT            = update Just (\s => { githubPAT := Just $ hide s })
+propSetter CommentOnRequest     =
+  update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
+propSetter ParseBranchStrategy  =
+  update (parseBranchConfig . toLower) (\s => { branchParsing := s })
+propSetter DefaultProject       =
+  \config => update (projectByNumber config.repoProjects <=< parsePositive) (\p => { defaultProject := Just p }) config
+    where
+      projectByNumber : List ProjectRef -> Nat -> Maybe ProjectRef
+      projectByNumber xs n = find (\p => p.number == cast n) xs
 
 ||| Attempt to set a property and value given String representations.
 ||| After setting, write the config and return the updated result.
@@ -172,6 +179,7 @@ propGetter BugfixPRTitlePrefix  = show . bugfixPRTitlePrefix
 propGetter AddPrTreeDescription = show . addPrTreeDescription
 propGetter DefaultRemote        = show . defaultRemote
 propGetter MainBranch           = show . mainBranch
+propGetter DefaultProject       = show . defaultProject
 propGetter ThemeProp            = show . theme
 propGetter GithubPAT            = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show . githubPAT
 
@@ -277,6 +285,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   githubUser   <- login <$> getSelf
   let addPrTreeDescription = False
   let bugfixPRTitlePrefix = Nothing
+  let defaultProject = Nothing
   let ignoredPRs = []
   let githubPAT = hide <$> configPAT
   let githubUser = Just githubUser
@@ -286,6 +295,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , repo
     , defaultRemote
     , mainBranch
+    , defaultProject
     , requestTeams
     , requestUsers
     , commentOnRequest

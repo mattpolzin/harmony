@@ -8,11 +8,15 @@ $harmony --bash-completion -- -- harmony
 # version command
 #
 echo ''
+echo 'version command'
+echo ''
 $harmony --bash-completion version -- version
 
 #
 # config command
 #
+echo ''
+echo 'config command'
 echo ''
 echo 'no args suggests all settable props:'
 $harmony --bash-completion config -- config
@@ -28,6 +32,10 @@ $harmony --bash-completion config -- commentOnRequest
 echo ''
 echo 'options for bugfixPRTitlePrefix config:'
 $harmony --bash-completion config -- bugfixPRTitlePrefix
+
+echo ''
+echo 'options for defaultProject config:'
+$harmony --bash-completion config -- defaultProject
 
 #
 # pr command

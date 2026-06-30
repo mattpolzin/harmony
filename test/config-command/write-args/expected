@@ -5,6 +5,9 @@ none
 jira
 none
 "upstream"
+Just [456] test project
 "root"
 light
 xxxxxxxx (hidden)
+fails:
+999 is not a valid value for defaultProject.
