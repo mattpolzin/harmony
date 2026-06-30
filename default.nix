@@ -36,7 +36,7 @@ let
         ./man/harmony.1
       ];
     };
-    npmDepsHash = "sha256-A+QKwM+H9lF9MO5fc+P0QZh+wvZ58wzY8EV+0MkeUC0=";
+    npmDepsHash = "sha256-cvGig/C6KY35n9288n2JYj9ZI0z1ttD7J72QiUp+ubg=";
     dontNpmBuild = true;
     dontBuild = true;
 
