@@ -1,3 +1,14 @@
+# 7.4.0 (De-fault)
+Published: 2026-06-30T03:14:04Z
+
+## What's Changed
+* default project config (https://github.com/mattpolzin/harmony/pull/346)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.3.0...7.4.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 7.3.0 (Late to the ~party~ project)
 Published: 2026-06-29T15:42:19Z
 
