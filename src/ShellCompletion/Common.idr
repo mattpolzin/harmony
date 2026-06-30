@@ -49,21 +49,29 @@ allQuickCmdOptsAndDescriptions =
 allQuickCmdOpts : (s : CompletionStyle) -> List CompletionResult
 allQuickCmdOpts s = completionResult <$> allQuickCmdOptsAndDescriptions
 
-allProjectOptsAndDescriptions : Config -> (projectNumbersToo : Bool) -> List (String, String)
-allProjectOptsAndDescriptions config projectNumbersToo =
+data ProjectStyle = Number | Title | All
+
+allProjectOptsAndDescriptions : Config -> ProjectStyle -> List (String, String)
+allProjectOptsAndDescriptions config projectStyle =
   config.repoProjects >>= numAndTitle
   
   where
-    projectNumberOpt : ProjectRef -> List (String, String)
+    projectNumberOpt : ProjectRef -> Maybe (String, String)
     projectNumberOpt proj =
-      if projectNumbersToo
-         then [ (show proj.number, proj.title) ]
-         else []
+      case projectStyle of
+         Title => Nothing
+         _     => Just (show proj.number, proj.title)
+
+    projectTitleOpt : ProjectRef -> Maybe (String, String)
+    projectTitleOpt proj =
+      case projectStyle of
+         Number => Nothing
+         _     => Just (slugify proj.title, "\{config.repo} project")
 
     numAndTitle : ProjectRef -> List (String, String)
-    numAndTitle proj = (slugify proj.title, "\{config.repo} project") :: projectNumberOpt proj
+    numAndTitle proj = catMaybes [ projectTitleOpt proj, projectNumberOpt proj ]
 
-allProjectOpts : (s : CompletionStyle) -> Config -> (projectNumbersToo : Bool) -> List CompletionResult
+allProjectOpts : (s : CompletionStyle) -> Config -> ProjectStyle -> List CompletionResult
 allProjectOpts s = map completionResult .: allProjectOptsAndDescriptions
 
 allPrCmdOptsAndDescriptions : List (String, String)
@@ -220,6 +228,9 @@ cmdOpts s "graph" partialArg _ =
 
 cmdOpts s "config" "--"         "config" = all (allSettableProps s)
 cmdOpts s "config" partialProp  "config" = someWithPrefix partialProp (allSettableProps s)
+cmdOpts s "config" _            "defaultProject" = Nothing -- <- falls through
+  -- ^  defaultProject is special cased because its options come from the
+  -- config cache of projects for the repo.
 cmdOpts s "config" "--"         settableProp = all (allSettableValuesForProp s settableProp)
 cmdOpts s "config" partialValue settableProp =
   someWithPrefix partialValue (allSettableValuesForProp s settableProp)
@@ -275,11 +286,17 @@ configuredOpts : Config =>
 -- we assume we are not handling a root command (see @cmdOpts@ which
 -- should have already been called).
 
+-- the config command
+configuredOpts @{config} s "config" "--" "defaultProject" =
+  stringify' (allProjectOpts s config Number)
+configuredOpts @{config} s "config" partialProjectRef "defaultProject" =
+  withPrefix partialProjectRef (allProjectOpts s config Number)
+
 -- the quick command
 configuredOpts @{config} s "quick" "--" "--project" = 
-  stringify' (allProjectOpts s config False)
+  stringify' (allProjectOpts s config Title)
 configuredOpts @{config} s "quick" partialProjectRef "--project" =
-  withPrefix partialProjectRef (allProjectOpts s config True)
+  withPrefix partialProjectRef (allProjectOpts s config All)
 
 -- the label command
 configuredOpts @{config} _ "label" "--"         _ = 
@@ -310,9 +327,9 @@ configuredOpts @{config} _ "graph" partialTeamName previous =
 
 -- pr (handled partially above, but when a project or labels are specified, handled here)
 configuredOpts @{config} s "pr" "--" "--project" = 
-  stringify' (allProjectOpts s config False)
+  stringify' (allProjectOpts s config Title)
 configuredOpts @{config} s "pr" partialProjectRef "--project" =
-  withPrefix partialProjectRef (allProjectOpts s config True)
+  withPrefix partialProjectRef (allProjectOpts s config All)
 configuredOpts @{config} _ "pr" partialArg _ =
   if isHashPrefix partialArg
      then hashify . slugify <$> config.repoLabels

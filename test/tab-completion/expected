@@ -16,8 +16,12 @@ sync
 version
 whoami
 
+version command
+
 -s
 --short
+
+config command
 
 no args suggests all settable props:
 requestTeams
@@ -42,6 +46,9 @@ name
 at-mention
 
 options for bugfixPRTitlePrefix config:
+
+options for defaultProject config:
+456
 
 pr command
 
