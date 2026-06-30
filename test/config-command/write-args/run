@@ -20,6 +20,9 @@ ${harmony} config branchParsing
 ${harmony} config defaultRemote upstream
 ${harmony} config defaultRemote
 
+${harmony} config defaultProject 456
+${harmony} config defaultProject
+
 ${harmony} config mainBranch root
 ${harmony} config mainBranch
 
@@ -28,5 +31,8 @@ ${harmony} config theme
 
 ${harmony} config githubPAT 1234ABCD
 ${harmony} config githubPAT
+
+echo 'fails:'
+${harmony} config defaultProject 999 2>&1 || true
 
 . ../cleanup.sh

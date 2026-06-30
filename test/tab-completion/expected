@@ -28,6 +28,7 @@ bugfixPRTitlePrefix
 addPrTreeDescription
 defaultRemote
 mainBranch
+defaultProject
 theme
 githubPAT
 

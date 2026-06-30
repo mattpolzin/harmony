@@ -127,6 +127,8 @@ record Config where
   defaultRemote : String
   ||| The main branch. New PRs are based off of this branch.
   mainBranch    : String
+  ||| The project to add new issues to by default (if any).
+  defaultProject : Maybe ProjectRef
   ||| True to request review from teams as well as individual users on PRs.
   requestTeams   : Bool
   ||| True to request review from users as well as teams on PRs.
@@ -269,6 +271,14 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
     ( (Any "string")
     , "The name of the default Git base branch for new PRs."
     )
+  DefaultProject   : SettableProp
+    "defaultProject"
+    ( (Any "number")
+    , """
+      The project number of a default project to add new issues to. \
+      You can leave this unset if you don't want new issues added to any project.`
+      """
+    )
   ThemeProp       : SettableProp
     "theme"
     ( (Enum ["dark", "light"])
@@ -309,6 +319,7 @@ settablePropNamed "bugfixPRTitlePrefix"  = Just $ Evidence _ BugfixPRTitlePrefix
 settablePropNamed "addPrTreeDescription" = Just $ Evidence _ AddPrTreeDescription
 settablePropNamed "defaultRemote"        = Just $ Evidence _ DefaultRemote
 settablePropNamed "mainBranch"           = Just $ Evidence _ MainBranch
+settablePropNamed "defaultProject"       = Just $ Evidence _ DefaultProject
 settablePropNamed "theme"                = Just $ Evidence _ ThemeProp
 settablePropNamed "githubPAT"            = Just $ Evidence _ GithubPAT
 settablePropNamed "requestUsers"         = Just $ Evidence _ RequestUsers
@@ -332,6 +343,7 @@ reifyProp (Evidence _ BugfixPRTitlePrefix) = (_ ** BugfixPRTitlePrefix)
 reifyProp (Evidence _ AddPrTreeDescription) = (_ ** AddPrTreeDescription)
 reifyProp (Evidence _ DefaultRemote) = (_ ** DefaultRemote)
 reifyProp (Evidence _ MainBranch) = (_ ** MainBranch)
+reifyProp (Evidence _ DefaultProject) = (_ ** DefaultProject)
 reifyProp (Evidence _ ThemeProp) = (_ **  ThemeProp)
 reifyProp (Evidence _ GithubPAT) = (_ ** GithubPAT)
 
@@ -345,6 +357,7 @@ settableProps = [
   , (_ ** _ ** AddPrTreeDescription)
   , (_ ** _ ** DefaultRemote)
   , (_ ** _ ** MainBranch)
+  , (_ ** _ ** DefaultProject)
   , (_ ** _ ** ThemeProp)
   , (_ ** _ ** GithubPAT)
   ]
@@ -412,6 +425,7 @@ render config = vsep
   , "                repo:" <++> (pretty $ config.repo)
   , "       defaultRemote:" <++> (pretty $ config.defaultRemote)
   , "          mainBranch:" <++> (pretty $ config.mainBranch)
+  , "      defaultProject:" <++> (pretty $ maybe "not set" show config.defaultProject)
   , "        requestTeams:" <++> (pretty $ show config.requestTeams)
   , "        requestUsers:" <++> (pretty $ show config.requestUsers)
   , "    commentOnRequest:" <++> (pretty $ show config.commentOnRequest)
@@ -461,7 +475,7 @@ Show Config where
 
 export
 json : Config -> JSON
-json (MkConfig updatedAt org repo defaultRemote mainBranch
+json (MkConfig updatedAt org repo defaultRemote mainBranch defaultProject
                requestTeams requestUsers commentOnRequest branchParsing
                bugfixPRTitlePrefix addPrTreeDescription teamSlugs repoLabels
                repoProjects orgMembers ignoredPRs githubPAT githubUser theme _) =
@@ -476,6 +490,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch
     , ("repo"                 , JString repo)
     , ("defaultRemote"        , JString defaultRemote)
     , ("mainBranch"           , JString mainBranch)
+    , ("defaultProject"       , maybe JNull json defaultProject)
     , ("theme"                , JString $ show theme)
     , ("orgMembers"           , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"            , JArray $ JString <$> sort teamSlugs)
@@ -532,12 +547,16 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           let maybeGithubUser = lookup "githubUser" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
+                                          let maybeDefaultProject = lookup "defaultProject" config
                                           let maybeRepoProjects = lookup "repoProjects" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
                                           r  <- string repo
                                           dr <- string defaultRemote
                                           mb <- string mainBranch
+                                          dp <- maybe (Right Nothing) (optional parseProjectRef) maybeDefaultProject
+                                          -- TODO 9.0.0: Make defaultProject required part of config file (default to Nothing)
+                                          --             defaultProject lookup can be moved to the required lookupAll above.
                                           at <- bool requestTeams
                                           au <- bool requestUsers
                                           ca <- commentConfig commentOnRequest
@@ -562,6 +581,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , repo                 = r
                                             , defaultRemote        = dr
                                             , mainBranch           = mb
+                                            , defaultProject       = dp
                                             , requestTeams         = at
                                             , requestUsers         = au
                                             , teamSlugs            = ts
@@ -607,6 +627,7 @@ simpleDefaults =
       , repo                 = "repo"
       , defaultRemote        = "origin"
       , mainBranch           = "main"
+      , defaultProject       = Nothing
       , requestTeams         = True
       , requestUsers         = True
       , teamSlugs            = []

@@ -4,5 +4,6 @@ at-mention
 github
 "origin"
 "main"
+Nothing
 dark
 Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)
