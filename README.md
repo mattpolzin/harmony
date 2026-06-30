@@ -259,6 +259,9 @@ Not all configuration properties can be read/set with this command.
 `mainBranch` (optional string) 
 : When creating a PR, this is the default base branch.
 
+`defaultProject` (optional number) 
+: A project to add new issues to. If unset, new issues aren't added to any projects.
+
 `theme` (`dark`/`light`) 
 : Use colors suited better for either a dark or light Terminal background.
 
