@@ -75,7 +75,7 @@ changelog:
 	git pull --tags
 	bash ./scripts/generate-changelog.sh
 
-CHANGELOG.md:
+CHANGELOG.md: harmony.ipkg
 	$(MAKE) changelog
 
 package: build README.md man/harmony.1
