@@ -135,7 +135,7 @@ eval "$(harmony --bash-completion-script)"
 ```
 
 ## Zsh completion
-Zsh completion is supported via `bashcompinit` and can be loaded by adding the
+Set up Zsh completion by adding the
 following to your Zsh resource file or profile:
 ```shell
 eval "$(harmony --zsh-completion-script)"
@@ -165,7 +165,7 @@ you have both set.
 The first time you start Harmony in any particular folder, you will be asked to
 provide some information about the GitHub repository you are working with. This
 information is stored in a file named `harmony.json` in the current working
-directory.
+directory. You generally probably want one harmony config per repo so the best place to initialize it from is the repository root folder. You can move `harmony.json` there by hand after the fact as well.
 
 Note that the GitHub organization and repository are both slugs, not names.
 These are the values you find in a GitHub URL pointing to your repository.
