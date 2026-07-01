@@ -371,6 +371,7 @@ export
 data PrTreeNode : Type where
   Branch : (idx : Nat) -> (symbol : String) -> (name : String) -> (title : Maybe String) -> PrTreeNode
   PR : {default False marked : Bool} -> (idx : Nat) -> (symbol : String) -> PullRequest -> PrTreeNode
+  Leaf : PrTreeNode
 
 ||| Generate a PR tree.
 |||
@@ -412,7 +413,8 @@ prTree branch title downstreamPrs prs terminalBranch =
 
     goDown : (idx : Nat) -> PullRequestTree -> List PrTreeNode
     goDown i PRTLeaf = []
-    goDown i (PRTBranch pr children) = PR i arrow pr :: (goDown' (S i) children)
+    goDown i (PRTBranch pr []) =  [PR i arrow pr, Leaf]
+    goDown i (PRTBranch pr children) =  PR i arrow pr :: (goDown' (S i) children)
 
     goDown' i [] = []
     goDown' i (tree :: trees) = goDown i tree ++ goDown' i trees
@@ -439,6 +441,10 @@ renderPrTree @{config} format =
     markerLines True = ["**[[** -> _you are here_ <- **]]**"]
 
     renderNode : String -> PrTreeNode -> String
+    renderNode acc Leaf =
+      case format of
+           Markdown => acc ++ "\n"
+           Shell => acc
     renderNode acc (Branch idx symbol name title) =
       let title' = maybe "" (\t => "\n" ++ mdIndent idx "**\{t}**") title
           next = \str => acc ++ str ++ "\n"
