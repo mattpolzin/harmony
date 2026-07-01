@@ -114,7 +114,7 @@ namespace RenderPrTree
                       """
   onePrNoLeafShell = MkTTest
 
-  onePrAboveOneBelowNoLeaf : renderPrTree @{RenderPrTree.config} Markdown (prTree Nothing Nothing [mkPr 456 "feature-2"] [mkPr 123 "feature-1"] "main")
+  onePrAboveOneBelowNoLeaf : renderPrTree @{RenderPrTree.config} Markdown (prTree Nothing Nothing [PRTBranch (mkPr 456 "feature-2") []] [mkPr 123 "feature-1"] "main")
                   ==> """
                       > ⨀ `main`
                       >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
@@ -126,7 +126,7 @@ namespace RenderPrTree
                       """
   onePrAboveOneBelowNoLeaf = MkTTest
 
-  onePrAboveOneBelowNoLeafShell : renderPrTree @{RenderPrTree.config} Shell (prTree Nothing Nothing [mkPr 456 "feature-2"] [mkPr 123 "feature-1"] "main")
+  onePrAboveOneBelowNoLeafShell : renderPrTree @{RenderPrTree.config} Shell (prTree Nothing Nothing [PRTBranch (mkPr 456 "feature-2") []] [mkPr 123 "feature-1"] "main")
                   ==> """
                        ⨀ main
                            ↖ ▪ Fancy PR

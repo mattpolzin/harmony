@@ -278,7 +278,7 @@ pr @{config} args = do
     printPrTree : PullRequest -> Promise' ()
     printPrTree pr = do
       (upstreamPrs, terminalBranch) <- upstreamPrChain (limit 10) pr.baseRef
-      downstreamPrs <- downstreamPrChain (limit 10) pr.headRef
+      downstreamPrs <- downstreamPrTrees (limit 10) pr.headRef
       let nodes = prTree Nothing Nothing downstreamPrs (pr :: upstreamPrs) terminalBranch
       putStrLn $ renderPrTree renderFormat nodes
 
@@ -304,12 +304,12 @@ upstreamPrsJsonStr fuel branch = do
 ||| moment.
 |||
 ||| Produces a JSON array of PRs
-export
-downstreamPrsJsonStr : Config => Octokit => Fuel -> (branch : String) -> Promise' String
-downstreamPrsJsonStr fuel branch = do
-  prs <- downstreamPrChain fuel branch
-  let json = JArray $ json <$> prs
-  pure (show json)
+-- export
+-- downstreamPrsJsonStr : Config => Octokit => Fuel -> (branch : String) -> Promise' String
+-- downstreamPrsJsonStr fuel branch = do
+--   prs <- downstreamPrTrees fuel branch
+--   let json = JArray $ json <$> prs
+--   pure (show json)
 
 ||| Request review from the given teams & users as reviewers when the user executes
 ||| `harmony request ...`.
