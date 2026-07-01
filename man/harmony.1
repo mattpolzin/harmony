@@ -16,7 +16,7 @@ Harmony \- Harmonize with coworkers around GitHub reviewing
 .PD 0
 .P
 .PD
-\f[CR]harmony graph [options] {team\-slug}\f[R]
+\f[CR]harmony graph {team\-slug} [options]\f[R]
 .PD 0
 .P
 .PD
@@ -85,6 +85,8 @@ Running Harmony requires NodeJS 18+ (and a local installation of
 If you\(cqd like to try Harmony out without even \(lqinstalling\(rq it
 and you have Nix installed with flakes enabled, you can run it as
 \f[CR]nix run github:mattpolzin/harmony\f[R].
+This will take quite a while if you don\(cqt use the harmony binary
+cache (see the install section below).
 .SS Bash completion
 Set up Bash completion by adding the following to your Bash resource
 file or profile:
@@ -93,8 +95,8 @@ file or profile:
 eval \(dq$(harmony \-\-bash\-completion\-script)\(dq
 .EE
 .SS Zsh completion
-Zsh completion is supported via \f[CR]bashcompinit\f[R] and can be
-loaded by adding the following to your Zsh resource file or profile:
+Set up Zsh completion by adding the following to your Zsh resource file
+or profile:
 .IP
 .EX
 eval \(dq$(harmony \-\-zsh\-completion\-script)\(dq
@@ -127,6 +129,10 @@ asked to provide some information about the GitHub repository you are
 working with.
 This information is stored in a file named \f[CR]harmony.json\f[R] in
 the current working directory.
+You generally probably want one harmony config per repo so the best
+place to initialize it from is the repository root folder.
+You can move \f[CR]harmony.json\f[R] there by hand after the fact as
+well.
 .PP
 Note that the GitHub organization and repository are both slugs, not
 names.
