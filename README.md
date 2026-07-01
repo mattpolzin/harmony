@@ -25,7 +25,7 @@ Harmony - Harmonize with coworkers around GitHub reviewing
 `harmony branch` \
 `harmony config [property] [value]` \
 `harmony contribute [options]` \
-`harmony graph [options] {team-slug}` \
+`harmony graph {team-slug} [options]` \
 `harmony health` \
 `harmony help [subcommand]` \
 `harmony label {label} [...]` \
@@ -56,7 +56,8 @@ alternatively Nix with flakes enabled.
 
 If you'd like to try Harmony out without even "installing" it and you have Nix
 installed with flakes enabled, you can run it as 
-`nix run github:mattpolzin/harmony`.
+`nix run github:mattpolzin/harmony`. This will take quite a while if you don't
+use the harmony binary cache (see the install section below).
 
 ### Build time
 Harmony can be built with `nix` or using `make` which in turn requires you have
@@ -165,7 +166,9 @@ you have both set.
 The first time you start Harmony in any particular folder, you will be asked to
 provide some information about the GitHub repository you are working with. This
 information is stored in a file named `harmony.json` in the current working
-directory.
+directory. You generally probably want one harmony config per repo so the best
+place to initialize it from is the repository root folder. You can move
+`harmony.json` there by hand after the fact as well.
 
 Note that the GitHub organization and repository are both slugs, not names.
 These are the values you find in a GitHub URL pointing to your repository.

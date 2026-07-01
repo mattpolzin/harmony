@@ -2,7 +2,7 @@
 `harmony branch` \
 `harmony config [property] [value]` \
 `harmony contribute [options]` \
-`harmony graph [options] {team-slug}` \
+`harmony graph {team-slug} [options]` \
 `harmony health` \
 `harmony help [subcommand]` \
 `harmony label {label} [...]` \
