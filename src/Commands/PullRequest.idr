@@ -391,33 +391,40 @@ prTree : (branch : Maybe String)
       -> (terminalBranch : String)
       -> List PrTreeNode
 prTree branch title downstreamPrs prs terminalBranch = 
-  (Branch 0 terminus terminalBranch Nothing) :: goUp 1 branch (reverse prs) ++ (goDown' (1 + length prs) downstreamPrs)
+  (Branch 0 terminus terminalBranch Nothing) :: goUp 1 branch (reverse prs) ++ (goDown' True (1 + length prs) downstreamPrs)
 
   where
     terminus : String
     terminus = "⨀"
 
-    arrow : String
-    arrow = "↖"
+    arrowDiag : String
+    arrowDiag = "↖"
+
+    arrowUp : String
+    arrowUp = "↑"
 
     goUp : (idx : Nat) -> (branch : Maybe String) -> List PullRequest -> List PrTreeNode
-    goUp i (Just branch) [] = [Branch i arrow branch title]
+    goUp i (Just branch) [] = [Branch i arrowDiag branch title]
     goUp _ Nothing       [] = []
     goUp i branch (pr :: prs) =
       -- we special case the last PR in the list to mark it as "current" unless there is a branch specified.
       if null prs && isNothing branch
-         then [PR {marked = True} i arrow pr]
-         else PR i arrow pr :: goUp (S i) branch prs
+         then [PR {marked = True} i arrowDiag pr]
+         else PR i arrowDiag pr :: goUp (S i) branch prs
 
-    goDown' : (idx : Nat) -> List PullRequestTree -> List PrTreeNode
+    goDown' : (first : Bool) -> (idx : Nat) -> List PullRequestTree -> List PrTreeNode
 
-    goDown : (idx : Nat) -> PullRequestTree -> List PrTreeNode
-    goDown i PRTLeaf = []
-    goDown i (PRTBranch pr []) =  [PR i arrow pr, Leaf]
-    goDown i (PRTBranch pr children) =  PR i arrow pr :: (goDown' (S i) children)
+    arrow : (first : Bool) -> String
+    arrow False = arrowDiag
+    arrow True = arrowDiag
 
-    goDown' i [] = []
-    goDown' i (tree :: trees) = goDown i tree ++ goDown' i trees
+    goDown : (first : Bool) -> (idx : Nat) -> PullRequestTree -> List PrTreeNode
+    goDown _ i PRTLeaf = []
+    goDown first i (PRTBranch pr []) =  [PR i (arrow first) pr, Leaf]
+    goDown first i (PRTBranch pr children) =  PR i (arrow first) pr :: (goDown' True (S i) children)
+
+    goDown' first i [] = []
+    goDown' first i (tree :: trees) = goDown first i tree ++ goDown' False i trees
 
 ||| Render a PR tree.
 export
