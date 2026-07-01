@@ -102,9 +102,9 @@ handleAuthenticatedArgs : Config => Octokit =>
 handleAuthenticatedArgs ["upstreamPrs", "--json", branch] = do
   prChain <- upstreamPrsJsonStr (limit 10) branch
   putStr prChain
-handleAuthenticatedArgs ["downstreamPrs", "--json", branch] = do
-  prChain <- downstreamPrsJsonStr (limit 10) branch
-  putStr prChain
+-- handleAuthenticatedArgs ["downstreamPrs", "--json", branch] = do
+--   prChain <- downstreamPrsJsonStr (limit 10) branch
+--   putStr prChain
 handleAuthenticatedArgs @{config} ["reviews", "--json", prNumber] =
   whenJust (parsePositive prNumber) $ \pr => do
     reviewsJsonStr <- listPullReviewsJsonStr config.org config.repo pr

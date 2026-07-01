@@ -348,29 +348,30 @@ upstreamPrChain @{config} (More fuel) branch =
                | [] => pure ([], branch)
              mapFst (prForBranch ::) <$> upstreamPrChain fuel prForBranch.baseRef
 
-||| Get the chain of PRs that lead from the given branch to some downstream PR
-||| with no PRs based off of it. The branch given is not included.
+data PullRequestTree = PRTLeaf | PRTBranch PullRequest (List PullRequestTree)
+
+||| Get the tree of PRs that lead from the given branch to some number of
+||| downstream PRs each with no PRs based off of them. The branch given is not
+||| included.
 |||
-||| There can be more than one downstream PR for any given PR but this function
-||| currently just takes the first one and continues on ignoring all others.
-||| That is a limitation, not a desired behavior.
-|||
-||| @return list of PRs
+||| @return tree of PRs
 export
-downstreamPrChain : Config => Octokit => Fuel -> (branch : String) -> Promise' (List PullRequest)
-downstreamPrChain Dry _ = pure []
-downstreamPrChain @{config} (More fuel) branch = do
-  (prForBranch :: _) <- listPRsForBaseBranch config.org config.repo branch
-    | [] => pure []
-  (prForBranch ::) <$> downstreamPrChain fuel prForBranch.headRef
+downstreamPrTrees : Config => Octokit => Fuel -> (branch : String) -> Promise' (List PullRequestTree)
+downstreamPrTrees Dry _ = pure []
+downstreamPrTrees @{config} (More fuel) branch = do
+  prsForBranch <- listPRsForBaseBranch config.org config.repo branch
+  case prsForBranch of
+       []  => pure []
+       prs => traverse (\pr => PRTBranch pr <$> (downstreamPrTrees fuel pr.headRef)) prsForBranch
 
 public export
 data RenderFormat = Markdown | Shell
 
 export
 data PrTreeNode : Type where
-  Branch : (symbol : String) -> (name : String) -> (title : Maybe String) -> PrTreeNode
-  PR : {default False marked : Bool} -> (symbol : String) -> PullRequest -> PrTreeNode
+  Branch : (idx : Nat) -> (symbol : String) -> (name : String) -> (title : Maybe String) -> PrTreeNode
+  PR : {default False marked : Bool} -> (idx : Nat) -> (symbol : String) -> PullRequest -> PrTreeNode
+  Leaf : PrTreeNode
 
 ||| Generate a PR tree.
 |||
@@ -385,34 +386,51 @@ data PrTreeNode : Type where
 export
 prTree : (branch : Maybe String)
       -> (title : Maybe String)
-      -> (downstreamPrs : List PullRequest)
+      -> (downstreamPrs : List PullRequestTree)
       -> List PullRequest
       -> (terminalBranch : String)
       -> List PrTreeNode
 prTree branch title downstreamPrs prs terminalBranch = 
-  (Branch terminus terminalBranch Nothing) :: go True branch (reverse prs) ++ go False Nothing downstreamPrs
+  (Branch 0 terminus terminalBranch Nothing) :: goUp 1 branch (reverse prs) ++ (goDown' True (1 + length prs) downstreamPrs)
 
   where
     terminus : String
     terminus = "⨀"
 
-    arrow : String
-    arrow = "↖"
+    arrowDiag : String
+    arrowDiag = "↖"
 
-    go : (markLast : Bool) -> (branch : Maybe String) -> List PullRequest -> List PrTreeNode
-    go _ (Just branch) [] = [Branch arrow branch title]
-    go _ Nothing       [] = []
-    go mark branch (pr :: prs) =
+    arrowUp : String
+    arrowUp = "↑"
+
+    goUp : (idx : Nat) -> (branch : Maybe String) -> List PullRequest -> List PrTreeNode
+    goUp i (Just branch) [] = [Branch i arrowDiag branch title]
+    goUp _ Nothing       [] = []
+    goUp i branch (pr :: prs) =
       -- we special case the last PR in the list to mark it as "current" unless there is a branch specified.
-      if mark && null prs && isNothing branch
-         then [PR {marked = True} arrow pr]
-         else PR arrow pr :: go mark branch prs
+      if null prs && isNothing branch
+         then [PR {marked = True} i arrowDiag pr]
+         else PR i arrowDiag pr :: goUp (S i) branch prs
+
+    goDown' : (first : Bool) -> (idx : Nat) -> List PullRequestTree -> List PrTreeNode
+
+    arrow : (first : Bool) -> String
+    arrow False = arrowDiag
+    arrow True = arrowDiag
+
+    goDown : (first : Bool) -> (idx : Nat) -> PullRequestTree -> List PrTreeNode
+    goDown _ i PRTLeaf = []
+    goDown first i (PRTBranch pr []) =  [PR i (arrow first) pr, Leaf]
+    goDown first i (PRTBranch pr children) =  PR i (arrow first) pr :: (goDown' True (S i) children)
+
+    goDown' first i [] = []
+    goDown' first i (tree :: trees) = goDown first i tree ++ goDown' False i trees
 
 ||| Render a PR tree.
 export
 renderPrTree : Config => RenderFormat -> List PrTreeNode -> String
 renderPrTree @{config} format = 
-  snd . foldl renderNode (0, "")
+  foldl renderNode ""
 
   where
     mdIndent : Nat -> String -> String
@@ -429,18 +447,22 @@ renderPrTree @{config} format =
     markerLines False = []
     markerLines True = ["**[[** -> _you are here_ <- **]]**"]
 
-    renderNode : (Nat, String) -> PrTreeNode -> (Nat, String)
-    renderNode (idx, acc) (Branch symbol name title) =
+    renderNode : String -> PrTreeNode -> String
+    renderNode acc Leaf =
+      case format of
+           Markdown => acc ++ "\n"
+           Shell => acc
+    renderNode acc (Branch idx symbol name title) =
       let title' = maybe "" (\t => "\n" ++ mdIndent idx "**\{t}**") title
-          next = \str => (S idx, acc ++ str ++ "\n")
+          next = \str => acc ++ str ++ "\n"
       in next $ 
         case format of
              Markdown => mdIndent idx "\{symbol} `\{name}`\{title'}"
              Shell    => renderString $ 
                            shellIndent idx $ 
                              (pretty symbol) <++> (theme' Special $ pretty $ fromMaybe name title)
-    renderNode (idx, acc) (PR {marked} symbol pr) =
-      let next = \str => (S idx, acc ++ str ++ "\n")
+    renderNode acc (PR {marked} idx symbol pr) =
+      let next = \str => acc ++ str ++ "\n"
           uri = webURI' config.org config.repo pr
       in next $
         case format of

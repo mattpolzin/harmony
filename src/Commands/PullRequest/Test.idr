@@ -114,7 +114,7 @@ namespace RenderPrTree
                       """
   onePrNoLeafShell = MkTTest
 
-  onePrAboveOneBelowNoLeaf : renderPrTree @{RenderPrTree.config} Markdown (prTree Nothing Nothing [mkPr 456 "feature-2"] [mkPr 123 "feature-1"] "main")
+  onePrAboveOneBelowNoLeaf : renderPrTree @{RenderPrTree.config} Markdown (prTree Nothing Nothing [PRTBranch (mkPr 456 "feature-2") []] [mkPr 123 "feature-1"] "main")
                   ==> """
                       > ⨀ `main`
                       >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
@@ -123,10 +123,11 @@ namespace RenderPrTree
                       >>> ↖ `feature-2` (https://github.com/org/repo/pull/456)
                       >>> **Fancy PR**
 
+
                       """
   onePrAboveOneBelowNoLeaf = MkTTest
 
-  onePrAboveOneBelowNoLeafShell : renderPrTree @{RenderPrTree.config} Shell (prTree Nothing Nothing [mkPr 456 "feature-2"] [mkPr 123 "feature-1"] "main")
+  onePrAboveOneBelowNoLeafShell : renderPrTree @{RenderPrTree.config} Shell (prTree Nothing Nothing [PRTBranch (mkPr 456 "feature-2") []] [mkPr 123 "feature-1"] "main")
                   ==> """
                        ⨀ main
                            ↖ ▪ Fancy PR
@@ -138,3 +139,47 @@ namespace RenderPrTree
 
                       """
   onePrAboveOneBelowNoLeafShell = MkTTest
+
+  downstreamTree : PullRequestTree
+  downstreamTree = PRTBranch (mkPr 456 "feature-2") [PRTBranch (mkPr 789 "feature-3") [PRTBranch (mkPr 101 "feature-4") []], PRTBranch (mkPr 202 "feature-5") [PRTLeaf]]
+
+  prWithDownstreamTree : renderPrTree @{RenderPrTree.config} Markdown (prTree Nothing Nothing [RenderPrTree.downstreamTree] [mkPr 123 "feature-1"] "main")
+                  ==> """
+                      > ⨀ `main`
+                      >> ↖ `feature-1` (https://github.com/org/repo/pull/123)
+                      >> **[[** -> _you are here_ <- **]]**
+                      >> **Fancy PR**
+                      >>> ↖ `feature-2` (https://github.com/org/repo/pull/456)
+                      >>> **Fancy PR**
+                      >>>> ↖ `feature-3` (https://github.com/org/repo/pull/789)
+                      >>>> **Fancy PR**
+                      >>>>> ↖ `feature-4` (https://github.com/org/repo/pull/101)
+                      >>>>> **Fancy PR**
+
+                      >>>> ↖ `feature-5` (https://github.com/org/repo/pull/202)
+                      >>>> **Fancy PR**
+
+                      """
+  prWithDownstreamTree = MkTTest
+
+  prWithDownstreamTreeShell : renderPrTree @{RenderPrTree.config} Shell (prTree Nothing Nothing [RenderPrTree.downstreamTree] [mkPr 123 "feature-1"] "main")
+                  ==> """
+                       ⨀ main
+                           ↖ ▪ Fancy PR
+                             ├ feature-1
+                             └ https://github.com/org/repo/pull/123
+                               ↖ Fancy PR
+                                 ├ feature-2
+                                 └ https://github.com/org/repo/pull/456
+                                   ↖ Fancy PR
+                                     ├ feature-3
+                                     └ https://github.com/org/repo/pull/789
+                                       ↖ Fancy PR
+                                         ├ feature-4
+                                         └ https://github.com/org/repo/pull/101
+                                   ↖ Fancy PR
+                                     ├ feature-5
+                                     └ https://github.com/org/repo/pull/202
+
+                      """
+  prWithDownstreamTreeShell = MkTTest
