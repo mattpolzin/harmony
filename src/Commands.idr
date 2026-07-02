@@ -101,7 +101,7 @@ label @{config} labels =
 
 prUsageError  : String
 prUsageError = 
-  "pr's arguments must be #<label>, --into <branch-name>, --ready, --draft, or --issue."
+  "pr's arguments must be #<label>, --into <branch-name>, --print-tree, --output <format>, --ready, --draft, or --issue."
 
 data IntoOpt = Branch (Exists String.NonEmpty)
 
@@ -140,10 +140,10 @@ parsePrArgs args =
       intoArgs' = Into <$> intoArgs
       (outputArgs, rest') = parseAllOutputArgs rest
       outputArgs' = Output <$> outputArgs
-      (projectArgs, rest') = parseAllProjectArgs rest
+      (projectArgs, rest'') = parseAllProjectArgs rest'
       projectArgs' = SetProject <$> projectArgs
-      rest'' = (traverse (parseReadyFlag <||> parseDraftFlag <||> parseIssueFlag <||> parsePrintTreeFlag <||> parseLabelArg) rest')
-      in  maybeToEither prUsageError ((intoArgs' ++ outputArgs' ++ projectArgs' ++) <$> rest'')
+      rest''' = (traverse (parseReadyFlag <||> parseDraftFlag <||> parseIssueFlag <||> parsePrintTreeFlag <||> parseLabelArg) rest'')
+      in  maybeToEither prUsageError ((intoArgs' ++ outputArgs' ++ projectArgs' ++) <$> rest''')
   where
     parseDraftFlag : String -> Maybe PrArg
     parseDraftFlag "--draft" = Just Draft
