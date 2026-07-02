@@ -1,3 +1,15 @@
+# 7.5.0 (Get down to get up)
+Published: 2026-07-02T02:29:35Z
+
+## What's Changed
+* Support multiple downstream PRs in tree by @mattpolzin in https://github.com/mattpolzin/harmony/pull/351
+* [fix] PR command output option fails to parse by @mattpolzin in https://github.com/mattpolzin/harmony/pull/365
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.4.0...7.5.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 7.4.0 (De-fault)
 Published: 2026-06-30T03:14:04Z
 
