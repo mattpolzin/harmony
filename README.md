@@ -438,6 +438,34 @@ Create a GitHub issue and then create a PR linked to that issue:
 harmony pr --issue
 ```
 
+Print a PR Tree:
+```shell
+harmony pr --print-tree
+```
+
+<!-- image location is intentionally relative to repository root -->
+![PR Tree Screenshot](./docs/images/pr-tree.png)
+
+Print a PR Tree in Markdown (well suited to GitHub PR descriptions):
+```shell
+harmony pr --print-tree --output markdown 
+```
+> ⨀ `main`
+>> ↖ `feature/352/test-a` (https://github.com/mattpolzin/harmony/pull/357)
+>> **Test A**
+>>> ↖ `feature/353/test-b` (https://github.com/mattpolzin/harmony/pull/358)
+>>> **[[** -> _you are here_ <- **]]**
+>>> **Test B**
+>>>> ↖ `feature/354/test-c` (https://github.com/mattpolzin/harmony/pull/359)
+>>>> **Test c**
+>>>>> ↖ `feature/362/test-c2` (https://github.com/mattpolzin/harmony/pull/363)
+>>>>> **Test C2**
+
+>>>> ↖ `feature/355/test-d` (https://github.com/mattpolzin/harmony/pull/360)
+>>>> **Test D**
+>>>>> ↖ `feature/356/test-e` (https://github.com/mattpolzin/harmony/pull/361)
+>>>>> **Test E**
+
 ## `quick [--bugfix] [--project {<project-number> | <project-title>}] [issue-title | #<issue-number>] [...]`
 Helps you create a new GitHub issue and a branch to work on that issue all in
 one go. The branch name will be structured such that if you have GitHub branch
