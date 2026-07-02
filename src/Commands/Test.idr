@@ -34,8 +34,17 @@ namespace ParsePrArgs
   parsesProjectOption : parsePrArgs ["--project", "a"] === Right [SetProject (Title "a")]
   parsesProjectOption = Refl
 
+  parsesOutputOption : parsePrArgs ["--output", "markdown"] === Right [Output Markdown]
+  parsesOutputOption = Refl
+
+  parsesOutputOptionWithPrintTree : parsePrArgs ["--print-tree", "--output", "markdown"] === Right [Output Markdown, PrintTree]
+  parsesOutputOptionWithPrintTree = Refl
+
   errorsForJustIntoFlag : parsePrArgs ["--into"] === Left Commands.prUsageError
   errorsForJustIntoFlag = Refl
+
+  errorsForJustOutputFlag : parsePrArgs ["--output"] === Left Commands.prUsageError
+  errorsForJustOutputFlag = Refl
 
   errorsForLabelWithoutHash : parsePrArgs ["a"] === Left Commands.prUsageError
   errorsForLabelWithoutHash = Refl
