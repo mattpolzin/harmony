@@ -25,3 +25,12 @@ public export
 isHashPrefix : String -> Bool
 isHashPrefix str =
   ("#" `isPrefixOf` str) || ("\\#" `isPrefixOf` str)
+
+public export
+parseBool : String -> Maybe Bool
+parseBool x with (toLower x)
+  _ | "yes"   = Just True
+  _ | "true"  = Just True
+  _ | "no"    = Just False
+  _ | "false" = Just False
+  _ | _ = Nothing

@@ -507,7 +507,7 @@ githubInferredBranchInfo @{config} branch =
         MkInferredData Nothing 
                        (Just $ buildIssueBodyPrefix branch issue)
                        (Just $ titlePrefixForBranch branch ++ issue.title)
-                       issue.baseBranchGuess
+                       issue.commentConfig.baseBranchGuess
 
   where
     issueNumber : Maybe String
