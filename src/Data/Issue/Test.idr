@@ -17,7 +17,7 @@ mockIssue = MkIssue
   }
 
 namespace BaseBranchGuess
-  testBaseBranchParsing : Test.mockIssue.commentConfig.baseBranchGuess ==> Nothing
+  testBaseBranchParsing : (commentConfig Test.mockIssue).baseBranchGuess ==> Nothing
   testBaseBranchParsing = MkTTest
 
   bodyWithBaseBranch : String
@@ -30,10 +30,10 @@ namespace BaseBranchGuess
   mockIssue2 : Issue
   mockIssue2 = { body := bodyWithBaseBranch } mockIssue
 
-  testBaseBranchParsing2 : BaseBranchGuess.mockIssue2.commentConfig.baseBranchGuess ==> Just "feature/1234/cool-stuff"
+  testBaseBranchParsing2 : (commentConfig BaseBranchGuess.mockIssue2).baseBranchGuess ==> Just "feature/1234/cool-stuff"
   testBaseBranchParsing2 = MkTTest
 
-  testCloseWithPRParsing : Test.mockIssue.commentConfig.closeWithPr ==> Nothing
+  testCloseWithPRParsing : (commentConfig Test.mockIssue).closeWithPr ==> Nothing
   testCloseWithPRParsing = MkTTest
 
   bodyWithCloseWithPRComment : String
@@ -46,6 +46,6 @@ namespace BaseBranchGuess
   mockIssue3 : Issue
   mockIssue3 = { body := bodyWithCloseWithPRComment } mockIssue
 
-  testCloseWithPRParsing2 : BaseBranchGuess.mockIssue3.commentConfig.closeWithPr ==> Just True
+  testCloseWithPRParsing2 : (commentConfig BaseBranchGuess.mockIssue3).closeWithPr ==> Just True
   testCloseWithPRParsing2 = MkTTest
 

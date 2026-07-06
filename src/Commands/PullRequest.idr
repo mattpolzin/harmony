@@ -293,14 +293,14 @@ record BranchInferredData where
 noInferredData : BranchInferredData
 noInferredData = MkInferredData Nothing Nothing Nothing Nothing
 
-relatedToPrefix : (issueNumber : String) -> String
-relatedToPrefix issueNumber = "Related to #\{issueNumber}"
+relatedToBranchStr : (closes : Bool) -> (bugfix : Bool) -> (issueNumber : String) -> String
+relatedToBranchStr False _     issueNumber = "Related to #\{issueNumber}"
+relatedToBranchStr True  False issueNumber = "Closes #\{issueNumber}"
+relatedToBranchStr True  True  issueNumber = "Fixes #\{issueNumber}"
 
-titlePrefixForBranch : Config => (branch : String) -> String
-titlePrefixForBranch @{config} branch =
-  if isBugfixBranch branch
-     then maybe "" (++ " ") config.bugfixPRTitlePrefix
-     else ""
+titlePrefixForBranch : Config => (bugfix : Bool) -> String
+titlePrefixForBranch @{config} False = ""
+titlePrefixForBranch @{config} True  = maybe "" (++ " ") config.bugfixPRTitlePrefix
 
 removeCommentOpenTag : String -> String
 removeCommentOpenTag str =
@@ -323,12 +323,12 @@ issueDescriptionPrefix maybeTree issue =
   -->
   """
 
-issueBodyPrefix : (maybeTree : String) -> Issue -> String
-issueBodyPrefix maybeTree issue =
+issueBodyPrefix : (closesWithPR : Bool) -> (bugfix : Bool) -> (maybeTree : String) -> Issue -> String
+issueBodyPrefix closesWithPR bugfix maybeTree issue =
   """
   \{issueDescriptionPrefix maybeTree issue}
 
-  \{relatedToPrefix (show issue.number)}
+  \{relatedToBranchStr closesWithPR bugfix (show issue.number)}
   """
 
 ||| Get the chain of PRs that lead from the given branch to the configured
@@ -480,16 +480,22 @@ renderPrTree @{config} format =
                         , indent 2 $ "└" <++> annotate italic (pretty uri)
                         ]
 
-buildIssueBodyPrefix : Config => Octokit => (branch : String) -> Issue -> (baseBranch : String) -> Promise' String
-buildIssueBodyPrefix @{config} branch issue baseBranch = do
+record ConfiguredBranch where
+  constructor MkConfiguredBranch
+  branch : String
+  bugfix : Bool
+
+buildIssueBodyPrefix : Config => Octokit => ConfiguredBranch -> ConfiguredIssue -> (baseBranch : String) -> Promise' String
+buildIssueBodyPrefix @{config} (MkConfiguredBranch branch bugfix) issue' baseBranch = do
   tree <- maybePrTree
-  pure $ issueBodyPrefix tree issue
+  let closesWithPR = maybe False id issue'.closeWithPr
+  pure $ issueBodyPrefix closesWithPR bugfix tree issue'.issue
   where
     maybePrTree : Promise' String
     maybePrTree =
       if config.addPrTreeDescription && (baseBranch /= config.mainBranch)
          then do (prs, terminalBranch) <- upstreamPrChain (limit 10) baseBranch
-                 let nodes = prTree (Just branch) (Just issue.title) [] prs terminalBranch
+                 let nodes = prTree (Just branch) (Just issue'.title) [] prs terminalBranch
                  let tree = renderPrTree Markdown nodes
                  pure """
                       ## PR Tree
@@ -497,21 +503,22 @@ buildIssueBodyPrefix @{config} branch issue baseBranch = do
                       """
          else pure ""
 
-githubInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
-githubInferredBranchInfo @{config} branch =
+githubInferredBranchInfo : Config => Octokit => ConfiguredBranch -> Promise' BranchInferredData
+githubInferredBranchInfo @{config} branch' =
   case issueNumber of
     Nothing => pure noInferredData
     Just issueNum => do
       issue <- getIssue config.org config.repo issueNum
+      let configuredIssue = configuredIssue issue
       pure $ 
         MkInferredData Nothing 
-                       (Just $ buildIssueBodyPrefix branch issue)
-                       (Just $ titlePrefixForBranch branch ++ issue.title)
-                       issue.commentConfig.baseBranchGuess
+                       (Just $ buildIssueBodyPrefix branch' configuredIssue)
+                       (Just $ titlePrefixForBranch branch'.bugfix ++ issue.title)
+                       configuredIssue.baseBranchGuess
 
   where
     issueNumber : Maybe String
-    issueNumber = parseGithubIssueNumber branch
+    issueNumber = parseGithubIssueNumber branch'.branch
 
 ||| Get any inferred title prefix, body prefix, or default title from the
 ||| current branch.
@@ -528,12 +535,12 @@ githubInferredBranchInfo @{config} branch =
 ||| When the `addPrTreeDescription` Config option is set and a GitHub issue is
 ||| found, a tree of branches will be added to the body prefix if the `--into`
 ||| branch is not the configured `mainBranch`.
-getInferredBranchInfo : Config => Octokit => (branch : String) -> Promise' BranchInferredData
-getInferredBranchInfo @{config} branch =
+getInferredBranchInfo : Config => Octokit => ConfiguredBranch -> Promise' BranchInferredData
+getInferredBranchInfo @{config} branch' =
     case config.branchParsing of
-         Jira   => pure (MkInferredData ((++ " - ") <$> parseJiraSlug branch) Nothing Nothing Nothing)
+         Jira   => pure (MkInferredData ((++ " - ") <$> parseJiraSlug branch'.branch) Nothing Nothing Nothing)
          --               ^ Jira slugs become a title prefix
-         Github => githubInferredBranchInfo branch
+         Github => githubInferredBranchInfo branch'
          None   => pure noInferredData
 
 ||| A GitHub URL at which a PR can be created for the given branch.
@@ -661,17 +668,19 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
 
         -- proceed to creating a PR
         putStrLn "Creating a new PR for the current branch (\{branch})."
-        inferredBranchInfo <- getInferredBranchInfo branch
+        let branch' = MkConfiguredBranch branch (isBugfixBranch branch)
+        inferredBranchInfo <- getInferredBranchInfo branch'
 
         baseBranch <- getBaseBranch intoBranch inferredBranchInfo.baseBranchGuess
 
         issueForPr : Maybe Issue <-
           sequence $ issueTemplate <&> 
                        createNewIssueWithMessage "Creating a new GitHub issue for this PR." baseBranch Nothing . project
+        let configuredIssue = configuredIssue <$> issueForPr
 
         let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
-        bodyPrefix <- case issueForPr of
-                           Just issue => buildIssueBodyPrefix branch issue baseBranch
+        bodyPrefix <- case configuredIssue of
+                           Just issue => buildIssueBodyPrefix branch' issue baseBranch
                            Nothing => maybe (pure "") ($ baseBranch) inferredBranchInfo.buildBodyPrefix
 
         let defaultTitle = case issueForPr of

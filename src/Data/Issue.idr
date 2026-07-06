@@ -91,8 +91,8 @@ empty : IssueCommentConfig
 empty = MkIssueCommentConfig Nothing Nothing
 
 export
-(.commentConfig) : Issue -> IssueCommentConfig
-issue.commentConfig = foldr go empty . lines $ issue.body
+commentConfig : Issue -> IssueCommentConfig
+commentConfig issue = foldr go empty . lines $ issue.body
   where
     getBaseFromLine : String -> IssueCommentConfig ->  IssueCommentConfig
     getBaseFromLine line cfg =
@@ -109,6 +109,29 @@ issue.commentConfig = foldr go empty . lines $ issue.body
     go : String -> IssueCommentConfig -> IssueCommentConfig
     go line =
       getBaseFromLine line . getCloseWithPRFromLine line
+
+public export
+record ConfiguredIssue where
+  constructor MkConfiguredIssue
+  issue : Issue
+  config : IssueCommentConfig
+
+export
+(.baseBranchGuess) : ConfiguredIssue -> Maybe String
+i.baseBranchGuess = i.config.baseBranchGuess
+
+export
+(.closeWithPr) : ConfiguredIssue -> Maybe Bool
+i.closeWithPr = i.config.closeWithPr
+
+export
+(.title) : ConfiguredIssue -> String
+i.title = i.issue.title
+
+export
+configuredIssue : Issue -> ConfiguredIssue
+configuredIssue issue =
+  MkConfiguredIssue issue (commentConfig issue)
 
 export
 parseIssue : JSON -> Either String Issue
