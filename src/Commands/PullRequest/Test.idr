@@ -7,7 +7,10 @@ import Data.Theme
 
 import Commands.PullRequest
 
+-- testing
+import Hedgehog
 import TTest
+--
 
 namespace PrCreationUrl
   withoutIntoBranch : prCreationUrl "org" "repo" "branch" Nothing === "https://github.com/org/repo/compare/branch?expand=1"
@@ -24,8 +27,15 @@ namespace RemoveCommentTags
   withTags = MkTTest
 
 namespace IssueBodyPrefix
-  relatedToPrefixTest : relatedToPrefix "123" === "Related to #123"
-  relatedToPrefixTest = Refl
+  relatedToBranchStrTest : (bugfix : Bool)
+                        -> relatedToBranchStr False bugfix "123" === "Related to #123"
+  relatedToBranchStrTest _ = Refl
+
+  relatedToBranchStrTest2 : relatedToBranchStr True True "123" === "Fixes #123"
+  relatedToBranchStrTest2 = Refl
+
+  relatedToBranchStrTest3 : relatedToBranchStr True False "123" === "Closes #123"
+  relatedToBranchStrTest3 = Refl
 
 namespace RenderPrTree
   config : Config

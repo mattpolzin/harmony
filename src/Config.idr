@@ -17,7 +17,9 @@ import JSON.Parser
 import System
 import System.File
 import System.Git
+
 import Util
+import Util.String
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Util
@@ -125,14 +127,6 @@ parseGitHubURI str = parseHTTPS str <|> parseSSH str
 
     parseSSH : String -> Maybe GitRemote
     parseSSH = dropPrefix' "git@github.com:" >=> parseSuffix
-
-parseBool : String -> Maybe Bool
-parseBool x with (toLower x)
-  _ | "yes"   = Just True
-  _ | "true"  = Just True
-  _ | "no"    = Just False
-  _ | "false" = Just False
-  _ | _ = Nothing
 
 update : Functor f => (String -> f a) -> (a -> b -> b) -> b -> String -> f b
 update f g c = map (flip g c) . f

@@ -67,7 +67,7 @@ createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project 
             putStrLn "What would you like the issue title to be?"
             trim <$> getLine
 
-  let bodyPrefix = baseBranchComment
+  let bodyPrefix = comments
 
   issueBody <- case config.editor of
                     Nothing => inlineDescription issuePrompt bodyPrefix
@@ -79,14 +79,20 @@ createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project 
       issuePrompt : String
       issuePrompt = "What would you like the issue description to be (two blank lines to finish)?"
 
-      baseBranchComment : String
+      baseBranchComment : Maybe String
       baseBranchComment =
         if baseBranchGuess /= config.mainBranch
-           then """
-                \{Issue.baseBranchComment baseBranchGuess}
+           then Just $ Issue.baseBranchComment baseBranchGuess
+           else Nothing
 
-                """
-           else ""
+      closeIssueWithBranchComment : String
+      closeIssueWithBranchComment = Issue.closeWithPRComment True
+
+      comments = 
+        unlines $ catMaybes
+          [ baseBranchComment
+          , Just closeIssueWithBranchComment
+          ]
 
 export
 createNewIssue : Config =>
