@@ -1,3 +1,14 @@
+# 7.6.0 (As quick to close as it was to open)
+Published: 2026-07-07T01:46:08Z
+
+## What's Changed
+* Close quick issues with PRs (https://github.com/mattpolzin/harmony/pull/371)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.5.0...7.6.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 7.5.0 (Get down to get up)
 Published: 2026-07-02T02:29:35Z
 
