@@ -12,12 +12,6 @@ import Hedgehog
 import TTest
 --
 
--- Generators
-%hint
-boolGen : Gen Bool
-boolGen = bool
---
-
 namespace PrCreationUrl
   withoutIntoBranch : prCreationUrl "org" "repo" "branch" Nothing === "https://github.com/org/repo/compare/branch?expand=1"
   withoutIntoBranch = Refl
@@ -34,8 +28,8 @@ namespace RemoveCommentTags
 
 namespace IssueBodyPrefix
   relatedToBranchStrTest : (bugfix : Bool)
-                        -> relatedToBranchStr False bugfix "123" ==> "Related to #123"
-  relatedToBranchStrTest _ = MkTTest
+                        -> relatedToBranchStr False bugfix "123" === "Related to #123"
+  relatedToBranchStrTest _ = Refl
 
   relatedToBranchStrTest2 : relatedToBranchStr True True "123" === "Fixes #123"
   relatedToBranchStrTest2 = Refl
