@@ -101,7 +101,7 @@ label @{config} labels =
 
 prUsageError  : String
 prUsageError = 
-  "pr's arguments must be #<label>, --into <branch-name>, --print-tree, --output <format>, --ready, --draft, or --issue."
+  "pr's arguments must be #<label>, --into <branch-name>, --print-tree, --output <format>, --ready, --draft, --issue, or --project <project-ref>."
 
 data IntoOpt = Branch (Exists String.NonEmpty)
 

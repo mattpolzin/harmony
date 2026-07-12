@@ -27,15 +27,15 @@ namespace RemoveCommentTags
   withTags = MkTTest
 
 namespace IssueBodyPrefix
-  relatedToBranchStrTest : (bugfix : Bool)
-                        -> relatedToBranchStr False bugfix "123" === "Related to #123"
-  relatedToBranchStrTest _ = Refl
+  relatedToIssueStrTest : (bugfix : Bool)
+                        -> relatedToIssueStr False bugfix "123" === "Related to #123"
+  relatedToIssueStrTest _ = Refl
 
-  relatedToBranchStrTest2 : relatedToBranchStr True True "123" === "Fixes #123"
-  relatedToBranchStrTest2 = Refl
+  relatedToIssueStrTest2 : relatedToIssueStr True True "123" === "Fixes #123"
+  relatedToIssueStrTest2 = Refl
 
-  relatedToBranchStrTest3 : relatedToBranchStr True False "123" === "Closes #123"
-  relatedToBranchStrTest3 = Refl
+  relatedToIssueStrTest3 : relatedToIssueStr True False "123" === "Closes #123"
+  relatedToIssueStrTest3 = Refl
 
 namespace RenderPrTree
   config : Config

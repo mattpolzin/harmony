@@ -293,10 +293,10 @@ record BranchInferredData where
 noInferredData : BranchInferredData
 noInferredData = MkInferredData Nothing Nothing Nothing Nothing
 
-relatedToBranchStr : (closes : Bool) -> (bugfix : Bool) -> (issueNumber : String) -> String
-relatedToBranchStr False _     issueNumber = "Related to #\{issueNumber}"
-relatedToBranchStr True  False issueNumber = "Closes #\{issueNumber}"
-relatedToBranchStr True  True  issueNumber = "Fixes #\{issueNumber}"
+relatedToIssueStr : (closes : Bool) -> (bugfix : Bool) -> (issueNumber : String) -> String
+relatedToIssueStr False _     issueNumber = "Related to #\{issueNumber}"
+relatedToIssueStr True  False issueNumber = "Closes #\{issueNumber}"
+relatedToIssueStr True  True  issueNumber = "Fixes #\{issueNumber}"
 
 titlePrefixForBranch : Config => (bugfix : Bool) -> String
 titlePrefixForBranch @{config} False = ""
@@ -328,7 +328,7 @@ issueBodyPrefix closesWithPR bugfix maybeTree issue =
   """
   \{issueDescriptionPrefix maybeTree issue}
 
-  \{relatedToBranchStr closesWithPR bugfix (show issue.number)}
+  \{relatedToIssueStr closesWithPR bugfix (show issue.number)}
   """
 
 ||| Get the chain of PRs that lead from the given branch to the configured
@@ -570,6 +570,10 @@ record IssueTemplate where
 ||| through creating a new PR in-terminal. Otherwise, a GitHub URL is returned
 ||| that, when visited, will allow the user to create a PR for the current
 ||| branch in-browser.
+|||
+||| If an issue template is provided (by default this arg is `Nothing`) that
+||| indicates that a new issue should be created and associated with the
+||| identified or created PR.
 export
 identifyOrCreatePR : Config => Octokit => 
                      {default False markAsDraft : Bool}
@@ -579,18 +583,11 @@ identifyOrCreatePR : Config => Octokit =>
                   -> Promise' CreatePRResult
 identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch = do
   [openPr] <- listPRsForBranch config.org config.repo branch
-    | [] => do
-        when (isJust issueTemplate && isJust (parseGithubIssueNumber branch)) $
-          reject "The current branch already appears to reference a GitHub issue; --issue would create a duplicate issue."
-        if config.ttyStdout
-             then Actual Created <$> createPR
-             else if isJust issueTemplate
-                     then reject "The --issue option requires an interactive terminal because Harmony needs to prompt for issue details."
-                     else pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
+    | [] => createIssueAndPR issueTemplate (parseGithubIssueNumber branch) config.ttyStdout
     | _  => reject "Multiple PRs for the current brach. Harmony only handles 1 PR per branch currently."
-  whenJust issueTemplate $ \_ =>
-    reject "The --issue option is only supported when creating a new PR."
+  maybeCreateIssueForExistingPR openPr issueTemplate
   pure (Actual Identified openPr)
+
     where
       continueGivenUncommittedChanges : Promise' Bool
       continueGivenUncommittedChanges = do
@@ -644,6 +641,26 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
               (notEmptyString <$> getLineEnterForDefault "What would you like the PR title to be?"
                                                          defaultTitle)
 
+      createIssue : (baseBranch : String) -> IssueTemplate -> Promise' ConfiguredIssue
+      createIssue baseBranch issueTemplate = do
+        issueForPr : Issue <-
+          createNewIssueWithMessage "Creating a new GitHub issue for this PR." baseBranch Nothing issueTemplate.project
+        pure $ configuredIssue issueForPr
+
+      maybeCreateIssueForExistingPR : PullRequest -> Maybe IssueTemplate -> Promise' ()
+      maybeCreateIssueForExistingPR _ Nothing = pure ()
+      maybeCreateIssueForExistingPR openPr (Just issueTemplate) = do
+        True <- yesNoPrompt "Do you want to create a new issue and mention it from the existing PR for this branch?"
+          | False => putStrLn "No worries, leaving the existing PR alone."
+        configuredIssue <- createIssue openPr.baseRef issueTemplate 
+        let commentPrefix = relatedToIssueStr False False (show configuredIssue.number)
+        comment <- case config.editor of
+                        Nothing => inlineDescription "What would you like the PR comment to say (two blank lines to finish)?" commentPrefix
+                        Just ed => either (const "") id <$> do
+                                     waitForEnter "write a comment relating the new issue to the current PR"
+                                     editorDescription ed Nothing commentPrefix
+        createComment config.org config.repo openPr.number comment
+
       createPR : Promise' PullRequest
       createPR = do
         -- create a remote tracking branch if needed
@@ -673,17 +690,14 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
 
         baseBranch <- getBaseBranch intoBranch inferredBranchInfo.baseBranchGuess
 
-        issueForPr : Maybe Issue <-
-          sequence $ issueTemplate <&> 
-                       createNewIssueWithMessage "Creating a new GitHub issue for this PR." baseBranch Nothing . project
-        let configuredIssue = configuredIssue <$> issueForPr
+        configuredIssue <- traverse (createIssue baseBranch) issueTemplate
 
         let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
         bodyPrefix <- case configuredIssue of
                            Just issue => buildIssueBodyPrefix branch' issue baseBranch
                            Nothing => maybe (pure "") ($ baseBranch) inferredBranchInfo.buildBodyPrefix
 
-        let defaultTitle = case issueForPr of
+        let defaultTitle = case configuredIssue of
                                 Just issue => Just issue.title
                                 Nothing => inferredBranchInfo.defaultTitle
 
@@ -701,3 +715,13 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
         putStrLn branch
 
         GitHub.createPR {markAsDraft} config.org config.repo branch baseBranch title description
+
+      createIssueAndPR : Maybe IssueTemplate -> (issueNumber : Maybe String) -> (isTTY : Bool) -> Promise' CreatePRResult
+      createIssueAndPR (Just _) (Just _) _ =
+        reject "The current branch already appears to reference a GitHub issue; --issue would create a duplicate issue."
+      createIssueAndPR (Just _) _ False =
+        reject "The --issue option requires an interactive terminal because Harmony needs to prompt for issue details."
+      createIssueAndPR issueTemplate issueNumber True =
+        Actual Created <$> createPR
+      createIssueAndPR Nothing _ False =
+        pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
