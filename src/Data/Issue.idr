@@ -129,6 +129,10 @@ export
 i.title = i.issue.title
 
 export
+(.number) : ConfiguredIssue -> Integer
+i.number = i.issue.number
+
+export
 configuredIssue : Issue -> ConfiguredIssue
 configuredIssue issue =
   MkConfiguredIssue issue (commentConfig issue)
