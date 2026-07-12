@@ -650,7 +650,7 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
       maybeCreateIssueForExistingPR : PullRequest -> Maybe IssueTemplate -> Promise' ()
       maybeCreateIssueForExistingPR _ Nothing = pure ()
       maybeCreateIssueForExistingPR openPr (Just issueTemplate) = do
-        True <- yesNoPrompt "Do you want to create a new issue and relate it to the existing PR for this branch?"
+        True <- yesNoPrompt "Do you want to create a new issue and mention it from the existing PR for this branch?"
           | False => putStrLn "No worries, leaving the existing PR alone."
         configuredIssue <- createIssue openPr.baseRef issueTemplate 
         let commentPrefix = relatedToIssueStr False False (show configuredIssue.number)
