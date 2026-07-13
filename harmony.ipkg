@@ -1,5 +1,5 @@
 package harmony
-version = 7.6.0
+version = 7.7.0
 authors = "Mathew Polzin"
 license = "MIT"
 brief = "Harmony GitHub collaboration tool"
@@ -41,6 +41,7 @@ main = Main
 executable = "harmony"
 opts = "--codegen node"
 sourcedir = "src"
+datadir = "support"
 
 -- builddir =
 -- outputdir =

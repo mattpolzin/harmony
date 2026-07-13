@@ -20,6 +20,7 @@ import System.Git
 
 import Util
 import Util.String
+import Util.Prompting
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Util

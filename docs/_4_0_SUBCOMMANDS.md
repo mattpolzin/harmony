@@ -151,8 +151,10 @@ flag. The default behavior for new PRs is to mark them ready.
 
 When creating a new PR interactively, `--issue` creates a GitHub issue first,
 uses its title as the default PR title, and adds the usual `Related to #N` link
-to the PR body. `--issue` only works for new PRs; existing PRs need issue
-association handled separately for now.
+to the PR body. `--issue` can create issues for existing PRs and add a comment
+on the PR referring to the new issue -- It cannot set the issue up to
+automatically close when the PR merges but this can be set up afterwards in the
+GitHub web app.
 
 When creating a new issue (see `--issue`), the `--project` option can be used to
 associate the new issue with an existing project.
@@ -210,7 +212,8 @@ Create a pull request that will merge into the hypothetical pre-existing
 harmony pr --into release/2_0
 ```
 
-Create a GitHub issue and then create a PR linked to that issue:
+Create a GitHub issue and then create a PR linked to that issue or comment on
+an existing PR with reference to the new issue:
 ```shell
 harmony pr --issue
 ```
