@@ -26,6 +26,7 @@ import FFI.Concurrency
 import FFI.GitHub
 import Util
 import Util.OptionParsing
+import Util.Prompting
 import Util.ShellCompletion
 import Util.String
 import System.Git

@@ -31,6 +31,7 @@ import Theme
 import Util
 import Util.Github
 import Util.Jira
+import Util.Prompting
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
@@ -652,7 +653,10 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
       maybeCreateIssueForExistingPR openPr (Just issueTemplate) = do
         True <- yesNoPrompt "Do you want to create a new issue and mention it from the existing PR for this branch?"
           | False => putStrLn "No worries, leaving the existing PR alone."
-        putStrLn "IMPORTANT NOTE: You cannot set the issue up to automatically close when this PR closes but you can link the two by commenting on the PR with a reference to the issue."
+        printImportant """
+                       You cannot set the issue up to automatically close when this PR closes but harmony
+                       will link the two by commenting on the PR with a reference to the issue.
+                       """
         putStrLn "  You can set the PR up to close the new issue from the GitHub web app later."
         waitForEnter "continue"
         configuredIssue <- createIssue openPr.baseRef issueTemplate 

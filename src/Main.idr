@@ -38,18 +38,6 @@ exitError err =
           else ignore $ fPutStrLn stderr err
      exitFailure
 
-printWarning : HasIO io => 
-               String 
-            -> io ()
-printWarning warning =
-  if !(isTTY stderr)
-    then do
-      ignore $ fPutStrLn stderr . renderString . layoutPretty defaultLayoutOptions . annotate (color Yellow) . pretty $ trim warning
-      ignore $ fPutStrLn stderr ""
-    else do
-      ignore $ fPutStrLn stderr warning
-      ignore $ fPutStrLn stderr ""
-
 resolve'' : Promise' () -> IO ()
 resolve'' = resolve' pure exitError
 

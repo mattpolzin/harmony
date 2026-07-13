@@ -8,8 +8,9 @@ import Data.String
 import public Data.Project
 
 import FFI.GitHub
-import Util
 
+import Util
+import Util.Prompting
 import Util.ShellCompletion
 
 import System.Git
