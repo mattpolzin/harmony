@@ -653,17 +653,21 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
       maybeCreateIssueForExistingPR openPr (Just issueTemplate) = do
         True <- yesNoPrompt "Do you want to create a new issue and mention it from the existing PR for this branch?"
           | False => putStrLn "No worries, leaving the existing PR alone."
+        putStrLn ""
         printImportant """
                        You cannot set the issue up to automatically close when this PR closes but harmony
                        will link the two by commenting on the PR with a reference to the issue.
                        """
-        putStrLn "  You can set the PR up to close the new issue from the GitHub web app later."
+        putStrLn ""
+        putStrLn "You can set the PR up to close the new issue from the GitHub web app later."
+        putStrLn ""
         waitForEnter "continue"
         configuredIssue <- createIssue openPr.baseRef issueTemplate 
         let commentPrefix = relatedToIssueStr False False (show configuredIssue.number)
         comment <- case config.editor of
                         Nothing => inlineDescription "What would you like the PR comment to say (two blank lines to finish)?" commentPrefix
                         Just ed => either (const "") id <$> do
+                                     putStrLn ""
                                      waitForEnter "write a comment relating the new issue to the current PR"
                                      editorDescription ed Nothing commentPrefix
         createComment config.org config.repo openPr.number comment

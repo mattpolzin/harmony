@@ -170,6 +170,6 @@ printImportant : HasIO io =>
               -> io ()
 printImportant message = do
   renderIO $
-    hsep [ annotate (color Yellow) "IMPORTANT:"
-         , reflow message
-         ]
+    (annotate (color Yellow) "IMPORTANT:") <+> (
+      indent 1 $
+        reflow message)
