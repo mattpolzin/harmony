@@ -1,3 +1,16 @@
+# 7.7.0 (A Real Throwback)
+Published: 2026-07-13T18:09:15Z
+
+## What's Changed
+* Support issue flag on existing PRs (https://github.com/mattpolzin/harmony/pull/372 / https://github.com/mattpolzin/harmony/pull/375)
+
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.6.0...7.7.0
+
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 7.6.0 (As quick to close as it was to open)
 Published: 2026-07-07T01:46:08Z
 
