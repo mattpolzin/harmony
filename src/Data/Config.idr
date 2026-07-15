@@ -335,32 +335,20 @@ namespace SettablePropNamedProperties
 
 export
 reifyProp : Exists (SettableProp name) -> (h ** SettableProp name h)
-reifyProp (Evidence _ RequestTeams) = (_ ** RequestTeams)
-reifyProp (Evidence _ RequestUsers) = (_ ** RequestUsers)
-reifyProp (Evidence _ CommentOnRequest) = (_ ** CommentOnRequest)
-reifyProp (Evidence _ ParseBranchStrategy) = (_ ** ParseBranchStrategy)
-reifyProp (Evidence _ BugfixPRTitlePrefix) = (_ ** BugfixPRTitlePrefix)
-reifyProp (Evidence _ AddPrTreeDescription) = (_ ** AddPrTreeDescription)
-reifyProp (Evidence _ DefaultRemote) = (_ ** DefaultRemote)
-reifyProp (Evidence _ MainBranch) = (_ ** MainBranch)
-reifyProp (Evidence _ DefaultProject) = (_ ** DefaultProject)
-reifyProp (Evidence _ ThemeProp) = (_ **  ThemeProp)
-reifyProp (Evidence _ GithubPAT) = (_ ** GithubPAT)
+reifyProp (Evidence h prop) = %runElab ( do
+            cons <- getCons `{ Data.Config.SettableProp }
+            check $ elabCase `( prop ) `( Data.Config.SettableProp name h )
+                             cons (\name => let name' = IVar EmptyFC name
+                                            in  (MkClause name `( (_ ** ~name') )))
+          )
 
 settableProps : List SomeSettableProp
-settableProps = [
-    (_ ** _ ** RequestTeams)
-  , (_ ** _ ** RequestUsers)
-  , (_ ** _ ** CommentOnRequest)
-  , (_ ** _ ** ParseBranchStrategy)
-  , (_ ** _ ** BugfixPRTitlePrefix)
-  , (_ ** _ ** AddPrTreeDescription)
-  , (_ ** _ ** DefaultRemote)
-  , (_ ** _ ** MainBranch)
-  , (_ ** _ ** DefaultProject)
-  , (_ ** _ ** ThemeProp)
-  , (_ ** _ ** GithubPAT)
-  ]
+settableProps = %runElab ( do
+                  cons <- getCons `{ Data.Config.SettableProp }
+                  let prop = (\name => let name' = IVar EmptyFC name
+                                        in  `( (_ ** _ ** ~name') ))
+                  traverse check (prop <$> cons)
+                )
 
 namespace SettablePropsProperties
   settablePropsCovering : (p : SettableProp n h) -> Elem (n ** h ** p) Config.settableProps
