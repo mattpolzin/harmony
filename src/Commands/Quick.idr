@@ -75,7 +75,7 @@ createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project 
                     Just ed => either (const "") id <$>
                                  editorDescription ed Nothing bodyPrefix
 
-  createIssue config.org config.repo project issueTitle issueBody
+  createIssue config.org config.repo project Nothing issueTitle issueBody
     where
       issuePrompt : String
       issuePrompt = "What would you like the issue description to be (two blank lines to finish)?"
