@@ -13,6 +13,38 @@ import Util.String
 %default total
 
 public export
+record IssueRef where
+  constructor MkIssueRef
+  ||| The issue's opaque GraphQL identifier
+  graphQlId : String
+  ||| The issue's "number" (as seen in URIs referring to the issue)
+  number    : Integer
+  ||| The issue's title
+  title     : String
+
+export
+Show IssueRef where
+  show (MkIssueRef graphQlId number title) = "[\{show number}] \{title}"
+
+export
+parseIssueRef : JSON -> Either String IssueRef
+parseIssueRef json =
+ do issueRef <- object json
+    [id, issueNumber, issueTitle] <- lookupAll ["graphQlId", "issue_number", "title"] issueRef
+    graphQlId   <- string id
+    number      <- integer issueNumber
+    title       <- string issueTitle
+    pure $ MkIssueRef {
+        graphQlId
+      , number
+      , title
+      }
+
+export
+json : IssueRef -> JSON
+json (MkIssueRef graphQlId number title) = JObject [("graphQlId", JString graphQlId), ("number", JInteger number), ("title", JString title)]
+
+public export
 record Issue where
   constructor MkIssue
   ||| The issue's "number" (as seen in URIs referring to the issue).

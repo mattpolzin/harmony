@@ -33,6 +33,7 @@ addPrTreeDescription
 defaultRemote
 mainBranch
 defaultProject
+defaultParentIssue
 theme
 githubPAT
 

@@ -32,6 +32,9 @@ mainBranch:           [string] The name of the default Git base branch for new
 defaultProject:       [number] The project number of a default project to add
                       new issues to. You can leave this unset if you don't want
                       new issues added to any project.`
+defaultParentIssue:   [number] The issue number of a default issue to create new
+                      issues under. You can leave this unset if you don't want
+                      new issues added to any parent issue.`
 theme:                [dark/light]
 githubPAT:            [string] The Personal Access Token Harmony should use to
                       authenticate with GitHub. You can leave this unset if you
@@ -46,6 +49,7 @@ Current Configuration:
        defaultRemote: origin
           mainBranch: main
       defaultProject: not set
+  defaultParentIssue: not set
         requestTeams: True
         requestUsers: False
     commentOnRequest: at-mention

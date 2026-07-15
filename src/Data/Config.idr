@@ -1,6 +1,7 @@
 module Data.Config
 
 import Data.Either
+import Data.Issue
 import Data.List
 import Data.List.Elem
 import Data.Project
@@ -128,11 +129,13 @@ record Config where
   ||| The main branch. New PRs are based off of this branch.
   mainBranch    : String
   ||| The project to add new issues to by default (if any).
-  defaultProject : Maybe ProjectRef
+  defaultProject     : Maybe ProjectRef
+  ||| The parent issue (number) to add new issues to by default (if any).
+  defaultParentIssue : Maybe Integer
   ||| True to request review from teams as well as individual users on PRs.
-  requestTeams   : Bool
+  requestTeams : Bool
   ||| True to request review from users as well as teams on PRs.
-  requestUsers   : Bool
+  requestUsers : Bool
   ||| AtMention or Name to comment on PRs after requesting review from users.
   commentOnRequest : CommentStrategy
   ||| If set to Jira, attempt to extract a Jira slug from branch names and use
@@ -261,17 +264,17 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
       for any PR that is into a branch other than the `mainBranch` configured.
       """
     )
-  DefaultRemote   : SettableProp
+  DefaultRemote      : SettableProp
     "defaultRemote"
     ( (Any "string")
     , "The name of the default Git remote to use (e.g. 'origin')."
     )
-  MainBranch      : SettableProp
+  MainBranch         : SettableProp
     "mainBranch"
     ( (Any "string")
     , "The name of the default Git base branch for new PRs."
     )
-  DefaultProject   : SettableProp
+  DefaultProject     : SettableProp
     "defaultProject"
     ( (Any "number")
     , """
@@ -279,12 +282,20 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
       You can leave this unset if you don't want new issues added to any project.`
       """
     )
-  ThemeProp       : SettableProp
+  DefaultParentIssue : SettableProp
+    "defaultParentIssue"
+    ( (Any "number")
+    , """
+      The issue number of a default issue to create new issues under. \
+      You can leave this unset if you don't want new issues added to any parent issue.`
+      """
+    )
+  ThemeProp          : SettableProp
     "theme"
     ( (Enum ["dark", "light"])
     , ""
     )
-  GithubPAT       : SettableProp
+  GithubPAT          : SettableProp
     "githubPAT"
     ( (Any "string")
     , """
@@ -320,6 +331,7 @@ settablePropNamed "addPrTreeDescription" = Just $ Evidence _ AddPrTreeDescriptio
 settablePropNamed "defaultRemote"        = Just $ Evidence _ DefaultRemote
 settablePropNamed "mainBranch"           = Just $ Evidence _ MainBranch
 settablePropNamed "defaultProject"       = Just $ Evidence _ DefaultProject
+settablePropNamed "defaultParentIssue"   = Just $ Evidence _ DefaultParentIssue
 settablePropNamed "theme"                = Just $ Evidence _ ThemeProp
 settablePropNamed "githubPAT"            = Just $ Evidence _ GithubPAT
 settablePropNamed "requestUsers"         = Just $ Evidence _ RequestUsers
@@ -414,6 +426,7 @@ render config = vsep
   , "       defaultRemote:" <++> (pretty $ config.defaultRemote)
   , "          mainBranch:" <++> (pretty $ config.mainBranch)
   , "      defaultProject:" <++> (pretty $ maybe "not set" show config.defaultProject)
+  , "  defaultParentIssue:" <++> (pretty $ maybe "not set" show config.defaultParentIssue)
   , "        requestTeams:" <++> (pretty $ show config.requestTeams)
   , "        requestUsers:" <++> (pretty $ show config.requestUsers)
   , "    commentOnRequest:" <++> (pretty $ show config.commentOnRequest)
@@ -464,9 +477,10 @@ Show Config where
 export
 json : Config -> JSON
 json (MkConfig updatedAt org repo defaultRemote mainBranch defaultProject
-               requestTeams requestUsers commentOnRequest branchParsing
-               bugfixPRTitlePrefix addPrTreeDescription teamSlugs repoLabels
-               repoProjects orgMembers ignoredPRs githubPAT githubUser theme _) =
+               defaultParentIssue requestTeams requestUsers commentOnRequest
+               branchParsing bugfixPRTitlePrefix addPrTreeDescription teamSlugs
+               repoLabels repoProjects orgMembers ignoredPRs githubPAT
+               githubUser theme _) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
@@ -479,6 +493,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch defaultProject
     , ("defaultRemote"        , JString defaultRemote)
     , ("mainBranch"           , JString mainBranch)
     , ("defaultProject"       , maybe JNull json defaultProject)
+    , ("defaultParentIssue"   , maybe JNull JInteger defaultParentIssue)
     , ("theme"                , JString $ show theme)
     , ("orgMembers"           , JArray $ JString <$> sort orgMembers)
     , ("teamSlugs"            , JArray $ JString <$> sort teamSlugs)
@@ -536,6 +551,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeGithubUser = lookup "githubUser" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
                                           let maybeDefaultProject = lookup "defaultProject" config
+                                          let maybeDefaultParentIssue = lookup "defaultParentIssue" config
                                           let maybeRepoProjects = lookup "repoProjects" config
                                           ua <- cast <$> integer updatedAt
                                           o  <- string org
@@ -546,6 +562,9 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           -- TODO 9.0.0: Make defaultProject required part of config file (default to Nothing)
                                           --             defaultProject lookup can be moved to the required lookupAll above.
                                           at <- bool requestTeams
+                                          dpi <- maybe (Right Nothing) (optional integer) maybeDefaultParentIssue
+                                          -- TODO 9.0.0: Make defaultParentIssue required part of config file (default to Nothing)
+                                          --             defaultParentIssue lookup can be moved to the required lookupAll above.
                                           au <- bool requestUsers
                                           ca <- commentConfig commentOnRequest
                                           bp <- branchConfig branchParsing
@@ -570,6 +589,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , defaultRemote        = dr
                                             , mainBranch           = mb
                                             , defaultProject       = dp
+                                            , defaultParentIssue   = dpi
                                             , requestTeams         = at
                                             , requestUsers         = au
                                             , teamSlugs            = ts
@@ -616,6 +636,7 @@ simpleDefaults =
       , defaultRemote        = "origin"
       , mainBranch           = "main"
       , defaultProject       = Nothing
+      , defaultParentIssue   = Nothing
       , requestTeams         = True
       , requestUsers         = True
       , teamSlugs            = []

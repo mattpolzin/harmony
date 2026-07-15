@@ -8,7 +8,8 @@ Subcommands:
       be set and read via this subcommand.
       properties: requestTeams, requestUsers, commentOnRequest, branchParsing,
                   bugfixPRTitlePrefix, addPrTreeDescription, defaultRemote,
-                  mainBranch, defaultProject, theme, githubPAT
+                  mainBranch, defaultProject, defaultParentIssue, theme,
+                  githubPAT
   contribute [-c/--checkout | -l/--list] [-<num>] [-i/--ignore {<uri> | <pr-number>}]
       Contribute to an open PR. Prints a URL. Prioritizes PRs you are requested
       to review but will also return other PRs.
