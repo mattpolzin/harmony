@@ -70,7 +70,7 @@ record Issue where
 export
 Show Issue where
   show (MkIssue _ number title _ _ author _ _) = 
-    "[\{show number}] \{authorString} - \{title}"
+    "[\{show number}] \{title}"
     where
       authorString : String
       authorString = padRight 15 ' ' $ show author
