@@ -6,6 +6,8 @@ import Data.Project
 import Data.Promise
 import Data.String
 
+import Config
+
 import FFI.GitHub
 import System.File
 import Util.Prompting
@@ -20,6 +22,33 @@ Show IssueCategory where
   show Bugfix = "Bugfix"
   show Feature = "Feature"
 
+maybeParentIssuePrompt : Config =>
+                         Octokit =>
+                         Promise' (Maybe Issue)
+maybeParentIssuePrompt @{config} =
+  case config.defaultParentIssue of
+       Nothing => pure Nothing
+       Just defaultParentIssueNum => goWithIssueNum defaultParentIssueNum
+
+  where
+    clearDefaultPrompt : Issue -> Promise' ()
+    clearDefaultPrompt issue = do
+      putStrLn ""
+      True <- yesNoPrompt {defaultAnswer = False}
+                           "Do you want to clear the current default parent issue (\{show issue})?"
+        | False => pure ()
+      
+      ignore (clearDefaultParentIssue config)
+
+    goWithIssueNum : (issueNum : Integer) -> Promise' (Maybe Issue)
+    goWithIssueNum issueNum = do
+      issue <- getIssue config.org config.repo (show issueNum)
+      
+      True <- yesNoPrompt "Would you like your new issue to be a sub-issue of \{show issue}?"
+        | False => do clearDefaultPrompt issue
+                      pure Nothing
+      pure $ Just issue
+
 export
 createNewIssueWithMessage : Config =>
                             Octokit =>
@@ -31,6 +60,8 @@ createNewIssueWithMessage : Config =>
 createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project = do
   putStrLn message
   putStrLn ""
+
+  parentIssue <- maybeParentIssuePrompt
 
   issueTitle <-
     case issueTitle' of
@@ -46,7 +77,7 @@ createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project 
                     Just ed => either (const "") id <$>
                                  editorDescription ed Nothing bodyPrefix
 
-  createIssue config.org config.repo project Nothing issueTitle issueBody
+  createIssue config.org config.repo project (reference <$> parentIssue) issueTitle issueBody
     where
       issuePrompt : String
       issuePrompt = "What would you like the issue description to be (two blank lines to finish)?"

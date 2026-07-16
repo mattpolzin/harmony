@@ -83,6 +83,12 @@ addIgnoredPRs config is =
   writeConfig $
     { ignoredPRs := (nub $ config.ignoredPRs ++ is) } config
 
+export
+clearDefaultParentIssue : Config -> Promise' Config
+clearDefaultParentIssue config =
+  let config' = { defaultParentIssue := Nothing } config
+  in  writeConfig config'
+
 ||| Determine if any configuration settings are inconsistent with each other or result in
 ||| behavior that is likely undesirable.
 checkConfigConsistency : Config -> Either (Doc AnsiStyle) ()
