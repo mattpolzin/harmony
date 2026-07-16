@@ -283,7 +283,7 @@ listIssues @{Kit ptr} owner repo =
   parsePrimResult parseIssuesString ignoreStatus $
     prim__listIssues ptr owner repo
 
-%foreign okit_ffi "get_issue"
+%foreign okit_ffi "get_issue_graphql"
 prim__getIssue : Ptr OctokitRef 
               -> (owner : String) 
               -> (repo : String) 

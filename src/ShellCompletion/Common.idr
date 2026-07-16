@@ -392,16 +392,16 @@ compareAssignees (Just u) (Just a1) (Just a2) =
                      else EQ
 
 compareIssues : (githubUser : Maybe String) -> Issue -> Issue -> Ordering
-compareIssues u (MkIssue _ _ _ _ _ assignee1 (Just prCount1)) (MkIssue _ _ _ _ _ assignee2 (Just prCount2)) =
+compareIssues u (MkIssue _ _ _ _ _ _ assignee1 (Just prCount1)) (MkIssue _ _ _ _ _ _ assignee2 (Just prCount2)) =
   case compare prCount1 prCount2 of
        LT => LT
        GT => GT
        EQ => compareAssignees u assignee1 assignee2
-compareIssues u (MkIssue _ _ _ _ _ assignee1 Nothing) (MkIssue _ _ _ _ _ assignee2 (Just _)) =
+compareIssues u (MkIssue _ _ _ _ _ _ assignee1 Nothing) (MkIssue _ _ _ _ _ _ assignee2 (Just _)) =
   LT
-compareIssues u (MkIssue _ _ _ _ _ assignee1 (Just _)) (MkIssue _ _ _ _ _ assignee2 Nothing) =
+compareIssues u (MkIssue _ _ _ _ _ _ assignee1 (Just _)) (MkIssue _ _ _ _ _ _ assignee2 Nothing) =
   GT
-compareIssues u (MkIssue _ _ _ _ _ assignee1 Nothing) (MkIssue _ _ _ _ _ assignee2 Nothing) =
+compareIssues u (MkIssue _ _ _ _ _ _ assignee1 Nothing) (MkIssue _ _ _ _ _ _ assignee2 Nothing) =
   compareAssignees u assignee1 assignee2
 
 ||| Opts for which completion requires reaching out to GitHub.

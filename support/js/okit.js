@@ -358,38 +358,6 @@ const okit_list_pr_reviews = (octokit, owner, repo, pull_number, onSuccess, onFa
     onFailure
   )
 
-const digIssue = issue => {
-    return {
-      issue_number: issue.number,
-      author: issue.user.login,
-      created_at: issue.created_at,
-      title: issue.title,
-      body: issue.body,
-      assignee: issue.assignee ? issue.assignee.login : null,
-      linked_pr_count: null
-    }
-  }
-const digIssues = issueJson =>
-  issueJson.map(digIssue)
-
-// Get a single Issue
-// Executes callback with stringified JSON {"issue_number": Int, "author": String, "created_at": Date, "title": String, "body": String?, "assignee": String?}
-const okit_get_issue = (octokit, owner, repo, issue_number, onSuccess, onFailure) =>
-  idris__okit_unpromisify(
-    octokit.rest.issues.get({ owner, repo, issue_number }),
-    r => onSuccess(JSON.stringify(digIssue(r.data))),
-    onFailure
-  )
-
-// Get a list of Issues
-// Executes callback with stringified JSON [{"issue_number": Int, "author": String, "created_at": Date, "title": String, "body": String?, "assignee": String?}]
-const okit_list_open_issues = (octokit, owner, repo, onSuccess, onFailure) =>
-  idris__okit_unpromisify(
-    octokit.rest.issues.listForRepo({ owner, repo, state: 'open', sort: 'updated', direction: 'desc' }),
-    r => onSuccess(JSON.stringify(digIssues(r.data))),
-    onFailure
-  )
-
 // Get GraphQL Issue Data
 const digGraphQlIssue = issue => {
     return {
@@ -418,6 +386,24 @@ const graphql_issue_selections = `
             assignedActors(first: 10) { nodes { ... on Actor { login } } }
             closedByPullRequestsReferences(first: 10) { nodes { ... on PullRequest { number } } }
 `
+
+const okit_get_issue_graphql = (octokit, owner, repo, issue_number, onSuccess, onFailure) =>
+  idris__okit_unpromisify(
+    octokit.graphql({
+      query: `query listIssues($owner: String!, $repo: String!, $issue_number: Int!) {
+        repository(owner: $owner, name: $repo) {
+          issue(number: $issue_number) {
+            ${graphql_issue_selections}
+          }
+        }
+      }`,
+      owner,
+      repo,
+      issue_number: Number(issue_number)
+    }),
+    r => onSuccess(JSON.stringify(digGraphQlIssue(r.repository.issue))),
+    onFailure
+  )
 
 const okit_list_open_issues_graphql = (octokit, owner, repo, onSuccess, onFailure) =>
   idris__okit_unpromisify(
