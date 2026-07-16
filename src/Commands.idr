@@ -1,11 +1,11 @@
 module Commands
 
-import Commands.Graph
-import Commands.Label
-import Commands.PullRequest
+import public Commands.Graph
+import public Commands.Label
+import public Commands.PullRequest
 import public Commands.Quick
-import Commands.Reviewer
-import Commands.User
+import public Commands.Reviewer
+import public Commands.User
 
 import Data.Config
 import Data.DPair
@@ -22,14 +22,16 @@ import Data.String
 import Data.User
 
 import Config
+import Issue
+
 import FFI.Concurrency
 import FFI.GitHub
+import System.Git
 import Util
 import Util.OptionParsing
 import Util.Prompting
 import Util.ShellCompletion
 import Util.String
-import System.Git
 
 import JSON.Parser
 import Text.PrettyPrint.Prettyprinter

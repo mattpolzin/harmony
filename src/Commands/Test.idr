@@ -12,6 +12,8 @@ import Data.List1
 import Data.String
 import Data.String.Extra
 
+import Issue
+
 namespace ParsePrArgs
   parsesJustDraftFlag : parsePrArgs ["--draft"] === Right [Draft]
   parsesJustDraftFlag = Refl
