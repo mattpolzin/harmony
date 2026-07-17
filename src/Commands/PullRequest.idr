@@ -1,7 +1,6 @@
 module Commands.PullRequest
 
 import Commands.Reviewer
-import Commands.Quick
 
 import Data.Config
 import Data.Either
@@ -12,6 +11,7 @@ import Data.List
 import Data.List1
 import Data.Nat
 import Data.Pagination
+import Data.Project
 import Data.Promise
 import Data.PullRequest
 import Data.Review
@@ -19,6 +19,8 @@ import Data.SortedMap
 import Data.String
 import Data.String.Extra
 import Data.User
+
+import Issue
 
 import FFI.Concurrency
 import FFI.GitHub

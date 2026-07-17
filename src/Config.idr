@@ -83,6 +83,12 @@ addIgnoredPRs config is =
   writeConfig $
     { ignoredPRs := (nub $ config.ignoredPRs ++ is) } config
 
+export
+clearDefaultParentIssue : Config -> Promise' Config
+clearDefaultParentIssue config =
+  let config' = { defaultParentIssue := Nothing } config
+  in  writeConfig config'
+
 ||| Determine if any configuration settings are inconsistent with each other or result in
 ||| behavior that is likely undesirable.
 checkConfigConsistency : Config -> Either (Doc AnsiStyle) ()
@@ -150,6 +156,8 @@ propSetter DefaultProject       =
     where
       projectByNumber : List ProjectRef -> Nat -> Maybe ProjectRef
       projectByNumber xs n = find (\p => p.number == cast n) xs
+propSetter DefaultParentIssue   =
+  \config => update parsePositive (\i => { defaultParentIssue := Just i }) config
 
 ||| Attempt to set a property and value given String representations.
 ||| After setting, write the config and return the updated result.
@@ -175,6 +183,7 @@ propGetter AddPrTreeDescription = show . addPrTreeDescription
 propGetter DefaultRemote        = show . defaultRemote
 propGetter MainBranch           = show . mainBranch
 propGetter DefaultProject       = show . defaultProject
+propGetter DefaultParentIssue   = show . defaultParentIssue
 propGetter ThemeProp            = show . theme
 propGetter GithubPAT            = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show . githubPAT
 
@@ -281,6 +290,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   let addPrTreeDescription = False
   let bugfixPRTitlePrefix = Nothing
   let defaultProject = Nothing
+  let defaultParentIssue = Nothing
   let ignoredPRs = []
   let githubPAT = hide <$> configPAT
   let githubUser = Just githubUser
@@ -291,6 +301,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , defaultRemote
     , mainBranch
     , defaultProject
+    , defaultParentIssue
     , requestTeams
     , requestUsers
     , commentOnRequest

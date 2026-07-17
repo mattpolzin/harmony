@@ -3,27 +3,20 @@ module Commands.Quick
 import Data.Config
 import Data.Issue
 import Data.List
+import public Data.Project
 import Data.Promise
 import Data.String
-import public Data.Project
+
+import Issue
 
 import FFI.GitHub
-
+import System.File
+import System.Git
 import Util
 import Util.Prompting
 import Util.ShellCompletion
 
-import System.Git
-import System.File
-
 %default total
-
-public export
-data IssueCategory = Bugfix | Feature
-
-Show IssueCategory where
-  show Bugfix = "Bugfix"
-  show Feature = "Feature"
 
 dasherize : String -> String
 dasherize = pack . replaceOn ' ' '-' . unpack
@@ -49,53 +42,6 @@ projectFromUnsluggifiedTitle configProjects slugifiedTitle =
 branchNameSuggestion : String -> String
 branchNameSuggestion = toLower . dasherize
 
-export
-createNewIssueWithMessage : Config =>
-                            Octokit =>
-                            (message : String)
-                         -> (baseBranchGuess : String)
-                         -> (issueTitle : Maybe String)
-                         -> (project : Maybe ProjectRef)
-                         -> Promise' Issue
-createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project = do
-  putStrLn message
-  putStrLn ""
-
-  issueTitle <-
-    case issueTitle' of
-         Just title => pure title
-         Nothing    => do
-            putStrLn "What would you like the issue title to be?"
-            trim <$> getLine
-
-  let bodyPrefix = comments
-
-  issueBody <- case config.editor of
-                    Nothing => inlineDescription issuePrompt bodyPrefix
-                    Just ed => either (const "") id <$>
-                                 editorDescription ed Nothing bodyPrefix
-
-  createIssue config.org config.repo project issueTitle issueBody
-    where
-      issuePrompt : String
-      issuePrompt = "What would you like the issue description to be (two blank lines to finish)?"
-
-      baseBranchComment : Maybe String
-      baseBranchComment =
-        if baseBranchGuess /= config.mainBranch
-           then Just $ Issue.baseBranchComment baseBranchGuess
-           else Nothing
-
-      closeIssueWithBranchComment : String
-      closeIssueWithBranchComment = Issue.closeWithPRComment True
-
-      comments = 
-        unlines $ catMaybes
-          [ baseBranchComment
-          , Just closeIssueWithBranchComment
-          ]
-
-export
 createNewIssue : Config =>
                  Octokit =>
                  (baseBranchGuess : String)

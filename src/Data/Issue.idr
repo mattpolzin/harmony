@@ -13,8 +13,42 @@ import Util.String
 %default total
 
 public export
+record IssueRef where
+  constructor MkIssueRef
+  ||| The issue's opaque GraphQL identifier
+  graphQlId : String
+  ||| The issue's "number" (as seen in URIs referring to the issue)
+  number    : Integer
+  ||| The issue's title
+  title     : String
+
+export
+Show IssueRef where
+  show (MkIssueRef graphQlId number title) = "[\{show number}] \{title}"
+
+export
+parseIssueRef : JSON -> Either String IssueRef
+parseIssueRef json =
+ do issueRef <- object json
+    [id, issueNumber, issueTitle] <- lookupAll ["graphQlId", "issue_number", "title"] issueRef
+    graphQlId   <- string id
+    number      <- integer issueNumber
+    title       <- string issueTitle
+    pure $ MkIssueRef {
+        graphQlId
+      , number
+      , title
+      }
+
+export
+json : IssueRef -> JSON
+json (MkIssueRef graphQlId number title) = JObject [("graphQlId", JString graphQlId), ("number", JInteger number), ("title", JString title)]
+
+public export
 record Issue where
   constructor MkIssue
+  ||| An opaque ID that can be used in GraphQL requests.
+  graphQlId : String
   ||| The issue's "number" (as seen in URIs referring to the issue).
   number    : Integer
   ||| The issue's title
@@ -35,11 +69,19 @@ record Issue where
 
 export
 Show Issue where
-  show (MkIssue number title _ _ author _ _) = 
-    "[\{show number}] \{authorString} - \{title}"
+  show (MkIssue _ number title _ _ author _ _) = 
+    "[\{show number}] \{title}"
     where
       authorString : String
       authorString = padRight 15 ' ' $ show author
+
+export
+reference : Issue -> IssueRef
+reference i = MkIssueRef i.graphQlId i.number i.title
+
+export
+(.reference) : Issue -> IssueRef
+i.reference = reference i
 
 export
 isAuthor : String -> Issue -> Bool
@@ -47,8 +89,8 @@ isAuthor login = (== login) . author
 
 export
 isAssignee : String -> Issue -> Bool
-isAssignee login (MkIssue _ _ _ _ _ Nothing _) = False
-isAssignee login (MkIssue _ _ _ _ _ (Just assignee) _) = login == assignee
+isAssignee login (MkIssue _ _ _ _ _ _ Nothing _) = False
+isAssignee login (MkIssue _ _ _ _ _ _ (Just assignee) _) = login == assignee
 
 -- the beginning and end tags of the html comment are intentionally on their
 -- given lines here to make parsing as low overhead as possible.
@@ -141,7 +183,8 @@ export
 parseIssue : JSON -> Either String Issue
 parseIssue json =
  do issue <- object json
-    [issueNumber, issueTitle, issueBody, authorLogin, createdAtStr, assigneeLogin] <- lookupAll ["issue_number", "title", "body", "author", "created_at", "assignee"] issue
+    [graphQlId, issueNumber, issueTitle, issueBody, authorLogin, createdAtStr, assigneeLogin] <- lookupAll ["graphql_id", "issue_number", "title", "body", "author", "created_at", "assignee"] issue
+    graphQlId   <- string graphQlId
     number      <- integer issueNumber
     title       <- string issueTitle
     body        <- maybe "" id <$> optional string issueBody
@@ -152,7 +195,8 @@ parseIssue json =
                            (optional nat)
                            (lookup "linked_pr_count" issue)
     pure $ MkIssue {
-        number
+        graphQlId
+      , number
       , title
       , body
       , createdAt

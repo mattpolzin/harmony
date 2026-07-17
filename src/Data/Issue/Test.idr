@@ -7,7 +7,8 @@ import TTest
 
 mockIssue : Issue
 mockIssue = MkIssue
-  { number        = 12
+  { graphQlId = "1234"
+  , number        = 12
   , title         = "issue 1"
   , body          = "issue description"
   , createdAt     = MkDate 2020 10 01
