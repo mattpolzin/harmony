@@ -1,3 +1,14 @@
+# 7.8.0 (Who should I look up to?)
+Published: 2026-07-17T01:06:04Z
+
+## What's Changed
+* Add parent issue config option (https://github.com/mattpolzin/harmony/pull/385)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.7.0...7.8.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 7.7.0 (A Real Throwback)
 Published: 2026-07-13T18:09:15Z
 
