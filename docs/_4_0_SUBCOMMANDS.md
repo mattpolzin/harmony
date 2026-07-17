@@ -42,6 +42,9 @@ Not all configuration properties can be read/set with this command.
 `defaultProject` (optional number) 
 : A project to add new issues to. If unset, new issues aren't added to any projects.
 
+`defaultParentIssue` (optional number) 
+: An issue to add new issues to. If unset, new issues aren't added to any parent issue.
+
 `theme` (`dark`/`light`) 
 : Use colors suited better for either a dark or light Terminal background.
 
