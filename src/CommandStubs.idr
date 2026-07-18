@@ -37,6 +37,8 @@ allCommands =
       "request review for the current branch (creating a PR if needed)"
   , C "rq"
       "request review for the current branch (creating a PR if needed)"
+  , C "slow"
+      "set a parent issue for upcoming 'quick' issues and maybe stub some issues out"
   , C "sync"
       "pull labels, teams, etc. from GitHub and cache locally"
   , C "version"

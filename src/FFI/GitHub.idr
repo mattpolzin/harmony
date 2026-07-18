@@ -270,6 +270,7 @@ createPR @{Kit ptr} {markAsDraft} owner repo head base title description =
 prim__listIssues : Ptr OctokitRef 
                -> (owner : String) 
                -> (repo : String) 
+               -> (count : Int)
                -> (onSuccess : String -> PrimIO ()) 
                -> (onFailure : String -> PrimIO ()) 
                -> PrimIO ()
@@ -278,10 +279,11 @@ export
 listIssues : Octokit => 
              (owner : String) 
           -> (repo : String) 
+          -> (count : Nat)
           -> Promise String (List Issue)
-listIssues @{Kit ptr} owner repo =
+listIssues @{Kit ptr} owner repo count =
   parsePrimResult parseIssuesString ignoreStatus $
-    prim__listIssues ptr owner repo
+    prim__listIssues ptr owner repo (cast count)
 
 %foreign okit_ffi "get_issue_graphql"
 prim__getIssue : Ptr OctokitRef 

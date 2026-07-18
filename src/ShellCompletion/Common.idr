@@ -414,7 +414,7 @@ githubOpts : Config =>
           -> (prevWord : String)
           -> Promise' (List String)
 githubOpts @{config} gh _ "quick" partialArg _ = do
-  issues <- listIssues @{gh} config.org config.repo
+  issues <- listIssues @{gh} config.org config.repo 30
   let partialArg' = unhashify partialArg
   let str = stringify . completionResult
   let sorter = (compareIssues config.githubUser) `on` snd

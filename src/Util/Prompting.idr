@@ -137,9 +137,10 @@ editorDescription : HasIO io =>
                     (editor : String)
                  -> (templateFilePath : Maybe String)
                  -> (bodyPrefix : String)
+                 -> {default "md" tmpFileExtension : String}
                  -> io (Either FileError String)
-editorDescription editor templateFilePath bodyPrefix = do
-  let tmpFileName = "editor_description.tmp.md"
+editorDescription editor templateFilePath bodyPrefix {tmpFileExtension} = do
+  let tmpFileName = "editor_description.tmp.\{tmpFileExtension}"
   prepareDescriptionFile templateFilePath bodyPrefix tmpFileName
   0 <- system "\{editor} \{tmpFileName}"
     | e => pure (Left $ GenericFileError e)

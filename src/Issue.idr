@@ -5,6 +5,7 @@ import Data.Issue
 import Data.Project
 import Data.Promise
 import Data.String
+import Data.List
 
 import Config
 
@@ -16,6 +17,11 @@ import Util.Prompting
 
 public export
 data IssueCategory = Bugfix | Feature
+
+public export
+data IssueIdent = NoInfo
+                | IssueTitle String
+                | IssueNumber String
 
 export
 Show IssueCategory where
@@ -96,3 +102,26 @@ createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project 
           [ baseBranchComment
           , Just closeIssueWithBranchComment
           ]
+
+showIssueOption : Issue -> String
+showIssueOption issue =
+  """
+      [\{show issue.number}]:
+  \{issue.body}
+
+  """
+
+export
+getIssueByTitle : Config =>
+                  Octokit =>
+                  (title : String)
+               -> Promise' Issue
+getIssueByTitle @{config} title = do
+  issues <- listIssues config.org config.repo 100
+  let [issue] = filter (\i => i.title == title) issues
+    | [] => reject "Issue with title '\{title}' was not one of the 100 most recent issues."
+    | issues => reject """
+                       Issue title '\{title}' is ambiguous. You'll have to use an issue number.
+                       \{concatMap showIssueOption issues}
+                       """
+  pure issue

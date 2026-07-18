@@ -2,6 +2,7 @@ module Config
 
 import Data.Config
 import Data.Either
+import Data.Issue
 import Data.List
 import Data.List.PrefixSuffix
 import Data.List1
@@ -82,6 +83,12 @@ addIgnoredPRs : Config -> List Integer -> Promise' Config
 addIgnoredPRs config is =
   writeConfig $
     { ignoredPRs := (nub $ config.ignoredPRs ++ is) } config
+
+export
+setDefaultParentIssue : Config -> IssueRef -> Promise' Config
+setDefaultParentIssue config issue =
+  let config' = { defaultParentIssue := Just issue.number } config
+  in  writeConfig config'
 
 export
 clearDefaultParentIssue : Config -> Promise' Config
