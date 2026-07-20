@@ -12,6 +12,7 @@ quick
 reflect
 request
 rq
+slow
 sync
 version
 whoami
