@@ -1,3 +1,24 @@
+# 7.9.0 (More like fast in a different way)
+Published: 2026-07-20T14:52:02Z
+
+## What's Changed
+* add `slow` command (https://github.com/mattpolzin/harmony/pull/403)
+
+### `slow`
+The `harmony slow` command allows you to set a parent issue to be used for future `quick` issues and optionally stub out some issues immediately.
+
+#### Examles
+`harmony slow \#123` will make it so that the next time you run `harmony quick` your new issue will be created as a child issue of issue number `123`.
+
+`harmony slow \#123 --stub` will also ask you to enter any number of newline delimited issue titles and it will create a child issue of issue number `123` for each.
+
+If you've already got a default parent issue set (a previous invocation of `harmony slow`, for example) then you can also run `harmony slow --stub` without specifying an issue to stub some issues out for the current parent issue.
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.8.0...7.9.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 7.8.0 (Who should I look up to?)
 Published: 2026-07-17T01:06:04Z
 
