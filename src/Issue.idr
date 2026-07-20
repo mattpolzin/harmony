@@ -12,6 +12,11 @@ import Config
 import FFI.GitHub
 import System.File
 import Util.Prompting
+import Util
+
+import Text.PrettyPrint.Prettyprinter
+import Text.PrettyPrint.Prettyprinter.Util
+import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
@@ -103,13 +108,16 @@ createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project 
           , Just closeIssueWithBranchComment
           ]
 
-showIssueOption : Issue -> String
+showIssueOption : Issue -> Doc AnsiStyle
 showIssueOption issue =
-  """
-      [\{show issue.number}]:
-  \{issue.body}
+  vsep [ enclose "[" "]" (annotate (color Green) . pretty $ show issue.number) <+> ":"
+       , indent 2 $ reflow issue.body
+       ]
 
-  """
+ambiguousIssueOptions : List Issue -> Doc AnsiStyle
+ambiguousIssueOptions issues =
+    vsep $ [ annotate underline $ annotate [Reset] "Possible Issues:"
+           ] ++ (showIssueOption <$> issues)
 
 export
 getIssueByTitle : Config =>
@@ -122,6 +130,7 @@ getIssueByTitle @{config} title = do
     | [] => reject "Issue with title '\{title}' was not one of the 100 most recent issues."
     | issues => reject """
                        Issue title '\{title}' is ambiguous. You'll have to use an issue number.
-                       \{concatMap showIssueOption issues}
+
+                       \{renderString $ ambiguousIssueOptions issues}
                        """
   pure issue
