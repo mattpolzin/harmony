@@ -35,6 +35,7 @@ Harmony - Harmonize with coworkers around GitHub reviewing
 `harmony reflect` \
 `harmony request {team-slug | +user-login} [options]` \
 `harmony rq {team-slug | +user-login} [options]` \
+`harmony slow [options] [issue-title | #issue-number]` \
 `harmony sync` \
 `harmony version` \
 `harmony whoami`
@@ -198,8 +199,9 @@ Creating config...
 
 ## Usage
 Once configured, Harmony supports the following commands that are documented
-below: `config`, `branch`, `pr`, `quick`, `label`, `request` (also aliased to
-`rq`), `contribute`, `whoami`, `reflect`, `list`, `graph`, `health`, and `sync`.
+below: `config`, `branch`, `pr`, `quick`, `slow`, `label`, `request` (also
+aliased to `rq`), `contribute`, `whoami`, `reflect`, `list`, `graph`, `health`,
+and `sync`.
 
 Some of Harmony's features will request you to enter titles, descriptions, etc.
 at the CLI. You can walk through these prompts and enter values interactively
@@ -576,6 +578,9 @@ additionally request review from the users with logins "carl001" and "emmaham":
 ```shell
 harmony request web +carl001 +emmaham
 ```
+## `slow [-s/--stub] [issue-title | #<issue-number>]`
+Set an issue to be the parent of upcoming `quick` issues and optionally stub out
+any number of sub-issues immediately.
 
 ## `sync`
 Sync the locally configured team slugs and user logins that are used by

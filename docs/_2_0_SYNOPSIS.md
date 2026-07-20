@@ -12,6 +12,7 @@
 `harmony reflect` \
 `harmony request {team-slug | +user-login} [options]` \
 `harmony rq {team-slug | +user-login} [options]` \
+`harmony slow [options] [issue-title | #issue-number]` \
 `harmony sync` \
 `harmony version` \
 `harmony whoami`

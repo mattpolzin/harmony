@@ -56,6 +56,10 @@ Harmony \- Harmonize with coworkers around GitHub reviewing
 .PD 0
 .P
 .PD
+\f[CR]harmony slow [options] [issue\-title | #issue\-number]\f[R]
+.PD 0
+.P
+.PD
 \f[CR]harmony sync\f[R]
 .PD 0
 .P
@@ -166,10 +170,10 @@ Creating config...
 .SS Usage
 Once configured, Harmony supports the following commands that are
 documented below: \f[CR]config\f[R], \f[CR]branch\f[R], \f[CR]pr\f[R],
-\f[CR]quick\f[R], \f[CR]label\f[R], \f[CR]request\f[R] (also aliased to
-\f[CR]rq\f[R]), \f[CR]contribute\f[R], \f[CR]whoami\f[R],
-\f[CR]reflect\f[R], \f[CR]list\f[R], \f[CR]graph\f[R],
-\f[CR]health\f[R], and \f[CR]sync\f[R].
+\f[CR]quick\f[R], \f[CR]slow\f[R], \f[CR]label\f[R], \f[CR]request\f[R]
+(also aliased to \f[CR]rq\f[R]), \f[CR]contribute\f[R],
+\f[CR]whoami\f[R], \f[CR]reflect\f[R], \f[CR]list\f[R],
+\f[CR]graph\f[R], \f[CR]health\f[R], and \f[CR]sync\f[R].
 .PP
 Some of Harmony\(cqs features will request you to enter titles,
 descriptions, etc.
@@ -619,6 +623,9 @@ team and additionally request review from the users with logins
 .EX
 harmony request web +carl001 +emmaham
 .EE
+.SS \f[CR]slow [\-s/\-\-stub] [issue\-title | #<issue\-number>]\f[R]
+Set an issue to be the parent of upcoming \f[CR]quick\f[R] issues and
+optionally stub out any number of sub\-issues immediately.
 .SS \f[CR]sync\f[R]
 Sync the locally configured team slugs and user logins that are used by
 auto\-completion for Harmony.

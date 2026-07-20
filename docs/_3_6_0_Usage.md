@@ -1,7 +1,8 @@
 ## Usage
 Once configured, Harmony supports the following commands that are documented
-below: `config`, `branch`, `pr`, `quick`, `label`, `request` (also aliased to
-`rq`), `contribute`, `whoami`, `reflect`, `list`, `graph`, `health`, and `sync`.
+below: `config`, `branch`, `pr`, `quick`, `slow`, `label`, `request` (also
+aliased to `rq`), `contribute`, `whoami`, `reflect`, `list`, `graph`, `health`,
+and `sync`.
 
 Some of Harmony's features will request you to enter titles, descriptions, etc.
 at the CLI. You can walk through these prompts and enter values interactively
