@@ -18,10 +18,10 @@ commentOnRequest:     [none/name/at-mention] Determines whether- and how to
 branchParsing:        [none/jira/github] Determines whether- and how to parse
                       branch names for a prefix to automatically add to a new
                       PR's title or body to link the PR and issue/ticket.
-bugfixPRTitlePrefix:  [string] A string to prefix default PR titles with when
-                      the branch the PR is being created from is determined to
-                      be a bugfix branch (branch name starts with 'bugfix'). For
-                      example, a common prefix is '[fix]'.
+bugfixPRTitlePrefix:  [none/any string] A string to prefix default PR titles
+                      with when the branch the PR is being created from is
+                      determined to be a bugfix branch (branch name starts with
+                      'bugfix'). For example, a common prefix is '[fix]'.
 addPrTreeDescription: [true/false] Determines whether to add a tree of PRs to
                       the description for any PR that is into a branch other
                       than the `mainBranch` configured.
@@ -29,16 +29,16 @@ defaultRemote:        [string] The name of the default Git remote to use (e.g.
                       'origin').
 mainBranch:           [string] The name of the default Git base branch for new
                       PRs.
-defaultProject:       [number] The project number of a default project to add
-                      new issues to. You can leave this unset if you don't want
-                      new issues added to any project.`
-defaultParentIssue:   [number] The issue number of a default issue to create new
-                      issues under. You can leave this unset if you don't want
-                      new issues added to any parent issue.`
+defaultProject:       [none/any number] The project number of a default project
+                      to add new issues to. You can leave this unset if you
+                      don't want new issues added to any project.`
+defaultParentIssue:   [none/any number] The issue number of a default issue to
+                      create new issues under. You can leave this unset if you
+                      don't want new issues added to any parent issue.`
 theme:                [dark/light]
-githubPAT:            [string] The Personal Access Token Harmony should use to
-                      authenticate with GitHub. You can leave this unset if you
-                      want to set a PAT via the GITHUB_PAT or GH_TOKEN
+githubPAT:            [none/any string] The Personal Access Token Harmony should
+                      use to authenticate with GitHub. You can leave this unset
+                      if you want to set a PAT via the GITHUB_PAT or GH_TOKEN
                       environment variable.
 
 Current Configuration:

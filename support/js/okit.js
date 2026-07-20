@@ -405,12 +405,12 @@ const okit_get_issue_graphql = (octokit, owner, repo, issue_number, onSuccess, o
     onFailure
   )
 
-const okit_list_open_issues_graphql = (octokit, owner, repo, onSuccess, onFailure) =>
+const okit_list_open_issues_graphql = (octokit, owner, repo, count, onSuccess, onFailure) =>
   idris__okit_unpromisify(
     octokit.graphql({
-      query: `query listIssues($owner: String!, $repo: String!) {
+      query: `query listIssues($owner: String!, $repo: String!, $count: Int!) {
         repository(owner: $owner, name: $repo) {
-          issues(states: [OPEN], orderBy: {field: UPDATED_AT, direction: DESC}, first: 30) {
+          issues(states: [OPEN], orderBy: {field: UPDATED_AT, direction: DESC}, first: $count) {
             nodes { ... on Issue {
               ${graphql_issue_selections}
             }}
@@ -418,7 +418,8 @@ const okit_list_open_issues_graphql = (octokit, owner, repo, onSuccess, onFailur
         }
       }`,
       owner,
-      repo
+      repo,
+      count
     }),
     r => onSuccess(JSON.stringify(digGraphQlIssues(r.repository.issues.nodes))),
     onFailure

@@ -163,6 +163,10 @@ handleAuthenticatedArgs ("rq" :: requestRest) =
   Commands.request requestRest
 handleAuthenticatedArgs ("request" :: requestRest) =
   Commands.request requestRest
+handleAuthenticatedArgs ("slow" :: args) =
+  case (parseSlowArgs args) of
+       Right args => Commands.slow args
+       Left err   => exitError err
 handleAuthenticatedArgs ["label"] =
   reject "The label command expects one or more labels as arguments."
 handleAuthenticatedArgs ("label" :: label1 :: labels) =

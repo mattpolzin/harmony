@@ -150,6 +150,13 @@ subcommandHelp' n@"quick"   = subcommand n [ argument False "--bugfix"
       description interactively regardless.
       """
   ]
+subcommandHelp' n@"slow"    = subcommand n [argument False "-s/--stub"]
+  [reflow """
+          set an issue to be the parent of upcoming 'quick' issues and
+          optionally stub the slow issue out with a series of child issues right
+          away. This is longer term project planning
+          """
+  ]
 subcommandHelp' n@"sync"    = subcommand n [] ["Synchronize local config with information from GitHub."]
 subcommandHelp' n@"branch"  = subcommand n [] ["Print the GitHub URI for the currently checked out branch."]
 subcommandHelp' n@"whoami"  = subcommand n [] [reflow "Print information about the configured and authenticated user."]

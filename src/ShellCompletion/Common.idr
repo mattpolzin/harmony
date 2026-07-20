@@ -49,6 +49,15 @@ allQuickCmdOptsAndDescriptions =
 allQuickCmdOpts : (s : CompletionStyle) -> List CompletionResult
 allQuickCmdOpts s = completionResult <$> allQuickCmdOptsAndDescriptions
 
+allSlowCmdOptsAndDescriptions : List (String, String)
+allSlowCmdOptsAndDescriptions =
+  [ ("-s"    , "stub out sub-issues")
+  , ("--stub", "stub out sub-issues")
+  ]
+
+allSlowCmdOpts : (s : CompletionStyle) -> List CompletionResult
+allSlowCmdOpts s = completionResult <$> allSlowCmdOptsAndDescriptions
+
 data ProjectStyle = Number | Title | All
 
 allProjectOptsAndDescriptions : Config -> ProjectStyle -> List (String, String)
@@ -175,6 +184,15 @@ cmdOpts s "quick" partialArg "quick"     =
   if isHashPrefix partialArg
      then Nothing -- <- falls through to handle with config below.
      else someWithPrefix partialArg (allQuickCmdOpts s)
+
+cmdOpts s "slow" "--" "slow"   = all (allSlowCmdOpts s)
+cmdOpts s "slow" "-"  "slow"   = someWithPrefix "--" (allSlowCmdOpts s)
+cmdOpts s "slow" _    "--stub" = Nothing -- <- fall through to handle issue autocompletion
+cmdOpts s "slow" _    "-s"     = Nothing -- <- fall through to handle issue autocompletion
+cmdOpts s "slow" partialArg _  =
+  if isHashPrefix partialArg
+     then Nothing -- <- falls through to handle with github below.
+     else someWithPrefix partialArg (allSlowCmdOpts s)
 
 cmdOpts s "pr" "--"          "pr"        = all (allPrCmdOpts s)
 cmdOpts s "pr" "-"           "pr"        = someWithPrefix "--" (allPrCmdOpts s)
@@ -414,7 +432,17 @@ githubOpts : Config =>
           -> (prevWord : String)
           -> Promise' (List String)
 githubOpts @{config} gh _ "quick" partialArg _ = do
-  issues <- listIssues @{gh} config.org config.repo
+  issues <- listIssues @{gh} config.org config.repo 30
+  let partialArg' = unhashify partialArg
+  let str = stringify . completionResult
+  let sorter = (compareIssues config.githubUser) `on` snd
+  let describer = describe config.githubUser
+  let issues' =
+    mapMaybe (\i => (, i) <$> hashifyIfPrefix partialArg' i.number)
+             issues
+  pure (str . mapSnd describer <$> sortBy sorter issues')
+githubOpts @{config} gh _ "slow" partialArg _ = do
+  issues <- listIssues @{gh} config.org config.repo 30
   let partialArg' = unhashify partialArg
   let str = stringify . completionResult
   let sorter = (compareIssues config.githubUser) `on` snd

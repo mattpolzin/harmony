@@ -190,16 +190,20 @@ record Config where
 -- Settable Properties Setup
 --
 
-data Options = Enum (List String) | Any String
+data IsOpt = Optional | Required
+
+data Options = Enum (List String) | Any IsOpt String
 
 (.strValue) : Options -> String
 (.strValue) (Enum strs) = concat $ intersperse "/" strs
-(.strValue) (Any str) = str
+(.strValue) (Any Required str) = str
+(.strValue) (Any Optional str) = "none/any \{str}"
 
 (.enumeratedOptions) : Options -> List String
 (.enumeratedOptions) (Enum strs) = strs
-(.enumeratedOptions) (Any str) = []
---                               ^
+(.enumeratedOptions) (Any Optional str) = ["none"]
+(.enumeratedOptions) (Any Required str) = []
+--                                 ^
 -- The string here describes the type of option so it is not itself one of the options.
 
 booleanOptions : Options
@@ -249,7 +253,7 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
     )
   BugfixPRTitlePrefix : SettableProp
     "bugfixPRTitlePrefix"
-    ( (Any "string")
+    ( (Any Optional "string")
     , """
       A string to prefix default PR titles with when the branch the PR \
       is being created from is determined to be a bugfix branch (branch name \
@@ -266,17 +270,17 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
     )
   DefaultRemote      : SettableProp
     "defaultRemote"
-    ( (Any "string")
+    ( (Any Required "string")
     , "The name of the default Git remote to use (e.g. 'origin')."
     )
   MainBranch         : SettableProp
     "mainBranch"
-    ( (Any "string")
+    ( (Any Required "string")
     , "The name of the default Git base branch for new PRs."
     )
   DefaultProject     : SettableProp
     "defaultProject"
-    ( (Any "number")
+    ( (Any Optional "number")
     , """
       The project number of a default project to add new issues to. \
       You can leave this unset if you don't want new issues added to any project.`
@@ -284,7 +288,7 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
     )
   DefaultParentIssue : SettableProp
     "defaultParentIssue"
-    ( (Any "number")
+    ( (Any Optional "number")
     , """
       The issue number of a default issue to create new issues under. \
       You can leave this unset if you don't want new issues added to any parent issue.`
@@ -297,7 +301,7 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
     )
   GithubPAT          : SettableProp
     "githubPAT"
-    ( (Any "string")
+    ( (Any Optional "string")
     , """
       The Personal Access Token Harmony should use to authenticate \
       with GitHub. You can leave this unset if you want to set a PAT via the \
@@ -322,6 +326,13 @@ propOptions : {h : _} -> SettableProp n h -> List String
 propOptions x = (fst h).enumeratedOptions
 
 export
+propIsOptional : {h :_} -> SettableProp n h -> Bool
+propIsOptional x = 
+  case (fst h) of
+       (Any Optional _) => True
+       _ => False
+
+export
 settablePropNamed : (name : String) -> Maybe (Exists (SettableProp name))
 settablePropNamed "requestTeams"         = Just $ Evidence _ RequestTeams
 settablePropNamed "commentOnRequest"     = Just $ Evidence _ CommentOnRequest
@@ -344,6 +355,15 @@ namespace SettablePropNamedProperties
       check $ elabCase `( prop ) `( Data.Config.SettableProp n h )
                        cons (\name => (MkClause name `( Refl )))
     )
+
+export
+reifyProp' : SettableProp name h -> (h ** SettableProp name h)
+reifyProp' prop = %runElab ( do
+            cons <- getCons `{ Data.Config.SettableProp }
+            check $ elabCase `( prop ) `( Data.Config.SettableProp name h )
+                             cons (\name => let name' = IVar EmptyFC name
+                                            in  (MkClause name `( (_ ** ~name') )))
+          )
 
 export
 reifyProp : Exists (SettableProp name) -> (h ** SettableProp name h)

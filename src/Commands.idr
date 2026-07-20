@@ -5,6 +5,7 @@ import public Commands.Label
 import public Commands.PullRequest
 import public Commands.Quick
 import public Commands.Reviewer
+import public Commands.Slow
 import public Commands.User
 
 import Data.Config
@@ -605,7 +606,10 @@ titleOrNumberArg args =
 issueCategory : List QuickArg -> IssueCategory
 issueCategory = maybe Feature (const Bugfix) . find (\case ABugfix => True; _ => False)
 
-||| Quickly create a new GitHub issue and branch to go along with it.
+||| Quickly create a new GitHub issue (or use an existing one) and branch to go
+||| along with it.
+|||
+||| For longer term 'project' scale work, see `slow`.
 export
 quick : Config =>
         Octokit =>
@@ -617,3 +621,62 @@ quick @{config} args = do
                     (titleOrNumberArg args)
                     {project}
 
+data SlowArg = Stub | SIssue IssueIdent
+
+slowUsageError : String
+slowUsageError =
+  "The slow command expects a single issue and optionally the --stub flag."
+
+||| Parse arguments to the slow subcommand.
+export
+parseSlowArgs : List String -> Either String (List1 SlowArg)
+parseSlowArgs args =
+  case traverse (parseStubFlag <||> parseIssue) args of
+       Just (a :: as) => Right (a ::: as)
+       _ => Left slowUsageError
+  where
+    parseStubFlag : String -> Maybe SlowArg
+    parseStubFlag "--stub" = Just Stub
+    parseStubFlag "-s" = Just Stub
+    parseStubFlag _ = Nothing
+
+    parseIssue : String -> Maybe SlowArg
+    parseIssue str =
+      if isHashPrefix str
+         then Just . SIssue . IssueNumber $ drop 1 str
+         else Just . SIssue $ IssueTitle str
+
+issueArg : List SlowArg -> Maybe IssueIdent
+issueArg = head' . mapMaybe (\case (SIssue i) => Just i; _ => Nothing)
+
+||| Slow, a cheeky spelling that opposes 'quick'. Instead of quickly working on
+||| one issue, you take an issue and break it down to work on over time.
+|||
+||| quick - create issue or use existing issue, create a branch for that issue.
+|||
+||| slow  - set an issue to be the parent of upcoming 'quick' issues and
+||| optionally stub the slow issue out with a series of child issues right
+||| away. This is longer term project planning.
+export
+slow : Config =>
+       Octokit =>
+       (args : List1 SlowArg)
+    -> Promise' ()
+slow @{config} (a ::: a' :: _ :: _) = reject slowUsageError
+slow @{config} (a ::: a') =
+  let args = (a :: a')
+      stubIssueOut = isJust $ find (\case Stub => True; _ => False) args
+  in do
+    let requestedIssue = maybe NoInfo id $ issueArg args
+    issue <- case requestedIssue of
+                  NoInfo => defaultParentIssue
+                  IssueTitle title => getIssueByTitle title
+                  IssueNumber n => getIssue config.org config.repo n
+    slowStartWork issue {stubIssueOut} 
+
+  where
+    defaultParentIssue : Promise' Issue
+    defaultParentIssue = do
+      let Just issueNum = config.defaultParentIssue
+        | Nothing => reject "The slow command requires an issue to start working on unless a defaultParentIssue is already set."
+      getIssue config.org config.repo (show issueNum)

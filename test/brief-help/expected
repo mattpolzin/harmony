@@ -14,6 +14,7 @@ Subcommands:
   reflect    show detailed information about your own review activity
   request    request review for the current branch (creating a PR if needed)
   rq         request review for the current branch (creating a PR if needed)
+  slow       set a parent issue for upcoming 'quick' issues and maybe stub some issues out
   sync       pull labels, teams, etc. from GitHub and cache locally
   version    show harmony version information
   whoami     show information about the authenticated user

@@ -90,6 +90,10 @@ Subcommands:
       Optionally apply any number of labels by prefixing them with '#'.
   rq 
       Alias for 'request' command.
+  slow [-s/--stub]
+      set an issue to be the parent of upcoming 'quick' issues and optionally
+      stub the slow issue out with a series of child issues right away. This is
+      longer term project planning
   sync 
       Synchronize local config with information from GitHub.
   version [-s/--short]

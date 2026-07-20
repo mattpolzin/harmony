@@ -353,6 +353,9 @@ additionally request review from the users with logins "carl001" and "emmaham":
 ```shell
 harmony request web +carl001 +emmaham
 ```
+## `slow [-s/--stub] [issue-title | #<issue-number>]`
+Set an issue to be the parent of upcoming `quick` issues and optionally stub out
+any number of sub-issues immediately.
 
 ## `sync`
 Sync the locally configured team slugs and user logins that are used by

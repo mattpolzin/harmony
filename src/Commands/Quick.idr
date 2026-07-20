@@ -50,11 +50,6 @@ createNewIssue : Config =>
               -> Promise' Issue
 createNewIssue = createNewIssueWithMessage "Creating a new GitHub issue and branch."
 
-public export
-data IssueIdent = NoInfo
-                | IssueTitle String
-                | IssueNumber String
-
 ||| Quickly create a branch to go along with a new or existing GitHub issue.
 export
 quickStartNewWork : Config =>

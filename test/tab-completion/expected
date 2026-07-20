@@ -12,6 +12,7 @@ quick
 reflect
 request
 rq
+slow
 sync
 version
 whoami
@@ -47,6 +48,7 @@ name
 at-mention
 
 options for bugfixPRTitlePrefix config:
+none
 
 options for defaultProject config:
 456

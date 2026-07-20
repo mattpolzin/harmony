@@ -2,6 +2,7 @@ module Config
 
 import Data.Config
 import Data.Either
+import Data.Issue
 import Data.List
 import Data.List.PrefixSuffix
 import Data.List1
@@ -84,6 +85,12 @@ addIgnoredPRs config is =
     { ignoredPRs := (nub $ config.ignoredPRs ++ is) } config
 
 export
+setDefaultParentIssue : Config -> IssueRef -> Promise' Config
+setDefaultParentIssue config issue =
+  let config' = { defaultParentIssue := Just issue.number } config
+  in  writeConfig config'
+
+export
 clearDefaultParentIssue : Config -> Promise' Config
 clearDefaultParentIssue config =
   let config' = { defaultParentIssue := Nothing } config
@@ -138,26 +145,40 @@ parseGitHubURI str = parseHTTPS str <|> parseSSH str
 update : Functor f => (String -> f a) -> (a -> b -> b) -> b -> String -> f b
 update f g c = map (flip g c) . f
 
+defaultParser : SettableProp n h -> (String -> Maybe (Maybe a)) -> String -> Maybe (Maybe a)
+defaultParser p f str =
+  let (h ** prop) = reifyProp' p
+  in
+  if propIsOptional prop
+     then case (toLower str) of
+               "none" =>  Just Nothing
+               str => f str
+     else f str
+
+defaultUpdate : SettableProp n h -> (String -> Maybe (Maybe a)) -> (Maybe a -> b -> b) -> b -> String -> Maybe b
+defaultUpdate p parser g =
+  update (defaultParser p parser) g
+
 propSetter : SettableProp n h -> (Config -> String -> Maybe Config)
-propSetter RequestTeams         = update parseBool (\b => { requestTeams := b })
-propSetter RequestUsers         = update parseBool (\b => { requestUsers := b })
-propSetter BugfixPRTitlePrefix  = update Just (\s => { bugfixPRTitlePrefix := Just s })
-propSetter AddPrTreeDescription = update parseBool (\b => { addPrTreeDescription := b })
-propSetter DefaultRemote        = update Just (\s => { defaultRemote := s })
-propSetter MainBranch           = update Just (\s => { mainBranch := s })
-propSetter ThemeProp            = update parseString (\t => { theme := t })
-propSetter GithubPAT            = update Just (\s => { githubPAT := Just $ hide s })
-propSetter CommentOnRequest     =
+propSetter p@RequestTeams         = update parseBool (\b => { requestTeams := b })
+propSetter p@RequestUsers         = update parseBool (\b => { requestUsers := b })
+propSetter p@BugfixPRTitlePrefix  = defaultUpdate p (Just . Just) (\s => { bugfixPRTitlePrefix := s })
+propSetter p@AddPrTreeDescription = update parseBool (\b => { addPrTreeDescription := b })
+propSetter p@DefaultRemote        = update Just (\s => { defaultRemote := s })
+propSetter p@MainBranch           = update Just (\s => { mainBranch := s })
+propSetter p@ThemeProp            = update parseString (\t => { theme := t })
+propSetter p@GithubPAT            = defaultUpdate p (Just . Just) (\s => { githubPAT := hide <$> s })
+propSetter p@CommentOnRequest     =
   update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
-propSetter ParseBranchStrategy  =
+propSetter p@ParseBranchStrategy  =
   update (parseBranchConfig . toLower) (\s => { branchParsing := s })
-propSetter DefaultProject       =
-  \config => update (projectByNumber config.repoProjects <=< parsePositive) (\p => { defaultProject := Just p }) config
+propSetter p@DefaultProject       =
+  \config => defaultUpdate p (map Just . projectByNumber config.repoProjects <=< parsePositive) (\p => { defaultProject := p }) config
     where
       projectByNumber : List ProjectRef -> Nat -> Maybe ProjectRef
       projectByNumber xs n = find (\p => p.number == cast n) xs
-propSetter DefaultParentIssue   =
-  \config => update parsePositive (\i => { defaultParentIssue := Just i }) config
+propSetter p@DefaultParentIssue   =
+  \config => defaultUpdate p (map Just . parsePositive) (\i => { defaultParentIssue := i }) config
 
 ||| Attempt to set a property and value given String representations.
 ||| After setting, write the config and return the updated result.
