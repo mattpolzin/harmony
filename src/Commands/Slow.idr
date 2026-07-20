@@ -44,10 +44,15 @@ slowStartWork @{config} issue {stubIssueOut} = do
   -- we set the default parent issue in the config so that future calls to
   -- `quick` will create issues under this project.
   renderIO $
-    reflow """
-           Issue \{show issue.number} will be the default parent of new issues until
-           you call `slow` again or clear it with `config defaultParentIssue none`.
-           """
+    hsep [ "Issue"
+         , (annotate (color Green) . pretty $ show issue.number)
+         , "will be the default parent of new issues until you call"
+         , softline'
+         , enclose "`" "`" (annotate italic "slow")
+         , "again or clear it with"
+         , enclose "`" "`" (annotate italic "config defaultParentIssue none")
+         ]
+
   ignore $ setDefaultParentIssue config issue.reference
 
   let True = stubIssueOut
