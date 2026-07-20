@@ -155,30 +155,30 @@ defaultParser p f str =
                str => f str
      else f str
 
-defaultUpdate : SettableProp n h -> (String -> Maybe a) -> (Maybe a -> b -> b) -> b -> String -> Maybe b
+defaultUpdate : SettableProp n h -> (String -> Maybe (Maybe a)) -> (Maybe a -> b -> b) -> b -> String -> Maybe b
 defaultUpdate p parser g =
-  update (defaultParser p (Just . parser)) g
+  update (defaultParser p parser) g
 
 propSetter : SettableProp n h -> (Config -> String -> Maybe Config)
 propSetter p@RequestTeams         = update parseBool (\b => { requestTeams := b })
 propSetter p@RequestUsers         = update parseBool (\b => { requestUsers := b })
-propSetter p@BugfixPRTitlePrefix  = defaultUpdate p Just (\s => { bugfixPRTitlePrefix := s })
+propSetter p@BugfixPRTitlePrefix  = defaultUpdate p (Just . Just) (\s => { bugfixPRTitlePrefix := s })
 propSetter p@AddPrTreeDescription = update parseBool (\b => { addPrTreeDescription := b })
 propSetter p@DefaultRemote        = update Just (\s => { defaultRemote := s })
 propSetter p@MainBranch           = update Just (\s => { mainBranch := s })
 propSetter p@ThemeProp            = update parseString (\t => { theme := t })
-propSetter p@GithubPAT            = defaultUpdate p Just (\s => { githubPAT := hide <$> s })
+propSetter p@GithubPAT            = defaultUpdate p (Just . Just) (\s => { githubPAT := hide <$> s })
 propSetter p@CommentOnRequest     =
   update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
 propSetter p@ParseBranchStrategy  =
   update (parseBranchConfig . toLower) (\s => { branchParsing := s })
 propSetter p@DefaultProject       =
-  \config => defaultUpdate p (projectByNumber config.repoProjects <=< parsePositive) (\p => { defaultProject := p }) config
+  \config => defaultUpdate p (map Just . projectByNumber config.repoProjects <=< parsePositive) (\p => { defaultProject := p }) config
     where
       projectByNumber : List ProjectRef -> Nat -> Maybe ProjectRef
       projectByNumber xs n = find (\p => p.number == cast n) xs
 propSetter p@DefaultParentIssue   =
-  \config => defaultUpdate p parsePositive (\i => { defaultParentIssue := i }) config
+  \config => defaultUpdate p (map Just . parsePositive) (\i => { defaultParentIssue := i }) config
 
 ||| Attempt to set a property and value given String representations.
 ||| After setting, write the config and return the updated result.
