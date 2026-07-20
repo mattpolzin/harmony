@@ -1,5 +1,5 @@
 package harmony
-version = 7.8.0
+version = 7.9.0
 authors = "Mathew Polzin"
 license = "MIT"
 brief = "Harmony GitHub collaboration tool"
