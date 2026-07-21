@@ -6,16 +6,11 @@ import Data.String
 %default total
 
 export
-stringify : (s : CompletionStyle) => CompletionResult @{s} -> String
-stringify @{Cmds} name = name
-stringify @{CmdsAndDescriptions} (name, desc) = "\{name}:\{desc}"
-
-export
 stringify' : (s : CompletionStyle) => List CompletionResult -> List String
 stringify' = map stringify
 
 ||| Turn spaces into '+' so that multi-word phrases can be used with tab-completion.
-export
+public export
 slugify : String -> String
 slugify = pack . replaceOn ' ' '◌' . unpack
 

@@ -101,8 +101,11 @@ test: ./build/ttc
 	cp -R ./build/ttc/* ./test/depends/harmony-0/
 	$(MAKE) -C test test
 
+FILTER ?= Test
+
 type-test:
 	find src -name 'Test.idr' | \
+    grep "${FILTER}" | \
     xargs type-test --find-ipkg
 
 clean:

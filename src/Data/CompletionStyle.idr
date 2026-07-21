@@ -1,9 +1,20 @@
 module Data.CompletionStyle
 
+import Data.String
+import Data.String.Extra
+
 %default total
 
-public export
+export
 data CompletionStyle = Cmds | CmdsAndDescriptions
+
+public export
+Cmd : CompletionStyle
+Cmd = Cmds
+
+public export
+CmdAndDescription : CompletionStyle
+CmdAndDescription = CmdsAndDescriptions
 
 public export
 CompletionResult : CompletionStyle => Type
@@ -24,3 +35,13 @@ public export
 describe : (s : CompletionStyle) => (description : String) -> (name : String) -> CompletionResult @{s}
 describe @{Cmds} description name = name
 describe @{CmdsAndDescriptions} description name = (name, description)
+
+public export
+stringify : (s : CompletionStyle) => CompletionResult @{s} -> String
+stringify @{Cmds} name = name
+stringify @{CmdsAndDescriptions} (name, desc) = "\{name}:\{desc}"
+
+export
+encodeForShell : (s : CompletionStyle) -> List String -> String
+encodeForShell Cmds = unlines
+encodeForShell CmdsAndDescriptions = join "~"

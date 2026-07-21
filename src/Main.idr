@@ -49,10 +49,9 @@ shellCompletion : (envGithubPAT : Maybe String)
                -> (prevWord : String) 
                -> IO ()
 shellCompletion envPAT completionStyle subcommand curWord prevWord = 
-  resolve'' $
-    case completionStyle of
-         Cmds => putStr $ unlines !completions
-         CmdsAndDescriptions => putStr $ join "~" !completions
+  resolve'' $ do
+    cs <- completions
+    putStr (encodeForShell completionStyle cs)
   where
     trivialCompletions : Maybe (List String)
     trivialCompletions =
@@ -215,8 +214,8 @@ handleArgs : (envGithubPAT : Maybe String)
           -> (editor : Maybe String)
           -> List String 
           -> IO ()
-handleArgs envPAT _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = shellCompletion envPAT Cmds subcommand curWord prevWord
-handleArgs envPAT _ _ _ _ ["--zsh-completion", subcommand, curWord, prevWord] = shellCompletion envPAT CmdsAndDescriptions subcommand curWord prevWord
+handleArgs envPAT _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = shellCompletion envPAT Cmd subcommand curWord prevWord
+handleArgs envPAT _ _ _ _ ["--zsh-completion", subcommand, curWord, prevWord] = shellCompletion envPAT CmdAndDescription subcommand curWord prevWord
 handleArgs _ _ _ _ _ ["--bash-completion-script"] = putStrLn Bash.script
 handleArgs _ _ _ _ _ ["--zsh-completion-script"] = putStrLn Zsh.script
 handleArgs envPAT ttyStdout terminalColors terminalColumns editor args =
