@@ -22,15 +22,15 @@ namespace Unhashify
   test5 = Refl
 
 namespace SomeFrom
-  matchesAllOpts1 : someFrom @{Cmds} ["--bugfix"] ["--bugfix"] === Just ["--bugfix"]
+  matchesAllOpts1 : someFrom @{Cmd} ["--bugfix"] ["--bugfix"] === Just ["--bugfix"]
   matchesAllOpts1 = Refl
 
-  matchesAllOpts2 : someFrom @{Cmds} ["--one", "--two"] ["--one", "--two"] === Just ["--one", "--two"]
+  matchesAllOpts2 : someFrom @{Cmd} ["--one", "--two"] ["--one", "--two"] === Just ["--one", "--two"]
   matchesAllOpts2 = Refl
 
-  matchesOneOpt : someFrom @{Cmds} ["--bugfix"] ["--one", "--two", "--bugfix", "--three"] === Just ["--bugfix"]
+  matchesOneOpt : someFrom @{Cmd} ["--bugfix"] ["--one", "--two", "--bugfix", "--three"] === Just ["--bugfix"]
   matchesOneOpt = Refl
 
-  matchesWithDescription : someFrom @{CmdsAndDescriptions} ["--bugfix"] [("--one", "one"), ("--bugfix", "hello"), ("--three", "three")] === Just ["--bugfix:hello"]
+  matchesWithDescription : someFrom @{CmdAndDescription} ["--bugfix"] [("--one", "one"), ("--bugfix", "hello"), ("--three", "three")] === Just ["--bugfix:hello"]
   matchesWithDescription = Refl
 
