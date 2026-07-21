@@ -13,6 +13,7 @@ import FFI.GitHub
 import System.File
 import Util.Prompting
 import Util
+import Util.ShellCompletion
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Util
@@ -126,7 +127,7 @@ getIssueByTitle : Config =>
                -> Promise' Issue
 getIssueByTitle @{config} title = do
   issues <- listIssues config.org config.repo 100
-  let [issue] = filter (\i => i.title == title) issues
+  let [issue] = filter (\i => i.title == title || i.title == unslugify title) issues
     | [] => reject "Issue with title '\{title}' was not one of the 100 most recent issues."
     | issues => reject """
                        Issue title '\{title}' is ambiguous. You'll have to use an issue number.
