@@ -37,9 +37,18 @@ describe @{Cmds} description name = name
 describe @{CmdsAndDescriptions} description name = (name, description)
 
 public export
+escapeColons : String -> String
+escapeColons = pack . go . unpack
+  where
+    go : List Char -> List Char
+    go [] = []
+    go (':' :: xs) = '\\' :: ':' :: go xs
+    go (x :: xs) = x :: go xs
+
+public export
 stringify : (s : CompletionStyle) => CompletionResult @{s} -> String
 stringify @{Cmds} name = name
-stringify @{CmdsAndDescriptions} (name, desc) = "\{name}:\{desc}"
+stringify @{CmdsAndDescriptions} (name, desc) = "\{escapeColons name}:\{desc}"
 
 export
 encodeForShell : (s : CompletionStyle) -> List String -> String
