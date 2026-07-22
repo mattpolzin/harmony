@@ -97,7 +97,10 @@ slowStartWork @{config} issue {stubIssueOut} = do
 
     inlineDescriptionPrompt : String
     inlineDescriptionPrompt =
-        "Enter one issue title per line (two blank lines to finish)"
+        """
+
+        Enter one issue title per line (two blank lines to finish)
+        """
 
     instructions : String
     instructions = """
