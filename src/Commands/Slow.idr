@@ -75,7 +75,7 @@ slowStartWork @{config} issue {stubIssueOut} = do
   let numIssues = length issueTitles
 
   putStrLn ""
-  putStr "Createing \{issueNumLabel numIssues}"
+  putStr "Creating \{issueNumLabel numIssues}"
   issues <- for issueTitles $ \title => do
     putStr . renderString $ annotate (color Green) "."
     createIssue config.org
