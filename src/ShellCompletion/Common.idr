@@ -427,7 +427,7 @@ issueByNum partialArg i = (, i) <$> hashifyIfPrefix partialArg i.number
 
 issueByTitle : (partialArg : String) -> Issue -> Maybe (String, Issue)
 issueByTitle partialArg i =
-  if partialArg `isStrPrefixOf` i.title
+  if (unslugify partialArg) `isStrPrefixOf` i.title
      then Just (slugify i.title, i)
      else Nothing
 

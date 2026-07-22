@@ -78,4 +78,9 @@ namespace IssuesByNumAndTitle
   allIssuesForUnslugifiedTitleMatch : 
     map Builtin.fst (issuesByNumAndTitle "Issue 1" IssuesByNumAndTitle.testIssues)
       ==> ["Issue◌1"]
-  allIssuesForUnslugifiedTitleMatch  = MkTTest
+  allIssuesForUnslugifiedTitleMatch = MkTTest
+
+  sluggyPrefixMatchesTitle :
+    map Builtin.fst (issuesByNumAndTitle "Issue◌" IssuesByNumAndTitle.testIssues)
+      ==> ["Issue◌1"]
+  sluggyPrefixMatchesTitle = MkTTest
