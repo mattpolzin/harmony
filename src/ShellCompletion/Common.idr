@@ -422,6 +422,9 @@ compareIssues u (MkIssue _ _ _ _ _ _ assignee1 (Just _)) (MkIssue _ _ _ _ _ _ as
 compareIssues u (MkIssue _ _ _ _ _ _ assignee1 Nothing) (MkIssue _ _ _ _ _ _ assignee2 Nothing) =
   compareAssignees u assignee1 assignee2
 
+issueByNum : (partialArg : String) ->  Issue -> Maybe (String, Issue)
+issueByNum partialArg i = (, i) <$> hashifyIfPrefix partialArg i.number
+
 issueByTitle : (partialArg : String) -> Issue -> Maybe (String, Issue)
 issueByTitle partialArg i =
   if partialArg `isStrPrefixOf` i.title
@@ -431,7 +434,12 @@ issueByTitle partialArg i =
 ||| Get issue completions matching the partial arg for issue title.
 issuesByTitle : (partialArg : String) -> List Issue -> List (String, Issue)
 issuesByTitle partialArg issues =
-  catMaybes $ map (issueByTitle partialArg)  issues
+  catMaybes $ map (issueByTitle partialArg) issues
+
+||| Get issue completions matching the partial arg for issue number.
+issuesByNum : (partialArg : String) -> List Issue -> List (String, Issue)
+issuesByNum partialArg issues =
+  catMaybes $ map (issueByNum partialArg) issues
 
 ||| Get issue completions matching the partial arg for either issue number or
 ||| issue title.
@@ -444,7 +452,7 @@ issuesByNumAndTitle partialArg issues =
 
   where
     byNum : Issue -> Maybe (String, Issue)
-    byNum i = (, i) <$> hashifyIfPrefix partialArg i.number
+    byNum = issueByNum partialArg
 
     byTitle : Issue -> Maybe (String, Issue)
     byTitle = issueByTitle partialArg
@@ -484,7 +492,7 @@ githubOpts @{config} gh s "slow" partialArg _ = do
                        else unhashify partialArg
   let regularOpts = maybe [] id $ someWithPrefix partialArg (allSlowCmdOpts s)
   let issues' = if partialArg' == ""
-                   then issuesByTitle "" issues
+                   then issuesByNum "" issues
                    else issuesByNumAndTitle partialArg' issues
   pure (regularOpts ++ (issueOpts config.githubUser issues'))
 githubOpts _ _ _ _ _ = pure []
