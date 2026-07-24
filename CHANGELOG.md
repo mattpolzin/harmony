@@ -1,3 +1,16 @@
+# 7.10.0 (7.10.0)
+Published: 2026-07-24T01:51:33Z
+
+## What's Changed
+* Issue title shell completion (https://github.com/mattpolzin/harmony/pull/407)
+* fix `slow` command's shell completion for empty option string (https://github.com/mattpolzin/harmony/pull/409)
+* Better output spacing for slow inline title prompts (https://github.com/mattpolzin/harmony/pull/420)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.9.0...7.10.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 7.9.0 (More like fast in a different way)
 Published: 2026-07-20T14:52:02Z
 
