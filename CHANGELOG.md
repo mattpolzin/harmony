@@ -1,4 +1,15 @@
-# 7.10.0 (7.10.0)
+# 7.11.0 (My other house is a GitHub)
+Published: 2026-10-08T03:41:45Z
+
+## What's Changed
+* Support other github domains (https://github.com/mattpolzin/harmony/pull/428)
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.10.0...7.11.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
+# 7.10.0 (Slow and steady)
 Published: 2026-07-24T01:51:33Z
 
 ## What's Changed
