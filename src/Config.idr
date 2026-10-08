@@ -27,6 +27,11 @@ import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Util
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
+import Language.Reflection
+import Derive.Prelude
+
+%language ElabReflection
+
 %default total
 
 writeConfig : Config -> Promise' Config
@@ -116,7 +121,9 @@ checkConfigConsistency config = do
 
 record GitRemote where
   constructor Remote
-  org, repo : String
+  domain, org, repo : String
+
+%runElab derive `{GitRemote} [Eq, Show]
 
 dropPrefix' : (prefx : String) -> String -> Maybe String
 dropPrefix' prefx = map pack . drop' . unpack
@@ -129,18 +136,30 @@ dropPrefix' prefx = map pack . drop' . unpack
 parseGitHubURI : String -> Maybe GitRemote
 parseGitHubURI str = parseHTTPS str <|> parseSSH str
   where
-    parseSuffix : String -> Maybe GitRemote
-    parseSuffix suffix =
-      do let (orgAndRepo, _) = break (== '.') suffix
-         (org ::: repo :: []) <- pure $ split (== '/') orgAndRepo
-           | _ => Nothing
-         pure $ Remote org repo
+    parseHTTPSDomain : String -> Maybe (String, String)
+    parseHTTPSDomain uri =
+      let (domain ::: rest@(_ :: _)) = split (== '/') uri
+            | _ => Nothing
+      in  Just (domain, join "/" rest)
+
+    parseSSHDomain : String -> Maybe (String, String)
+    parseSSHDomain uri =
+      let (domain ::: rest@(_ :: _)) = split (== ':') uri
+            | _ => Nothing
+      in  Just (domain, join ":" rest)
+
+    parseUri : (domain : String) -> (suffix : String) -> Maybe GitRemote
+    parseUri domain suffix = do
+      let (orgAndRepo, _) = break (== '.') suffix
+      (org ::: repo :: []) <- pure $ split (== '/') orgAndRepo
+        | _ => Nothing
+      pure $ Remote domain org repo
 
     parseHTTPS : String -> Maybe GitRemote
-    parseHTTPS = dropPrefix' "https://github/com/" >=> parseSuffix
+    parseHTTPS = dropPrefix' "https://" >=> parseHTTPSDomain >=> uncurry parseUri
 
     parseSSH : String -> Maybe GitRemote
-    parseSSH = dropPrefix' "git@github.com:" >=> parseSuffix
+    parseSSH = dropPrefix' "git@" >=> parseSSHDomain >=> uncurry parseUri
 
 update : Functor f => (String -> f a) -> (a -> b -> b) -> b -> String -> f b
 update f g c = map (flip g c) . f
@@ -259,19 +278,25 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
                  ++ "property must be set to a personal access token."
 
   remoteGuess <- preferOriginRemote <$> listRemotes
-  defaultOrgAndRepo <- (parseGitHubURI <$> remoteURI remoteGuess) <|> pure Nothing
+  defaultDomainOrgAndRepo <- (parseGitHubURI <$> remoteURI remoteGuess) <|> pure Nothing
+
+  putStrLn ""
+  domain <-
+    getLineEnterForDefault
+      "What GitHub domain would you like to use harmony for?"
+      (domain defaultDomainOrgAndRepo)
 
   putStrLn ""
   org <-
     getLineEnterForDefault
       "What GitHub org would you like to use harmony for?"
-      (org defaultOrgAndRepo)
+      (org defaultDomainOrgAndRepo)
 
   putStrLn ""
   repo <-
     getLineEnterForDefault 
       "What repository would you like to use harmony for?"
-      (repo defaultOrgAndRepo)
+      (repo defaultDomainOrgAndRepo)
 
   putStrLn ""
   defaultRemote <-
@@ -317,6 +342,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   let githubUser = Just githubUser
   let config = MkConfig {
       updatedAt
+    , domain
     , org
     , repo
     , defaultRemote
@@ -346,6 +372,9 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   pure config
 
   where
+    domain : Maybe GitRemote -> Maybe String
+    domain = map (.domain)
+
     org : Maybe GitRemote -> Maybe String
     org = map (.org)
 

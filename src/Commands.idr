@@ -420,7 +420,7 @@ health : Config => Octokit =>
          Promise' ()
 health @{config} = do
   prs <- listOpenPRs {pageBreaks = 4} 100
-  renderIO $ healthGraph prs config.org config.repo
+  renderIO $ healthGraph prs config.domain config.org config.repo
 
 data IgnoreOpt = PRNum Nat
 
@@ -472,7 +472,7 @@ parseContributeArgs args =
       loop x [] = x
       loop _ (x :: xs) = loop x xs
 
-    -- expect a Nat or else a URI here of the form: https://github.com/<org>/<repo>/pull/<pr-number>
+    -- expect a Nat or else a URI here of the form: https://<github-domain>/<org>/<repo>/pull/<pr-number>
     parseIgnoreOpt : String -> Maybe IgnoreOpt
     parseIgnoreOpt str =
       let parts = split (== '/') str
@@ -564,9 +564,10 @@ export
 branch : Config => Promise' ()
 branch @{config} = do
   branch <- currentBranch
+  let domain = config.domain
   let org = config.org
   let repo = config.repo
-  let uri = "https://github.com/\{org}/\{repo}/tree/\{branch}"
+  let uri = "https://\{domain}/\{org}/\{repo}/tree/\{branch}"
   putStrLn uri
 
 export

@@ -44,6 +44,7 @@ githubPAT:            [none/any string] The Personal Access Token Harmony should
 Current Configuration:
            updatedAt: ***
                theme: dark
+              domain: github.com
          org or user: mattpolzin
                 repo: harmony
        defaultRemote: origin

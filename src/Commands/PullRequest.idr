@@ -466,7 +466,7 @@ renderPrTree @{config} format =
                              (pretty symbol) <++> (theme' Special $ pretty $ fromMaybe name title)
     renderNode acc (PR {marked} idx symbol pr) =
       let next = \str => acc ++ str ++ "\n"
-          uri = webURI' config.org config.repo pr
+          uri = webURI' config.domain config.org config.repo pr
       in next $
         case format of
              Markdown => 
@@ -547,9 +547,9 @@ getInferredBranchInfo @{config} branch' =
          None   => pure noInferredData
 
 ||| A GitHub URL at which a PR can be created for the given branch.
-prCreationUrl : (org : String) -> (repo : String) -> (branch : String) -> (intoBranch : Maybe String) -> String
-prCreationUrl org repo branch intoBranch =
-  "https://github.com/\{org}/\{repo}/compare/\{into}\{branch}?expand=1"
+prCreationUrl : (domain, org, repo, branch : String) -> (intoBranch : Maybe String) -> String
+prCreationUrl domain org repo branch intoBranch =
+  "https://\{domain}/\{org}/\{repo}/compare/\{into}\{branch}?expand=1"
     -- NOTE: I would love to be able to create the above 
     --       URL such that the page opens with "draft" 
     --       as the default if the PR was requested to 
@@ -737,4 +737,4 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
       createIssueAndPR issueTemplate issueNumber True =
         Actual Created <$> createPR
       createIssueAndPR Nothing _ False =
-        pure (Hypothetical $ prCreationUrl config.org config.repo branch intoBranch)
+        pure (Hypothetical $ prCreationUrl config.domain config.org config.repo branch intoBranch)

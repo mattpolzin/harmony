@@ -122,7 +122,11 @@ record Config where
   constructor MkConfig
   ||| Timestamp when the config was last syncronized with GitHub.
   updatedAt     : Timestamp
+  ||| The GitHub domain (most commonly github.com).
+  domain        : String
+  ||| The org or user the repository lives under.
   org           : String
+  ||| The repository slug (not its name).
   repo          : String
   ||| The remote name (e.g. "origin")
   defaultRemote : String
@@ -441,6 +445,7 @@ render : Config -> Doc AnsiStyle
 render config = vsep
   [ "           updatedAt:" <++> (pretty $ show config.updatedAt)
   , "               theme:" <++> (pretty $ show config.theme)
+  , "              domain:" <++> (pretty $ config.domain)
   , "         org or user:" <++> (pretty $ config.org)
   , "                repo:" <++> (pretty $ config.repo)
   , "       defaultRemote:" <++> (pretty $ config.defaultRemote)
@@ -496,11 +501,11 @@ Show Config where
 
 export
 json : Config -> JSON
-json (MkConfig updatedAt org repo defaultRemote mainBranch defaultProject
-               defaultParentIssue requestTeams requestUsers commentOnRequest
-               branchParsing bugfixPRTitlePrefix addPrTreeDescription teamSlugs
-               repoLabels repoProjects orgMembers ignoredPRs githubPAT
-               githubUser theme _) =
+json (MkConfig updatedAt domain org repo defaultRemote mainBranch
+               defaultProject defaultParentIssue requestTeams requestUsers
+               commentOnRequest branchParsing bugfixPRTitlePrefix
+               addPrTreeDescription teamSlugs repoLabels repoProjects
+               orgMembers ignoredPRs githubPAT githubUser theme _) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
@@ -508,6 +513,7 @@ json (MkConfig updatedAt org repo defaultRemote mainBranch defaultProject
     , ("branchParsing"        , JString $ show branchParsing)
     , ("bugfixPRTitlePrefix"  , maybe JNull JString bugfixPRTitlePrefix)
     , ("addPrTreeDescription" , JBool addPrTreeDescription)
+    , ("domain"               , JString domain)
     , ("org"                  , JString org)
     , ("repo"                 , JString repo)
     , ("defaultRemote"        , JString defaultRemote)
@@ -568,12 +574,16 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               , "theme"
                                               ] config
                                           let maybeGithubPAT = lookup "githubPAT" config
+                                          let maybeGithubDomain = lookup "domain" config
                                           let maybeGithubUser = lookup "githubUser" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
                                           let maybeDefaultProject = lookup "defaultProject" config
                                           let maybeDefaultParentIssue = lookup "defaultParentIssue" config
                                           let maybeRepoProjects = lookup "repoProjects" config
                                           ua <- cast <$> integer updatedAt
+                                          dom <- maybe (Right "github.com") string maybeGithubDomain
+                                          -- TODO 9.0.0: Make domain required part of config file
+                                          --             domain lookup can be moved to the required lookupAll above.
                                           o  <- string org
                                           r  <- string repo
                                           dr <- string defaultRemote
@@ -604,6 +614,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           th <- (stringy "dark or light" parseString) theme
                                           pure $ MkConfig {
                                               updatedAt            = ua
+                                            , domain               = dom
                                             , org                  = o
                                             , repo                 = r
                                             , defaultRemote        = dr
@@ -651,6 +662,7 @@ simpleDefaults : Config
 simpleDefaults = 
     MkConfig {
         updatedAt            = 0
+      , domain               = "github.com"
       , org                  = "org"
       , repo                 = "repo"
       , defaultRemote        = "origin"

@@ -13,10 +13,10 @@ import TTest
 --
 
 namespace PrCreationUrl
-  withoutIntoBranch : prCreationUrl "org" "repo" "branch" Nothing === "https://github.com/org/repo/compare/branch?expand=1"
+  withoutIntoBranch : prCreationUrl "domain" "org" "repo" "branch" Nothing === "https://domain/org/repo/compare/branch?expand=1"
   withoutIntoBranch = Refl
 
-  withIntoBranch : prCreationUrl "org" "repo" "branch" (Just "main") === "https://github.com/org/repo/compare/main...branch?expand=1"
+  withIntoBranch : prCreationUrl "domain" "org" "repo" "branch" (Just "main") === "https://domain/org/repo/compare/main...branch?expand=1"
   withIntoBranch = Refl
 
 namespace RemoveCommentTags
