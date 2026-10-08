@@ -126,10 +126,11 @@ parameters (config : Config)
 export
 healthGraph : Config =>
               (openPullRequests : List PullRequest)
+           -> (domain : String)
            -> (org : String)
            -> (repo : String)
            -> Doc AnsiStyle
-healthGraph @{config} openPullRequests org repo =
+healthGraph @{config} openPullRequests domain org repo =
   let groups = groupBy ((==) `on` .month `on` .createdAt) $ sortBy (compare `on` .createdAt) openPullRequests
       max    = foldr (\xs,m => max (length xs) m) 1 groups
   in vsep [ header
@@ -140,7 +141,7 @@ healthGraph @{config} openPullRequests org repo =
           ]
   where
     link : String
-    link = "https://github.com/\{org}/\{repo}/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc"
+    link = "https://\{domain}/\{org}/\{repo}/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc"
 
     graphable : (List1 PullRequest) -> PRsOnDate Date
     graphable (pr ::: tail) = MkPRsOnDate pr.createdAt (S $ length tail)

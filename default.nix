@@ -36,7 +36,7 @@ let
         ./man/harmony.1
       ];
     };
-    npmDepsHash = "sha256-P/iwP6nbYiUiszsnQhpRG7eWMrxjyvBWbVQnPvZ5yvA=";
+    npmDepsHash = "sha256-oWy58pcIaChB+w3RTeX7Tw8JCh7TgzieASCji14isSU=";
     dontNpmBuild = true;
     dontBuild = true;
 
@@ -66,7 +66,7 @@ let
       makeBinaryWrapper
       pandoc
     ]
-    ++ lib.optionals stdenv.isDarwin [ zsh ];
+    ++ lib.optionals stdenv.hostPlatform.isDarwin [ zsh ];
     buildInputs = [
       nodejs
       git
