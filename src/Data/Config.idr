@@ -161,32 +161,32 @@ record Config where
   |||   >>> ↖ `feature-2`
   addPrTreeDescription : Bool
   ||| Local cache of GitHub teams within the configured org.
-  teamSlugs     : List String
+  teamSlugs    : List String
   ||| Local cache of GitHub labels for the configured repo.
-  repoLabels    : List String
+  repoLabels   : List String
   ||| Local cache of GitHub projects for the configured repo.
-  repoProjects  : List ProjectRef
+  repoProjects : List ProjectRef
   ||| Local cache of GitHub members within the configured org.
-  orgMembers    : List String
+  orgMembers   : List String
   ||| A list of Pull Request numbers that should be ignored (specifically when
   ||| determining the results of the contribute command).
-  ignoredPRs    : List Integer
+  ignoredPRs   : List Integer
   ||| A GitHub Personal Access Token. This value is only used if there is no
   ||| $GITHUB_PAT or $GH_TOKEN environment variable set. One of either the
   ||| environment variable or this config property must be set.
-  githubPAT     : Maybe (Hidden String)
+  githubPAT    : Maybe (Hidden String)
   ||| Generally not used for harmony actions which can rely on the concept of a
   ||| current (authenticated) user for any given GitHub request, but if shell
   ||| completion or some other action is only indirectly related to a GitHub
   ||| user then it may use this cached information.
   |||
   ||| This is the user's login or "slug"
-  githubUser    : Maybe String
+  githubUser   : Maybe String
   ||| Should Harmony print with colors fit for a dark terminal or a light
   ||| terminal?
-  theme         : Theme
+  theme        : Theme
   ||| Configuration properties that are not written to a file.
-  ephemeral     : Ephemeral -- not written out to file
+  ephemeral    : Ephemeral -- not written out to file
 
 %name Config config
 
