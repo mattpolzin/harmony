@@ -293,6 +293,21 @@ record BranchInferredData where
   ||| might be stored in an issue.
   baseBranchGuess : Maybe String
 
+Eq BranchInferredData where
+  a == b = a.titlePrefix == b.titlePrefix
+        && ((isJust a.buildBodyPrefix && isJust b.buildBodyPrefix) || (isNothing a.buildBodyPrefix && isNothing b.buildBodyPrefix))
+        && a.defaultTitle == b.defaultTitle
+        && a.baseBranchGuess == b.baseBranchGuess
+    where
+      isNothing : Maybe z -> Bool
+      isNothing = not . isJust
+
+Show BranchInferredData where
+  show a = show [a.titlePrefix, showJust a.buildBodyPrefix, a.defaultTitle, a.baseBranchGuess]
+    where
+      showJust : Maybe z -> Maybe String
+      showJust = map (const "branchName -> Promise")
+
 noInferredData : BranchInferredData
 noInferredData = MkInferredData Nothing Nothing Nothing Nothing
 
@@ -523,6 +538,10 @@ githubInferredBranchInfo @{config} branch' =
     issueNumber : Maybe String
     issueNumber = parseGithubIssueNumber branch'.branch
 
+jiraInferredBranchInfo : String -> BranchInferredData
+jiraInferredBranchInfo branch =
+  (MkInferredData ((++ " - ") <$> parseJiraSlug branch) Nothing Nothing Nothing)
+
 ||| Get any inferred title prefix, body prefix, or default title from the
 ||| current branch.
 |||
@@ -541,7 +560,7 @@ githubInferredBranchInfo @{config} branch' =
 getInferredBranchInfo : Config => Octokit => ConfiguredBranch -> Promise' BranchInferredData
 getInferredBranchInfo @{config} branch' =
     case config.branchParsing of
-         Jira   => pure (MkInferredData ((++ " - ") <$> parseJiraSlug branch'.branch) Nothing Nothing Nothing)
+         Jira   => pure (jiraInferredBranchInfo branch'.branch)
          --               ^ Jira slugs become a title prefix
          Github => githubInferredBranchInfo branch'
          None   => pure noInferredData

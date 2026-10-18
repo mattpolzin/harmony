@@ -2,6 +2,7 @@ module Commands.PullRequest.Test
 
 import Data.Config
 import Data.Date
+import Data.Promise
 import Data.PullRequest
 import Data.Theme
 
@@ -36,6 +37,10 @@ namespace IssueBodyPrefix
 
   relatedToIssueStrTest3 : relatedToIssueStr True False "123" === "Closes #123"
   relatedToIssueStrTest3 = Refl
+
+namespace JiraInferredBranchInfo
+  prefixTitle : jiraInferredBranchInfo "PROJ-1234-hello-world" ==> MkInferredData (Just "PROJ-1234 - ") Nothing Nothing Nothing
+  prefixTitle = MkTTest
 
 namespace RenderPrTree
   config : Config
