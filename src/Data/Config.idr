@@ -190,6 +190,16 @@ record Config where
 
 %name Config config
 
+export
+apiBaseUrl : (domain : String) -> String
+apiBaseUrl "github.com" = "https://api.github.com"
+apiBaseUrl domain       = "https://\{domain}/api/v3"
+
+||| The API base URL as needed to configure Octokit.
+export
+(.apiBaseUrl) : Config -> String
+config.apiBaseUrl = apiBaseUrl config.domain
+
 --
 -- Settable Properties Setup
 --

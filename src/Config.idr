@@ -309,7 +309,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   putStrLn ""
   branchParsing <- branchParsingPrompt
 
-  _ <- liftIO $ octokit pat
+  _ <- liftIO $ octokit pat (apiBaseUrl domain)
   teamDetails <- nonOrgFallback [] $ listTeamsDetailed org
 
   (requestTeams, requestUsers) <- prRequestPrompts teamDetails

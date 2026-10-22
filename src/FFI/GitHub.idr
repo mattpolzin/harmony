@@ -34,11 +34,16 @@ gqlIdStr (Just (GQLId str)) = str
 gqlIdStr Nothing = "null"
 
 %foreign okit_ffi "octokit"
-prim__octokit : (authToken : String) -> PrimIO (Ptr OctokitRef)
+prim__octokit : (authToken : String) -> (baseUrl : String) -> PrimIO (Ptr OctokitRef)
 
+||| Initialize Octokit (required for all other GitHub FFI
+||| calls).
+|||
+||| @authToken A GitHub PAT (personal access token)
+||| @baseUrl   The base URL to use to communicate with GitHub's APIs.
 export
-octokit : (authToken : String) -> IO Octokit
-octokit authToken = Kit <$> (primIO $ prim__octokit authToken)
+octokit : (authToken, baseUrl : String) -> IO Octokit
+octokit authToken baseUrl = Kit <$> (primIO $ prim__octokit authToken baseUrl)
 
 data ErrorCode = NotFound
                | BadRequest
