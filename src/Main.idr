@@ -77,7 +77,7 @@ shellCompletion envPAT completionStyle subcommand curWord prevWord =
         | cs => pure cs
       Just pat <- pure $ envPAT <|> expose <$> config.githubPAT
         | Nothing => pure []
-      gitCompletions !(liftIO $ octokit pat)
+      gitCompletions !(liftIO $ octokit pat config.apiBaseUrl)
 
 ||| Handle commands that require both configuration and
 ||| authentication.
@@ -195,7 +195,7 @@ handleConfiguredArgs @{config} envPAT args = do
    Just pat <- pure $ envPAT <|> expose <$> config.githubPAT
      | Nothing => reject $ "Either the GITHUB_PAT or GH_TOKEN environment variable or githubPAT config "
                         ++ "property must be set to a personal access token."
-   _ <- liftIO $ octokit pat
+   _ <- liftIO $ octokit pat config.apiBaseUrl
 
    config' <- syncIfOld config
 

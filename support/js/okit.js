@@ -2,8 +2,8 @@
 const { Octokit } = require('octokit')
 const { GraphqlResponseError } = require('@octokit/graphql')
 
-const okit_octokit = authToken =>
-  new Octokit({ auth: authToken })
+const okit_octokit = (authToken, baseUrl) =>
+  new Octokit({ auth: authToken, baseUrl })
 
 // Note that every Octokit FFI function uses idris__okit_stringify_error
 // which results in onFailure being called with a JSON string of the following structure:
