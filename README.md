@@ -117,8 +117,9 @@ You can add Harmony to your Flake inputs as follows:
 Then, in your outputs, bring Harmony into a package install list as
 `harmony.packages.<system>.harmony`.
 
-Harmony builds are cached in Cachix so you can take advantage of those builds by
-adding `https://gh-harmony.cachix.org` to the list of `substituters` and
+Harmony builds are cached in Cachix. You can take advantage of those builds by
+_not_ making the harmony input follow your nixpkgs and then adding
+`https://gh-harmony.cachix.org` to the list of `substituters` and
 `gh-harmony.cachix.org-1:KX5tTtEt3Y6an8pywe3Cy6jR9bUo+1Cl7hJmh+5eI4I=` to the
 list of `trusted-public-keys`.
 
