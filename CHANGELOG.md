@@ -1,3 +1,15 @@
+# 7.11.1 (Directions home)
+Published: 2026-10-22T04:35:53Z
+
+## What's Changed
+* [fix] Alternative domain support was incomplete (https://github.com/mattpolzin/harmony/pull/432)
+
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.11.0...7.11.1
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 7.11.0 (My other house is a GitHub)
 Published: 2026-10-08T03:41:45Z
 
