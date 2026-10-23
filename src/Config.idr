@@ -13,12 +13,14 @@ import Data.Team
 import Data.Theme
 import Data.User
 import Decidable.Equality
+import FFI.Concurrency
 import FFI.GitHub
 import JSON.Parser
 import System
 import System.File
 import System.Git
 
+import Language.JSON.Accessors
 import Util
 import Util.String
 import Util.Prompting
@@ -41,9 +43,49 @@ writeConfig config =
           Right () => pure config
           Left err => reject "Failed to write updated config file to \{config.filepath}: \{show err}."
 
+||| Create a fork of this program that retrieves users for the given team
+||| and outputs the result as JSON.
+forkedTeamMembers : (teamSlug : String) -> Promise' Future
+forkedTeamMembers teamSlug = fork "teamMembers --json \{teamSlug}"
+
+||| List members of all of the given teams.
+|||
+||| Each teams' membership is fetched concurrently. If the current "org" is
+||| actually an individual GitHub user, this fails. Only call this in the
+||| context of an org.
+forceListTeamsMembers : (teamSlugs : List String) -> Promise' (List String)
+forceListTeamsMembers teamSlugs = do
+  memberJsons <- promiseAll =<< traverse forkedTeamMembers teamSlugs
+  members <- either $ traverse (array string) memberJsons
+  pure $ join members
+
+UserSlug : Type
+UserSlug = String
+
+TeamSlug : Type
+TeamSlug = String
+
 ||| For non-orgs, provide a fallback
 nonOrgFallback : (Lazy a) -> Promise OrgError a -> Promise String a
 nonOrgFallback x p = bindError p (\case NotAnOrg => pure x; Msg err => reject err)
+
+||| Either get the full organization teams and members lists or get the
+||| combined members of teams being filtered to depending on the first
+||| argument.
+orgOrFilteredTeamsAndMembers : Octokit =>
+                               (org : String)
+                            -> (filterToTeams : Bool)
+                            -> (currentTeams : List String)
+                            -> Promise' (List UserSlug, List TeamSlug)
+orgOrFilteredTeamsAndMembers org filterToTeams currentTeams =
+  if filterToTeams
+     then do
+       teamMembers <- forceListTeamsMembers currentTeams
+       pure (teamMembers, currentTeams)
+     else do
+       teamSlugs  <- nonOrgFallback [] $ listTeamNames org
+       orgMembers <- nonOrgFallback [] $ listOrgMembers org 100
+       pure (orgMembers, teamSlugs)
 
 export
 syncConfig : Config => Octokit => (echo : Bool) -> Promise' Config
@@ -68,11 +110,7 @@ syncConfig @{config} echo =
 
   where
     teamsAndMembers : Promise' (List String, List String)
-    teamsAndMembers = do
-      teamSlugs  <- nonOrgFallback [] $ listTeamNames config.org
-      orgMembers <- nonOrgFallback [] $ listOrgMembers config.org 100
-      -- TODO 7.11.1: check with config to determine if the teams should be left alone and the org members fetched based on team membership.
-      pure (teamSlugs, orgMembers)
+    teamsAndMembers = orgOrFilteredTeamsAndMembers config.org config.handPickedTeams config.teamSlugs
 
 export
 syncIfOld : Octokit => Config -> Promise' Config
