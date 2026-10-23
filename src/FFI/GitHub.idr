@@ -644,14 +644,16 @@ forceListTeamMembers = mapError errString .: listTeamMembers
 %foreign okit_ffi "list_org_members"
 prim__listOrgMembers : Ptr OctokitRef 
                     -> (org : String) 
+                    -> (pageLimit : Int16) 
                     -> (onSuccess : String -> PrimIO ()) 
                     -> (onFailure : String -> PrimIO ()) 
                     -> PrimIO ()
 
+||| List 1 page of org members.
 export
-listOrgMembers : Octokit => (org : String) -> Promise OrgError (List String)
-listOrgMembers @{Kit ptr} org =
-  lines <$> (mapOrgError . promiseIO $ prim__listOrgMembers ptr org)
+listOrgMembers : Octokit => (org : String) -> (pageLimit : Fin 101) -> Promise OrgError (List String)
+listOrgMembers @{Kit ptr} org pageLimit =
+  lines <$> (mapOrgError . promiseIO $ prim__listOrgMembers ptr org (cast $ finToNat pageLimit))
 
 %foreign okit_ffi "get_user"
 prim__getUser : Ptr OctokitRef 

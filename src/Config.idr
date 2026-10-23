@@ -70,7 +70,7 @@ syncConfig @{config} echo =
     teamsAndMembers : Promise' (List String, List String)
     teamsAndMembers = do
       teamSlugs  <- nonOrgFallback [] $ listTeamNames config.org
-      orgMembers <- nonOrgFallback [] $ listOrgMembers config.org
+      orgMembers <- nonOrgFallback [] $ listOrgMembers config.org 100
       -- TODO 7.11.1: check with config to determine if the teams should be left alone and the org members fetched based on team membership.
       pure (teamSlugs, orgMembers)
 
@@ -345,7 +345,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , editor
     }
   let teamSlugs = slug <$> teamDetails
-  orgMembers   <- nonOrgFallback [] $ listOrgMembers org
+  orgMembers   <- nonOrgFallback [] $ listOrgMembers org 100
   repoLabels   <- listRepoLabels org repo
   repoProjects <- map reference <$> listRepoProjects org repo
   githubUser   <- login <$> getSelf
