@@ -466,7 +466,7 @@ render config = vsep
   , "        requestUsers:" <++> (pretty $ show config.requestUsers)
   , "    commentOnRequest:" <++> (pretty $ show config.commentOnRequest)
   , "       branchParsing:" <++> (pretty $ show config.branchParsing)
-  , " bugfixPRTitlePrefix:" <++> (pretty $ maybe "Not set" show config.bugfixPRTitlePrefix)
+  , " bugfixPRTitlePrefix:" <++> (pretty $ maybe "not set" show config.bugfixPRTitlePrefix)
   , "addPrTreeDescription:" <++> (pretty $ show config.addPrTreeDescription)
   , "           teamSlugs:" <++> (pretty $ newlineList config.teamSlugs)
   , "          repoLabels:" <++> (pretty $ newlineList $ show <$> config.repoLabels)
