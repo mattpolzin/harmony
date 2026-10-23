@@ -48,8 +48,7 @@ nonOrgFallback x p = bindError p (\case NotAnOrg => pure x; Msg err => reject er
 export
 syncConfig : Config => Octokit => (echo : Bool) -> Promise' Config
 syncConfig @{config} echo =
- do teamSlugs  <- nonOrgFallback [] $ listTeamNames config.org
-    orgMembers <- nonOrgFallback [] $ listOrgMembers config.org
+ do (teamSlugs, orgMembers) <- teamsAndMembers
     labelNames <- listRepoLabels config.org config.repo
     repoProjects <- map reference <$> listRepoProjects config.org config.repo
     githubUser <- login <$> getSelf
@@ -66,6 +65,14 @@ syncConfig @{config} echo =
       do putStrLn "Your updated configuration is:"
          printLn config'
     pure config'
+
+  where
+    teamsAndMembers : Promise' (List String, List String)
+    teamsAndMembers = do
+      teamSlugs  <- nonOrgFallback [] $ listTeamNames config.org
+      orgMembers <- nonOrgFallback [] $ listOrgMembers config.org
+      -- TODO: check with config to determine if the teams should be left alone and the org members fetched based on team membership.
+      pure (teamSlugs, orgMembers)
 
 export
 syncIfOld : Octokit => Config -> Promise' Config
@@ -349,6 +356,9 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   let ignoredPRs = []
   let githubPAT = hide <$> configPAT
   let githubUser = Just githubUser
+  let handPickedTeams = False
+  -- TODO: prompt to determine if teams should be hand picked and let the user select them.
+  -- TODO: write shared function that retrieves org members either wholistically or filtered to given teams.
   let config = MkConfig {
       updatedAt
     , domain
@@ -364,6 +374,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , branchParsing
     , bugfixPRTitlePrefix
     , addPrTreeDescription
+    , handPickedTeams
     , teamSlugs
     , repoLabels
     , repoProjects
