@@ -71,7 +71,7 @@ syncConfig @{config} echo =
     teamsAndMembers = do
       teamSlugs  <- nonOrgFallback [] $ listTeamNames config.org
       orgMembers <- nonOrgFallback [] $ listOrgMembers config.org
-      -- TODO: check with config to determine if the teams should be left alone and the org members fetched based on team membership.
+      -- TODO 7.11.1: check with config to determine if the teams should be left alone and the org members fetched based on team membership.
       pure (teamSlugs, orgMembers)
 
 export
@@ -357,8 +357,8 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   let githubPAT = hide <$> configPAT
   let githubUser = Just githubUser
   let handPickedTeams = False
-  -- TODO: prompt to determine if teams should be hand picked and let the user select them.
-  -- TODO: write shared function that retrieves org members either wholistically or filtered to given teams.
+  -- TODO 7.11.1: prompt to determine if teams should be hand picked and let the user select them.
+  -- TODO 7.11.1: write shared function that retrieves org members either wholistically or filtered to given teams.
   let config = MkConfig {
       updatedAt
     , domain
