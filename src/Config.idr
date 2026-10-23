@@ -303,8 +303,6 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     getLineEnterForDefault
       "What GitHub remote repo would you like to use harmony for?"
       (Just remoteGuess)
-  putStrLn ""
-  commentOnRequest <- commentConfigPrompt 
 
   putStrLn ""
   branchParsing <- branchParsingPrompt
@@ -312,7 +310,18 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   _ <- liftIO $ octokit pat (apiBaseUrl domain)
   teamDetails <- nonOrgFallback [] $ listTeamsDetailed org
 
-  (requestTeams, requestUsers) <- prRequestPrompts teamDetails
+  prRequestBehavior <- prRequestPrompts teamDetails
+  let (requestTeams, requestUsers) = (shouldRequestTeams prRequestBehavior, shouldRequestUser prRequestBehavior)
+
+  -- If the user wants to defer requesting review to GitHub then there's no
+  -- benefit to configuring the comment behavior used when harmony requests
+  -- a review.
+  commentOnRequest <-
+    if shouldDeferRequestToGitHub prRequestBehavior
+       then pure None
+       else do 
+         putStrLn ""
+         commentConfigPrompt 
 
   putStrLn ""
   theme <- themePrompt
@@ -411,20 +420,35 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
                  None $
                    parseBranchConfig . orIfEmpty (Just "none") . trim <$> getLine
 
+    data PrRequestBehavior = DeferToGithub
+                           | TeamsAndUser (Bool, Bool)
+
+    shouldRequestTeams : PrRequestBehavior -> Bool
+    shouldRequestTeams DeferToGithub = True
+    shouldRequestTeams (TeamsAndUser (teams, _)) = teams
+    
+    shouldRequestUser : PrRequestBehavior -> Bool
+    shouldRequestUser DeferToGithub = False
+    shouldRequestUser (TeamsAndUser (_, users)) = users
+
+    shouldDeferRequestToGitHub : PrRequestBehavior -> Bool
+    shouldDeferRequestToGitHub DeferToGithub = True
+    shouldDeferRequestToGitHub (TeamsAndUser _) = False
+
     ||| Ask whether to request users and request teams when picking a team from
     ||| harmony.
-    prRequestPrompts : HasIO io => (teamDetails : List Team) -> io (Bool, Bool)
+    prRequestPrompts : HasIO io => (teamDetails : List Team) -> io PrRequestBehavior
     prRequestPrompts teams = 
       case filter reviewDelegationEnabled teams of
-           []    => promptEach
+           []    => TeamsAndUser <$> promptEach
            teams' => do
              putStrLn ""
              putStrLn "The following teams are configured for automatic GitHub review requests:"
              printAutoReviewRequestSummaries teams'
              putStrLn ""
              False <- yesNoPrompt "Would you like harmony to defer to GitHub for automatically picking peer reviewers?"
-               | True => pure (True, False)
-             promptEach
+               | True => pure DeferToGithub
+             TeamsAndUser <$> promptEach
 
     where
       promptEach : io (Bool, Bool)
