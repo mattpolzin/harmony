@@ -55,8 +55,9 @@ Current Configuration:
         requestUsers: False
     commentOnRequest: at-mention
        branchParsing: github
- bugfixPRTitlePrefix: Not set
+ bugfixPRTitlePrefix: not set
 addPrTreeDescription: False
+     handPickedTeams: False
            teamSlugs: none
           repoLabels: "WIP"               "bug"
                       "documentation"     "duplicate"

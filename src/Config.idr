@@ -13,12 +13,14 @@ import Data.Team
 import Data.Theme
 import Data.User
 import Decidable.Equality
+import FFI.Concurrency
 import FFI.GitHub
 import JSON.Parser
 import System
 import System.File
 import System.Git
 
+import Language.JSON.Accessors
 import Util
 import Util.String
 import Util.Prompting
@@ -41,15 +43,55 @@ writeConfig config =
           Right () => pure config
           Left err => reject "Failed to write updated config file to \{config.filepath}: \{show err}."
 
+||| Create a fork of this program that retrieves users for the given team
+||| and outputs the result as JSON.
+forkedTeamMembers : (teamSlug : String) -> Promise' Future
+forkedTeamMembers teamSlug = fork "teamMembers --json \{teamSlug}"
+
+||| List members of all of the given teams.
+|||
+||| Each teams' membership is fetched concurrently. If the current "org" is
+||| actually an individual GitHub user, this fails. Only call this in the
+||| context of an org.
+forceListTeamsMembers : (teamSlugs : List String) -> Promise' (List String)
+forceListTeamsMembers teamSlugs = do
+  memberJsons <- promiseAll =<< traverse forkedTeamMembers teamSlugs
+  members <- either $ traverse (array string) memberJsons
+  pure $ join members
+
+UserSlug : Type
+UserSlug = String
+
+TeamSlug : Type
+TeamSlug = String
+
 ||| For non-orgs, provide a fallback
 nonOrgFallback : (Lazy a) -> Promise OrgError a -> Promise String a
 nonOrgFallback x p = bindError p (\case NotAnOrg => pure x; Msg err => reject err)
 
+||| Either get the full organization teams and members lists or get the
+||| combined members of teams being filtered to depending on the first
+||| argument.
+orgOrFilteredTeamsAndMembers : Octokit =>
+                               (org : String)
+                            -> (filterToTeams : Bool)
+                            -> (currentTeams : List String)
+                            -> Promise' (List UserSlug, List TeamSlug)
+orgOrFilteredTeamsAndMembers org filterToTeams currentTeams =
+  if filterToTeams
+     then do
+       teamMembers <- forceListTeamsMembers currentTeams
+       pure (teamMembers, currentTeams)
+     else do
+       teamSlugs  <- nonOrgFallback [] $ listTeamNames org
+       orgMembers <- nonOrgFallback [] $ listOrgMembers org 100
+       pure (orgMembers, teamSlugs)
+
 export
 syncConfig : Config => Octokit => (echo : Bool) -> Promise' Config
 syncConfig @{config} echo =
- do teamSlugs  <- nonOrgFallback [] $ listTeamNames config.org
-    orgMembers <- nonOrgFallback [] $ listOrgMembers config.org
+ do (teamSlugs, orgMembers) <-
+      orgOrFilteredTeamsAndMembers config.org config.handPickedTeams config.teamSlugs
     labelNames <- listRepoLabels config.org config.repo
     repoProjects <- map reference <$> listRepoProjects config.org config.repo
     githubUser <- login <$> getSelf
@@ -252,6 +294,29 @@ preferOriginRemote names =
        Just n  => n
        Nothing => fromMaybe "origin" (head' names)
 
+||| Get the user's selection of any number of teams from the given list.
+||| The user should have already been presented with the list of teams to
+||| choose from and prompted to choose from them. 
+|||
+||| Entries can be either team names or indices into the list of teams.
+||| Index (numeric) entries by the user should be 1-indexed.
+||| A blank line ends selection.
+getSelectTeams : HasIO io => (fuel : Fuel) -> (allTeams : List Team) -> io (List Team)
+getSelectTeams Dry _ = pure []
+getSelectTeams (More fuel) allTeams = do
+  line <- getLine
+  if line == ""
+     then pure []
+     else case (`minus` 1) <$> parsePositive {a=Nat} line of
+               Just idx => case inBounds idx allTeams of
+                                Yes _ => pure $ index idx allTeams :: !(getSelectTeams fuel allTeams)
+                                No  _ => do printWarning "\{show idx} is not in bounds. Please choose again."
+                                            getSelectTeams fuel allTeams
+               Nothing  => case find ((==) line . name) allTeams of
+                                Just team => pure $ team :: !(getSelectTeams fuel allTeams)
+                                Nothing   => do printWarning "\{line} is not an available team name. Please choose again."
+                                                getSelectTeams fuel allTeams
+
 createConfig : (envGithubPAT : Maybe String)
             -> (ttyStdout : Bool)
             -> (terminalColors : Bool)
@@ -323,6 +388,8 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
          putStrLn ""
          commentConfigPrompt 
 
+  (handPickedTeams, teamSlugs) <- teamFilterPrompt org teamDetails
+
   putStrLn ""
   theme <- themePrompt
 
@@ -337,8 +404,8 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , columns  = terminalColumns
     , editor
     }
-  let teamSlugs = slug <$> teamDetails
-  orgMembers   <- nonOrgFallback [] $ listOrgMembers org
+  (teamSlugs, orgMembers) <-
+      orgOrFilteredTeamsAndMembers org handPickedTeams teamSlugs
   repoLabels   <- listRepoLabels org repo
   repoProjects <- map reference <$> listRepoProjects org repo
   githubUser   <- login <$> getSelf
@@ -364,6 +431,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , branchParsing
     , bugfixPRTitlePrefix
     , addPrTreeDescription
+    , handPickedTeams
     , teamSlugs
     , repoLabels
     , repoProjects
@@ -419,6 +487,30 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
                  "Could not parse the input as a valid option; will use 'none' for now."
                  None $
                    parseBranchConfig . orIfEmpty (Just "none") . trim <$> getLine
+
+    teamFilterPrompt : HasIO io => (org : String) -> (allTeams : List Team) -> io (Bool, List TeamSlug)
+    teamFilterPrompt org allTeams = 
+      let numTeams = length allTeams
+      in  if numTeams < 3
+             then pure (False, slug <$> allTeams)
+             else do
+               putStrLn ""
+               putStrLn "The \{org} org has \{show numTeams} teams."
+               putStrLn "It is recommended to configure harmony for a subset of teams if you won't be working with all of them."
+               putStrLn ""                                                                         
+               True <- yesNoPrompt "Would you like to configure harmony for a subset of teams?"
+                 | False => pure (False, slug <$> allTeams)
+               putStrLn ""
+               putStrLn "The teams available are:"
+               traverse_ (putStrLn . \(idx, t) => "\{show idx} \{t.name}") (zip [0..numTeams] allTeams)
+               putStrLn ""
+               putStrLn "Enter team names or indexes to filter to below, one per line. A blank line ends selection."
+               filteredTeams <- map slug <$> getSelectTeams (limit (numTeams + 5)) allTeams
+               --                                                       ^
+               --  Arbitrarily give the user 5 extra attempts in case they
+               --  choose out of bounds indices or have typos in team names.
+               --  They won't be selecting all teams anyway.
+               pure (True, filteredTeams)
 
     data PrRequestBehavior = DeferToGithub
                            | TeamsAndUser (Bool, Bool)

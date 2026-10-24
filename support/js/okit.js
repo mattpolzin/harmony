@@ -504,10 +504,11 @@ const okit_list_team_members = (octokit, org, team_slug, onSuccess, onFailure) =
   )
 
 // list org members
+// Currently only retrieves one page (at the given count of users).
 // Executes callback with [String]
-const okit_list_org_members = (octokit, org, onSuccess, onFailure) =>
+const okit_list_org_members = (octokit, org, per_page, onSuccess, onFailure) =>
   idris__okit_unpromisify(
-    octokit.rest.orgs.listMembers({ org, per_page: 100 }),
+    octokit.rest.orgs.listMembers({ org, per_page }),
     r => onSuccess(newline_delimited(digUserLogins(r.data))),
     onFailure
   )

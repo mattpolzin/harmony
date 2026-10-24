@@ -96,7 +96,7 @@ forkedPRs filter perPage page _ _ = fork "pulls --json \{filterString} \{show pe
 ||| Grab all of the given pages of PRs and create a list of PRs from them.
 list' : (filter : Maybe GitHubPRState) -> Pagination _ _ _ () -> Promise' (List PullRequest)
 list' filter pgs = do
-  prJsons <- promiseAll =<< traverse' (forkedPRs filter)  pgs
+  prJsons <- promiseAll =<< traverse' (forkedPRs filter) pgs
   pulls   <- either $ traverse (array parsePR) prJsons
   pure $ join pulls
 
