@@ -310,11 +310,11 @@ getSelectTeams (More fuel) allTeams = do
      else case (`minus` 1) <$> parsePositive {a=Nat} line of
                Just idx => case inBounds idx allTeams of
                                 Yes _ => pure $ index idx allTeams :: !(getSelectTeams fuel allTeams)
-                                No  _ => do putStrLn "\{show idx} is not in bounds. Please choose again."
+                                No  _ => do printWarning "\{show idx} is not in bounds. Please choose again."
                                             getSelectTeams fuel allTeams
                Nothing  => case find ((==) line . name) allTeams of
                                 Just team => pure $ team :: !(getSelectTeams fuel allTeams)
-                                Nothing   => do putStrLn "\{line} is not an available team name. Please choose again."
+                                Nothing   => do printWarning "\{line} is not an available team name. Please choose again."
                                                 getSelectTeams fuel allTeams
 
 createConfig : (envGithubPAT : Maybe String)
