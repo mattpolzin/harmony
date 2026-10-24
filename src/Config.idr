@@ -90,7 +90,8 @@ orgOrFilteredTeamsAndMembers org filterToTeams currentTeams =
 export
 syncConfig : Config => Octokit => (echo : Bool) -> Promise' Config
 syncConfig @{config} echo =
- do (teamSlugs, orgMembers) <- teamsAndMembers
+ do (teamSlugs, orgMembers) <-
+      orgOrFilteredTeamsAndMembers config.org config.handPickedTeams config.teamSlugs
     labelNames <- listRepoLabels config.org config.repo
     repoProjects <- map reference <$> listRepoProjects config.org config.repo
     githubUser <- login <$> getSelf
@@ -107,10 +108,6 @@ syncConfig @{config} echo =
       do putStrLn "Your updated configuration is:"
          printLn config'
     pure config'
-
-  where
-    teamsAndMembers : Promise' (List String, List String)
-    teamsAndMembers = orgOrFilteredTeamsAndMembers config.org config.handPickedTeams config.teamSlugs
 
 export
 syncIfOld : Octokit => Config -> Promise' Config
@@ -368,6 +365,9 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
          putStrLn ""
          commentConfigPrompt 
 
+  let allTeamSlugs = slug <$> teamDetails
+  (handPickedTeams, teamSlugs) <- teamFilterPrompt allTeamSlugs
+
   putStrLn ""
   theme <- themePrompt
 
@@ -382,8 +382,8 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , columns  = terminalColumns
     , editor
     }
-  let teamSlugs = slug <$> teamDetails
-  orgMembers   <- nonOrgFallback [] $ listOrgMembers org 100
+  (teamSlugs, orgMembers) <-
+      orgOrFilteredTeamsAndMembers org handPickedTeams teamSlugs
   repoLabels   <- listRepoLabels org repo
   repoProjects <- map reference <$> listRepoProjects org repo
   githubUser   <- login <$> getSelf
@@ -394,9 +394,6 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   let ignoredPRs = []
   let githubPAT = hide <$> configPAT
   let githubUser = Just githubUser
-  let handPickedTeams = False
-  -- TODO 7.11.1: prompt to determine if teams should be hand picked and let the user select them.
-  -- TODO 7.11.1: write shared function that retrieves org members either wholistically or filtered to given teams.
   let config = MkConfig {
       updatedAt
     , domain
@@ -468,6 +465,21 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
                  "Could not parse the input as a valid option; will use 'none' for now."
                  None $
                    parseBranchConfig . orIfEmpty (Just "none") . trim <$> getLine
+
+    teamFilterPrompt : HasIO io => (allTeamSlugs : List TeamSlug) -> io (Bool, List TeamSlug)
+    teamFilterPrompt allTeamSlugs = 
+      let numTeams = length allTeamSlugs
+      in  if numTeams < 3
+             then pure (False, allTeamSlugs)
+             else do
+               putStrLn "Your org has \{show numTeams} teams."
+               putStrLn "It is recommended to configure harmony for a subset of teams if you won't be working with all of them."
+               putStrLn ""                                                                         
+               True <- yesNoPrompt "Would you like to configure for a subset of teams?"
+                 | False => pure (False, allTeamSlugs)
+               let filteredTeams = allTeamSlugs
+               -- TODO 7.11.1: prompt to determine the teams to filter to.
+               pure (True, filteredTeams)
 
     data PrRequestBehavior = DeferToGithub
                            | TeamsAndUser (Bool, Bool)
