@@ -160,6 +160,10 @@ record Config where
   |||   >> **Fancy PR**
   |||   >>> ↖ `feature-2`
   addPrTreeDescription : Bool
+  ||| Are the teams hand-picked? If so, only org members for those teams will
+  ||| be cached and new team slugs will not be fetched during syncing because
+  ||| the user has hand-picked the teams they care about.
+  handPickedTeams      : Bool
   ||| Local cache of GitHub teams within the configured org.
   teamSlugs    : List String
   ||| Local cache of GitHub labels for the configured repo.
@@ -466,8 +470,9 @@ render config = vsep
   , "        requestUsers:" <++> (pretty $ show config.requestUsers)
   , "    commentOnRequest:" <++> (pretty $ show config.commentOnRequest)
   , "       branchParsing:" <++> (pretty $ show config.branchParsing)
-  , " bugfixPRTitlePrefix:" <++> (pretty $ maybe "Not set" show config.bugfixPRTitlePrefix)
+  , " bugfixPRTitlePrefix:" <++> (pretty $ maybe "not set" show config.bugfixPRTitlePrefix)
   , "addPrTreeDescription:" <++> (pretty $ show config.addPrTreeDescription)
+  , "     handPickedTeams:" <++> (pretty $ show config.handPickedTeams)
   , "           teamSlugs:" <++> (pretty $ newlineList config.teamSlugs)
   , "          repoLabels:" <++> (pretty $ newlineList $ show <$> config.repoLabels)
   , "        repoProjects:" <++> (pretty $ newlineList $ show <$> config.repoProjects)
@@ -514,8 +519,8 @@ json : Config -> JSON
 json (MkConfig updatedAt domain org repo defaultRemote mainBranch
                defaultProject defaultParentIssue requestTeams requestUsers
                commentOnRequest branchParsing bugfixPRTitlePrefix
-               addPrTreeDescription teamSlugs repoLabels repoProjects
-               orgMembers ignoredPRs githubPAT githubUser theme _) =
+               addPrTreeDescription handPickedTeams teamSlugs repoLabels
+               repoProjects orgMembers ignoredPRs githubPAT githubUser theme _) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
@@ -532,6 +537,7 @@ json (MkConfig updatedAt domain org repo defaultRemote mainBranch
     , ("defaultParentIssue"   , maybe JNull JInteger defaultParentIssue)
     , ("theme"                , JString $ show theme)
     , ("orgMembers"           , JArray $ JString <$> sort orgMembers)
+    , ("handPickedTeams"      , JBool handPickedTeams)
     , ("teamSlugs"            , JArray $ JString <$> sort teamSlugs)
     , ("repoLabels"           , JArray $ JString <$> sort repoLabels)
     , ("repoProjects"         , JArray $ json <$> sort repoProjects)
@@ -585,6 +591,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               ] config
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           let maybeGithubDomain = lookup "domain" config
+                                          let maybeHandPickedTeams = lookup "handPickedTeams" config
                                           let maybeGithubUser = lookup "githubUser" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
                                           let maybeDefaultProject = lookup "defaultProject" config
@@ -614,6 +621,9 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           rp <- maybe (Right []) (array parseProjectRef) maybeRepoProjects
                                           -- TODO 9.0.0: Make repoProjects required part of config file (default to [])
                                           --             repoProjects lookup can be moved to the required lookupAll above.
+                                          hpt <- maybe (Right False) bool maybeHandPickedTeams
+                                          -- TODO 9.0.0: Make handPickedTeams required part of config file
+                                          --             handPickedTeams lookup can be moved to the required lookupAll above.
                                           ts <- array string teamSlugs
                                           rl <- array string repoLabels
                                           om <- array string orgMembers
@@ -633,6 +643,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , defaultParentIssue   = dpi
                                             , requestTeams         = at
                                             , requestUsers         = au
+                                            , handPickedTeams      = hpt
                                             , teamSlugs            = ts
                                             , repoLabels           = rl
                                             , repoProjects         = rp
@@ -681,6 +692,7 @@ simpleDefaults =
       , defaultParentIssue   = Nothing
       , requestTeams         = True
       , requestUsers         = True
+      , handPickedTeams      = False
       , teamSlugs            = []
       , repoLabels           = []
       , repoProjects         = []

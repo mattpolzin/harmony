@@ -116,6 +116,9 @@ handleAuthenticatedArgs @{config} ["pulls", "--json", stateFilter, pageLimit, pa
     parsePg = parsePositive
 handleAuthenticatedArgs @{config} ["user", "--json", username] =
   print $ json !(getUser username)
+handleAuthenticatedArgs @{config} ["teamMembers", "--json", teamSlug] = do
+  members <- forceListTeamMembers config.org teamSlug
+  print . JArray $ JString <$> members
 
 -- user-facing commands:
 handleAuthenticatedArgs ["whoami"] =
