@@ -42,6 +42,7 @@ githubPAT:            [none/any string] The Personal Access Token Harmony should
                       environment variable.
 
 Current Configuration:
+             version: ***
            updatedAt: ***
                theme: dark
               domain: github.com

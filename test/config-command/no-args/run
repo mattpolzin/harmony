@@ -4,6 +4,7 @@
 set +e
 
 $harmony config 2>&1 | \
-  sed 's/updatedAt: .*$/updatedAt: ***/'
+  sed 's/updatedAt: .*$/updatedAt: ***/' | \
+  sed 's/version: .*$/version: ***/'
 
 . ../cleanup.sh

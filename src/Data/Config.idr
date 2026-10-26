@@ -1,5 +1,6 @@
 module Data.Config
 
+import AppVersion
 import Data.Either
 import Data.Issue
 import Data.List
@@ -41,6 +42,12 @@ record Ephemeral where
   columns   : Nat
   ||| If set, a preferred editor to use for writing PR desriptions.
   editor    : Maybe String
+
+public export
+record WriteOnly where
+  constructor MkWriteOnly
+  ||| The current harmony version
+  version : String
 
 export
 data Hidden a = Hide a
@@ -191,6 +198,8 @@ record Config where
   theme        : Theme
   ||| Configuration properties that are not written to a file.
   ephemeral    : Ephemeral -- not written out to file
+  ||| Configuration properties that are written but not read back out again. These can be useful e.g. to be read by some other code (not the code that reads the Config)
+  writeOnly    : WriteOnly
 
 %name Config config
 
@@ -457,7 +466,8 @@ config.editor = config.ephemeral.editor
 export 
 render : Config -> Doc AnsiStyle
 render config = vsep
-  [ "           updatedAt:" <++> (pretty $ show config.updatedAt)
+  [ "             version:" <++> (pretty $ config.writeOnly.version)
+  , "           updatedAt:" <++> (pretty $ show config.updatedAt)
   , "               theme:" <++> (pretty $ show config.theme)
   , "              domain:" <++> (pretty $ config.domain)
   , "         org or user:" <++> (pretty $ config.org)
@@ -520,7 +530,8 @@ json (MkConfig updatedAt domain org repo defaultRemote mainBranch
                defaultProject defaultParentIssue requestTeams requestUsers
                commentOnRequest branchParsing bugfixPRTitlePrefix
                addPrTreeDescription handPickedTeams teamSlugs repoLabels
-               repoProjects orgMembers ignoredPRs githubPAT githubUser theme _) =
+               repoProjects orgMembers ignoredPRs githubPAT githubUser theme _
+               writeOnly) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
@@ -545,6 +556,7 @@ json (MkConfig updatedAt domain org repo defaultRemote mainBranch
     , ("githubPAT"            , maybe JNull (JString . expose) githubPAT)
     , ("githubUser"           , maybe JNull JString githubUser)
     , ("updatedAt"            , JInteger $ cast updatedAt)
+    , ("version"              , JString $ writeOnly.version)
     ]
 
 --
@@ -657,6 +669,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , githubUser           = gu
                                             , theme                = th
                                             , ephemeral            = ephemeral
+                                            , writeOnly            = MkWriteOnly appVersion
                                             }
       where
         exactlyOneOf : String -> String -> Either String JSON
@@ -706,5 +719,6 @@ simpleDefaults =
       , githubUser           = Nothing
       , theme                = Dark
       , ephemeral            = MkEphem "path/to/repo" False False 200 Nothing
+      , writeOnly            = MkWriteOnly appVersion
       }
 

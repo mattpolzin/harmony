@@ -1,5 +1,6 @@
 module Config
 
+import AppVersion
 import Data.Config
 import Data.Either
 import Data.Issue
@@ -416,6 +417,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   let ignoredPRs = []
   let githubPAT = hide <$> configPAT
   let githubUser = Just githubUser
+  let writeOnly = MkWriteOnly appVersion
   let config = MkConfig {
       updatedAt
     , domain
@@ -441,6 +443,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , githubUser
     , theme
     , ephemeral
+    , writeOnly
     }
   ignore $ writeConfig config
   putStrLn "Your new configuration is:"
