@@ -84,7 +84,12 @@ partition = uncurry MkPRHistory . partition ((== Open) . (.state))
 
 ||| Create a fork of this program that retrieves the given page of PRs
 ||| and outputs the result as JSON.
-forkedPRs : (filter : Maybe GitHubPRState) -> (perPage : Nat) -> (currentPageIdx : Nat) -> (currentPageSize : Nat) -> (x : ()) -> Promise' Future
+forkedPRs : (filter : Maybe GitHubPRState)
+         -> (perPage : Nat)
+         -> (currentPageIdx : Nat)
+         -> (currentPageSize : Nat)
+         -> (x : ())
+         -> Promise' Future
 forkedPRs filter perPage page _ _ = fork "pulls --json \{filterString} \{show perPage} \{show page}"
   where
     filterString : String
@@ -347,6 +352,14 @@ issueBodyPrefix closesWithPR bugfix maybeTree issue =
   \{issueDescriptionPrefix maybeTree issue}
 
   \{relatedToIssueStr closesWithPR bugfix (show issue.number)}
+  """
+
+titleBodyPrefix : (prTitle : String) -> String
+titleBodyPrefix prTitle =
+  """
+  <!--
+  \{prTitle}
+  -->
   """
 
 ||| Get the chain of PRs that lead from the given branch to the configured
@@ -725,15 +738,16 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
         configuredIssue <- traverse (createIssue baseBranch) issueTemplate
 
         let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
-        bodyPrefix <- case configuredIssue of
-                           Just issue => buildIssueBodyPrefix branch' issue baseBranch
-                           Nothing => maybe (pure "") ($ baseBranch) inferredBranchInfo.buildBodyPrefix
 
         let defaultTitle = case configuredIssue of
                                 Just issue => Just issue.title
                                 Nothing => inferredBranchInfo.defaultTitle
 
         title <- (titlePrefix ++) <$> (prTitlePrompt defaultTitle)
+
+        bodyPrefix <- case configuredIssue of
+                           Just issue => buildIssueBodyPrefix branch' issue baseBranch
+                           Nothing => maybe (pure $ titleBodyPrefix title) ($ baseBranch) inferredBranchInfo.buildBodyPrefix
 
         -- either get the description at the command line or open an editor
         -- with a template if available
