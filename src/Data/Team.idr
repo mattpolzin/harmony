@@ -106,3 +106,14 @@ parseTeamsString : String -> Either String (List Team)
 parseTeamsString =
   (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> array parseTeam
 
+export
+mockTeam : (name : String) -> Team
+mockTeam name = MkTeam
+  { graphQlId = "1"
+  , slug  = "slug"
+  , name
+  , description = "description"
+  , createdAt = (MkDate 2026 1 1)
+  , updatedAt = (MkDate 2026 1 1)
+  , reviewRequestDelegation = Disabled
+  }
