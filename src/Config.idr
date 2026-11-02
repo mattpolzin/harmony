@@ -304,19 +304,22 @@ preferOriginRemote names =
 ||| A blank line ends selection.
 getSelectTeams : HasIO io => (fuel : Fuel) -> (allTeams : List Team) -> io (List Team)
 getSelectTeams Dry _ = pure []
-getSelectTeams (More fuel) allTeams = do
-  line <- getLine
-  if line == ""
-     then pure []
-     else case (`minus` 1) <$> parsePositive {a=Nat} line of
-               Just idx => case inBounds idx allTeams of
-                                Yes _ => pure $ index idx allTeams :: !(getSelectTeams fuel allTeams)
-                                No  _ => do printWarning "\{show idx} is not in bounds. Please choose again."
+getSelectTeams (More fuel) allTeams = trim <$> getLine >>= go
+  where
+    go : (line : String) -> io (List Team)
+    go "" = pure []
+    go line =
+      case parsePositive {a=Nat} line of
+           Just 0   => do printWarning "Indices are 1 or greater. Please choose again."
+                          getSelectTeams fuel allTeams
+           Just idx => case inBounds (idx `minus` 1) allTeams of
+                            Yes _ => pure $ index (idx `minus` 1) allTeams :: !(getSelectTeams fuel allTeams)
+                            No  _ => do printWarning "\{show idx} is not in bounds. Please choose again."
+                                        getSelectTeams fuel allTeams
+           Nothing  => case find ((==) line . name) allTeams of
+                            Just team => pure $ team :: !(getSelectTeams fuel allTeams)
+                            Nothing   => do printWarning "\{line} is not an available team name. Please choose again."
                                             getSelectTeams fuel allTeams
-               Nothing  => case find ((==) line . name) allTeams of
-                                Just team => pure $ team :: !(getSelectTeams fuel allTeams)
-                                Nothing   => do printWarning "\{line} is not an available team name. Please choose again."
-                                                getSelectTeams fuel allTeams
 
 createConfig : (envGithubPAT : Maybe String)
             -> (ttyStdout : Bool)
@@ -505,7 +508,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
                  | False => pure (False, slug <$> allTeams)
                putStrLn ""
                putStrLn "The teams available are:"
-               traverse_ (putStrLn . \(idx, t) => "\{show idx} \{t.name}") (zip [0..numTeams] allTeams)
+               traverse_ (putStrLn . \(idx, t) => "\{show idx} \{t.name}") (zip [1..(numTeams + 1)] allTeams)
                putStrLn ""
                putStrLn "Enter team names or indexes to filter to below, one per line. A blank line ends selection."
                filteredTeams <- map slug <$> getSelectTeams (limit (numTeams + 5)) allTeams
