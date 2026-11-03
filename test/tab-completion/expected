@@ -29,6 +29,7 @@ requestTeams
 requestUsers
 commentOnRequest
 branchParsing
+titleSlugPosition
 bugfixPRTitlePrefix
 addPrTreeDescription
 defaultRemote
