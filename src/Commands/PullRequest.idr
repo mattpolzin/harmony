@@ -289,6 +289,8 @@ record BranchInferredData where
 
   ||| The title prefix is to be prepended to the new PR title.
   titlePrefix : Maybe String
+  ||| The title suffix is to be appended to the new PR title.
+  titleSuffix : Maybe String
   ||| The body prefix is to be prepended to the new PR body.
   buildBodyPrefix  : Maybe ((branchName : String) -> Promise' String)
   ||| The default title is an option the user may choose to avoid needing to
@@ -314,7 +316,7 @@ Show BranchInferredData where
       showJust = map (const "branchName -> Promise")
 
 noInferredData : BranchInferredData
-noInferredData = MkInferredData Nothing Nothing Nothing Nothing
+noInferredData = MkInferredData Nothing Nothing Nothing Nothing Nothing
 
 relatedToIssueStr : (closes : Bool) -> (bugfix : Bool) -> (issueNumber : String) -> String
 relatedToIssueStr False _     issueNumber = "Related to #\{issueNumber}"
@@ -542,7 +544,8 @@ githubInferredBranchInfo @{config} branch' =
       issue <- getIssue config.org config.repo issueNum
       let configuredIssue = configuredIssue issue
       pure $ 
-        MkInferredData Nothing 
+        MkInferredData Nothing
+                       Nothing
                        (Just $ buildIssueBodyPrefix branch' configuredIssue)
                        (Just $ titlePrefixForBranch branch'.bugfix ++ issue.title)
                        configuredIssue.baseBranchGuess
@@ -551,9 +554,15 @@ githubInferredBranchInfo @{config} branch' =
     issueNumber : Maybe String
     issueNumber = parseGithubIssueNumber branch'.branch
 
-jiraInferredBranchInfo : String -> BranchInferredData
-jiraInferredBranchInfo branch =
-  (MkInferredData ((++ " - ") <$> parseJiraSlug branch) Nothing Nothing Nothing)
+jiraInferredBranchInfo : TitleSlugPosition -> (branch : String) -> BranchInferredData
+jiraInferredBranchInfo position branch = go (parseJiraSlug branch)
+  where
+    go : Maybe String -> BranchInferredData
+    go slug =
+      case position of
+           Prefix => (MkInferredData ((++ " - ") <$> slug) Nothing Nothing Nothing Nothing)
+           Suffix => (MkInferredData Nothing ((\s => "(\{s})") <$> slug) Nothing Nothing Nothing)
+  
 
 ||| Get any inferred title prefix, body prefix, or default title from the
 ||| current branch.
@@ -573,7 +582,7 @@ jiraInferredBranchInfo branch =
 getInferredBranchInfo : Config => Octokit => ConfiguredBranch -> Promise' BranchInferredData
 getInferredBranchInfo @{config} branch' =
     case config.branchParsing of
-         Jira   => pure (jiraInferredBranchInfo branch'.branch)
+         Jira   => pure (jiraInferredBranchInfo config.titleSlugPosition branch'.branch)
          --               ^ Jira slugs become a title prefix
          Github => githubInferredBranchInfo branch'
          None   => pure noInferredData

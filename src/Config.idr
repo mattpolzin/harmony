@@ -234,6 +234,8 @@ propSetter p@CommentOnRequest     =
   update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
 propSetter p@ParseBranchStrategy  =
   update (parseBranchConfig . toLower) (\s => { branchParsing := s })
+propSetter p@SlugTitlePosition  =
+  update (parseTitleSlugPosition . toLower) (\s => { titleSlugPosition := s })
 propSetter p@DefaultProject       =
   \config => defaultUpdate p (map Just . projectByNumber config.repoProjects <=< parsePositive) (\p => { defaultProject := p }) config
     where
@@ -261,6 +263,7 @@ propGetter RequestTeams         = show . requestTeams
 propGetter RequestUsers         = show . requestUsers
 propGetter CommentOnRequest     = show . commentOnRequest
 propGetter ParseBranchStrategy  = show . branchParsing
+propGetter SlugTitlePosition    = show . titleSlugPosition
 propGetter BugfixPRTitlePrefix  = show . bugfixPRTitlePrefix
 propGetter AddPrTreeDescription = show . addPrTreeDescription
 propGetter DefaultRemote        = show . defaultRemote
@@ -420,6 +423,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   let ignoredPRs = []
   let githubPAT = hide <$> configPAT
   let githubUser = Just githubUser
+  let titleSlugPosition = Prefix
   let writeOnly = MkWriteOnly appVersion
   let config = MkConfig {
       updatedAt
@@ -434,6 +438,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , requestUsers
     , commentOnRequest
     , branchParsing
+    , titleSlugPosition
     , bugfixPRTitlePrefix
     , addPrTreeDescription
     , handPickedTeams
