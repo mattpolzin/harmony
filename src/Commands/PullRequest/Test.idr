@@ -39,8 +39,11 @@ namespace IssueBodyPrefix
   relatedToIssueStrTest3 = Refl
 
 namespace JiraInferredBranchInfo
-  prefixTitle : jiraInferredBranchInfo "PROJ-1234-hello-world" ==> MkInferredData (Just "PROJ-1234 - ") Nothing Nothing Nothing
+  prefixTitle : jiraInferredBranchInfo Prefix "PROJ-1234-hello-world" ==> MkInferredData (Just "PROJ-1234 - ") Nothing Nothing Nothing Nothing
   prefixTitle = MkTTest
+
+  suffixTitle : jiraInferredBranchInfo Suffix "PROJ-1234-hello-world" ==> MkInferredData Nothing (Just "(PROJ-1234)") Nothing Nothing Nothing
+  suffixTitle = MkTTest
 
 namespace RenderPrTree
   config : Config

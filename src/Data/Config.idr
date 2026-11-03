@@ -118,6 +118,33 @@ branchConfig = (map toLower . string)  >=> (maybeToEither "" . parseBranchConfig
     err : String
     err = "Expected the branchParsing setting to be 'none', 'github', or 'jira'"
 
+namespace TitleSlugPosition
+  public export
+  data TitleSlugPosition = Prefix | Suffix
+
+  export
+  Show TitleSlugPosition where
+    show Prefix = "prefix"
+    show Suffix = "suffix"
+
+  export
+  Eq TitleSlugPosition where
+    Prefix == Prefix = True
+    Suffix == Suffix = True
+    _ == _ = False
+
+  export
+  parseTitleSlugPosition : String -> Maybe TitleSlugPosition
+  parseTitleSlugPosition "prefix" = Just Prefix
+  parseTitleSlugPosition "suffix" = Just Suffix
+  parseTitleSlugPosition _ = Nothing
+
+titleSlugConfig : JSON -> Either String TitleSlugPosition
+titleSlugConfig = (map toLower . string)  >=> (maybeToEither "" . parseTitleSlugPosition)
+  where
+    err : String
+    err = "Expected the titleSlugPosition setting to be 'prefix', or 'suffix'"
+
 Alternative (Either String) where
   empty = Left "empty"
 
@@ -155,6 +182,10 @@ record Config where
   ||| If set to Github, attempt to extract a Github issue number from branch
   ||| names and use that in the PR body.
   branchParsing : ParseBranchStrategy
+  ||| PR Title Slug position is whether a Jira slug should appear at the
+  ||| beginning or end of a PR title. GitHub slugs only appear in the PR body
+  ||| so this setting has no effect on them (currently).
+  titleSlugPosition : TitleSlugPosition
   ||| If set, prefix new PR titles (by default suggestion only) with the given
   ||| string. For example, '[fix]'.
   bugfixPRTitlePrefix : Maybe String
@@ -278,6 +309,15 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
       issue/ticket.
       """
     )
+  SlugTitlePosition : SettableProp
+    "titleSlugPosition"
+    ( (Enum ["prefix", "suffix"])
+    , """
+      Determines whether Jira slugs are prepended or appended to PR titles. \
+      Does not affect GitHub slugs which are added to PR bodies, not titles. \
+      Prefixes are 'SLUG-1234 - ...' and Suffixes are '... (SLUG-1234)'.
+      """
+    )
   BugfixPRTitlePrefix : SettableProp
     "bugfixPRTitlePrefix"
     ( (Any Optional "string")
@@ -364,6 +404,7 @@ settablePropNamed : (name : String) -> Maybe (Exists (SettableProp name))
 settablePropNamed "requestTeams"         = Just $ Evidence _ RequestTeams
 settablePropNamed "commentOnRequest"     = Just $ Evidence _ CommentOnRequest
 settablePropNamed "branchParsing"        = Just $ Evidence _ ParseBranchStrategy
+settablePropNamed "titleSlugPosition"    = Just $ Evidence _ SlugTitlePosition
 settablePropNamed "bugfixPRTitlePrefix"  = Just $ Evidence _ BugfixPRTitlePrefix
 settablePropNamed "addPrTreeDescription" = Just $ Evidence _ AddPrTreeDescription
 settablePropNamed "defaultRemote"        = Just $ Evidence _ DefaultRemote
@@ -480,6 +521,7 @@ render config = vsep
   , "        requestUsers:" <++> (pretty $ show config.requestUsers)
   , "    commentOnRequest:" <++> (pretty $ show config.commentOnRequest)
   , "       branchParsing:" <++> (pretty $ show config.branchParsing)
+  , "   titleSlugPosition:" <++> (pretty $ show config.titleSlugPosition)
   , " bugfixPRTitlePrefix:" <++> (pretty $ maybe "not set" show config.bugfixPRTitlePrefix)
   , "addPrTreeDescription:" <++> (pretty $ show config.addPrTreeDescription)
   , "     handPickedTeams:" <++> (pretty $ show config.handPickedTeams)
@@ -528,15 +570,16 @@ export
 json : Config -> JSON
 json (MkConfig updatedAt domain org repo defaultRemote mainBranch
                defaultProject defaultParentIssue requestTeams requestUsers
-               commentOnRequest branchParsing bugfixPRTitlePrefix
-               addPrTreeDescription handPickedTeams teamSlugs repoLabels
-               repoProjects orgMembers ignoredPRs githubPAT githubUser theme _
-               writeOnly) =
+               commentOnRequest branchParsing titleSlugPosition
+               bugfixPRTitlePrefix addPrTreeDescription handPickedTeams
+               teamSlugs repoLabels repoProjects orgMembers ignoredPRs
+               githubPAT githubUser theme _ writeOnly) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
     , ("commentOnRequest"     , JString $ show commentOnRequest)
     , ("branchParsing"        , JString $ show branchParsing)
+    , ("titleSlugPosition"    , JString $ show titleSlugPosition)
     , ("bugfixPRTitlePrefix"  , maybe JNull JString bugfixPRTitlePrefix)
     , ("addPrTreeDescription" , JBool addPrTreeDescription)
     , ("domain"               , JString domain)
@@ -609,6 +652,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeDefaultProject = lookup "defaultProject" config
                                           let maybeDefaultParentIssue = lookup "defaultParentIssue" config
                                           let maybeRepoProjects = lookup "repoProjects" config
+                                          let maybeTitleSlugPosition = lookup "titleSlugPosition" config
                                           ua <- cast <$> integer updatedAt
                                           dom <- maybe (Right "github.com") string maybeGithubDomain
                                           -- TODO 9.0.0: Make domain required part of config file
@@ -627,6 +671,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           au <- bool requestUsers
                                           ca <- commentConfig commentOnRequest
                                           bp <- branchConfig branchParsing
+                                          tsp <- maybe (Right Prefix) titleSlugConfig maybeTitleSlugPosition
                                           prt <- maybe (Right False) bool maybePrTree
                                           -- TODO 8.0.0: Make addPrTreeDescription required part of config file (default to false)
                                           --             addPrTreeDescription lookup can be moved to the required lookupAll above.
@@ -661,6 +706,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , repoProjects         = rp
                                             , commentOnRequest     = ca
                                             , branchParsing        = bp
+                                            , titleSlugPosition    = tsp
                                             , bugfixPRTitlePrefix  = bf
                                             , addPrTreeDescription = prt
                                             , orgMembers           = om
@@ -711,6 +757,7 @@ simpleDefaults =
       , repoProjects         = []
       , commentOnRequest     = None
       , branchParsing        = None
+      , titleSlugPosition    = Prefix
       , bugfixPRTitlePrefix  = Nothing
       , addPrTreeDescription = False
       , orgMembers           = []
