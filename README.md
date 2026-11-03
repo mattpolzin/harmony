@@ -253,6 +253,9 @@ Not all configuration properties can be read/set with this command.
 `branchParsing` (`none`/`jira`/`github`) 
 : Optionally extract a Jira ticket slug or GitHub issue number from the branch name and prepend it to the PR title or body to link the PR and ticket/issue.
 
+`titleSlugPosition` (`prefix`/`suffix`) 
+: If a Jira ticket slug is found in the branch name, whether to prepend or append it to the PR title.
+
 `bugfixPRTitlePrefix` (optional string) 
 : A string to prefix default PR titles with when the branch the PR is being created from is determined to be a bugfix branch (branch name starts with 'bugfix'). For example, a common prefix is '[fix]'.
 
