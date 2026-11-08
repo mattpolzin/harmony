@@ -224,6 +224,11 @@ record Config where
   |||
   ||| This is the user's login or "slug"
   githubUser   : Maybe String
+  ||| Jira requests are authenticated against this user. Jira auth is only
+  ||| needed when retrieving information about Jira tickets which means most
+  ||| operations work without a Jira user at all. Jira features in harmony are
+  ||| entirely optional.
+  jiraUser     : Maybe String
   ||| Should Harmony print with colors fit for a dark terminal or a light
   ||| terminal?
   theme        : Theme
@@ -375,6 +380,15 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
       GITHUB_PAT or GH_TOKEN environment variable.
       """
     )
+  JiraUser           : SettableProp
+    "jiraUser"
+    ( (Any Optional "string")
+    , """
+      The username to use to authenticate with Jira. There need not \
+      be any Jira configuration at all unless you are using harmony to work \
+      with Jira tickets.
+      """
+    )
 
 public export
 SomeSettableProp : Type
@@ -413,6 +427,7 @@ settablePropNamed "defaultProject"       = Just $ Evidence _ DefaultProject
 settablePropNamed "defaultParentIssue"   = Just $ Evidence _ DefaultParentIssue
 settablePropNamed "theme"                = Just $ Evidence _ ThemeProp
 settablePropNamed "githubPAT"            = Just $ Evidence _ GithubPAT
+settablePropNamed "jiraUser"             = Just $ Evidence _ JiraUser
 settablePropNamed "requestUsers"         = Just $ Evidence _ RequestUsers
 settablePropNamed _ = Nothing
 
@@ -532,6 +547,7 @@ render config = vsep
   , "          ignoredPRs:" <++> (pretty $ newlineList $ show <$> config.ignoredPRs)
   , "           githubPAT:" <++> (pretty $ personalAccessToken)
   , "          githubUser:" <++> (pretty $ maybe "not set" id config.githubUser)
+  , "            jiraUser:" <++> (pretty $ maybe "not set" id config.jiraUser)
   ]
       where
         personalAccessToken : String
@@ -573,7 +589,7 @@ json (MkConfig updatedAt domain org repo defaultRemote mainBranch
                commentOnRequest branchParsing titleSlugPosition
                bugfixPRTitlePrefix addPrTreeDescription handPickedTeams
                teamSlugs repoLabels repoProjects orgMembers ignoredPRs
-               githubPAT githubUser theme _ writeOnly) =
+               githubPAT githubUser jiraUser theme _ writeOnly) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
@@ -598,6 +614,7 @@ json (MkConfig updatedAt domain org repo defaultRemote mainBranch
     , ("ignoredPRs"           , JArray $ JInteger . cast <$> sort ignoredPRs)
     , ("githubPAT"            , maybe JNull (JString . expose) githubPAT)
     , ("githubUser"           , maybe JNull JString githubUser)
+    , ("jiraUser"             , maybe JNull JString jiraUser)
     , ("updatedAt"            , JInteger $ cast updatedAt)
     , ("version"              , JString $ writeOnly.version)
     ]
@@ -648,6 +665,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeGithubDomain = lookup "domain" config
                                           let maybeHandPickedTeams = lookup "handPickedTeams" config
                                           let maybeGithubUser = lookup "githubUser" config
+                                          let maybeJiraUser = lookup "jiraUser" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
                                           let maybeDefaultProject = lookup "defaultProject" config
                                           let maybeDefaultParentIssue = lookup "defaultParentIssue" config
@@ -689,6 +707,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           gu <- maybe (Right Nothing) (optional string) maybeGithubUser
+                                          ju <- maybe (Right Nothing) (optional string) maybeJiraUser
                                           bf <- optional string bugfixPrefix
                                           th <- (stringy "dark or light" parseString) theme
                                           pure $ MkConfig {
@@ -715,6 +734,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , ignoredPRs           = ip
                                             , githubPAT            = (map Hide) gp
                                             , githubUser           = gu
+                                            , jiraUser             = ju
                                             , theme                = th
                                             , ephemeral            = ephemeral
                                             , writeOnly            = MkWriteOnly appVersion
@@ -766,6 +786,7 @@ simpleDefaults =
       , ignoredPRs           = []
       , githubPAT            = Nothing
       , githubUser           = Nothing
+      , jiraUser             = Nothing
       , theme                = Dark
       , ephemeral            = MkEphem "path/to/repo" False False 200 Nothing
       , writeOnly            = MkWriteOnly appVersion

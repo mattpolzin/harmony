@@ -230,6 +230,7 @@ propSetter p@DefaultRemote        = update Just (\s => { defaultRemote := s })
 propSetter p@MainBranch           = update Just (\s => { mainBranch := s })
 propSetter p@ThemeProp            = update parseString (\t => { theme := t })
 propSetter p@GithubPAT            = defaultUpdate p (Just . Just) (\s => { githubPAT := hide <$> s })
+propSetter p@JiraUser             = defaultUpdate p (Just . Just) (\s => { jiraUser := s })
 propSetter p@CommentOnRequest     =
   update (parseCommentConfig . toLower) (\b => { commentOnRequest := b })
 propSetter p@ParseBranchStrategy  =
@@ -272,6 +273,7 @@ propGetter DefaultProject       = show . defaultProject
 propGetter DefaultParentIssue   = show . defaultParentIssue
 propGetter ThemeProp            = show . theme
 propGetter GithubPAT            = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show . githubPAT
+propGetter JiraUser             = maybe "Not set" show . githubPAT
 
 export
 getConfig : Config =>
@@ -425,6 +427,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   let githubUser = Just githubUser
   let titleSlugPosition = Prefix
   let writeOnly = MkWriteOnly appVersion
+  let jiraUser = Nothing
   let config = MkConfig {
       updatedAt
     , domain
@@ -449,6 +452,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , ignoredPRs
     , githubPAT
     , githubUser
+    , jiraUser
     , theme
     , ephemeral
     , writeOnly

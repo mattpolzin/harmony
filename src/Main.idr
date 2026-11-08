@@ -212,26 +212,37 @@ handleConfiguredArgs @{config} envPAT args = do
    handleAuthenticatedArgs @{config'} args
 
 
+configureJira : Config => IO (Maybe Jira)
+configureJira @{config} = do
+  Just jiraToken <- pure $ !(getEnv "JIRA_API_TOKEN") <|> !(getEnv "ATLASSIAN_API_TOKEN")
+    | Nothing => pure Nothing
+  Just jiraUser <- pure $ !(getEnv "JIRA_USERNAME") <|> !(getEnv "ATLASSIAN_USERNAME")
+    | Nothing => pure Nothing
+  Just jiraDomain <- pure $ !(getEnv "JIRA_BASE_URL") <|> !(getEnv "ATLASSIAN_BASE_URL")
+    | Nothing => pure Nothing
+
+  Just <$> jira jiraUser jiraToken jiraDomain
+
 -- bash and zsh completion are special cases where we don't want to create the config
 -- if it doesn't exist yet so we handle it up front before loading config and then
 -- handling any other input.
 covering
 handleArgs : (envGithubPAT : Maybe String)
-          -> (jira : Maybe Jira)
           -> (ttyStdout : Bool)
           -> (terminalColors : Bool)
           -> (terminalColumns : Nat)
           -> (editor : Maybe String)
           -> List String 
           -> IO ()
-handleArgs envPAT _ _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = shellCompletion envPAT Cmd subcommand curWord prevWord
-handleArgs envPAT _ _ _ _ _ ["--zsh-completion", subcommand, curWord, prevWord] = shellCompletion envPAT CmdAndDescription subcommand curWord prevWord
-handleArgs _ _ _ _ _ _ ["--bash-completion-script"] = putStrLn Bash.script
-handleArgs _ _ _ _ _ _ ["--zsh-completion-script"] = putStrLn Zsh.script
-handleArgs envPAT jira ttyStdout terminalColors terminalColumns editor args =
+handleArgs envPAT _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = shellCompletion envPAT Cmd subcommand curWord prevWord
+handleArgs envPAT _ _ _ _ ["--zsh-completion", subcommand, curWord, prevWord] = shellCompletion envPAT CmdAndDescription subcommand curWord prevWord
+handleArgs _ _ _ _ _ ["--bash-completion-script"] = putStrLn Bash.script
+handleArgs _ _ _ _ _ ["--zsh-completion-script"] = putStrLn Zsh.script
+handleArgs envPAT ttyStdout terminalColors terminalColumns editor args =
   resolve'' $
     do -- create the config file before continuing if it does not exist yet
        config <- loadOrCreateConfig envPAT ttyStdout terminalColors terminalColumns editor
+       jira <- liftIO configureJira
 
        -- temporary jira exploration
        whenJust jira $ \_ => do
@@ -243,17 +254,6 @@ shouldUseColors : HasIO io => (ttyStdout : Bool) -> io Bool
 shouldUseColors tty = do
   noColors <- getEnv "NO_COLOR"
   pure (isNothing noColors && tty)
-
-configureJira : IO (Maybe Jira)
-configureJira = do
-  Just jiraToken <- pure $ !(getEnv "JIRA_API_TOKEN") <|> !(getEnv "ATLASSIAN_API_TOKEN")
-    | Nothing => pure Nothing
-  Just jiraUser <- pure $ !(getEnv "JIRA_USERNAME") <|> !(getEnv "ATLASSIAN_USERNAME")
-    | Nothing => pure Nothing
-  Just jiraDomain <- pure $ !(getEnv "JIRA_BASE_URL") <|> !(getEnv "ATLASSIAN_BASE_URL")
-    | Nothing => pure Nothing
-
-  Just <$> jira jiraUser jiraToken jiraDomain
 
 covering
 main : IO ()
@@ -281,6 +281,5 @@ main = do
     printVersion False
     exitSuccess
   envPAT <- pure $ !(getEnv "GITHUB_PAT") <|> !(getEnv "GH_TOKEN")
-  jira <- configureJira
-  handleArgs envPAT jira tty terminalColors terminalColumns editor args
+  handleArgs envPAT tty terminalColors terminalColumns editor args
 
