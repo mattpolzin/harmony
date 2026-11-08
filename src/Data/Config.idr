@@ -672,6 +672,8 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           ca <- commentConfig commentOnRequest
                                           bp <- branchConfig branchParsing
                                           tsp <- maybe (Right Prefix) titleSlugConfig maybeTitleSlugPosition
+                                          -- TODO 10.0.0: Make titleSlugPosition required part of config file (default to Prefix)
+                                          --              titleSlugPosition lookup can be moved to the required lookupAll above.
                                           prt <- maybe (Right False) bool maybePrTree
                                           -- TODO 8.0.0: Make addPrTreeDescription required part of config file (default to false)
                                           --             addPrTreeDescription lookup can be moved to the required lookupAll above.
