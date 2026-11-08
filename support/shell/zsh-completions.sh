@@ -29,7 +29,7 @@ _harmony()
   read -rA comps <<< "${REPLY}"
   IFS="${IFS_OLD}"
 
-  _describe 'harmony' comps
+  _describe -V 'harmony' comps
 }
 
 # don't run the completion function when being source-ed or eval-ed
