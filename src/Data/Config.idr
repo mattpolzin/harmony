@@ -229,6 +229,10 @@ record Config where
   ||| operations work without a Jira user at all. Jira features in harmony are
   ||| entirely optional.
   jiraUser     : Maybe String
+  ||| Jira requests are made against this domain. Jira only needs to be
+  ||| configured to request information about Jira tickets. Jira features in
+  ||| harmony are entirely optional.
+  jiraDomain   : Maybe String
   ||| Should Harmony print with colors fit for a dark terminal or a light
   ||| terminal?
   theme        : Theme
@@ -387,6 +391,14 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
       The username to use to authenticate with Jira. There need not \
       be any Jira configuration at all unless you are using harmony to work \
       with Jira tickets.
+      """
+    )
+  JiraDomain         : SettableProp
+    "jiraDomain"
+    ( (Any Optional "string")
+    , """
+      The Jira domain to use. There need not be any Jira configuration at \
+      all unless you are using harmony to work with Jira tickets.
       """
     )
 
@@ -558,6 +570,7 @@ render config = vsep
   , "           githubPAT:" <++> (pretty $ personalAccessToken)
   , "          githubUser:" <++> (pretty $ maybe "not set" id config.githubUser)
   , "            jiraUser:" <++> (pretty $ maybe "not set" id config.jiraUser)
+  , "          jiraDomain:" <++> (pretty $ maybe "not set" id config.jiraDomain)
   ]
       where
         personalAccessToken : String
@@ -599,7 +612,7 @@ json (MkConfig updatedAt domain org repo defaultRemote mainBranch
                commentOnRequest branchParsing titleSlugPosition
                bugfixPRTitlePrefix addPrTreeDescription handPickedTeams
                teamSlugs repoLabels repoProjects orgMembers ignoredPRs
-               githubPAT githubUser jiraUser theme _ writeOnly) =
+               githubPAT githubUser jiraUser jiraDomain theme _ writeOnly) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
@@ -625,6 +638,7 @@ json (MkConfig updatedAt domain org repo defaultRemote mainBranch
     , ("githubPAT"            , maybe JNull (JString . expose) githubPAT)
     , ("githubUser"           , maybe JNull JString githubUser)
     , ("jiraUser"             , maybe JNull JString jiraUser)
+    , ("jiraDomain"           , maybe JNull JString jiraDomain)
     , ("updatedAt"            , JInteger $ cast updatedAt)
     , ("version"              , JString $ writeOnly.version)
     ]
@@ -676,6 +690,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeHandPickedTeams = lookup "handPickedTeams" config
                                           let maybeGithubUser = lookup "githubUser" config
                                           let maybeJiraUser = lookup "jiraUser" config
+                                          let maybeJiraDomain = lookup "jiraDomain" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
                                           let maybeDefaultProject = lookup "defaultProject" config
                                           let maybeDefaultParentIssue = lookup "defaultParentIssue" config
@@ -718,6 +733,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           gu <- maybe (Right Nothing) (optional string) maybeGithubUser
                                           ju <- maybe (Right Nothing) (optional string) maybeJiraUser
+                                          jd <- maybe (Right Nothing) (optional string) maybeJiraDomain
                                           bf <- optional string bugfixPrefix
                                           th <- (stringy "dark or light" parseString) theme
                                           pure $ MkConfig {
@@ -745,6 +761,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , githubPAT            = (map Hide) gp
                                             , githubUser           = gu
                                             , jiraUser             = ju
+                                            , jiraDomain           = jd
                                             , theme                = th
                                             , ephemeral            = ephemeral
                                             , writeOnly            = MkWriteOnly appVersion
@@ -797,6 +814,7 @@ simpleDefaults =
       , githubPAT            = Nothing
       , githubUser           = Nothing
       , jiraUser             = Nothing
+      , jiraDomain           = Nothing
       , theme                = Dark
       , ephemeral            = MkEphem "path/to/repo" False False 200 Nothing
       , writeOnly            = MkWriteOnly appVersion
