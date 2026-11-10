@@ -413,23 +413,33 @@ propIsOptional x =
        (Any Optional _) => True
        _ => False
 
+getConsAndStrName : Name -> Elab (Name, TTImp)
+getConsAndStrName nm = do
+  [(fnm, imp)] <- getType nm
+    | _ => failAt EmptyFC "Name was ambiguous"
+  -- we look for two application patterns below because longer strings become
+  -- applications of  fromStringLiteral and shorter strings are inlined:
+  case imp of
+    (IApp _ (IApp _ _ (IApp _ _ strName)) _) => pure (fnm, strName)
+    -- ^ (SettableProp (fromStringLiteral "jiraUser")) description
+    (IApp _ (IApp _ _ strName) _) => pure (fnm, strName)
+    -- ^ (SettableProp "jiraUser") description
+    i => failAt EmptyFC (show i)
+
 export
 settablePropNamed : (name : String) -> Maybe (Exists (SettableProp name))
-settablePropNamed "requestTeams"         = Just $ Evidence _ RequestTeams
-settablePropNamed "commentOnRequest"     = Just $ Evidence _ CommentOnRequest
-settablePropNamed "branchParsing"        = Just $ Evidence _ ParseBranchStrategy
-settablePropNamed "titleSlugPosition"    = Just $ Evidence _ SlugTitlePosition
-settablePropNamed "bugfixPRTitlePrefix"  = Just $ Evidence _ BugfixPRTitlePrefix
-settablePropNamed "addPrTreeDescription" = Just $ Evidence _ AddPrTreeDescription
-settablePropNamed "defaultRemote"        = Just $ Evidence _ DefaultRemote
-settablePropNamed "mainBranch"           = Just $ Evidence _ MainBranch
-settablePropNamed "defaultProject"       = Just $ Evidence _ DefaultProject
-settablePropNamed "defaultParentIssue"   = Just $ Evidence _ DefaultParentIssue
-settablePropNamed "theme"                = Just $ Evidence _ ThemeProp
-settablePropNamed "githubPAT"            = Just $ Evidence _ GithubPAT
-settablePropNamed "jiraUser"             = Just $ Evidence _ JiraUser
-settablePropNamed "requestUsers"         = Just $ Evidence _ RequestUsers
-settablePropNamed _ = Nothing
+settablePropNamed name = 
+  %runElab ( do
+      conss <- getCons `{ Data.Config.SettableProp }
+      pairs <- traverse getConsAndStrName conss
+      check $ elabCase' `( name ) `( String ) pairs mkClause (PatClause EmptyFC (Implicit EmptyFC True) `( Nothing ))
+    )
+  where
+    mkClause : (Name, TTImp) -> Util.Reflection.Clause TTImp
+    mkClause (nm, str) = 
+      let name' := IVar EmptyFC nm
+          evidence = `( Just (Evidence _ ~name') )
+      in  MkClause str evidence
 
 namespace SettablePropNamedProperties
   settablePropNamedOnto : (p : SettableProp n h) -> Config.settablePropNamed n === (Just $ Evidence h p)
@@ -459,18 +469,18 @@ reifyProp (Evidence h prop) = %runElab ( do
 
 settableProps : List SomeSettableProp
 settableProps = %runElab ( do
-                  cons <- getCons `{ Data.Config.SettableProp }
+                  conss <- getCons `{ Data.Config.SettableProp }
                   let prop = (\name => let name' = IVar EmptyFC name
                                         in  `( (_ ** _ ** ~name') ))
-                  traverse check (prop <$> cons)
+                  traverse check (prop <$> conss)
                 )
 
 namespace SettablePropsProperties
   settablePropsCovering : (p : SettableProp n h) -> Elem (n ** h ** p) Config.settableProps
   settablePropsCovering prop = %runElab ( do
-      cons <- getCons `{ Data.Config.SettableProp }
+      conss <- getCons `{ Data.Config.SettableProp }
       check $ elabCase `( prop ) `( Data.Config.SettableProp n h )
-                       cons (\name => (MkClause name `( %search )))
+                       conss (\name => (MkClause name `( %search )))
     )
 
 propName' : SomeSettableProp -> String
