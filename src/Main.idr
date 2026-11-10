@@ -211,14 +211,13 @@ handleConfiguredArgs @{config} envPAT args = do
    -- then handle any arguments given
    handleAuthenticatedArgs @{config'} args
 
-
 configureJira : Config => IO (Maybe Jira)
 configureJira @{config} = do
   Just jiraToken <- pure $ !(getEnv "JIRA_API_TOKEN") <|> !(getEnv "ATLASSIAN_API_TOKEN")
     | Nothing => pure Nothing
-  Just jiraUser <- pure $ !(getEnv "JIRA_USERNAME") <|> !(getEnv "ATLASSIAN_USERNAME")
+  Just jiraUser <- pure $ !(getEnv "JIRA_USERNAME") <|> !(getEnv "ATLASSIAN_USERNAME") <|> config.jiraUser
     | Nothing => pure Nothing
-  Just jiraDomain <- pure $ !(getEnv "JIRA_BASE_URL") <|> !(getEnv "ATLASSIAN_BASE_URL")
+  Just jiraDomain <- pure $ !(getEnv "JIRA_BASE_URL") <|> !(getEnv "ATLASSIAN_BASE_URL") <|> config.jiraDomain
     | Nothing => pure Nothing
 
   Just <$> jira jiraUser jiraToken jiraDomain
