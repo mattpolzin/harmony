@@ -39,3 +39,16 @@ listIssues : Jira =>
 listIssues @{JConfig ptr} jql = do
   r <- promiseIO $ prim__listIssues ptr jql
   pure r
+
+%foreign jira_ffi "get_me"
+prim__getMe : Ptr JiraRef
+                -> (onSuccess : String -> PrimIO ())
+                -> (onFailure : String -> PrimIO ())
+                -> PrimIO ()
+
+export
+getMe : Jira =>
+        Promise String String
+getMe @{JConfig ptr} = do
+  r <- promiseIO $ prim__getMe ptr
+  pure r

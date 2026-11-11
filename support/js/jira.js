@@ -12,16 +12,28 @@ const jira_config = (username, token, hostname) => {
 
 const jira_list_issues = (config, jql, onSuccess, onFailure) =>
   idris__jira_request(
-    config,
-    { jql
-    , fields: ['id','key']
-    }
+      config
+    , '/rest/api/3/search/jql'
+    , 'POST'
+    , { jql
+      , fields: ['id','key']
+      }
     , r => onSuccess(r)()
     , e => onFailure(e)()
   )
 
-const idris__jira_request = (config, postObj, onSuccess, onFailure) => {
-  const postData = JSON.stringify(postObj)
+const jira_get_me = (config, onSuccess, onFailure) =>
+  idris__jira_request(
+      config
+    , '/rest/api/3/myself'
+    , 'GET'
+    , {}
+    , r => onSuccess(r)()
+    , e => onFailure(e)()
+  )
+
+const idris__jira_request = (config, path, method, bodyObj, onSuccess, onFailure) => {
+  const bodyData = JSON.stringify(bodyObj)
 
   const {
     hostname,
@@ -29,34 +41,44 @@ const idris__jira_request = (config, postObj, onSuccess, onFailure) => {
     token
   } = config
 
+  const auth = `${username}:${token}`
+
+  const headers = {
+    'Accept': 'application/json',
+  }
+
+  if (method == 'POST') {
+    headers['Content-Length'] = Buffer.byteLength(bodyData)
+    headers['Content-Type'] = 'application/json'
+  }
+
   const options = {
     hostname,
-    auth: `${username}:${token}`,
-    path: '/rest/api/3/search/jql',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(postData),
-    },
+    path,
+    method,
+    headers,
+    auth,
     agent: false,
-  };
+  }
 
   const req = https.request(options, (res) => {
-    res.setEncoding('utf8');
+    res.setEncoding('utf8')
 
     var respContent = ''
     res.on('data', (chunk) => {
       respContent += chunk.toString()
-    }) ;
+    })
     res.on('end', () => {
       onSuccess(respContent)
-    });
-  });
+    })
+  })
 
   req.on('error', (e) => {
     onFailure(JSON.stringify(e))
-  });
+  })
 
-  req.write(postData);
-  req.end();
+  if (method == 'POST') {
+    req.write(bodyData)
+  }
+  req.end()
 }

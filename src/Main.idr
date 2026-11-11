@@ -245,7 +245,7 @@ handleArgs envPAT ttyStdout terminalColors terminalColumns editor args =
 
        -- temporary jira exploration
        whenJust jira $ \_ => do
-         printLn =<< (listIssues "resolution = Unresolved")
+         printLn =<< getMe
 
        handleConfiguredArgs envPAT args
 
