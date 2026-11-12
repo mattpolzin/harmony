@@ -406,8 +406,8 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
 
   putStrLn ""
   putStrLn "Creating config..."
-  mainBranch <- getRepoDefaultBranch org repo
   updatedAt  <- cast <$> time
+  mainBranch <- getRepoDefaultBranch org repo
   let ephemeral = MkEphem {
       filepath = "./\{Config.filename}"
     , ttyStdout
@@ -415,6 +415,10 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , columns  = terminalColumns
     , editor
     }
+  let githubPAT = hide <$> configPAT
+  -- write just auth stuff to the config file before getting users/teams (that
+  -- code can spin up additional processes that may read auth for github)
+  writeAuthOnlyConfig updatedAt domain org repo githubPAT ephemeral
   (orgMembers, teamSlugs) <-
       orgOrFilteredTeamsAndMembers org handPickedTeams teamSlugs
   repoLabels   <- listRepoLabels org repo
@@ -425,7 +429,6 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   let defaultProject = Nothing
   let defaultParentIssue = Nothing
   let ignoredPRs = []
-  let githubPAT = hide <$> configPAT
   let githubUser = Just githubUser
   let titleSlugPosition = Prefix
   let writeOnly = MkWriteOnly appVersion
@@ -476,6 +479,16 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
 
     repo : Maybe GitRemote -> Maybe String
     repo = map (.repo)
+
+    writeAuthOnlyConfig : Config.Timestamp -> String -> String -> String -> Maybe (Hidden String) -> Ephemeral -> Promise' ()
+    writeAuthOnlyConfig updatedAt domain org repo githubPAT ephemeral =
+      ignore . writeConfig $
+        { updatedAt := updatedAt
+        , domain    := domain
+        , org       := org
+        , repo      := repo
+        , githubPAT := githubPAT
+        , ephemeral := ephemeral } simpleDefaults
 
     defaultStr : (GitRemote -> String) -> Maybe GitRemote -> String
     defaultStr f = fromMaybe "" . map (enterForDefaultStr . f)
