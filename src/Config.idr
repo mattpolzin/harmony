@@ -91,7 +91,7 @@ orgOrFilteredTeamsAndMembers org filterToTeams currentTeams =
 export
 syncConfig : Config => Octokit => (echo : Bool) -> Promise' Config
 syncConfig @{config} echo =
- do (teamSlugs, orgMembers) <-
+ do (orgMembers, teamSlugs) <-
       orgOrFilteredTeamsAndMembers config.org config.handPickedTeams config.teamSlugs
     labelNames <- listRepoLabels config.org config.repo
     repoProjects <- map reference <$> listRepoProjects config.org config.repo
@@ -415,7 +415,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , columns  = terminalColumns
     , editor
     }
-  (teamSlugs, orgMembers) <-
+  (orgMembers, teamSlugs) <-
       orgOrFilteredTeamsAndMembers org handPickedTeams teamSlugs
   repoLabels   <- listRepoLabels org repo
   repoProjects <- map reference <$> listRepoProjects org repo
