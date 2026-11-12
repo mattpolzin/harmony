@@ -38,6 +38,8 @@ defaultProject
 defaultParentIssue
 theme
 githubPAT
+jiraUser
+jiraDomain
 
 options for requestTeams config:
 true
