@@ -12,6 +12,7 @@ import Data.String
 import Data.User
 
 import FFI.GitHub
+import FFI.Jira
 import Theme
 import Util
 
@@ -147,16 +148,18 @@ namespace Me
        -> (gitEmail : Maybe String)
        -> (githubUser : User)
        -> (githubTeams : List String)
+       -> (jiraUser : Maybe User)
        -> Doc AnsiStyle
-  print config gitEmail githubUser githubTeams =
-    vsep [
+  print config gitEmail githubUser githubTeams jiraUser =
+    vsep $ [
         emptyDoc
       , email
       , emptyDoc
       , fullName
       , login
       , emptyDoc
-      , teams
+      ] ++ (catMaybes [jiraFullName, jiraLogin, const emptyDoc <$> jiraLogin]) ++
+      [ teams
       , emptyDoc
       ]
     where
@@ -174,26 +177,37 @@ namespace Me
                                      Just e => dataVal e
                                      Nothing => it "Not set"
 
+      labeledDataVal : (label : Doc AnsiStyle) -> (value : String) -> Doc AnsiStyle
+      labeledDataVal label = (label <++>) . dataVal
+
       fullName : Doc AnsiStyle
-      fullName = "GitHub Name:" <++> dataVal githubUser.name
+      fullName = labeledDataVal "GitHub Name:" githubUser.name
 
       login : Doc AnsiStyle
-      login = "GitHub Login:" <++> dataVal githubUser.login
+      login = labeledDataVal "GitHub Login:" githubUser.login
 
       teams : Doc AnsiStyle
       teams = vsep $
                 ul "GitHub Teams:" :: (map it githubTeams)
 
+      jiraFullName : Maybe (Doc AnsiStyle)
+      jiraFullName = labeledDataVal "Jira Name:" . (.name) <$> jiraUser
+
+      jiraLogin : Maybe (Doc AnsiStyle)
+      jiraLogin = labeledDataVal "Jira Login:" . (.login) <$> jiraUser
+
   ||| Print information about the currently authenticated and configured user.
   ||| This includes information that can be retrieved from Git as well as GitHub.
   export
   printInfoOnSelf : Config => Octokit =>
-                    Promise' ()
-  printInfoOnSelf @{config} = do
+                    Maybe Jira
+                 -> Promise' ()
+  printInfoOnSelf @{config} jira = do
     gitEmail <- handleUnsetEmail <$> userEmail
-    githubUser <- getSelf
+    githubUser <- GitHub.getSelf
     githubTeams <- sort <$> listMyTeams 
-    renderIO $ print config gitEmail githubUser githubTeams
+    jiraUser <- traverse (\j => Jira.getSelf @{j}) jira
+    renderIO $ print config gitEmail githubUser githubTeams jiraUser
       where
         handleUnsetEmail : String -> Maybe String
         handleUnsetEmail "" = Nothing

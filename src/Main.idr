@@ -14,6 +14,7 @@ import Data.Fuel
 import AppVersion
 import Config
 import FFI.GitHub
+import FFI.Jira
 import FFI.Term
 import JSON.Parser
 import System
@@ -38,6 +39,22 @@ exitError err =
           else ignore $ fPutStrLn stderr err
      exitFailure
 
+configureJira : Config => IO (Maybe Jira)
+configureJira @{config} = do
+  Just jiraToken <- pure $ !(getEnv "JIRA_API_TOKEN") <|> !(getEnv "ATLASSIAN_API_TOKEN")
+    | Nothing => pure Nothing
+  Just jiraUser <- pure $ !(getEnv "JIRA_USERNAME") <|> !(getEnv "ATLASSIAN_USERNAME") <|> config.jiraUser
+    | Nothing => pure Nothing
+  Just jiraDomain <- pure $ !(getEnv "JIRA_BASE_URL") <|> !(getEnv "ATLASSIAN_BASE_URL") <|> config.jiraDomain
+    | Nothing => pure Nothing
+
+  Just <$> jira jiraUser jiraToken jiraDomain
+
+||| IMPORTANT: This does not result in waiting for the promise to resolve prior
+||| to any subsequent IO operations to be executed which can be very confusing.
+||| Best to make resolve'' the last IO operation for any given code path. If
+||| you need to continue with IO after a resolve'', use resolve' instead and
+||| pass the subsequent IO operations as the first argument.
 resolve'' : Promise' () -> IO ()
 resolve'' = resolve' pure exitError
 
@@ -121,8 +138,9 @@ handleAuthenticatedArgs @{config} ["teamMembers", "--json", teamSlug] = do
   print . JArray $ JString <$> members
 
 -- user-facing commands:
-handleAuthenticatedArgs ["whoami"] =
-  Commands.whoami
+handleAuthenticatedArgs ["whoami"] = do
+  jira <- liftIO configureJira
+  Commands.whoami jira
 handleAuthenticatedArgs ("whoami" :: _ :: _) =
   reject "The whoami command does not take any arguments."
 handleAuthenticatedArgs ["sync"] =
@@ -205,7 +223,6 @@ handleConfiguredArgs @{config} envPAT args = do
    -- then handle any arguments given
    handleAuthenticatedArgs @{config'} args
 
-
 -- bash and zsh completion are special cases where we don't want to create the config
 -- if it doesn't exist yet so we handle it up front before loading config and then
 -- handling any other input.
@@ -235,29 +252,29 @@ shouldUseColors tty = do
 
 covering
 main : IO ()
-main =
-  do tty <- isTTY stdout
-     terminalColors <- shouldUseColors tty
-     terminalColumns <- maybe maximumLayoutWidth id <$> termCols
-     editor <- getEnv "EDITOR"
-     -- drop 1 for `harmony.js`
-     args <- drop 1 <$> getArgs
-     -- short circuit for help, version commands
-     when (args == []) $ do
-       putStrLn (help terminalColors False terminalColumns)
-       exitSuccess
-     when (args == ["help"] || args == ["--help"]) $ do
-       putStrLn (help terminalColors True terminalColumns)
-       exitSuccess
-     when (head' args == Just "help") $ do
-       putStrLn (subcommandHelp terminalColors terminalColumns $ fromMaybe "" . head' $ drop 1 args)
-       exitSuccess
-     when (args == ["version"] || args == ["--version"]) $ do
-       printVersion True
-       exitSuccess
-     when (args == ["version", "-s"] || args == ["version", "--short"]) $ do
-       printVersion False
-       exitSuccess
-     envPAT <- pure $ !(getEnv "GITHUB_PAT") <|> !(getEnv "GH_TOKEN")
-     handleArgs envPAT tty terminalColors terminalColumns editor args
+main = do
+  tty <- isTTY stdout
+  terminalColors <- shouldUseColors tty
+  terminalColumns <- maybe maximumLayoutWidth id <$> termCols
+  editor <- getEnv "EDITOR"
+  -- drop 1 for `harmony.js`
+  args <- drop 1 <$> getArgs
+  -- short circuit for help, version commands
+  when (args == []) $ do
+    putStrLn (help terminalColors False terminalColumns)
+    exitSuccess
+  when (args == ["help"] || args == ["--help"]) $ do
+    putStrLn (help terminalColors True terminalColumns)
+    exitSuccess
+  when (head' args == Just "help") $ do
+    putStrLn (subcommandHelp terminalColors terminalColumns $ fromMaybe "" . head' $ drop 1 args)
+    exitSuccess
+  when (args == ["version"] || args == ["--version"]) $ do
+    printVersion True
+    exitSuccess
+  when (args == ["version", "-s"] || args == ["version", "--short"]) $ do
+    printVersion False
+    exitSuccess
+  envPAT <- pure $ !(getEnv "GITHUB_PAT") <|> !(getEnv "GH_TOKEN")
+  handleArgs envPAT tty terminalColors terminalColumns editor args
 

@@ -224,6 +224,15 @@ record Config where
   |||
   ||| This is the user's login or "slug"
   githubUser   : Maybe String
+  ||| Jira requests are authenticated against this user. Jira auth is only
+  ||| needed when retrieving information about Jira tickets which means most
+  ||| operations work without a Jira user at all. Jira features in harmony are
+  ||| entirely optional.
+  jiraUser     : Maybe String
+  ||| Jira requests are made against this domain. Jira only needs to be
+  ||| configured to request information about Jira tickets. Jira features in
+  ||| harmony are entirely optional.
+  jiraDomain   : Maybe String
   ||| Should Harmony print with colors fit for a dark terminal or a light
   ||| terminal?
   theme        : Theme
@@ -375,6 +384,23 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
       GITHUB_PAT or GH_TOKEN environment variable.
       """
     )
+  JiraUser           : SettableProp
+    "jiraUser"
+    ( (Any Optional "string")
+    , """
+      The username to use to authenticate with Jira. There need not \
+      be any Jira configuration at all unless you are using harmony to work \
+      with Jira tickets.
+      """
+    )
+  JiraDomain         : SettableProp
+    "jiraDomain"
+    ( (Any Optional "string")
+    , """
+      The Jira domain to use. There need not be any Jira configuration at \
+      all unless you are using harmony to work with Jira tickets.
+      """
+    )
 
 public export
 SomeSettableProp : Type
@@ -399,22 +425,33 @@ propIsOptional x =
        (Any Optional _) => True
        _ => False
 
+getConsAndStrName : Name -> Elab (Name, TTImp)
+getConsAndStrName nm = do
+  [(fnm, imp)] <- getType nm
+    | _ => failAt EmptyFC "Name was ambiguous"
+  -- we look for two application patterns below because longer strings become
+  -- applications of  fromStringLiteral and shorter strings are inlined:
+  case imp of
+    (IApp _ (IApp _ _ (IApp _ _ strName)) _) => pure (fnm, strName)
+    -- ^ (SettableProp (fromStringLiteral "jiraUser")) description
+    (IApp _ (IApp _ _ strName) _) => pure (fnm, strName)
+    -- ^ (SettableProp "jiraUser") description
+    i => failAt EmptyFC (show i)
+
 export
 settablePropNamed : (name : String) -> Maybe (Exists (SettableProp name))
-settablePropNamed "requestTeams"         = Just $ Evidence _ RequestTeams
-settablePropNamed "commentOnRequest"     = Just $ Evidence _ CommentOnRequest
-settablePropNamed "branchParsing"        = Just $ Evidence _ ParseBranchStrategy
-settablePropNamed "titleSlugPosition"    = Just $ Evidence _ SlugTitlePosition
-settablePropNamed "bugfixPRTitlePrefix"  = Just $ Evidence _ BugfixPRTitlePrefix
-settablePropNamed "addPrTreeDescription" = Just $ Evidence _ AddPrTreeDescription
-settablePropNamed "defaultRemote"        = Just $ Evidence _ DefaultRemote
-settablePropNamed "mainBranch"           = Just $ Evidence _ MainBranch
-settablePropNamed "defaultProject"       = Just $ Evidence _ DefaultProject
-settablePropNamed "defaultParentIssue"   = Just $ Evidence _ DefaultParentIssue
-settablePropNamed "theme"                = Just $ Evidence _ ThemeProp
-settablePropNamed "githubPAT"            = Just $ Evidence _ GithubPAT
-settablePropNamed "requestUsers"         = Just $ Evidence _ RequestUsers
-settablePropNamed _ = Nothing
+settablePropNamed name = 
+  %runElab ( do
+      conss <- getCons `{ Data.Config.SettableProp }
+      pairs <- traverse getConsAndStrName conss
+      check $ elabCase' `( name ) `( String ) pairs mkClause (PatClause EmptyFC (Implicit EmptyFC True) `( Nothing ))
+    )
+  where
+    mkClause : (Name, TTImp) -> Util.Reflection.Clause TTImp
+    mkClause (nm, str) = 
+      let name' := IVar EmptyFC nm
+          evidence = `( Just (Evidence _ ~name') )
+      in  MkClause str evidence
 
 namespace SettablePropNamedProperties
   settablePropNamedOnto : (p : SettableProp n h) -> Config.settablePropNamed n === (Just $ Evidence h p)
@@ -444,18 +481,18 @@ reifyProp (Evidence h prop) = %runElab ( do
 
 settableProps : List SomeSettableProp
 settableProps = %runElab ( do
-                  cons <- getCons `{ Data.Config.SettableProp }
+                  conss <- getCons `{ Data.Config.SettableProp }
                   let prop = (\name => let name' = IVar EmptyFC name
                                         in  `( (_ ** _ ** ~name') ))
-                  traverse check (prop <$> cons)
+                  traverse check (prop <$> conss)
                 )
 
 namespace SettablePropsProperties
   settablePropsCovering : (p : SettableProp n h) -> Elem (n ** h ** p) Config.settableProps
   settablePropsCovering prop = %runElab ( do
-      cons <- getCons `{ Data.Config.SettableProp }
+      conss <- getCons `{ Data.Config.SettableProp }
       check $ elabCase `( prop ) `( Data.Config.SettableProp n h )
-                       cons (\name => (MkClause name `( %search )))
+                       conss (\name => (MkClause name `( %search )))
     )
 
 propName' : SomeSettableProp -> String
@@ -532,6 +569,8 @@ render config = vsep
   , "          ignoredPRs:" <++> (pretty $ newlineList $ show <$> config.ignoredPRs)
   , "           githubPAT:" <++> (pretty $ personalAccessToken)
   , "          githubUser:" <++> (pretty $ maybe "not set" id config.githubUser)
+  , "            jiraUser:" <++> (pretty $ maybe "not set" id config.jiraUser)
+  , "          jiraDomain:" <++> (pretty $ maybe "not set" id config.jiraDomain)
   ]
       where
         personalAccessToken : String
@@ -573,7 +612,7 @@ json (MkConfig updatedAt domain org repo defaultRemote mainBranch
                commentOnRequest branchParsing titleSlugPosition
                bugfixPRTitlePrefix addPrTreeDescription handPickedTeams
                teamSlugs repoLabels repoProjects orgMembers ignoredPRs
-               githubPAT githubUser theme _ writeOnly) =
+               githubPAT githubUser jiraUser jiraDomain theme _ writeOnly) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
@@ -598,6 +637,8 @@ json (MkConfig updatedAt domain org repo defaultRemote mainBranch
     , ("ignoredPRs"           , JArray $ JInteger . cast <$> sort ignoredPRs)
     , ("githubPAT"            , maybe JNull (JString . expose) githubPAT)
     , ("githubUser"           , maybe JNull JString githubUser)
+    , ("jiraUser"             , maybe JNull JString jiraUser)
+    , ("jiraDomain"           , maybe JNull JString jiraDomain)
     , ("updatedAt"            , JInteger $ cast updatedAt)
     , ("version"              , JString $ writeOnly.version)
     ]
@@ -648,6 +689,8 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeGithubDomain = lookup "domain" config
                                           let maybeHandPickedTeams = lookup "handPickedTeams" config
                                           let maybeGithubUser = lookup "githubUser" config
+                                          let maybeJiraUser = lookup "jiraUser" config
+                                          let maybeJiraDomain = lookup "jiraDomain" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
                                           let maybeDefaultProject = lookup "defaultProject" config
                                           let maybeDefaultParentIssue = lookup "defaultParentIssue" config
@@ -672,6 +715,8 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           ca <- commentConfig commentOnRequest
                                           bp <- branchConfig branchParsing
                                           tsp <- maybe (Right Prefix) titleSlugConfig maybeTitleSlugPosition
+                                          -- TODO 10.0.0: Make titleSlugPosition required part of config file (default to Prefix)
+                                          --              titleSlugPosition lookup can be moved to the required lookupAll above.
                                           prt <- maybe (Right False) bool maybePrTree
                                           -- TODO 8.0.0: Make addPrTreeDescription required part of config file (default to false)
                                           --             addPrTreeDescription lookup can be moved to the required lookupAll above.
@@ -687,6 +732,8 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           gu <- maybe (Right Nothing) (optional string) maybeGithubUser
+                                          ju <- maybe (Right Nothing) (optional string) maybeJiraUser
+                                          jd <- maybe (Right Nothing) (optional string) maybeJiraDomain
                                           bf <- optional string bugfixPrefix
                                           th <- (stringy "dark or light" parseString) theme
                                           pure $ MkConfig {
@@ -713,6 +760,8 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , ignoredPRs           = ip
                                             , githubPAT            = (map Hide) gp
                                             , githubUser           = gu
+                                            , jiraUser             = ju
+                                            , jiraDomain           = jd
                                             , theme                = th
                                             , ephemeral            = ephemeral
                                             , writeOnly            = MkWriteOnly appVersion
@@ -764,6 +813,8 @@ simpleDefaults =
       , ignoredPRs           = []
       , githubPAT            = Nothing
       , githubUser           = Nothing
+      , jiraUser             = Nothing
+      , jiraDomain           = Nothing
       , theme                = Dark
       , ephemeral            = MkEphem "path/to/repo" False False 200 Nothing
       , writeOnly            = MkWriteOnly appVersion

@@ -103,12 +103,6 @@ orgError (MkError (OtherStatus i) error) = Msg error
 mapOrgError : Promise String a -> Promise OrgError a
 mapOrgError = mapError (orgError . parseOctokitError)
 
-parsePrimResult : (parser : String -> Either String a)
-               -> (transform : Promise String String -> Promise String String)
-               -> (action : (onSuccess : String -> PrimIO ()) -> (onFailure : String -> PrimIO ()) -> PrimIO ())
-               -> Promise String a
-parsePrimResult parser transform action = either . parser =<< (transform $ promiseIO action)
-
 %foreign okit_ffi "get_repo_graphql_id"
 prim__getRepoGraphQLId : Ptr OctokitRef
                       -> (owner : String)
