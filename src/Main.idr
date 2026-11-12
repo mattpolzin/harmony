@@ -39,6 +39,17 @@ exitError err =
           else ignore $ fPutStrLn stderr err
      exitFailure
 
+configureJira : Config => IO (Maybe Jira)
+configureJira @{config} = do
+  Just jiraToken <- pure $ !(getEnv "JIRA_API_TOKEN") <|> !(getEnv "ATLASSIAN_API_TOKEN")
+    | Nothing => pure Nothing
+  Just jiraUser <- pure $ !(getEnv "JIRA_USERNAME") <|> !(getEnv "ATLASSIAN_USERNAME") <|> config.jiraUser
+    | Nothing => pure Nothing
+  Just jiraDomain <- pure $ !(getEnv "JIRA_BASE_URL") <|> !(getEnv "ATLASSIAN_BASE_URL") <|> config.jiraDomain
+    | Nothing => pure Nothing
+
+  Just <$> jira jiraUser jiraToken jiraDomain
+
 ||| IMPORTANT: This does not result in waiting for the promise to resolve prior
 ||| to any subsequent IO operations to be executed which can be very confusing.
 ||| Best to make resolve'' the last IO operation for any given code path. If
@@ -127,8 +138,9 @@ handleAuthenticatedArgs @{config} ["teamMembers", "--json", teamSlug] = do
   print . JArray $ JString <$> members
 
 -- user-facing commands:
-handleAuthenticatedArgs ["whoami"] =
-  Commands.whoami
+handleAuthenticatedArgs ["whoami"] = do
+  jira <- liftIO configureJira
+  Commands.whoami jira
 handleAuthenticatedArgs ("whoami" :: _ :: _) =
   reject "The whoami command does not take any arguments."
 handleAuthenticatedArgs ["sync"] =
@@ -211,17 +223,6 @@ handleConfiguredArgs @{config} envPAT args = do
    -- then handle any arguments given
    handleAuthenticatedArgs @{config'} args
 
-configureJira : Config => IO (Maybe Jira)
-configureJira @{config} = do
-  Just jiraToken <- pure $ !(getEnv "JIRA_API_TOKEN") <|> !(getEnv "ATLASSIAN_API_TOKEN")
-    | Nothing => pure Nothing
-  Just jiraUser <- pure $ !(getEnv "JIRA_USERNAME") <|> !(getEnv "ATLASSIAN_USERNAME") <|> config.jiraUser
-    | Nothing => pure Nothing
-  Just jiraDomain <- pure $ !(getEnv "JIRA_BASE_URL") <|> !(getEnv "ATLASSIAN_BASE_URL") <|> config.jiraDomain
-    | Nothing => pure Nothing
-
-  Just <$> jira jiraUser jiraToken jiraDomain
-
 -- bash and zsh completion are special cases where we don't want to create the config
 -- if it doesn't exist yet so we handle it up front before loading config and then
 -- handling any other input.
@@ -241,11 +242,6 @@ handleArgs envPAT ttyStdout terminalColors terminalColumns editor args =
   resolve'' $
     do -- create the config file before continuing if it does not exist yet
        config <- loadOrCreateConfig envPAT ttyStdout terminalColors terminalColumns editor
-       jira <- liftIO configureJira
-
-       -- temporary jira exploration
-       whenJust jira $ \_ => do
-         printLn =<< getMe
 
        handleConfiguredArgs envPAT args
 

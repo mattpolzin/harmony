@@ -1,7 +1,9 @@
 module FFI.Jira
 
 import Data.Promise
+import Data.User
 import FFI
+import JSON.Parser
 
 %default total
 
@@ -47,8 +49,8 @@ prim__getMe : Ptr JiraRef
                 -> PrimIO ()
 
 export
-getMe : Jira =>
-        Promise String String
-getMe @{JConfig ptr} = do
-  r <- promiseIO $ prim__getMe ptr
-  pure r
+getSelf : Jira =>
+          Promise String User
+getSelf @{JConfig ptr} = do
+  jsonStr <- promiseIO $ prim__getMe ptr
+  either $ parseJiraUserString jsonStr

@@ -27,6 +27,7 @@ import Issue
 
 import FFI.Concurrency
 import FFI.GitHub
+import FFI.Jira
 import System.Git
 import Util
 import Util.OptionParsing
@@ -71,7 +72,8 @@ printConfig @{config} = do
 ||| they execute `harmony whoami`.
 export
 whoami : Config => Octokit =>
-         Promise' ()
+         Maybe Jira
+      -> Promise' ()
 whoami = printInfoOnSelf
 
 ||| Provide information on the curent user's recent work and currrent
