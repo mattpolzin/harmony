@@ -41,7 +41,7 @@ exitError err =
 
 configureJira : Config => IO (Maybe Jira)
 configureJira @{config} = do
-  Just jiraToken <- pure $ !(getEnv "JIRA_API_TOKEN") <|> !(getEnv "ATLASSIAN_API_TOKEN")
+  Just jiraToken <- pure $ !(getEnv "JIRA_API_TOKEN") <|> !(getEnv "ATLASSIAN_API_TOKEN") <|> (expose <$> config.jiraPAT)
     | Nothing => pure Nothing
   Just jiraUser <- pure $ !(getEnv "JIRA_USERNAME") <|> !(getEnv "ATLASSIAN_USERNAME") <|> config.jiraUser
     | Nothing => pure Nothing

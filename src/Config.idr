@@ -230,6 +230,7 @@ propSetter p@DefaultRemote        = update Just (\s => { defaultRemote := s })
 propSetter p@MainBranch           = update Just (\s => { mainBranch := s })
 propSetter p@ThemeProp            = update parseString (\t => { theme := t })
 propSetter p@GithubPAT            = defaultUpdate p (Just . Just) (\s => { githubPAT := hide <$> s })
+propSetter p@JiraPAT              = defaultUpdate p (Just . Just) (\s => { jiraPAT := hide <$> s })
 propSetter p@JiraUser             = defaultUpdate p (Just . Just) (\s => { jiraUser := s })
 propSetter p@JiraDomain           = defaultUpdate p (Just . Just) (\s => { jiraDomain := s })
 propSetter p@CommentOnRequest     =
@@ -274,6 +275,7 @@ propGetter DefaultProject       = show . defaultProject
 propGetter DefaultParentIssue   = show . defaultParentIssue
 propGetter ThemeProp            = show . theme
 propGetter GithubPAT            = maybe "Not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show . githubPAT
+propGetter JiraPAT              = maybe "Not required and not set (will use $JIRA_API_TOKEN or $ATLASSIAN_API_TOKEN environment variable)" show . jiraPAT
 propGetter JiraUser             = maybe "Not set" show . jiraUser
 propGetter JiraDomain           = maybe "Not set" show . jiraDomain
 
@@ -432,6 +434,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
   let githubUser = Just githubUser
   let titleSlugPosition = Prefix
   let writeOnly = MkWriteOnly appVersion
+  let jiraPAT = Nothing
   let jiraUser = Nothing
   let jiraDomain = Nothing
   let config = MkConfig {
@@ -458,6 +461,7 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , ignoredPRs
     , githubPAT
     , githubUser
+    , jiraPAT
     , jiraUser
     , jiraDomain
     , theme

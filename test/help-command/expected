@@ -9,7 +9,7 @@ Subcommands:
       properties: requestTeams, requestUsers, commentOnRequest, branchParsing,
                   titleSlugPosition, bugfixPRTitlePrefix, addPrTreeDescription,
                   defaultRemote, mainBranch, defaultProject, defaultParentIssue,
-                  theme, githubPAT, jiraUser, jiraDomain
+                  theme, githubPAT, jiraPAT, jiraUser, jiraDomain
   contribute [-c/--checkout | -l/--list] [-<num>] [-i/--ignore {<uri> | <pr-number>}]
       Contribute to an open PR. Prints a URL. Prioritizes PRs you are requested
       to review but will also return other PRs.

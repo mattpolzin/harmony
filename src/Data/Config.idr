@@ -224,6 +224,10 @@ record Config where
   |||
   ||| This is the user's login or "slug"
   githubUser   : Maybe String
+  ||| A Jira Personal Access Token. This value is only used if there is no
+  ||| $JIRA_API_TOKEN or $ATLASSIAN_API_TOKEN environment variable set. Jira
+  ||| features in harmony are entirely optional so this token is not required.
+  jiraPAT    : Maybe (Hidden String)
   ||| Jira requests are authenticated against this user. Jira auth is only
   ||| needed when retrieving information about Jira tickets which means most
   ||| operations work without a Jira user at all. Jira features in harmony are
@@ -382,6 +386,17 @@ data SettableProp : (name : String) -> (help : Help) -> Type where
       The Personal Access Token Harmony should use to authenticate \
       with GitHub. You can leave this unset if you want to set a PAT via the \
       GITHUB_PAT or GH_TOKEN environment variable.
+      """
+    )
+  JiraPAT            : SettableProp
+    "jiraPAT"
+    ( (Any Optional "string")
+    , """
+      The Personal Access Token Harmony should use to authenticate \
+      with Jira. You can leave this unset if you want to set a PAT via the \
+      JIRA_API_TOKEN or ATLASSIAN_API_TOKEN environment variable. \
+      There need not be any Jira configuration at all unless you are using \
+      harmony to work with Jira tickets.
       """
     )
   JiraUser           : SettableProp
@@ -567,14 +582,18 @@ render config = vsep
   , "        repoProjects:" <++> (pretty $ newlineList $ show <$> config.repoProjects)
   , "          orgMembers:" <++> (pretty $ newlineList $ config.orgMembers)
   , "          ignoredPRs:" <++> (pretty $ newlineList $ show <$> config.ignoredPRs)
-  , "           githubPAT:" <++> (pretty $ personalAccessToken)
+  , "           githubPAT:" <++> (pretty $ personalAccessToken GitHub)
   , "          githubUser:" <++> (pretty $ maybe "not set" id config.githubUser)
+  , "             jiraPAT:" <++> (pretty $ personalAccessToken Jira)
   , "            jiraUser:" <++> (pretty $ maybe "not set" id config.jiraUser)
   , "          jiraDomain:" <++> (pretty $ maybe "not set" id config.jiraDomain)
   ]
       where
-        personalAccessToken : String
-        personalAccessToken = maybe "not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show config.githubPAT
+        data Provider = Jira | GitHub
+
+        personalAccessToken : Provider -> String
+        personalAccessToken Jira = maybe "not required and not set (will use $JIRA_API_TOKEN or $ATLASSIAN_API_TOKEN environment variable)" show config.jiraPAT
+        personalAccessToken GitHub = maybe "not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)" show config.githubPAT
 
         spacer : String
         spacer = "                      "
@@ -612,7 +631,8 @@ json (MkConfig updatedAt domain org repo defaultRemote mainBranch
                commentOnRequest branchParsing titleSlugPosition
                bugfixPRTitlePrefix addPrTreeDescription handPickedTeams
                teamSlugs repoLabels repoProjects orgMembers ignoredPRs
-               githubPAT githubUser jiraUser jiraDomain theme _ writeOnly) =
+               githubPAT githubUser jiraPAT jiraUser jiraDomain theme _
+               writeOnly) =
   JObject [
       ("requestTeams"         , JBool requestTeams)
     , ("requestUsers"         , JBool requestUsers)
@@ -637,6 +657,7 @@ json (MkConfig updatedAt domain org repo defaultRemote mainBranch
     , ("ignoredPRs"           , JArray $ JInteger . cast <$> sort ignoredPRs)
     , ("githubPAT"            , maybe JNull (JString . expose) githubPAT)
     , ("githubUser"           , maybe JNull JString githubUser)
+    , ("jiraPAT"              , maybe JNull (JString . expose) jiraPAT)
     , ("jiraUser"             , maybe JNull JString jiraUser)
     , ("jiraDomain"           , maybe JNull JString jiraDomain)
     , ("updatedAt"            , JInteger $ cast updatedAt)
@@ -689,6 +710,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeGithubDomain = lookup "domain" config
                                           let maybeHandPickedTeams = lookup "handPickedTeams" config
                                           let maybeGithubUser = lookup "githubUser" config
+                                          let maybeJiraPAT = lookup "jiraPAT" config
                                           let maybeJiraUser = lookup "jiraUser" config
                                           let maybeJiraDomain = lookup "jiraDomain" config
                                           let maybePrTree = lookup "addPrTreeDescription" config
@@ -732,6 +754,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           ip <- array integer ignoredPRs
                                           gp <- maybe (Right Nothing) (optional string) maybeGithubPAT
                                           gu <- maybe (Right Nothing) (optional string) maybeGithubUser
+                                          jp <- maybe (Right Nothing) (optional string) maybeJiraPAT
                                           ju <- maybe (Right Nothing) (optional string) maybeJiraUser
                                           jd <- maybe (Right Nothing) (optional string) maybeJiraDomain
                                           bf <- optional string bugfixPrefix
@@ -760,6 +783,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , ignoredPRs           = ip
                                             , githubPAT            = (map Hide) gp
                                             , githubUser           = gu
+                                            , jiraPAT              = (map Hide) jp
                                             , jiraUser             = ju
                                             , jiraDomain           = jd
                                             , theme                = th
@@ -813,6 +837,7 @@ simpleDefaults =
       , ignoredPRs           = []
       , githubPAT            = Nothing
       , githubUser           = Nothing
+      , jiraPAT              = Nothing
       , jiraUser             = Nothing
       , jiraDomain           = Nothing
       , theme                = Dark
