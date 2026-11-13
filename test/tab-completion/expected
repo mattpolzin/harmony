@@ -38,6 +38,7 @@ defaultProject
 defaultParentIssue
 theme
 githubPAT
+jiraPAT
 jiraUser
 jiraDomain
 

@@ -44,6 +44,12 @@ githubPAT:            [none/any string] The Personal Access Token Harmony should
                       use to authenticate with GitHub. You can leave this unset
                       if you want to set a PAT via the GITHUB_PAT or GH_TOKEN
                       environment variable.
+jiraPAT:              [none/any string] The Personal Access Token Harmony should
+                      use to authenticate with Jira. You can leave this unset if
+                      you want to set a PAT via the JIRA_API_TOKEN or
+                      ATLASSIAN_API_TOKEN environment variable. There need not
+                      be any Jira configuration at all unless you are using
+                      harmony to work with Jira tickets.
 jiraUser:             [none/any string] The username to use to authenticate with
                       Jira. There need not be any Jira configuration at all
                       unless you are using harmony to work with Jira tickets.
@@ -81,5 +87,6 @@ addPrTreeDescription: False
           ignoredPRs: none
            githubPAT: not set (will use $GITHUB_PAT or $GH_TOKEN environment variable)
           githubUser: not set
+             jiraPAT: not required and not set (will use $JIRA_API_TOKEN or $ATLASSIAN_API_TOKEN environment variable)
             jiraUser: not set
           jiraDomain: not set
