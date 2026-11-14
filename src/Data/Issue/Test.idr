@@ -1,11 +1,11 @@
 module Data.Issue.Test
 
-import Data.Issue
+import Data.GHIssue
 import Data.Date
 
 import TTest
 
-mockIssue : Issue
+mockIssue : GHIssue
 mockIssue = MkIssue
   { graphQlId = "1234"
   , number        = 12
@@ -28,7 +28,7 @@ namespace BaseBranchGuess
     -->
     """
 
-  mockIssue2 : Issue
+  mockIssue2 : GHIssue
   mockIssue2 = { body := bodyWithBaseBranch } mockIssue
 
   testBaseBranchParsing2 : (commentConfig BaseBranchGuess.mockIssue2).baseBranchGuess ==> Just "feature/1234/cool-stuff"
@@ -44,7 +44,7 @@ namespace BaseBranchGuess
     -->
     """
 
-  mockIssue3 : Issue
+  mockIssue3 : GHIssue
   mockIssue3 = { body := bodyWithCloseWithPRComment } mockIssue
 
   testCloseWithPRParsing2 : (commentConfig BaseBranchGuess.mockIssue3).closeWithPr ==> Just True

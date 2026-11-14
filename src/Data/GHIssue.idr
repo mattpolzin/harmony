@@ -1,4 +1,4 @@
-module Data.Issue
+module Data.GHIssue
 
 import Data.Date
 import Data.Either
@@ -13,7 +13,7 @@ import Util.String
 %default total
 
 public export
-record IssueRef where
+record GHIssueRef where
   constructor MkIssueRef
   ||| The issue's opaque GraphQL identifier
   graphQlId : String
@@ -23,11 +23,11 @@ record IssueRef where
   title     : String
 
 export
-Show IssueRef where
+Show GHIssueRef where
   show (MkIssueRef graphQlId number title) = "[\{show number}] \{title}"
 
 export
-parseIssueRef : JSON -> Either String IssueRef
+parseIssueRef : JSON -> Either String GHIssueRef
 parseIssueRef json =
  do issueRef <- object json
     [id, issueNumber, issueTitle] <- lookupAll ["graphQlId", "issue_number", "title"] issueRef
@@ -41,11 +41,11 @@ parseIssueRef json =
       }
 
 export
-json : IssueRef -> JSON
+json : GHIssueRef -> JSON
 json (MkIssueRef graphQlId number title) = JObject [("graphQlId", JString graphQlId), ("number", JInteger number), ("title", JString title)]
 
 public export
-record Issue where
+record GHIssue where
   constructor MkIssue
   ||| An opaque ID that can be used in GraphQL requests.
   graphQlId : String
@@ -65,10 +65,10 @@ record Issue where
   ||| queries; if not available then it is `Nothing`.
   linkedPRCount : Maybe Nat
 
-%name Issue issue, issue1, issue2
+%name GHIssue issue, issue1, issue2
 
 export
-Show Issue where
+Show GHIssue where
   show (MkIssue _ number title _ _ author _ _) = 
     "[\{show number}] \{title}"
     where
@@ -76,19 +76,19 @@ Show Issue where
       authorString = padRight 15 ' ' $ show author
 
 export
-reference : Issue -> IssueRef
+reference : GHIssue -> GHIssueRef
 reference i = MkIssueRef i.graphQlId i.number i.title
 
 export
-(.reference) : Issue -> IssueRef
+(.reference) : GHIssue -> GHIssueRef
 i.reference = reference i
 
 export
-isAuthor : String -> Issue -> Bool
+isAuthor : String -> GHIssue -> Bool
 isAuthor login = (== login) . author
 
 export
-isAssignee : String -> Issue -> Bool
+isAssignee : String -> GHIssue -> Bool
 isAssignee login (MkIssue _ _ _ _ _ _ Nothing _) = False
 isAssignee login (MkIssue _ _ _ _ _ _ (Just assignee) _) = login == assignee
 
@@ -133,7 +133,7 @@ empty : IssueCommentConfig
 empty = MkIssueCommentConfig Nothing Nothing
 
 export
-commentConfig : Issue -> IssueCommentConfig
+commentConfig : GHIssue -> IssueCommentConfig
 commentConfig issue = foldr go empty . lines $ issue.body
   where
     getBaseFromLine : String -> IssueCommentConfig ->  IssueCommentConfig
@@ -155,7 +155,7 @@ commentConfig issue = foldr go empty . lines $ issue.body
 public export
 record ConfiguredIssue where
   constructor MkConfiguredIssue
-  issue : Issue
+  issue : GHIssue
   config : IssueCommentConfig
 
 export
@@ -175,12 +175,12 @@ export
 i.number = i.issue.number
 
 export
-configuredIssue : Issue -> ConfiguredIssue
+configuredIssue : GHIssue -> ConfiguredIssue
 configuredIssue issue =
   MkConfiguredIssue issue (commentConfig issue)
 
 export
-parseIssue : JSON -> Either String Issue
+parseIssue : JSON -> Either String GHIssue
 parseIssue json =
  do issue <- object json
     [graphQlId, issueNumber, issueTitle, issueBody, authorLogin, createdAtStr, assigneeLogin] <- lookupAll ["graphql_id", "issue_number", "title", "body", "author", "created_at", "assignee"] issue
@@ -207,13 +207,13 @@ parseIssue json =
 
 ||| Parse a single issue from a JSON String
 export
-parseIssueString : String -> Either String Issue
+parseIssueString : String -> Either String GHIssue
 parseIssueString =
   (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> parseIssue
 
 ||| Parse a list of issues from a JSON String
 export
-parseIssuesString : String -> Either String (List Issue)
+parseIssuesString : String -> Either String (List GHIssue)
 parseIssuesString =
   (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> array parseIssue
 

@@ -119,19 +119,19 @@ namespace TitleArg
   testNothingForOnlyBugfix = Refl
 
 namespace TitleOrNumberArg
-  singleHashArgumentIsIssueNumber : titleOrNumberArg [IssueNumOrTitle "#1234"] === IssueNumber "1234"
+  singleHashArgumentIsIssueNumber : titleOrNumberArg [IssueNumOrTitle "#1234"] === GHIssueNumber "1234"
   singleHashArgumentIsIssueNumber = Refl
 
-  singleNonHashArgumentIsTitle : titleOrNumberArg [IssueNumOrTitle "1234"] === IssueTitle "1234"
+  singleNonHashArgumentIsTitle : titleOrNumberArg [IssueNumOrTitle "1234"] === GHIssueTitle "1234"
   singleNonHashArgumentIsTitle = Refl
 
-  multipleArgumentsIsTitle : titleOrNumberArg [IssueNumOrTitle "#1234", IssueNumOrTitle "hi"] === IssueTitle "#1234 hi"
+  multipleArgumentsIsTitle : titleOrNumberArg [IssueNumOrTitle "#1234", IssueNumOrTitle "hi"] === GHIssueTitle "#1234 hi"
   multipleArgumentsIsTitle = Refl
 
-  singleHashArgPlusFlagIsNumber : titleOrNumberArg [ABugfix, IssueNumOrTitle "#1234"] === IssueNumber "1234"
+  singleHashArgPlusFlagIsNumber : titleOrNumberArg [ABugfix, IssueNumOrTitle "#1234"] === GHIssueNumber "1234"
   singleHashArgPlusFlagIsNumber = Refl
 
-  singleHashArgPlusFlagIsNumber' : titleOrNumberArg [IssueNumOrTitle "#1234", ABugfix] === IssueNumber "1234"
+  singleHashArgPlusFlagIsNumber' : titleOrNumberArg [IssueNumOrTitle "#1234", ABugfix] === GHIssueNumber "1234"
   singleHashArgPlusFlagIsNumber' = Refl
 
 namespace IssueCategory

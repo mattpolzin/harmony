@@ -1,7 +1,7 @@
 module Commands.Quick
 
 import Data.Config
-import Data.Issue
+import Data.GHIssue
 import Data.List
 import public Data.Project
 import Data.Promise
@@ -47,7 +47,7 @@ createNewIssue : Config =>
                  (baseBranchGuess : String)
               -> (issueTitle : Maybe String)
               -> (project : Maybe ProjectRef)
-              -> Promise' Issue
+              -> Promise' GHIssue
 createNewIssue = createNewIssueWithMessage "Creating a new GitHub issue and branch."
 
 ||| Quickly create a branch to go along with a new or existing GitHub issue.
@@ -65,9 +65,11 @@ quickStartNewWork @{config} issueCategory issueIdent {project} = do
   let createIssue = createNewIssue baseBranchGuess
 
   issue <- case issueIdent of
-                NoInfo                 => createIssue Nothing project
-                IssueTitle  issueTitle => createIssue (Just issueTitle) project
-                IssueNumber issueNum   => getIssue config.org config.repo issueNum
+                NoInfo                   => createIssue Nothing project
+                GHIssueTitle  issueTitle => createIssue (Just issueTitle) project
+                GHIssueNumber issueNum   => getIssue config.org config.repo issueNum
+                JiraIssueSlug issueSlug  => reject "Jira issues for quick command are not implemented yet"
+                                  -- TODO: ^ address this feature gap
 
   let branchTemplate = "\{branchPrefix}/\{show issue.number}/"
   let defaultBranchSlug = branchNameSuggestion issue.title

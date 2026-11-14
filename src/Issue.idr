@@ -1,7 +1,7 @@
 module Issue
 
 import Data.Config
-import Data.Issue
+import Data.GHIssue
 import Data.Project
 import Data.Promise
 import Data.String
@@ -26,8 +26,9 @@ data IssueCategory = Bugfix | Feature
 
 public export
 data IssueIdent = NoInfo
-                | IssueTitle String
-                | IssueNumber String
+                | GHIssueTitle String
+                | GHIssueNumber String
+                | JiraIssueSlug String
 
 export
 Show IssueCategory where
@@ -36,14 +37,14 @@ Show IssueCategory where
 
 maybeParentIssuePrompt : Config =>
                          Octokit =>
-                         Promise' (Maybe Issue)
+                         Promise' (Maybe GHIssue)
 maybeParentIssuePrompt @{config} =
   case config.defaultParentIssue of
        Nothing => pure Nothing
        Just defaultParentIssueNum => goWithIssueNum defaultParentIssueNum
 
   where
-    clearDefaultPrompt : Issue -> Promise' ()
+    clearDefaultPrompt : GHIssue -> Promise' ()
     clearDefaultPrompt issue = do
       putStrLn ""
       True <- yesNoPrompt {defaultAnswer = False}
@@ -52,7 +53,7 @@ maybeParentIssuePrompt @{config} =
       
       ignore (clearDefaultParentIssue config)
 
-    goWithIssueNum : (issueNum : Integer) -> Promise' (Maybe Issue)
+    goWithIssueNum : (issueNum : Integer) -> Promise' (Maybe GHIssue)
     goWithIssueNum issueNum = do
       issue <- getIssue config.org config.repo (show issueNum)
       
@@ -68,7 +69,7 @@ createNewIssueWithMessage : Config =>
                          -> (baseBranchGuess : String)
                          -> (issueTitle : Maybe String)
                          -> (project : Maybe ProjectRef)
-                         -> Promise' Issue
+                         -> Promise' GHIssue
 createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project = do
   putStrLn message
   putStrLn ""
@@ -97,11 +98,11 @@ createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project 
       baseBranchComment : Maybe String
       baseBranchComment =
         if baseBranchGuess /= config.mainBranch
-           then Just $ Issue.baseBranchComment baseBranchGuess
+           then Just $ GHIssue.baseBranchComment baseBranchGuess
            else Nothing
 
       closeIssueWithBranchComment : String
-      closeIssueWithBranchComment = Issue.closeWithPRComment True
+      closeIssueWithBranchComment = GHIssue.closeWithPRComment True
 
       comments = 
         unlines $ catMaybes
@@ -109,13 +110,13 @@ createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project 
           , Just closeIssueWithBranchComment
           ]
 
-showIssueOption : Issue -> Doc AnsiStyle
+showIssueOption : GHIssue -> Doc AnsiStyle
 showIssueOption issue =
   vsep [ enclose "[" "]" (annotate (color Green) . pretty $ show issue.number) <+> ":"
        , indent 2 $ reflow issue.body
        ]
 
-ambiguousIssueOptions : List Issue -> Doc AnsiStyle
+ambiguousIssueOptions : List GHIssue -> Doc AnsiStyle
 ambiguousIssueOptions issues =
     vsep $ [ annotate underline $ annotate [Reset] "Possible Issues:"
            ] ++ (showIssueOption <$> issues)
@@ -124,7 +125,7 @@ export
 getIssueByTitle : Config =>
                   Octokit =>
                   (title : String)
-               -> Promise' Issue
+               -> Promise' GHIssue
 getIssueByTitle @{config} title = do
   issues <- listIssues config.org config.repo 100
   let [issue] = filter (\i => i.title == title || i.title == unslugify title) issues

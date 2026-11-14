@@ -5,7 +5,7 @@ import Util.ShellCompletion
 import Data.CompletionStyle
 
 import Data.String
-import Data.Issue
+import Data.GHIssue
 import Data.Date
 import Data.List
 
@@ -52,7 +52,7 @@ namespace CompareAssignees
   knownUserGreaterThanUnassigned2 g = MkTTest
 
 namespace IssuesByNumAndTitle
-  testIssues : List Issue
+  testIssues : List GHIssue
   testIssues = [ MkIssue "g1" 1 "Issue 1" "A great issue" (MkDate 2026 01 01) "matt" Nothing Nothing
                , MkIssue "g2" 12 "Issue2" "Another great issue" (MkDate 2026 01 01) "matt" Nothing Nothing
                ]

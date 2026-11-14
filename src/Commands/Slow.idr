@@ -1,7 +1,7 @@
 module Commands.Slow
 
 import Data.Config
-import Data.Issue
+import Data.GHIssue
 import Data.List
 import Data.Promise
 import Data.String
@@ -37,7 +37,7 @@ getIssueTitleFromLines = mapMaybe (removeComment <=< removeBlankLine . trim)
 export
 slowStartWork : Config =>
                 Octokit =>
-                (issue: Issue)
+                (issue: GHIssue)
              -> {default False stubIssueOut : Bool}
              -> Promise' ()
 slowStartWork @{config} issue {stubIssueOut} = do
@@ -109,7 +109,7 @@ slowStartWork @{config} issue {stubIssueOut} = do
 
                    """
 
-    renderIssue : Issue -> Doc AnsiStyle
+    renderIssue : GHIssue -> Doc AnsiStyle
     renderIssue issue = issueNum <++> pretty issue.title
 
       where

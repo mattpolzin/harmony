@@ -1,6 +1,6 @@
 module FFI.GitHub
 
-import Data.Issue
+import Data.GHIssue
 import Data.Project
 import Data.Promise
 import Data.PullRequest
@@ -279,7 +279,7 @@ listIssues : Octokit =>
              (owner : String) 
           -> (repo : String) 
           -> (count : Nat)
-          -> Promise String (List Issue)
+          -> Promise String (List GHIssue)
 listIssues @{Kit ptr} owner repo count =
   parsePrimResult parseIssuesString ignoreStatus $
     prim__listIssues ptr owner repo (cast count)
@@ -298,7 +298,7 @@ getIssue : Octokit =>
            (owner : String) 
         -> (repo : String) 
         -> (issueNumber : String) 
-        -> Promise String Issue
+        -> Promise String GHIssue
 getIssue @{Kit ptr} owner repo issueNumber =
   parsePrimResult parseIssueString ignoreStatus $
     prim__getIssue ptr owner repo issueNumber
@@ -321,7 +321,7 @@ createIssue' : Octokit =>
           -> (parentIssue : Maybe OctokitGraphQlId) 
           -> (title : String) 
           -> (body : String) 
-          -> Promise String Issue
+          -> Promise String GHIssue
 createIssue' @{Kit ptr} (GQLId repoId) project parentIssue title body  =
   parsePrimResult parseIssueString ignoreStatus $
     prim__createIssue ptr repoId (gqlIdStr project) (gqlIdStr parentIssue) title body
@@ -331,10 +331,10 @@ createIssue : Octokit =>
             (owner : String) 
          -> (repo : String) 
          -> (project : Maybe ProjectRef)
-         -> (parentIssue : Maybe IssueRef)
+         -> (parentIssue : Maybe GHIssueRef)
          -> (title : String) 
          -> (body : String) 
-         -> Promise String Issue
+         -> Promise String GHIssue
 createIssue owner repo project parentIssue title body = do
   repoId <- getRepoGraphQLId owner repo
   createIssue' repoId (GQLId . graphQlId <$> project) (GQLId . graphQlId <$> parentIssue) title body

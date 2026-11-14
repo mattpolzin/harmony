@@ -13,7 +13,7 @@ import Data.DPair
 import Data.Date
 import Data.Either
 import Data.Fuel
-import Data.Issue
+import Data.GHIssue
 import Data.List
 import Data.List1
 import Data.Promise
@@ -602,9 +602,9 @@ titleOrNumberArg args =
     go : List QuickArg -> IssueIdent
     go [IssueNumOrTitle str] =
       if isHashPrefix str
-         then IssueNumber $ drop 1 str
-         else IssueTitle str
-    go args = maybe NoInfo IssueTitle $ titleArg args
+         then GHIssueNumber $ drop 1 str
+         else GHIssueTitle str
+    go args = maybe NoInfo GHIssueTitle $ titleArg args
 
 issueCategory : List QuickArg -> IssueCategory
 issueCategory = maybe Feature (const Bugfix) . find (\case ABugfix => True; _ => False)
@@ -646,8 +646,8 @@ parseSlowArgs args =
     parseIssue : String -> Maybe SlowArg
     parseIssue str =
       if isHashPrefix str
-         then Just . SIssue . IssueNumber $ drop 1 str
-         else Just . SIssue $ IssueTitle str
+         then Just . SIssue . GHIssueNumber $ drop 1 str
+         else Just . SIssue $ GHIssueTitle str
 
 issueArg : List SlowArg -> Maybe IssueIdent
 issueArg = head' . mapMaybe (\case (SIssue i) => Just i; _ => Nothing)
@@ -672,13 +672,15 @@ slow @{config} (a ::: a') =
   in do
     let requestedIssue = maybe NoInfo id $ issueArg args
     issue <- case requestedIssue of
-                  NoInfo => defaultParentIssue
-                  IssueTitle title => getIssueByTitle title
-                  IssueNumber n => getIssue config.org config.repo n
+                  NoInfo           => defaultParentIssue
+                  GHIssueTitle title => getIssueByTitle title
+                  GHIssueNumber n    => getIssue config.org config.repo n
+                  JiraIssueSlug slug => reject "jira issues are not implemented for the slow command yet"
+                                  -- TODO: ^ address this feature gap
     slowStartWork issue {stubIssueOut} 
 
   where
-    defaultParentIssue : Promise' Issue
+    defaultParentIssue : Promise' GHIssue
     defaultParentIssue = do
       let Just issueNum = config.defaultParentIssue
         | Nothing => reject "The slow command requires an issue to start working on unless a defaultParentIssue is already set."
