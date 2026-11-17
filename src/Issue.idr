@@ -22,6 +22,19 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 %default total
 
 public export
+data CLIIssuePrefix = Hashtag String | Percent String
+
+export
+getCLIIssuePrefix : String -> Maybe CLIIssuePrefix
+getCLIIssuePrefix str =
+  case (strM str) of
+      StrNil => Nothing
+      (StrCons '#' str) => Just $ Hashtag str
+      (StrCons '%' str) => Just $ Percent str
+      (StrCons '\\' str) => if "#" `isPrefixOf` str then Just (Hashtag $ drop 1 str) else Nothing
+      (StrCons _ _) => Nothing
+
+public export
 data IssueCategory = Bugfix | Feature
 
 public export
