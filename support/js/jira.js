@@ -10,15 +10,15 @@ const jira_config = (username, token, hostname) => {
   return cfg
 }
 
-const jira_list_issues = (config, jql, onSuccess, onFailure) =>
+const jira_list_issue_refs = (config, jql, onSuccess, onFailure) =>
   idris__jira_request(
       config
     , '/rest/api/3/search/jql'
     , 'POST'
     , { jql
-      , fields: ['id','key']
+      , fields: ['id','key', 'summary']
       }
-    , r => onSuccess(r)()
+    , r => onSuccess(JSON.stringify(JSON.parse(r)["issues"]))()
     , e => onFailure(e)()
   )
 

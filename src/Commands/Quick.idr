@@ -10,6 +10,7 @@ import Data.String
 import Issue
 
 import FFI.GitHub
+import FFI.Jira
 import System.File
 import System.Git
 import Util
