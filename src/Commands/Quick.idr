@@ -1,6 +1,8 @@
 module Commands.Quick
 
 import Data.Config
+import Data.GHIssue
+import Data.JiraIssue
 import Data.Issue
 import Data.List
 import public Data.Project
@@ -10,6 +12,7 @@ import Data.String
 import Issue
 
 import FFI.GitHub
+import FFI.Jira
 import System.File
 import System.Git
 import Util
@@ -47,29 +50,40 @@ createNewIssue : Config =>
                  (baseBranchGuess : String)
               -> (issueTitle : Maybe String)
               -> (project : Maybe ProjectRef)
-              -> Promise' Issue
+              -> Promise' GHIssue
 createNewIssue = createNewIssueWithMessage "Creating a new GitHub issue and branch."
+
+forgetGH : GHIssue -> AnyIssue
+forgetGH issue = MkI issue.reference
+
+forgetJira : JiraIssueRef -> AnyIssue
+forgetJira ref = MkI ref
 
 ||| Quickly create a branch to go along with a new or existing GitHub issue.
 export
 quickStartNewWork : Config =>
                     Octokit =>
-                    IssueCategory
+                    Maybe Jira
+                 -> IssueCategory
                  -> (issueIdent : IssueIdent)
                  -> {default Nothing project : Maybe ProjectRef}
                  -> Promise' ()
-quickStartNewWork @{config} issueCategory issueIdent {project} = do
+quickStartNewWork @{config} jira issueCategory issueIdent {project} = do
   -- We guess that the base branch is possibly the branch
   -- checked out when the new issue is being created.
   baseBranchGuess <- currentBranch
   let createIssue = createNewIssue baseBranchGuess
 
-  issue <- case issueIdent of
-                NoInfo                 => createIssue Nothing project
-                IssueTitle  issueTitle => createIssue (Just issueTitle) project
-                IssueNumber issueNum   => getIssue config.org config.repo issueNum
+  MkI issue <- case issueIdent of
+                    NoInfo                   => forgetGH <$> createIssue Nothing project
+                    GHIssueTitle  issueTitle => forgetGH <$> createIssue (Just issueTitle) project
+                    GHIssueNumber issueNum   => forgetGH <$> getIssue config.org config.repo issueNum
+                    JiraIssueSlug issueSlug  => do
+                      case jira of
+                           Just _  => forgetJira <$> getIssueRef issueSlug
+                           Nothing => reject "Jira tickets (%SLUG-1234) cannot be used without Jira credentials and domain configured"
 
-  let branchTemplate = "\{branchPrefix}/\{show issue.number}/"
+  let branchTemplate = "\{branchPrefix}/\{issue.identifier}/"
   let defaultBranchSlug = branchNameSuggestion issue.title
   let defaultBranchName = branchTemplate ++ defaultBranchSlug
   putStrLn "What would you like the branch to be named? \{enterForDefaultStr defaultBranchName}"

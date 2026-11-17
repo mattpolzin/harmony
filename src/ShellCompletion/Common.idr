@@ -2,7 +2,7 @@ module ShellCompletion.Common
 
 import Data.CompletionStyle
 import Data.Config
-import Data.Issue
+import Data.GHIssue
 import Data.Maybe
 import Data.Project
 import Data.Promise
@@ -371,7 +371,7 @@ hashifyIfPrefix substr num =
          then Just . hashify $ numStr
          else Nothing
 
-describe : (githubUser : Maybe String) -> Issue -> String
+describe : (githubUser : Maybe String) -> GHIssue -> String
 describe user issue = "\{assigned user}\{openPrs}\{issue.title}"
   where
     openPrs : String
@@ -409,7 +409,7 @@ compareAssignees (Just u) (Just a1) (Just a2) =
                      then LT
                      else EQ
 
-compareIssues : (githubUser : Maybe String) -> Issue -> Issue -> Ordering
+compareIssues : (githubUser : Maybe String) -> GHIssue -> GHIssue -> Ordering
 compareIssues u (MkIssue _ _ _ _ _ _ assignee1 (Just prCount1)) (MkIssue _ _ _ _ _ _ assignee2 (Just prCount2)) =
   case compare prCount1 prCount2 of
        LT => LT
@@ -422,22 +422,22 @@ compareIssues u (MkIssue _ _ _ _ _ _ assignee1 (Just _)) (MkIssue _ _ _ _ _ _ as
 compareIssues u (MkIssue _ _ _ _ _ _ assignee1 Nothing) (MkIssue _ _ _ _ _ _ assignee2 Nothing) =
   compareAssignees u assignee1 assignee2
 
-issueByNum : (partialArg : String) ->  Issue -> Maybe (String, Issue)
+issueByNum : (partialArg : String) ->  GHIssue -> Maybe (String, GHIssue)
 issueByNum partialArg i = (, i) <$> hashifyIfPrefix partialArg i.number
 
-issueByTitle : (partialArg : String) -> Issue -> Maybe (String, Issue)
+issueByTitle : (partialArg : String) -> GHIssue -> Maybe (String, GHIssue)
 issueByTitle partialArg i =
   if (unslugify partialArg) `isStrPrefixOf` i.title
      then Just (slugify i.title, i)
      else Nothing
 
 ||| Get issue completions matching the partial arg for issue title.
-issuesByTitle : (partialArg : String) -> List Issue -> List (String, Issue)
+issuesByTitle : (partialArg : String) -> List GHIssue -> List (String, GHIssue)
 issuesByTitle partialArg issues =
   catMaybes $ map (issueByTitle partialArg) issues
 
 ||| Get issue completions matching the partial arg for issue number.
-issuesByNum : (partialArg : String) -> List Issue -> List (String, Issue)
+issuesByNum : (partialArg : String) -> List GHIssue -> List (String, GHIssue)
 issuesByNum partialArg issues =
   catMaybes $ map (issueByNum partialArg) issues
 
@@ -446,28 +446,28 @@ issuesByNum partialArg issues =
 |||
 ||| IMPORTANT: The partial arg for an issue number should have its '#' stripped
 ||| off (unhashified).
-issuesByNumAndTitle : (partialArg : String) -> List Issue -> List (String, Issue)
+issuesByNumAndTitle : (partialArg : String) -> List GHIssue -> List (String, GHIssue)
 issuesByNumAndTitle partialArg issues =
   issues >>= (\i => catMaybes [byNum i, byTitle i])
 
   where
-    byNum : Issue -> Maybe (String, Issue)
+    byNum : GHIssue -> Maybe (String, GHIssue)
     byNum = issueByNum partialArg
 
-    byTitle : Issue -> Maybe (String, Issue)
+    byTitle : GHIssue -> Maybe (String, GHIssue)
     byTitle = issueByTitle partialArg
 
 strCompletion : CompletionStyle => (String, String) -> String
 strCompletion = stringify . completionResult
 
 parameters (githubUser : Maybe String)
-  issueSorter : (a, Issue) -> (a, Issue) -> Ordering
+  issueSorter : (a, GHIssue) -> (a, GHIssue) -> Ordering
   issueSorter = (compareIssues githubUser) `on` snd
 
-  issueDescriber : Issue -> String
+  issueDescriber : GHIssue -> String
   issueDescriber = describe githubUser
 
-  issueOpts : CompletionStyle => List (String, Issue) -> List String
+  issueOpts : CompletionStyle => List (String, GHIssue) -> List String
   issueOpts issues = strCompletion . mapSnd issueDescriber <$> sortBy issueSorter issues
 
 ||| Opts for which completion requires reaching out to GitHub.

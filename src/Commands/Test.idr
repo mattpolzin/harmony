@@ -14,6 +14,8 @@ import Data.String.Extra
 
 import Issue
 
+import TTest
+
 namespace ParsePrArgs
   parsesJustDraftFlag : parsePrArgs ["--draft"] === Right [Draft]
   parsesJustDraftFlag = Refl
@@ -80,13 +82,13 @@ namespace ParseQuickArgs
   testBugfix : parseQuickArgs ["--bugfix"] === [ABugfix]
   testBugfix = Refl
 
-  testBugfixLast : parseQuickArgs ["a", "bug", "--bugfix"] === [IssueNumOrTitle "a", IssueNumOrTitle "bug", ABugfix]
+  testBugfixLast : parseQuickArgs ["a", "bug", "--bugfix"] === [IssueIdentifier "a", IssueIdentifier "bug", ABugfix]
   testBugfixLast = Refl
 
-  testBugfixFirst : parseQuickArgs ["--bugfix", "a", "bug"] === [ABugfix, IssueNumOrTitle "a", IssueNumOrTitle "bug"]
+  testBugfixFirst : parseQuickArgs ["--bugfix", "a", "bug"] === [ABugfix, IssueIdentifier "a", IssueIdentifier "bug"]
   testBugfixFirst = Refl
 
-  testBugfixMiddle : parseQuickArgs ["a", "--bugfix", "bug"] === [IssueNumOrTitle "a", ABugfix, IssueNumOrTitle "bug"]
+  testBugfixMiddle : parseQuickArgs ["a", "--bugfix", "bug"] === [IssueIdentifier "a", ABugfix, IssueIdentifier "bug"]
   testBugfixMiddle = Refl
 
 namespace ParseContributeArgs
@@ -109,39 +111,39 @@ namespace ParseContributeArgs
   testIgnoreUri = Refl
 
 namespace TitleArg
-  testConcatsTitleStrings : titleArg [IssueNumOrTitle "One", IssueNumOrTitle "Two"] === Just "One Two"
+  testConcatsTitleStrings : titleArg [IssueIdentifier "One", IssueIdentifier "Two"] === Just "One Two"
   testConcatsTitleStrings = Refl
 
-  testSkipsBugfixArgs : titleArg [IssueNumOrTitle "One", ABugfix] === Just "One"
+  testSkipsBugfixArgs : titleArg [IssueIdentifier "One", ABugfix] === Just "One"
   testSkipsBugfixArgs = Refl
 
   testNothingForOnlyBugfix : titleArg [ABugfix] === Nothing
   testNothingForOnlyBugfix = Refl
 
 namespace TitleOrNumberArg
-  singleHashArgumentIsIssueNumber : titleOrNumberArg [IssueNumOrTitle "#1234"] === IssueNumber "1234"
-  singleHashArgumentIsIssueNumber = Refl
+  singleHashArgumentIsIssueNumber : issueIdentifier [IssueIdentifier "#1234"] ==> GHIssueNumber "1234"
+  singleHashArgumentIsIssueNumber = MkTTest
 
-  singleNonHashArgumentIsTitle : titleOrNumberArg [IssueNumOrTitle "1234"] === IssueTitle "1234"
-  singleNonHashArgumentIsTitle = Refl
+  singleNonHashArgumentIsTitle : issueIdentifier [IssueIdentifier "1234"] ==> GHIssueTitle "1234"
+  singleNonHashArgumentIsTitle = MkTTest
 
-  multipleArgumentsIsTitle : titleOrNumberArg [IssueNumOrTitle "#1234", IssueNumOrTitle "hi"] === IssueTitle "#1234 hi"
+  multipleArgumentsIsTitle : issueIdentifier [IssueIdentifier "#1234", IssueIdentifier "hi"] === GHIssueTitle "#1234 hi"
   multipleArgumentsIsTitle = Refl
 
-  singleHashArgPlusFlagIsNumber : titleOrNumberArg [ABugfix, IssueNumOrTitle "#1234"] === IssueNumber "1234"
-  singleHashArgPlusFlagIsNumber = Refl
+  singleHashArgPlusFlagIsNumber : issueIdentifier [ABugfix, IssueIdentifier "#1234"] ==> GHIssueNumber "1234"
+  singleHashArgPlusFlagIsNumber = MkTTest
 
-  singleHashArgPlusFlagIsNumber' : titleOrNumberArg [IssueNumOrTitle "#1234", ABugfix] === IssueNumber "1234"
-  singleHashArgPlusFlagIsNumber' = Refl
+  singleHashArgPlusFlagIsNumber' : issueIdentifier [IssueIdentifier "#1234", ABugfix] ==> GHIssueNumber "1234"
+  singleHashArgPlusFlagIsNumber' = MkTTest
 
 namespace IssueCategory
-  testPicksBugfixUpLast : issueCategory [IssueNumOrTitle "hello", ABugfix] === Bugfix
+  testPicksBugfixUpLast : issueCategory [IssueIdentifier "hello", ABugfix] === Bugfix
   testPicksBugfixUpLast = Refl
 
-  testPicksBugfixUpFirst : issueCategory [ABugfix, IssueNumOrTitle "hello"] === Bugfix
+  testPicksBugfixUpFirst : issueCategory [ABugfix, IssueIdentifier "hello"] === Bugfix
   testPicksBugfixUpFirst = Refl
 
-  testNotBugfix : issueCategory [IssueNumOrTitle "hi", IssueNumOrTitle "hello"] === Feature
+  testNotBugfix : issueCategory [IssueIdentifier "hi", IssueIdentifier "hello"] === Feature
   testNotBugfix = Refl
 
   testNotBugfixSimple : issueCategory [] === Feature

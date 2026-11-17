@@ -6,7 +6,7 @@ import Data.Config
 import Data.Either
 import Data.Fin.Extra
 import Data.Fuel
-import Data.Issue
+import Data.GHIssue
 import Data.List
 import Data.List1
 import Data.Nat
@@ -336,7 +336,7 @@ removeCommentOpenTag str =
 removeCommentTags : String -> String
 removeCommentTags = unlines . map removeCommentOpenTag . filter (/= "-->") . lines
 
-issueDescriptionPrefix : (maybeTree : String) -> Issue -> String
+issueDescriptionPrefix : (maybeTree : String) -> GHIssue -> String
 issueDescriptionPrefix maybeTree issue =
   """
   <!--
@@ -348,7 +348,7 @@ issueDescriptionPrefix maybeTree issue =
   -->
   """
 
-issueBodyPrefix : (closesWithPR : Bool) -> (bugfix : Bool) -> (maybeTree : String) -> Issue -> String
+issueBodyPrefix : (closesWithPR : Bool) -> (bugfix : Bool) -> (maybeTree : String) -> GHIssue -> String
 issueBodyPrefix closesWithPR bugfix maybeTree issue =
   """
   \{issueDescriptionPrefix maybeTree issue}
@@ -687,7 +687,7 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
 
       createIssue : (baseBranch : String) -> IssueTemplate -> Promise' ConfiguredIssue
       createIssue baseBranch issueTemplate = do
-        issueForPr : Issue <-
+        issueForPr : GHIssue <-
           createNewIssueWithMessage "Creating a new GitHub issue for this PR." baseBranch Nothing issueTemplate.project
         pure $ configuredIssue issueForPr
 

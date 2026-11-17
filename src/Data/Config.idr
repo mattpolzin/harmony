@@ -2,7 +2,7 @@ module Data.Config
 
 import AppVersion
 import Data.Either
-import Data.Issue
+import Data.GHIssue
 import Data.List
 import Data.List.Elem
 import Data.Project

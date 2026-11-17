@@ -10,14 +10,24 @@ const jira_config = (username, token, hostname) => {
   return cfg
 }
 
-const jira_list_issues = (config, jql, onSuccess, onFailure) =>
+const jira_list_issue_refs = (config, jql, onSuccess, onFailure) =>
   idris__jira_request(
       config
     , '/rest/api/3/search/jql'
     , 'POST'
     , { jql
-      , fields: ['id','key']
+      , fields: ['id','key', 'summary']
       }
+    , r => onSuccess(JSON.stringify(JSON.parse(r)["issues"]))()
+    , e => onFailure(e)()
+  )
+
+const jira_get_issue_ref = (config, issueIdOrKey, onSuccess, onFailure) =>
+  idris__jira_request(
+      config
+    , `/rest/api/3/issue/${issueIdOrKey}`
+    , 'GET'
+    , {}
     , r => onSuccess(r)()
     , e => onFailure(e)()
   )
@@ -69,7 +79,11 @@ const idris__jira_request = (config, path, method, bodyObj, onSuccess, onFailure
       respContent += chunk.toString()
     })
     res.on('end', () => {
-      onSuccess(respContent)
+      if (res.statusCode == 404) {
+        onFailure(JSON.parse(respContent)['errorMessages'][0])
+      } else {
+        onSuccess(respContent)
+      }
     })
   })
 

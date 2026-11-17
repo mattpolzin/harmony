@@ -1,0 +1,225 @@
+module Data.GHIssue
+
+import Data.Date
+import Data.Issue
+import Data.Either
+import Data.List
+import Data.String
+import Data.Vect
+import JSON.Parser
+import Language.JSON.Accessors
+
+import Util.String
+
+%default total
+
+public export
+record GHIssueRef where
+  constructor MkIssueRef
+  ||| The issue's opaque GraphQL identifier
+  graphQlId : String
+  ||| The issue's "number" (as seen in URIs referring to the issue)
+  number    : Integer
+  ||| The issue's title
+  title     : String
+
+export
+IssueRef GHIssueRef where
+  identifier = show . number
+  title = GHIssueRef.title
+
+export
+Show GHIssueRef where
+  show (MkIssueRef graphQlId number title) = "[\{show number}] \{title}"
+
+export
+parseIssueRef : JSON -> Either String GHIssueRef
+parseIssueRef json =
+ do issueRef <- object json
+    [id, issueNumber, issueTitle] <- lookupAll ["graphQlId", "issue_number", "title"] issueRef
+    graphQlId   <- string id
+    number      <- integer issueNumber
+    title       <- string issueTitle
+    pure $ MkIssueRef {
+        graphQlId
+      , number
+      , title
+      }
+
+export
+json : GHIssueRef -> JSON
+json (MkIssueRef graphQlId number title) = JObject [("graphQlId", JString graphQlId), ("number", JInteger number), ("title", JString title)]
+
+public export
+record GHIssue where
+  constructor MkIssue
+  ||| An opaque ID that can be used in GraphQL requests.
+  graphQlId : String
+  ||| The issue's "number" (as seen in URIs referring to the issue).
+  number    : Integer
+  ||| The issue's title
+  title     : String
+  ||| The issue's body
+  body      : String
+  ||| When the issue was created.
+  createdAt : Date
+  ||| The `login` of the author of the issue.
+  author    : String
+  ||| The `login` of the assignee of the issue.
+  assignee  : Maybe String
+  ||| The number of PRs linked to the issue. This is not returned for all
+  ||| queries; if not available then it is `Nothing`.
+  linkedPRCount : Maybe Nat
+
+%name GHIssue issue, issue1, issue2
+
+export
+Show GHIssue where
+  show (MkIssue _ number title _ _ author _ _) = 
+    "[\{show number}] \{title}"
+    where
+      authorString : String
+      authorString = padRight 15 ' ' $ show author
+
+export
+reference : GHIssue -> GHIssueRef
+reference i = MkIssueRef i.graphQlId i.number i.title
+
+export
+(.reference) : GHIssue -> GHIssueRef
+i.reference = reference i
+
+export
+isAuthor : String -> GHIssue -> Bool
+isAuthor login = (== login) . author
+
+export
+isAssignee : String -> GHIssue -> Bool
+isAssignee login (MkIssue _ _ _ _ _ _ Nothing _) = False
+isAssignee login (MkIssue _ _ _ _ _ _ (Just assignee) _) = login == assignee
+
+-- the beginning and end tags of the html comment are intentionally on their
+-- given lines here to make parsing as low overhead as possible.
+baseBranchCommentPrefix : String
+baseBranchCommentPrefix = "<!-- base-branch: "
+
+export
+baseBranchComment : (baseBranch : String) -> String
+baseBranchComment baseBranch =
+  """
+  \{baseBranchCommentPrefix}\{baseBranch}
+  -->
+  """
+
+-- the beginning and end tags of the html comment are intentionally on their
+-- given lines here to make parsing as low overhead as possible.
+closeIssueWithPRCommentPrefix : String
+closeIssueWithPRCommentPrefix = "<!-- close-with-pr: "
+
+export
+closeWithPRComment : Bool -> String
+closeWithPRComment enabled =
+  """
+  \{closeIssueWithPRCommentPrefix}\{toString enabled}
+  -->
+  """
+
+  where
+    toString : Bool -> String
+    toString False = "no"
+    toString True = "yes"
+
+public export
+record IssueCommentConfig where
+  constructor MkIssueCommentConfig
+  baseBranchGuess : Maybe String
+  closeWithPr : Maybe Bool
+
+empty : IssueCommentConfig
+empty = MkIssueCommentConfig Nothing Nothing
+
+export
+commentConfig : GHIssue -> IssueCommentConfig
+commentConfig issue = foldr go empty . lines $ issue.body
+  where
+    getBaseFromLine : String -> IssueCommentConfig ->  IssueCommentConfig
+    getBaseFromLine line cfg =
+      if baseBranchCommentPrefix `isPrefixOf` line
+         then { baseBranchGuess := Just (pack . drop (length baseBranchCommentPrefix) $ unpack line) } cfg
+         else cfg
+
+    getCloseWithPRFromLine : String -> IssueCommentConfig ->  IssueCommentConfig
+    getCloseWithPRFromLine line cfg =
+      if closeIssueWithPRCommentPrefix `isPrefixOf` line
+         then { closeWithPr := (parseBool . pack . drop (length closeIssueWithPRCommentPrefix) $ unpack line) } cfg
+         else cfg
+
+    go : String -> IssueCommentConfig -> IssueCommentConfig
+    go line =
+      getBaseFromLine line . getCloseWithPRFromLine line
+
+public export
+record ConfiguredIssue where
+  constructor MkConfiguredIssue
+  issue : GHIssue
+  config : IssueCommentConfig
+
+export
+(.baseBranchGuess) : ConfiguredIssue -> Maybe String
+i.baseBranchGuess = i.config.baseBranchGuess
+
+export
+(.closeWithPr) : ConfiguredIssue -> Maybe Bool
+i.closeWithPr = i.config.closeWithPr
+
+export
+(.title) : ConfiguredIssue -> String
+i.title = i.issue.title
+
+export
+(.number) : ConfiguredIssue -> Integer
+i.number = i.issue.number
+
+export
+configuredIssue : GHIssue -> ConfiguredIssue
+configuredIssue issue =
+  MkConfiguredIssue issue (commentConfig issue)
+
+export
+parseIssue : JSON -> Either String GHIssue
+parseIssue json =
+ do issue <- object json
+    [graphQlId, issueNumber, issueTitle, issueBody, authorLogin, createdAtStr, assigneeLogin] <- lookupAll ["graphql_id", "issue_number", "title", "body", "author", "created_at", "assignee"] issue
+    graphQlId   <- string graphQlId
+    number      <- integer issueNumber
+    title       <- string issueTitle
+    body        <- maybe "" id <$> optional string issueBody
+    author      <- string authorLogin
+    createdAt   <- parseDateTime =<< string createdAtStr
+    assignee    <- optional string assigneeLogin
+    linkedPRCount <- maybe (Right Nothing) 
+                           (optional nat)
+                           (lookup "linked_pr_count" issue)
+    pure $ MkIssue {
+        graphQlId
+      , number
+      , title
+      , body
+      , createdAt
+      , author
+      , assignee
+      , linkedPRCount
+      }
+
+||| Parse a single issue from a JSON String
+export
+parseIssueString : String -> Either String GHIssue
+parseIssueString =
+  (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> parseIssue
+
+||| Parse a list of issues from a JSON String
+export
+parseIssuesString : String -> Either String (List GHIssue)
+parseIssuesString =
+  (mapFst (const "Failed to parse JSON") . parseJSON Virtual) >=> array parseIssue
+

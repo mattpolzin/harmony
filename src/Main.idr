@@ -151,8 +151,9 @@ handleAuthenticatedArgs ["branch"] =
   Commands.branch
 handleAuthenticatedArgs ("branch" :: _ :: _) =
   reject "The branch command does not take any arguments."
-handleAuthenticatedArgs ("quick" :: args) =
-  Commands.quick (parseQuickArgs args)
+handleAuthenticatedArgs ("quick" :: args) = do
+  jira <- liftIO configureJira
+  Commands.quick jira (parseQuickArgs args)
 handleAuthenticatedArgs ("health" :: _ :: _) =
   reject "The health command does not take any arguments."
 handleAuthenticatedArgs ["health"] =

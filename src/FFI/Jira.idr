@@ -2,6 +2,7 @@ module FFI.Jira
 
 import Data.Promise
 import Data.User
+import Data.JiraIssue
 import FFI
 import JSON.Parser
 
@@ -27,20 +28,42 @@ export
 jira : (username, authToken, hostname : String) -> IO Jira
 jira username authToken hostname = JConfig <$> (primIO $ prim__config username authToken hostname)
 
-%foreign jira_ffi "list_issues"
-prim__listIssues : Ptr JiraRef
-                -> (jql : String)
-                -> (onSuccess : String -> PrimIO ())
-                -> (onFailure : String -> PrimIO ())
-                -> PrimIO ()
+%foreign jira_ffi "list_issue_refs"
+prim__listIssueRefs : Ptr JiraRef
+                  -> (jql : String)
+                  -> (onSuccess : String -> PrimIO ())
+                  -> (onFailure : String -> PrimIO ())
+                  -> PrimIO ()
+
+||| Search for issues using the given JQL expression.
+export
+listIssueRefs : Jira =>
+                (jql : String)
+             -> Promise String (List JiraIssueRef)
+listIssueRefs @{JConfig ptr} jql = do
+  jsonStr <- promiseIO $ prim__listIssueRefs ptr jql
+  either $ parseIssueRefsString jsonStr
 
 export
-listIssues : Jira =>
-             (jql : String)
-          -> Promise String String
-listIssues @{JConfig ptr} jql = do
-  r <- promiseIO $ prim__listIssues ptr jql
-  pure r
+listCurrentUserAssignedIssueRefs : Jira =>
+                                   Promise String (List JiraIssueRef)
+listCurrentUserAssignedIssueRefs = listIssueRefs "assignee = currentUser()"
+
+%foreign jira_ffi "get_issue_ref"
+prim__getIssueRef : Ptr JiraRef
+                 -> (issueKey : String)
+                 -> (onSuccess : String -> PrimIO ())
+                 -> (onFailure : String -> PrimIO ())
+                 -> PrimIO ()
+
+||| Get an issue by its key (aka slug).
+export
+getIssueRef : Jira =>
+             (issueKey : String)
+          -> Promise String JiraIssueRef
+getIssueRef @{JConfig ptr} issueKey = do
+  jsonStr <- promiseIO $ prim__getIssueRef ptr issueKey
+  either $ parseIssueRefString jsonStr
 
 %foreign jira_ffi "get_me"
 prim__getMe : Ptr JiraRef

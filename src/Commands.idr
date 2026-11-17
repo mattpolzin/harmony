@@ -13,7 +13,7 @@ import Data.DPair
 import Data.Date
 import Data.Either
 import Data.Fuel
-import Data.Issue
+import Data.GHIssue
 import Data.List
 import Data.List1
 import Data.Promise
@@ -573,7 +573,7 @@ branch @{config} = do
   putStrLn uri
 
 export
-data QuickArg = ABugfix | AProject ProjectOpt | IssueNumOrTitle String
+data QuickArg = ABugfix | AProject ProjectOpt | IssueIdentifier String
 
 export
 parseQuickArgs : List String -> List QuickArg
@@ -583,7 +583,7 @@ parseQuickArgs ("--project" :: numOrTitle :: xs) =
   case parseInteger numOrTitle of
        Just n => AProject (Num n) :: parseQuickArgs xs
        Nothing => AProject (Title numOrTitle) :: parseQuickArgs xs
-parseQuickArgs (titleStr :: xs) = IssueNumOrTitle titleStr :: parseQuickArgs xs
+parseQuickArgs (titleStr :: xs) = IssueIdentifier titleStr :: parseQuickArgs xs
 
 titleArg : List QuickArg -> Maybe String
 titleArg = foldl go Nothing
@@ -591,20 +591,21 @@ titleArg = foldl go Nothing
     go : Maybe String -> QuickArg -> Maybe String
     go mstr ABugfix = mstr
     go mstr (AProject _) = mstr
-    go Nothing (IssueNumOrTitle str) = Just str
-    go (Just x) (IssueNumOrTitle str) = Just $ "\{x} \{str}"
+    go Nothing (IssueIdentifier str) = Just str
+    go (Just x) (IssueIdentifier str) = Just $ "\{x} \{str}"
 
-titleOrNumberArg : List QuickArg -> IssueIdent
-titleOrNumberArg args =
+issueIdentifier : List QuickArg -> IssueIdent
+issueIdentifier args =
   go $ filter (\case ABugfix => False; _ => True) args
 
   where
     go : List QuickArg -> IssueIdent
-    go [IssueNumOrTitle str] =
-      if isHashPrefix str
-         then IssueNumber $ drop 1 str
-         else IssueTitle str
-    go args = maybe NoInfo IssueTitle $ titleArg args
+    go [IssueIdentifier str] =
+      case getCLIIssuePrefix str of
+           (Just (Hashtag str')) => GHIssueNumber str'
+           (Just (Percent str')) => JiraIssueSlug str'
+           Nothing => GHIssueTitle str
+    go args = maybe NoInfo GHIssueTitle $ titleArg args
 
 issueCategory : List QuickArg -> IssueCategory
 issueCategory = maybe Feature (const Bugfix) . find (\case ABugfix => True; _ => False)
@@ -616,12 +617,14 @@ issueCategory = maybe Feature (const Bugfix) . find (\case ABugfix => True; _ =>
 export
 quick : Config =>
         Octokit =>
-        (args : List QuickArg)
+        Maybe Jira
+     -> (args : List QuickArg)
      -> Promise' ()
-quick @{config} args = do
+quick @{config} jira args = do
   project <- maybeProject (projectOpts (\case (AProject p) => Just p; _ => Nothing) args)
-  quickStartNewWork (issueCategory args)
-                    (titleOrNumberArg args)
+  quickStartNewWork jira
+                    (issueCategory args)
+                    (issueIdentifier args)
                     {project}
 
 data SlowArg = Stub | SIssue IssueIdent
@@ -646,8 +649,8 @@ parseSlowArgs args =
     parseIssue : String -> Maybe SlowArg
     parseIssue str =
       if isHashPrefix str
-         then Just . SIssue . IssueNumber $ drop 1 str
-         else Just . SIssue $ IssueTitle str
+         then Just . SIssue . GHIssueNumber $ drop 1 str
+         else Just . SIssue $ GHIssueTitle str
 
 issueArg : List SlowArg -> Maybe IssueIdent
 issueArg = head' . mapMaybe (\case (SIssue i) => Just i; _ => Nothing)
@@ -672,13 +675,15 @@ slow @{config} (a ::: a') =
   in do
     let requestedIssue = maybe NoInfo id $ issueArg args
     issue <- case requestedIssue of
-                  NoInfo => defaultParentIssue
-                  IssueTitle title => getIssueByTitle title
-                  IssueNumber n => getIssue config.org config.repo n
+                  NoInfo           => defaultParentIssue
+                  GHIssueTitle title => getIssueByTitle title
+                  GHIssueNumber n    => getIssue config.org config.repo n
+                  JiraIssueSlug slug => reject "jira issues are not implemented for the slow command yet"
+                                  -- TODO: ^ address this feature gap
     slowStartWork issue {stubIssueOut} 
 
   where
-    defaultParentIssue : Promise' Issue
+    defaultParentIssue : Promise' GHIssue
     defaultParentIssue = do
       let Just issueNum = config.defaultParentIssue
         | Nothing => reject "The slow command requires an issue to start working on unless a defaultParentIssue is already set."
