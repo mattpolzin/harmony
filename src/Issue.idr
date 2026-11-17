@@ -19,7 +19,12 @@ import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Util
 import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
+import Language.Reflection
+import Derive.Prelude
+
 %default total
+
+%language ElabReflection
 
 public export
 data CLIIssuePrefix = Hashtag String | Percent String
@@ -42,6 +47,8 @@ data IssueIdent = NoInfo
                 | GHIssueTitle String
                 | GHIssueNumber String
                 | JiraIssueSlug String
+
+%runElab derive `{IssueIdent} [Eq, Show]
 
 export
 Show IssueCategory where

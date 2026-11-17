@@ -1,4 +1,4 @@
-module Data.Issue.Test
+module Data.GHIssue.Test
 
 import Data.GHIssue
 import Data.Date
