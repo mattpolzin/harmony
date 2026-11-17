@@ -1,6 +1,7 @@
 module Data.GHIssue
 
 import Data.Date
+import Data.Issue
 import Data.Either
 import Data.List
 import Data.String
@@ -21,6 +22,11 @@ record GHIssueRef where
   number    : Integer
   ||| The issue's title
   title     : String
+
+export
+IssueRef GHIssueRef where
+  identifier = show . number
+  title = GHIssueRef.title
 
 export
 Show GHIssueRef where

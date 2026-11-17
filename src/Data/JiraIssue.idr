@@ -1,6 +1,7 @@
 module Data.JiraIssue
 
 import Data.Date
+import Data.Issue
 import Data.Either
 import Data.List
 import Data.String
@@ -21,6 +22,11 @@ record JiraIssueRef where
   key : String
   ||| The issue's summary (aka title)
   summary : String
+
+export
+IssueRef JiraIssueRef where
+  identifier = key
+  title = summary
 
 export
 Show JiraIssueRef where

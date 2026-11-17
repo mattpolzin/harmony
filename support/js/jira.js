@@ -79,7 +79,11 @@ const idris__jira_request = (config, path, method, bodyObj, onSuccess, onFailure
       respContent += chunk.toString()
     })
     res.on('end', () => {
-      onSuccess(respContent)
+      if (res.statusCode == 404) {
+        onFailure(JSON.parse(respContent)['errorMessages'][0])
+      } else {
+        onSuccess(respContent)
+      }
     })
   })
 

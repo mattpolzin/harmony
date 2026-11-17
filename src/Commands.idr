@@ -617,11 +617,13 @@ issueCategory = maybe Feature (const Bugfix) . find (\case ABugfix => True; _ =>
 export
 quick : Config =>
         Octokit =>
-        (args : List QuickArg)
+        Maybe Jira
+     -> (args : List QuickArg)
      -> Promise' ()
-quick @{config} args = do
+quick @{config} jira args = do
   project <- maybeProject (projectOpts (\case (AProject p) => Just p; _ => Nothing) args)
-  quickStartNewWork (issueCategory args)
+  quickStartNewWork jira
+                    (issueCategory args)
                     (issueIdentifier args)
                     {project}
 
