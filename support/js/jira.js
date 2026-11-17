@@ -22,6 +22,16 @@ const jira_list_issue_refs = (config, jql, onSuccess, onFailure) =>
     , e => onFailure(e)()
   )
 
+const jira_get_issue_ref = (config, issueIdOrKey, onSuccess, onFailure) =>
+  idris__jira_request(
+      config
+    , `/rest/api/3/issue/${issueIdOrKey}`
+    , 'GET'
+    , {}
+    , r => onSuccess(r)()
+    , e => onFailure(e)()
+  )
+
 const jira_get_me = (config, onSuccess, onFailure) =>
   idris__jira_request(
       config

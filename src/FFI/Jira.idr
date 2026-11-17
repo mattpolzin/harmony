@@ -49,6 +49,22 @@ listCurrentUserAssignedIssueRefs : Jira =>
                                    Promise String (List JiraIssueRef)
 listCurrentUserAssignedIssueRefs = listIssueRefs "assignee = currentUser()"
 
+%foreign jira_ffi "get_issue_ref"
+prim__getIssueRef : Ptr JiraRef
+                 -> (issueKey : String)
+                 -> (onSuccess : String -> PrimIO ())
+                 -> (onFailure : String -> PrimIO ())
+                 -> PrimIO ()
+
+||| Get an issue by its key (aka slug).
+export
+getIssueRef : Jira =>
+             (issueKey : String)
+          -> Promise String JiraIssueRef
+getIssueRef @{JConfig ptr} issueKey = do
+  jsonStr <- promiseIO $ prim__getIssueRef ptr issueKey
+  either $ parseIssueRefString jsonStr
+
 %foreign jira_ffi "get_me"
 prim__getMe : Ptr JiraRef
                 -> (onSuccess : String -> PrimIO ())
