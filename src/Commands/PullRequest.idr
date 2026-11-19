@@ -672,18 +672,28 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
         "What would you like the description to be (two blank lines to finish)?"
 
       notEmptyString : String -> Maybe String
-      notEmptyString "" = Nothing
+      notEmptyString ""  = Nothing
       notEmptyString str = Just str
 
-      prTitlePrompt : Maybe String -> Promise' String
-      prTitlePrompt defaultTitle =
+      prTitlePrompt : String -> String -> Maybe String -> Promise' String
+      prTitlePrompt prefixStr suffixStr defaultTitle = do
+        let fore = "'\{prefixStr}' prepended"
+        let aft = "'\{suffixStr}' appended"
+        let note = case (prefixStr, suffixStr) of
+                        ("", "") => Nothing
+                        (p, "")  => Just fore
+                        ("", a)  => Just aft
+                        (p,  a)  => Just "\{fore} and \{aft}"
+        whenJust note $ \n =>
+          putStrLn "Your given title will have \{n}"
         let fallbackTitle = "New PR"
-        in  offerRetry 
-              "PR title cannot be an empty string."
-              "Did not find a non-empty value for a PR title. Will use '\{fallbackTitle}'"
-              fallbackTitle
-              (notEmptyString <$> getLineEnterForDefault "What would you like the PR title to be?"
-                                                         defaultTitle)
+        let promptStr = "What would you like the PR title to be?"
+        title <- offerRetry 
+                   "PR title cannot be an empty string."
+                   "Did not find a non-empty value for a PR title. Will use '\{fallbackTitle}'"
+                   fallbackTitle
+                   (notEmptyString <$> getLineEnterForDefault promptStr defaultTitle)
+        pure (prefixStr ++ title ++ suffixStr)
 
       createIssue : (baseBranch : String) -> IssueTemplate -> Promise' ConfiguredIssue
       createIssue baseBranch issueTemplate = do
@@ -747,12 +757,13 @@ identifyOrCreatePR @{config} {markAsDraft} {issueTemplate} {intoBranch} branch =
         configuredIssue <- traverse (createIssue baseBranch) issueTemplate
 
         let titlePrefix = fromMaybe "" inferredBranchInfo.titlePrefix
+        let titleSuffix = fromMaybe "" inferredBranchInfo.titleSuffix
 
         let defaultTitle = case configuredIssue of
                                 Just issue => Just issue.title
                                 Nothing => inferredBranchInfo.defaultTitle
 
-        title <- (titlePrefix ++) <$> (prTitlePrompt defaultTitle)
+        title <- prTitlePrompt titlePrefix titleSuffix defaultTitle
 
         bodyPrefix <- case configuredIssue of
                            Just issue => buildIssueBodyPrefix branch' issue baseBranch
