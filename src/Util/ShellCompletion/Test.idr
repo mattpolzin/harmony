@@ -21,6 +21,19 @@ namespace Unhashify
   test5 : unhashify "\\#hello" = "hello"
   test5 = Refl
 
+  test6 : unhashify "%hello" = "%hello"
+  test6 = Refl
+
+namespace Unpercentify
+  test1 : unpercentify "" = ""
+  test1 = Refl
+
+  test2 : unpercentify "%hello" = "hello"
+  test2 = Refl
+
+  test3 : unpercentify "#hello" = "#hello"
+  test3 = Refl
+
 namespace SomeFrom
   matchesAllOpts1 : someFrom @{Cmd} ["--bugfix"] ["--bugfix"] === Just ["--bugfix"]
   matchesAllOpts1 = Refl

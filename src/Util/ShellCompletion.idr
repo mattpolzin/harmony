@@ -36,6 +36,17 @@ unhashify str = case strM str of
                      (StrCons _ _) => str
 
 public export
+percentify : String -> String
+percentify = strCons '%'
+
+public export
+unpercentify : String -> String
+unpercentify str = case strM str of
+                        StrNil => ""
+                        (StrCons '%' str') => str'
+                        (StrCons _ _) => str
+
+public export
 isPrefixOf : (s : CompletionStyle) => String -> CompletionResult -> Bool
 isPrefixOf str = isPrefixOf str . name
 
