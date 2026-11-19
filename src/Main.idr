@@ -82,6 +82,10 @@ shellCompletion envPAT completionStyle subcommand curWord prevWord =
     gitCompletions gh =
       githubOpts gh completionStyle subcommand curWord prevWord
 
+    jiraCompletions : Config => Lazy Jira -> Promise' (List String)
+    jiraCompletions jira =
+      jiraOpts jira completionStyle subcommand curWord prevWord
+
     completions : Promise' (List String)
     completions = do
       let Nothing = trivialCompletions
@@ -94,7 +98,11 @@ shellCompletion envPAT completionStyle subcommand curWord prevWord =
         | cs => pure cs
       Just pat <- pure $ envPAT <|> expose <$> config.githubPAT
         | Nothing => pure []
-      gitCompletions !(liftIO $ octokit pat config.apiBaseUrl)
+      [] <- gitCompletions !(liftIO $ octokit pat config.apiBaseUrl)
+        | cs => pure cs
+      Just jira <- liftIO configureJira
+        | Nothing => pure []
+      jiraCompletions jira
 
 ||| Handle commands that require both configuration and
 ||| authentication.

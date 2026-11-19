@@ -3,16 +3,19 @@ module ShellCompletion.Common
 import Data.CompletionStyle
 import Data.Config
 import Data.GHIssue
+import Data.JiraIssue
 import Data.Maybe
 import Data.Project
 import Data.Promise
 import Data.String
 
+import Issue
 import CommandStubs
 import Util.ShellCompletion
 import Util.String
 
 import FFI.GitHub
+import FFI.Jira
 
 import System.Git
 
@@ -184,9 +187,10 @@ cmdOpts s "quick" "--"       "quick"     = all (allQuickCmdOpts s)
 cmdOpts s "quick" "-"        "quick"     = someWithPrefix "--" (allQuickCmdOpts s)
 cmdOpts s "quick" _          "--project" = Nothing -- <- fall through to handle project autocompletion
 cmdOpts s "quick" partialArg "quick"     =
-  if isHashPrefix partialArg
-     then Nothing -- <- falls through to handle with config below.
-     else someWithPrefix partialArg (allQuickCmdOpts s)
+  case getCLIIssuePrefix partialArg of
+       (Just $ Hashtag _) => Nothing -- <- falls through to handle with config below.
+       (Just $ Percent _) => Nothing
+       Nothing => someWithPrefix partialArg (allQuickCmdOpts s)
 
 cmdOpts s "slow" "--" "slow"   = Nothing
 cmdOpts s "slow" "-"  "slow"   = someWithPrefix "--" (allSlowCmdOpts s)
@@ -253,7 +257,7 @@ cmdOpts s "config" "--"         settableProp = all (allSettableValuesForProp s s
 cmdOpts s "config" partialValue settableProp =
   someWithPrefix partialValue (allSettableValuesForProp s settableProp)
 
--- anything else requires configuration being loaded, FFI, or GitHub requests
+-- anything else requires configuration being loaded, FFI, or GitHub/Jira requests
 cmdOpts _ _ _ _ = Nothing
 
 optsForPrIntoOption : HasIO io => (partialBranch : String) -> io (Maybe (List String))
@@ -371,6 +375,12 @@ hashifyIfPrefix substr num =
          then Just . hashify $ numStr
          else Nothing
 
+percentifyIfPrefix : (substr : String) -> (issueSlug : String) -> Maybe String
+percentifyIfPrefix substr slug =
+  if substr `isStrPrefixOf` slug
+     then Just . percentify $ slug
+     else Nothing
+
 describe : (githubUser : Maybe String) -> GHIssue -> String
 describe user issue = "\{assigned user}\{openPrs}\{issue.title}"
   where
@@ -467,8 +477,8 @@ parameters (githubUser : Maybe String)
   issueDescriber : GHIssue -> String
   issueDescriber = describe githubUser
 
-  issueOpts : CompletionStyle => List (String, GHIssue) -> List String
-  issueOpts issues = strCompletion . mapSnd issueDescriber <$> sortBy issueSorter issues
+  ghIssueOpts : CompletionStyle => List (String, GHIssue) -> List String
+  ghIssueOpts issues = strCompletion . mapSnd issueDescriber <$> sortBy issueSorter issues
 
 ||| Opts for which completion requires reaching out to GitHub.
 export
@@ -484,7 +494,7 @@ githubOpts @{config} gh _ "quick" partialArg _ = do
   let partialArg' = unhashify partialArg
   let issues' =
     mapMaybe (\i => (, i) <$> hashifyIfPrefix partialArg' i.number) issues
-  pure (issueOpts config.githubUser issues')
+  pure (ghIssueOpts config.githubUser issues')
 githubOpts @{config} gh s "slow" partialArg _ = do
   issues <- listIssues @{gh} config.org config.repo 30
   let partialArg' = if partialArg == "--"
@@ -494,5 +504,25 @@ githubOpts @{config} gh s "slow" partialArg _ = do
   let issues' = if partialArg' == ""
                    then issuesByNum "" issues
                    else issuesByNumAndTitle partialArg' issues
-  pure (regularOpts ++ (issueOpts config.githubUser issues'))
+  pure (regularOpts ++ (ghIssueOpts config.githubUser issues'))
 githubOpts _ _ _ _ _ = pure []
+
+jiraIssueOpts : CompletionStyle => List (String, JiraIssueRef) -> List String
+jiraIssueOpts issues = strCompletion . mapSnd (.summary) <$> issues
+
+||| Opts for which completion requires reaching out to Jira.
+export
+jiraOpts : Config =>
+           Lazy Jira
+        -> (s : CompletionStyle)
+        -> (subcommand : String)
+        -> (curWord : String)
+        -> (prevWord : String)
+        -> Promise' (List String)
+jiraOpts @{config} jira _ "quick" partialArg _ = do
+  issues <- listCurrentUserAssignedIssueRefs @{jira}
+  let partialArg' = unpercentify partialArg
+  let issues' =
+    mapMaybe (\i => (, i) <$> percentifyIfPrefix partialArg' i.key) issues
+  pure (jiraIssueOpts issues')
+jiraOpts _ _ _ _ _ = pure []
