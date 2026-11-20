@@ -1,6 +1,7 @@
 module FFI.Jira
 
 import Data.Promise
+import Data.String
 import Data.User
 import Data.JiraIssue
 import FFI
@@ -44,10 +45,32 @@ listIssueRefs @{JConfig ptr} jql = do
   jsonStr <- promiseIO $ prim__listIssueRefs ptr jql
   either $ parseIssueRefsString jsonStr
 
+namespace JQL
+  export
+  currentUser : String
+  currentUser = "assignee = currentUser()"
+
+  export
+  unresolved : String
+  unresolved = "resolution = Unresolved"
+
+  export
+  orderUpdatedDesc : String
+  orderUpdatedDesc = "order by updated DESC"
+
+||| Search for issues using the given JQL expressions (ANDed together).
+export
+listIssueRefs' : Jira =>
+                {default JQL.orderUpdatedDesc order : String}
+             -> (filters : List String)
+             -> Promise String (List JiraIssueRef)
+listIssueRefs' @{JConfig ptr} {order} =
+  listIssueRefs . (++ " " ++ order) . joinBy " and "
+
 export
 listCurrentUserAssignedIssueRefs : Jira =>
                                    Promise String (List JiraIssueRef)
-listCurrentUserAssignedIssueRefs = listIssueRefs "assignee = currentUser()"
+listCurrentUserAssignedIssueRefs = listIssueRefs' [currentUser, unresolved]
 
 %foreign jira_ffi "get_issue_ref"
 prim__getIssueRef : Ptr JiraRef
