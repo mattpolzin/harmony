@@ -21,8 +21,29 @@ import Util.ShellCompletion
 
 %default total
 
-dasherize : String -> String
-dasherize = pack . replaceOn ' ' '-' . unpack
+replacedCharacters : List Char
+replacedCharacters = [' ', '(', ')', '[', ']', '`']
+
+shouldReplace : Char -> Bool
+shouldReplace c = foldr (\m,acc => acc || c == m) False replacedCharacters
+
+replaceUnsafeChars : List Char -> List Char
+replaceUnsafeChars = foldr go []
+  where
+    go : (next : Char) -> (acc : List Char) -> List Char
+    go next acc with (shouldReplace next)
+      -- 1. don't replace the char
+      go next acc | False = next :: acc
+      -- 2. delete it at the end of a string
+      go next []  | True = []
+      -- 3. replacement character just encountered, delete char
+      go next acc@('-' :: _) | True = acc
+      -- 4. replace char with replacement character
+      go next acc@(_   :: _) | True = '-' :: acc
+
+branchSafeChars : String -> String
+-- branchSafeChars = pack . replaceWhen shouldReplace '-' . unpack
+branchSafeChars = pack . replaceUnsafeChars . unpack
 
 ||| In order to support tab completion of multi-word project titles, spaces
 ||| have been turned into another character to "slugify" the labels. Still, it
@@ -43,7 +64,7 @@ projectFromUnsluggifiedTitle configProjects slugifiedTitle =
     findByTitle title = find (\p => (p.title == title)) configProjects 
 
 branchNameSuggestion : String -> String
-branchNameSuggestion = toLower . dasherize
+branchNameSuggestion = toLower . branchSafeChars
 
 createNewIssue : Config =>
                  Octokit =>
