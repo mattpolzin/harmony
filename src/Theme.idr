@@ -40,6 +40,8 @@ data SemanticColor : (darkTheme : Colors) -> (lightTheme : Colors) -> Type where
   Special    : SemanticColor (cs [Magenta]) (cs [Magenta])
   -- marking
   Current    : SemanticColor (cs [Green  ]) (cs [Green])
+  -- level
+  Warning    : SemanticColor (cs [Yellow ]) (cs [Yellow])
 
 public export
 theme' : Theme => {d, l : _} -> SemanticColor d l -> Doc AnsiStyle -> Doc AnsiStyle
