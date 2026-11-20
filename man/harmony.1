@@ -40,7 +40,7 @@ Harmony \- Harmonize with coworkers around GitHub reviewing
 .PD 0
 .P
 .PD
-\f[CR]harmony quick [options] [issue\-title | #issue\-number] [...]\f[R]
+\f[CR]harmony quick [options] [issue\-title | #gh\-issue\-number | %jira\-slug] [...]\f[R]
 .PD 0
 .P
 .PD
@@ -73,8 +73,8 @@ Harmony \- Harmonize with coworkers around GitHub reviewing
 Harmony is a tool that helps teams keep GitHub reviews running smoothly.
 It takes the work out of picking someone from a pool of developers to
 review a new PR.
-Harmony does this by heuristically determining who on a particular
-GitHub Team has the least current/recent review workload.
+Harmony does this by determining who on a particular GitHub Team has the
+least current/recent review workload.
 .PP
 Harmony offers a heuristic for PR review requests that is different than
 GitHub\(cqs round robin or weighted algorithms, but Harmony can also
@@ -82,19 +82,21 @@ work well even if your team uses GitHub\(cqs automatic PR review
 requests (see below).
 .PP
 Harmony has grown over time to also offer shortcuts that make working
-with pull requests and their tickets and branches easier (for one
-particular personal take on what \(lqeasier\(rq means).
+with pull requests and their tickets and branches easier (an admittedly
+subjective thing).
 If the opinionated decisions made in building this tool end up working
 for you (e.g.\ using slugs in branch names to tie branches to issues,
 using comments in issues to determine if downstream PRs should close
 them, etc.)
-then you may find that harmony automates much of the connective tissue
-for you without requiring as much manual work (or relying as much on
-GenAI skills).
+then you may find that harmony automates much of the glue for you
+without requiring as much manual work (or relying as much on GenAI
+skills).
 .SS Dependencies
 .SS Runtime
-Running Harmony requires NodeJS 18+ (and a local installation of
+Running Harmony requires NodeJS 24+ (and a local installation of
 \f[CR]git\f[R]) or alternatively Nix with flakes enabled.
+It may work on older NodeJS versions, but its good not to fall too far
+behind the EOL for NodeJS anyway!
 .PP
 If you\(cqd like to try Harmony out without even \(lqinstalling\(rq it
 and you have Nix installed with flakes enabled, you can run it as
@@ -287,6 +289,18 @@ Use colors suited better for either a dark or light Terminal background.
 If the \f[CR]$GITHUB_PAT\f[R] and \f[CR]$GH_TOKEN\f[R] environment
 variables are not set, this Personal Access Token is used to
 authenticate with GitHub.
+.TP
+\f[CR]jiraPAT\f[R] (optional string)
+If the \f[CR]$JIRA_API_TOKEN\f[R] and \f[CR]$ATLASSIAN_API_TOKEN\f[R]
+environment variables are not set, this Personal Access Token is used to
+authenticate with Jira.
+You don\(cqt need Jira configured if your org does not use Jira.
+.TP
+\f[CR]jiraUser\f[R] (uptional string)
+The username to use to authenticate with Jira.
+.TP
+\f[CR]jiraDomain\f[R] (optional string)
+The Jira domain to use.
 .SS \f[CR]contribute [\-c/\-\-checkout | \-l/\-\-list] [\-<num>] [\-i/\-\-ignore {<uri> | <pr\-number>}]\f[R]
 Print the URI of the oldest non\-draft PR waiting for your review.
 If you are not requested for review on any PRs, Harmony will suggest a
@@ -369,8 +383,6 @@ Print help.
 .SS \f[CR]label {label} [...]\f[R]
 Helps you create a PR if one does not exist yet and then it will apply
 the given labels to the PR.
-This is essentially an alias for the \f[CR]harmony pr\f[R] command but
-without support for creating draft PRs.
 .PP
 Note that labels are \f[I]not\f[R] prefixed with `#' for this command.
 There is no need to differentiate labels from other kinds of arguments
@@ -407,6 +419,8 @@ up afterwards in the GitHub web app.
 When creating a new issue (see \f[CR]\-\-issue\f[R]), the
 \f[CR]\-\-project\f[R] option can be used to associate the new issue
 with an existing project.
+.PP
+Issue creation is not supported for Jira issues yet.
 .PP
 By default this command outputs to a shell format that is colored (if
 supported) but you can use the \f[CR]\-\-output markdown\f[R] option to
@@ -517,7 +531,7 @@ harmony pr \-\-print\-tree \-\-output markdown
 .RE
 .RE
 .RE
-.SS \f[CR]quick [\-\-bugfix] [\-\-project {<project\-number> | <project\-title>}] [issue\-title | #<issue\-number>] [...]\f[R]
+.SS \f[CR]quick [\-\-bugfix] [\-\-project {<project\-number> | <project\-title>}] [issue\-title | #<gh\-issue\-number> | %<jira\-slug>] [...]\f[R]
 Helps you create a new GitHub issue and a branch to work on that issue
 all in one go.
 The branch name will be structured such that if you have GitHub branch
@@ -536,14 +550,18 @@ You cannot create new projects this way; only existing projects are
 supported.
 .PP
 If your only argument (possibly in addition to the bugfix flag) is
-\f[CR]#<issue\-number>\f[R] for an existing GitHub issue then the new
-branch will point at that existing issue.
+\f[CR]#<issue\-number>\f[R] for an existing GitHub issue or
+\f[CR]%<jira\-slug>\f[R] for an existing Jira issue then the new branch
+will point at that existing issue.
 Otherwise, all additional arguments other than \f[CR]\-\-bugfix\f[R] and
 \f[CR]\-\-project {ref}\f[R] will be used as the issue title.
 If you don\(cqt specify a title at the CLI then you will be prompted to
 enter the issue title interactively.
 You will also be prompted for the issue description interactively
 regardless.
+.PP
+Issue creation is not yet supported for Jira issues, only referencing
+existing Jira issues.
 .SS Examples
 Create an issue and bugfix branch:
 .IP
@@ -563,6 +581,13 @@ Create a branch for the existing issue with GitHub issue number
 .IP
 .EX
 harmony quick \(rs#345
+.EE
+.PP
+Create a branch for the existing issue with Jira slug
+\f[CR]PROJ\-345\f[R]:
+.IP
+.EX
+harmony quick %PROJ\-345
 .EE
 .PP
 Create an issue (and branch) and associate it with the `Cool Features'
