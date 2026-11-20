@@ -14,6 +14,7 @@ import System.File
 import Util.Prompting
 import Util
 import Util.ShellCompletion
+import Theme
 
 import Text.PrettyPrint.Prettyprinter
 import Text.PrettyPrint.Prettyprinter.Util
@@ -91,6 +92,16 @@ createNewIssueWithMessage : Config =>
                          -> (project : Maybe ProjectRef)
                          -> Promise' GHIssue
 createNewIssueWithMessage @{config} message baseBranchGuess issueTitle' project = do
+  when (config.branchParsing == Jira) $ do
+    renderIO $
+      theme Warning (reflow """
+                            You are about to create a GitHub issue \
+                            (Jira issue creation is not yet supported)\
+                            """)
+    True <- yesNoPrompt "Do you want to continue?"
+      | False => reject "Issue creation aborted."
+    pure ()
+
   putStrLn message
   putStrLn ""
 
