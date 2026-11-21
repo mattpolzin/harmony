@@ -46,7 +46,8 @@ Subcommands:
 
       Mark an existing PR as ready for review with the --ready flag.
 
-      Create and link a GitHub Issue with --issue.
+      Create and link a GitHub Issue with --issue. Jira issue creation is not
+      yet supported.
 
       Associate an existing project with the new issue with --project (only
       supported when --issue is used).
@@ -56,11 +57,12 @@ Subcommands:
       Print a pr tree with the --print-tree flag.
 
       Output in markdown or shell (default) format.
-  quick [--bugfix] [--project {<project-number> | <project-title>}] [<title> | #<issue-number>] [...]
-      Quickly spin up new work with a GitHub issue and associated feature
-      branch. If you have harmony configured to parse GitHub issue numbers
-      (harmony config branchParsing github) then any PR created from the new
-      branch will automatically link to the new ticket in its description.
+  quick [--bugfix] [--project {<project-number> | <project-title>}] [<title> | #<gh-issue-number> | %<jira-slug>] [...]
+      Quickly spin up new work with a GitHub or Jira issue and associated
+      feature branch. If you have harmony configured to parse GitHub issue
+      numbers in branch names (harmony config branchParsing github) then any PR
+      created from the new branch will automatically link to the new ticket in
+      its description.
 
       By default the branch will have the 'feature' prefix. If the --bugfix flag
       is specified, the 'bugfix' prefix will be used.
@@ -72,12 +74,16 @@ Subcommands:
       supported.
 
       If your only argument (possibly in addition to the bugfix flag) is
-      #<issue-number> for an existing GitHub issue then the new branch will
-      point at that existing issue. Otherwise, all additional arguments other
-      than --bugfix and --project will be used as the issue title. If you don't
-      specify the title as CLI arguments, you will be prompted to enter the
-      issue title interactively. You will also be prompted for the issue
-      description interactively regardless.
+      #<issue-number> for an existing GitHub issue or %<jira-slug> for an
+      existing Jira issue then the new branch will point at that existing issue.
+      Otherwise, all additional arguments other than --bugfix and --project will
+      be used as the issue title. If you don't specify the title as CLI
+      arguments, you will be prompted to enter the issue title interactively.
+      You will also be prompted for the issue description interactively
+      regardless.
+
+      Currently issue creation is limited to GitHub issues, though selecting
+      existing issues supports both GitHub and Jira.
   reflect 
       Reflect on the current state of ones own PRs and review requests.
   request {<team-slug> | +<user-login>} [#<label>] [...]

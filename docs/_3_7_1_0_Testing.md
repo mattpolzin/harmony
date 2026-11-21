@@ -24,3 +24,4 @@ cannot be fully evaluated at compile time, the second variant can be used:
 `testSomethingElse : someFun "some string" ==> "some other string"`. In this
 second variant, the test will be run by `make type-test` rather than at compile
 time.
+

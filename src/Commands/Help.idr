@@ -87,7 +87,7 @@ subcommandHelp' n@"pr" = subcommand n [ argument False "--ready"
   , reflow "Apply any number of labels by prefixing them with '#'."
   , reflow "Mark a new or existing PR as a draft with the --draft flag."
   , reflow "Mark an existing PR as ready for review with the --ready flag."
-  , reflow "Create and link a GitHub Issue with --issue."
+  , reflow "Create and link a GitHub Issue with --issue. Jira issue creation is not yet supported."
   , reflow "Associate an existing project with the new issue with --project (only supported when --issue is used)."
   , reflow "Specify the branch to merge into with the --into option."
   , reflow "Print a pr tree with the --print-tree flag."
@@ -123,12 +123,18 @@ subcommandHelp' n@"help"    = subcommand n [argument False "<subcommand>"] ["Pri
 subcommandHelp' n@"version" = subcommand n [argument False "-s/--short"] ["Print version"]
 subcommandHelp' n@"quick"   = subcommand n [ argument False "--bugfix"
                                            , argument False "--project {<project-number> | <project-title>}"
-                                           , argument False "<title> | #<issue-number>"
+                                           , argument False "<title> | #<gh-issue-number> | %<jira-slug>"
                                            , argument False "..."
                                            ] [
-    hcat [ reflow "Quickly spin up new work with a GitHub issue and associated feature branch. If you have harmony configured to parse GitHub issue numbers ("
+    hcat [ reflow """
+                  Quickly spin up new work with a GitHub or Jira issue and associated feature branch.
+                  If you have harmony configured to parse GitHub issue numbers in branch names (\
+                  """
          ,  shell "harmony config branchParsing github"
-         , reflow ") then any PR created from the new branch will automatically link to the new ticket in its description."
+         , reflow """
+                  ) then any PR created from the new branch will automatically
+                  link to the new ticket in its description.
+                  """
          ]
   , reflow """
       By default the branch will have the 'feature' prefix. If the
@@ -142,12 +148,17 @@ subcommandHelp' n@"quick"   = subcommand n [ argument False "--bugfix"
       """
   , reflow """
       If your only argument (possibly in addition to the bugfix flag) is
-      #<issue-number> for an existing GitHub issue then the new branch will
-      point at that existing issue. Otherwise, all additional arguments other
-      than --bugfix and --project will be used as the issue title. If you don't
-      specify the title as CLI arguments, you will be prompted to enter the
-      issue title interactively. You will also be prompted for the issue
-      description interactively regardless.
+      #<issue-number> for an existing GitHub issue or %<jira-slug> for an
+      existing Jira issue then the new branch will point at that existing
+      issue. Otherwise, all additional arguments other than --bugfix and
+      --project will be used as the issue title. If you don't specify the title
+      as CLI arguments, you will be prompted to enter the issue title
+      interactively. You will also be prompted for the issue description
+      interactively regardless.
+      """
+  , reflow """
+      Currently issue creation is limited to GitHub issues, though selecting
+      existing issues supports both GitHub and Jira.
       """
   ]
 subcommandHelp' n@"slow"    = subcommand n [argument False "-s/--stub"]

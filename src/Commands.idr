@@ -678,8 +678,12 @@ slow @{config} (a ::: a') =
                   NoInfo           => defaultParentIssue
                   GHIssueTitle title => getIssueByTitle title
                   GHIssueNumber n    => getIssue config.org config.repo n
-                  JiraIssueSlug slug => reject "jira issues are not implemented for the slow command yet"
-                                  -- TODO: ^ address this feature gap
+                  JiraIssueSlug slug => reject """
+                                               `harmony slow` does not work with Jira issues, at least for now.
+                                               The idea of setting a parent issue to be used with future child \
+                                               issues falls apart because harmony does not support Jira issue \
+                                               creation to begin with.
+                                               """
     slowStartWork issue {stubIssueOut} 
 
   where

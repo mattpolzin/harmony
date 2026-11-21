@@ -688,6 +688,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                             , commentOnRequest
                                             , branchParsing
                                             , theme
+                                            , prTree
                                             ] <-
                                             lookupAll [
                                                 "updatedAt"
@@ -705,6 +706,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                               , "commentOnRequest"
                                               , "branchParsing"
                                               , "theme"
+                                              , "addPrTreeDescription"
                                               ] config
                                           let maybeGithubPAT = lookup "githubPAT" config
                                           let maybeGithubDomain = lookup "domain" config
@@ -713,7 +715,6 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           let maybeJiraPAT = lookup "jiraPAT" config
                                           let maybeJiraUser = lookup "jiraUser" config
                                           let maybeJiraDomain = lookup "jiraDomain" config
-                                          let maybePrTree = lookup "addPrTreeDescription" config
                                           let maybeDefaultProject = lookup "defaultProject" config
                                           let maybeDefaultParentIssue = lookup "defaultParentIssue" config
                                           let maybeRepoProjects = lookup "repoProjects" config
@@ -739,9 +740,7 @@ parseConfig ephemeral = (mapFst (const "Failed to parse JSON") . parseJSON Virtu
                                           tsp <- maybe (Right Prefix) titleSlugConfig maybeTitleSlugPosition
                                           -- TODO 10.0.0: Make titleSlugPosition required part of config file (default to Prefix)
                                           --              titleSlugPosition lookup can be moved to the required lookupAll above.
-                                          prt <- maybe (Right False) bool maybePrTree
-                                          -- TODO 8.0.0: Make addPrTreeDescription required part of config file (default to false)
-                                          --             addPrTreeDescription lookup can be moved to the required lookupAll above.
+                                          prt <- bool prTree
                                           rp <- maybe (Right []) (array parseProjectRef) maybeRepoProjects
                                           -- TODO 9.0.0: Make repoProjects required part of config file (default to [])
                                           --             repoProjects lookup can be moved to the required lookupAll above.

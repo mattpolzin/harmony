@@ -8,7 +8,7 @@
 `harmony label {label} [...]` \
 `harmony list [team-slug]` \
 `harmony pr [options]` \
-`harmony quick [options] [issue-title | #issue-number] [...]` \
+`harmony quick [options] [issue-title | #gh-issue-number | %jira-slug] [...]` \
 `harmony reflect` \
 `harmony request {team-slug | +user-login} [options]` \
 `harmony rq {team-slug | +user-login} [options]` \

@@ -54,6 +54,15 @@ Not all configuration properties can be read/set with this command.
 `githubPAT` (optional string) 
 : If the `$GITHUB_PAT` and `$GH_TOKEN` environment variables are not set, this Personal Access Token is used to authenticate with GitHub.
 
+`jiraPAT` (optional string)
+: If the `$JIRA_API_TOKEN` and `$ATLASSIAN_API_TOKEN` environment variables are not set, this Personal Access Token is used to authenticate with Jira. You don't need Jira configured if your org does not use Jira.
+
+`jiraUser` (uptional string)
+: The username to use to authenticate with Jira.
+
+`jiraDomain` (optional string)
+: The Jira domain to use.
+
 ## `contribute [-c/--checkout | -l/--list] [-<num>] [-i/--ignore {<uri> | <pr-number>}]`
 Print the URI of the oldest non-draft PR waiting for your review. If you are not
 requested for review on any PRs, Harmony will suggest a PR that your review is
@@ -132,8 +141,7 @@ Print help.
 
 ## `label {label} [...]`
 Helps you create a PR if one does not exist yet and then it will apply the given
-labels to the PR. This is essentially an alias for the `harmony pr` command but
-without support for creating draft PRs.
+labels to the PR.
 
 Note that labels are _not_ prefixed with '#' for this command. There is no need
 to differentiate labels from other kinds of arguments to `harmony label`.
@@ -164,6 +172,8 @@ GitHub web app.
 
 When creating a new issue (see `--issue`), the `--project` option can be used to
 associate the new issue with an existing project.
+
+Issue creation is not supported for Jira issues yet.
 
 By default this command outputs to a shell format that is colored (if supported)
 but you can use the `--output markdown` option to output to a markdown syntax
@@ -252,7 +262,7 @@ harmony pr --print-tree --output markdown
 >>>>> ↖ `feature/356/test-e` (https://github.com/mattpolzin/harmony/pull/361)
 >>>>> **Test E**
 
-## `quick [--bugfix] [--project {<project-number> | <project-title>}] [issue-title | #<issue-number>] [...]`
+## `quick [--bugfix] [--project {<project-number> | <project-title>}] [issue-title | #<gh-issue-number> | %<jira-slug>] [...]`
 Helps you create a new GitHub issue and a branch to work on that issue all in
 one go. The branch name will be structured such that if you have GitHub branch
 parsing on then the PR you create for the branch later on will refer to the
@@ -267,12 +277,15 @@ then that project will be looked up and associated with the new issue. You
 cannot create new projects this way; only existing projects are supported.
 
 If your only argument (possibly in addition to the bugfix flag) is
-`#<issue-number>` for an existing GitHub issue then the new branch will point at
-that existing issue. Otherwise, all additional arguments other than `--bugfix`
-and `--project {ref}` will be used as the issue title. If you don't specify a
-title at the CLI then you will be prompted to enter the issue title
-interactively. You will also be prompted for the issue description interactively
-regardless.
+`#<issue-number>` for an existing GitHub issue or `%<jira-slug>` for an existing
+Jira issue then the new branch will point at that existing issue. Otherwise, all
+additional arguments other than `--bugfix` and `--project {ref}` will be used as
+the issue title. If you don't specify a title at the CLI then you will be
+prompted to enter the issue title interactively. You will also be prompted for
+the issue description interactively regardless.
+
+Issue creation is not yet supported for Jira issues, only referencing existing
+Jira issues.
 
 ### Examples
 Create an issue and bugfix branch:
@@ -288,6 +301,11 @@ harmony quick --bugfix widget fails to create
 Create a branch for the existing issue with GitHub issue number `345`:
 ```shell
 harmony quick \#345
+```
+
+Create a branch for the existing issue with Jira slug `PROJ-345`:
+```shell
+harmony quick %PROJ-345
 ```
 
 Create an issue (and branch) and associate it with the 'Cool Features' project:

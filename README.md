@@ -19,6 +19,7 @@ Harmony - Harmonize with coworkers around GitHub reviewing
 - [Zsh completion](#zsh-completion)
 - [Initial configuration](#initial-configuration)
 - [Usage](#usage)
+- [Developing](#developing)
 - [SUBCOMMANDS](#subcommands)
 
 # SYNOPSIS
@@ -31,7 +32,7 @@ Harmony - Harmonize with coworkers around GitHub reviewing
 `harmony label {label} [...]` \
 `harmony list [team-slug]` \
 `harmony pr [options]` \
-`harmony quick [options] [issue-title | #issue-number] [...]` \
+`harmony quick [options] [issue-title | #gh-issue-number | %jira-slug] [...]` \
 `harmony reflect` \
 `harmony request {team-slug | +user-login} [options]` \
 `harmony rq {team-slug | +user-login} [options]` \
@@ -43,26 +44,26 @@ Harmony - Harmonize with coworkers around GitHub reviewing
 # DESCRIPTION
 Harmony is a tool that helps teams keep GitHub reviews running smoothly.
 It takes the work out of picking someone from a pool of developers to review a
-new PR. Harmony does this by heuristically determining who on a particular
-GitHub Team has the least current/recent review workload.
+new PR. Harmony does this by determining who on a particular GitHub Team has the
+least current/recent review workload.
 
 Harmony offers a heuristic for PR review requests that is different than
 GitHub's round robin or weighted algorithms, but Harmony can also work well even
 if your team uses GitHub's automatic PR review requests ([see below](#deferring-to-github)).
 
 Harmony has grown over time to also offer shortcuts that make working with pull
-requests and their tickets and branches easier (for one particular personal take
-on what "easier" means). If the opinionated decisions made in building this tool
-end up working for you (e.g. using slugs in branch names to tie branches to
-issues, using comments in issues to determine if downstream PRs should close
-them, etc.) then you may find that harmony automates much of the connective
-tissue for you without requiring as much manual work (or relying as much on
-GenAI skills).
+requests and their tickets and branches easier (an admittedly subjective thing).
+If the opinionated decisions made in building this tool end up working for you
+(e.g. using slugs in branch names to tie branches to issues, using comments in
+issues to determine if downstream PRs should close them, etc.) then you may find
+that harmony automates much of the glue for you without requiring as much manual
+work (or relying as much on GenAI skills).
 
 ## Dependencies
 ### Runtime
-Running Harmony requires NodeJS 18+ (and a local installation of `git`) or
-alternatively Nix with flakes enabled.
+Running Harmony requires NodeJS 24+ (and a local installation of `git`) or
+alternatively Nix with flakes enabled. It may work on older NodeJS versions, but
+its good not to fall too far behind the EOL for NodeJS anyway!
 
 If you'd like to try Harmony out without even "installing" it and you have Nix
 installed with flakes enabled, you can run it as 
@@ -75,32 +76,7 @@ the `pack` Idris2 package manager installed.
 
 Building the latest commits of Harmony is only tested to work against the latest
 package collection but may work from one that is sufficiently recent as well.
-### Testing
-Tests are written in two distinct ways.
 
-#### Golden Tests
-Golden Tests can be run with `make test`. You'll need a few common tools (in
-addition to the tools required to build harmony) in your `PATH` to run all the
-tests:
-  - `realpath`
-  - `sed`
-  - `xargs`
-
-#### Inline Tests
-Some tests are written into the Harmony codebase. These tests live in `Test.idr`
-files located in a subfolder for the module being tested. For example,
-`src/Commands/Graph/Test.idr` contains the `Commands.Graph.Test` module which
-has tests for the `Commands.Graph` module.
-
-These tests are always going to come in one of two forms of equality check.
-First, compile-time equality checks:
-`testSometing : someFun "some string" === "some other string"`. These test that
-certain inputs to functions result in expected outputs. They require the
-function to be able to be evaluated at compile time. In cases where a function
-cannot be fully evaluated at compile time, the second variant can be used:
-`testSomethingElse : someFun "some string" ==> "some other string"`. In this
-second variant, the test will be run by `make type-test` rather than at compile
-time.
 ## Installation
 You can install Harmony in several different ways, though by far the easiest is
 to install it via the Node Package Manager (NPM).
@@ -233,6 +209,68 @@ colored output when it determines `stdout` is not a TTY device (as is the case
 for e.g. redirecting harmony output into a file or piping into `cat`: 
 `harmony ... | cat`).
 
+### Jira
+Harmony is primarily focused on on the GitHub aspects of collaboration but it
+has some support for Jira tickets as an alternative to GitHub tickets.
+
+All Jira functionality is optional and can be ignored if your org does not use
+Jira to track issues.
+
+To set Jira up, tell harmony about your org's Jira domain and your Jira username
+(email):
+```shell
+harmony config jiraDomain me.atlassian.net
+harmony config jiraUser my-email@me.com
+```
+
+Next, generate a personal API Key for Jira and either pass it to
+`harmony config jiraPAT <api-key>` or export it into your shell environment as
+`$JIRA_API_TOKEN` or `$ATLASSIAN_API_TOKEN`.
+
+You more than likely want harmony to parse branch names looking for Jira slugs
+which can be set up with:
+```shell
+harmony config branchParsing jira
+```
+
+Now create your branches with a Jira slug anywhere in the name to have harmony
+pick up information about the ticket when you run `harmony pr` commands. If you
+use `harmony quick %PROJ-123` then harmony will create a branch for you that
+references the slug. Using the `quick` command has the benefit of knowing right
+away if you have a typo in your slug and tab-completion can also help you fill
+in the slug if you aren't copy-pasting it into the shell. Note that tab
+completion will only find Jira tickets that are currently open and assigned to
+you.
+
+## Developing
+
+### Testing
+Tests are written in two distinct ways.
+
+#### Golden Tests
+Golden Tests can be run with `make test`. You'll need a few common tools (in
+addition to the tools required to build harmony) in your `PATH` to run all the
+tests:
+  - `realpath`
+  - `sed`
+  - `xargs`
+
+#### Inline Tests
+Some tests are written into the Harmony codebase. These tests live in `Test.idr`
+files located in a subfolder for the module being tested. For example,
+`src/Commands/Graph/Test.idr` contains the `Commands.Graph.Test` module which
+has tests for the `Commands.Graph` module.
+
+These tests are always going to come in one of two forms of equality check.
+First, compile-time equality checks:
+`testSometing : someFun "some string" === "some other string"`. These test that
+certain inputs to functions result in expected outputs. They require the
+function to be able to be evaluated at compile time. In cases where a function
+cannot be fully evaluated at compile time, the second variant can be used:
+`testSomethingElse : someFun "some string" ==> "some other string"`. In this
+second variant, the test will be run by `make type-test` rather than at compile
+time.
+
 # SUBCOMMANDS
 
 ## `branch`
@@ -288,6 +326,15 @@ Not all configuration properties can be read/set with this command.
 
 `githubPAT` (optional string) 
 : If the `$GITHUB_PAT` and `$GH_TOKEN` environment variables are not set, this Personal Access Token is used to authenticate with GitHub.
+
+`jiraPAT` (optional string)
+: If the `$JIRA_API_TOKEN` and `$ATLASSIAN_API_TOKEN` environment variables are not set, this Personal Access Token is used to authenticate with Jira. You don't need Jira configured if your org does not use Jira.
+
+`jiraUser` (uptional string)
+: The username to use to authenticate with Jira.
+
+`jiraDomain` (optional string)
+: The Jira domain to use.
 
 ## `contribute [-c/--checkout | -l/--list] [-<num>] [-i/--ignore {<uri> | <pr-number>}]`
 Print the URI of the oldest non-draft PR waiting for your review. If you are not
@@ -367,8 +414,7 @@ Print help.
 
 ## `label {label} [...]`
 Helps you create a PR if one does not exist yet and then it will apply the given
-labels to the PR. This is essentially an alias for the `harmony pr` command but
-without support for creating draft PRs.
+labels to the PR.
 
 Note that labels are _not_ prefixed with '#' for this command. There is no need
 to differentiate labels from other kinds of arguments to `harmony label`.
@@ -399,6 +445,8 @@ GitHub web app.
 
 When creating a new issue (see `--issue`), the `--project` option can be used to
 associate the new issue with an existing project.
+
+Issue creation is not supported for Jira issues yet.
 
 By default this command outputs to a shell format that is colored (if supported)
 but you can use the `--output markdown` option to output to a markdown syntax
@@ -487,7 +535,7 @@ harmony pr --print-tree --output markdown
 >>>>> ↖ `feature/356/test-e` (https://github.com/mattpolzin/harmony/pull/361)
 >>>>> **Test E**
 
-## `quick [--bugfix] [--project {<project-number> | <project-title>}] [issue-title | #<issue-number>] [...]`
+## `quick [--bugfix] [--project {<project-number> | <project-title>}] [issue-title | #<gh-issue-number> | %<jira-slug>] [...]`
 Helps you create a new GitHub issue and a branch to work on that issue all in
 one go. The branch name will be structured such that if you have GitHub branch
 parsing on then the PR you create for the branch later on will refer to the
@@ -502,12 +550,15 @@ then that project will be looked up and associated with the new issue. You
 cannot create new projects this way; only existing projects are supported.
 
 If your only argument (possibly in addition to the bugfix flag) is
-`#<issue-number>` for an existing GitHub issue then the new branch will point at
-that existing issue. Otherwise, all additional arguments other than `--bugfix`
-and `--project {ref}` will be used as the issue title. If you don't specify a
-title at the CLI then you will be prompted to enter the issue title
-interactively. You will also be prompted for the issue description interactively
-regardless.
+`#<issue-number>` for an existing GitHub issue or `%<jira-slug>` for an existing
+Jira issue then the new branch will point at that existing issue. Otherwise, all
+additional arguments other than `--bugfix` and `--project {ref}` will be used as
+the issue title. If you don't specify a title at the CLI then you will be
+prompted to enter the issue title interactively. You will also be prompted for
+the issue description interactively regardless.
+
+Issue creation is not yet supported for Jira issues, only referencing existing
+Jira issues.
 
 ### Examples
 Create an issue and bugfix branch:
@@ -523,6 +574,11 @@ harmony quick --bugfix widget fails to create
 Create a branch for the existing issue with GitHub issue number `345`:
 ```shell
 harmony quick \#345
+```
+
+Create a branch for the existing issue with Jira slug `PROJ-345`:
+```shell
+harmony quick %PROJ-345
 ```
 
 Create an issue (and branch) and associate it with the 'Cool Features' project:

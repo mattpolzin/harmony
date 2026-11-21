@@ -4,3 +4,4 @@ the `pack` Idris2 package manager installed.
 
 Building the latest commits of Harmony is only tested to work against the latest
 package collection but may work from one that is sufficiently recent as well.
+

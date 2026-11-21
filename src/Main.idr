@@ -205,6 +205,15 @@ handleAuthenticatedArgs ("label" :: label1 :: labels) =
 handleAuthenticatedArgs args =
   reject "Unexpected command line arguments: \{show args}."
 
+||| There are a couple of reasons to skip config sync.
+||| 1. We are about to run the sync command which is going to sync config
+|||    explicity.
+||| 2. We are about to run an internal command needed by config syncing
+|||    so running config syncing before that command creates an infinite loop.
+skipSyncForCommand : (args : List String) -> Bool
+skipSyncForCommand ("sync" :: _) = True
+skipSyncForCommand ["teamMembers", "--json", teamSlug] = True
+skipSyncForCommand _ = False
 
 ||| Handle commands that only require configuration, or else
 ||| enforce authentication and handle commands that require auth.
@@ -227,7 +236,9 @@ handleConfiguredArgs @{config} envPAT args = do
                         ++ "property must be set to a personal access token."
    _ <- liftIO $ octokit pat config.apiBaseUrl
 
-   config' <- syncIfOld config
+   config' <- if skipSyncForCommand args
+                 then pure config
+                 else syncIfOld config
 
    -- then handle any arguments given
    handleAuthenticatedArgs @{config'} args
