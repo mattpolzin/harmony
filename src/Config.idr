@@ -90,25 +90,25 @@ orgOrFilteredTeamsAndMembers org filterToTeams currentTeams =
 
 export
 syncConfig : Config => Octokit => (echo : Bool) -> Promise' Config
-syncConfig @{config} echo =
- do (orgMembers, teamSlugs) <-
-      orgOrFilteredTeamsAndMembers config.org config.handPickedTeams config.teamSlugs
-    labelNames <- listRepoLabels config.org config.repo
-    repoProjects <- map reference <$> listRepoProjects config.org config.repo
-    githubUser <- login <$> getSelf
-    updatedAt  <- cast {to=Data.Config.Timestamp} <$> time
-    let config' = { updatedAt    := updatedAt
-                  , teamSlugs    := teamSlugs
-                  , repoLabels   := labelNames
-                  , repoProjects := repoProjects
-                  , orgMembers   := orgMembers
-                  , githubUser   := Just githubUser
-                  } config
-    ignore $ writeConfig config'
-    when echo $
-      do putStrLn "Your updated configuration is:"
-         printLn config'
-    pure config'
+syncConfig @{config} echo = do
+  (orgMembers, teamSlugs) <-
+    orgOrFilteredTeamsAndMembers config.org config.handPickedTeams config.teamSlugs
+  labelNames <- listRepoLabels config.org config.repo
+  repoProjects <- map reference <$> listRepoProjects config.org config.repo
+  githubUser <- login <$> getSelf
+  updatedAt  <- cast {to=Data.Config.Timestamp} <$> time
+  let config' = { updatedAt    := updatedAt
+                , teamSlugs    := teamSlugs
+                , repoLabels   := labelNames
+                , repoProjects := repoProjects
+                , orgMembers   := orgMembers
+                , githubUser   := Just githubUser
+                } config
+  ignore $ writeConfig config'
+  when echo $
+    do putStrLn "Your updated configuration is:"
+       printLn config'
+  pure config'
 
 export
 syncIfOld : Octokit => Config -> Promise' Config
