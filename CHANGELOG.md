@@ -1,3 +1,21 @@
+# 8.0.0 (Jira in, Jira out)
+Published: 2026-11-21T19:48:07Z
+
+## What's Changed
+Version 8.0.0 of Harmony is largely aimed at supporting Jira in more than just branch parsing.
+
+You can now set up Jira authentication and a Jira domain so that `harmony quick %PROJ-123` creates a branch from an existing Jira ticket with that slug. Tab completion for `harmony quick` also gives you your Jira ticket options. You can choose between a PR's title getting the Jira slug (as parsed from a branch name) prepended (`PROJ-123 - ...`) or appended (`... (PROJ-123)`). Groundwork is laid for Jira support in generating PR title suggestions and populating information to the PR body comment (similar to current GitHub issue support). Those PR related features have not been released but they will come in 8.x.
+
+To set Jira up fully, see the **Usage** -> **Jira** section of the README.md or manpage. 
+
+### Breaking Changes
+- `addPrTreeDescription` is now a required key in `harmony.json`. This field has been populated for you since harmony v6 so more than likely you do not need to worry. Run `harmony sync` from the v7.11.1 release once to migrate your `harmony.json` config automatically if you have not run harmony against a project since the v6.x releases.
+
+**Full Changelog**: https://github.com/mattpolzin/harmony/compare/7.11.1...8.0.0
+
+
+You can build the source with the latest `pack` packageset or `nix`.
+
 # 7.11.1 (Directions home)
 Published: 2026-10-22T04:35:53Z
 
