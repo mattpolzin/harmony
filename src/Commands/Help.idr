@@ -12,9 +12,6 @@ import Text.PrettyPrint.Prettyprinter.Render.Terminal
 
 %default total
 
-warning : String -> Doc AnsiStyle
-warning = annotate (color Yellow) . pretty
-
 subcommand' : String -> Doc AnsiStyle
 subcommand' = annotate (color Magenta) . pretty
 
@@ -33,16 +30,17 @@ heading n section =
 bullet : Doc AnsiStyle -> Doc AnsiStyle
 bullet item = "-" <++> item
 
-subcommandHelp' : String -> Maybe (Doc AnsiStyle)
-subcommandHelp' = map subcommand . commandNamed
-
 ||| Print help for a particular subcommand.
 export
 subcommandHelp : (useDecorations : Bool) -> (terminalColumns : Nat) -> (subcommand : String) -> Maybe String
-subcommandHelp useDecorations terminalColumns subcommand =
-  let decorate = if useDecorations then id else unAnnotate
-  in  renderString . layoutPretty (optionsWithBestWidth terminalColumns) .
-        decorate <$> (subcommandHelp' subcommand)
+subcommandHelp useDecorations terminalColumns command =
+  render . subcommand <$> (commandNamed command)
+  where
+    decorate : Doc ann -> Doc ann
+    decorate = if useDecorations then id else unAnnotate
+
+    render : Doc AnsiStyle -> String
+    render = renderString . layoutPretty (optionsWithBestWidth terminalColumns) . decorate
 
 briefHelp : Doc AnsiStyle
 briefHelp = vsep
