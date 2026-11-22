@@ -256,13 +256,12 @@ handleArgs : (envGithubPAT : Maybe String)
           -> IO ()
 handleArgs envPAT _ _ _ _ ["--bash-completion", subcommand, curWord, prevWord] = shellCompletion envPAT Cmd subcommand curWord prevWord
 handleArgs envPAT _ _ _ _ ["--zsh-completion", subcommand, curWord, prevWord] = shellCompletion envPAT CmdAndDescription subcommand curWord prevWord
-handleArgs _ _ _ _ _ ["--bash-completion-script"] = putStrLn Bash.script
-handleArgs _ _ _ _ _ ["--zsh-completion-script"] = putStrLn Zsh.script
+handleArgs _      _ _ _ _ ["--bash-completion-script"] = putStrLn Bash.script
+handleArgs _      _ _ _ _ ["--zsh-completion-script"] = putStrLn Zsh.script
 handleArgs envPAT ttyStdout terminalColors terminalColumns editor args =
   resolve'' $
     do -- create the config file before continuing if it does not exist yet
        config <- loadOrCreateConfig envPAT ttyStdout terminalColors terminalColumns editor
-
        handleConfiguredArgs envPAT args
 
 shouldUseColors : HasIO io => (ttyStdout : Bool) -> io Bool
@@ -280,21 +279,23 @@ main = do
   -- drop 1 for `harmony.js`
   args <- drop 1 <$> getArgs
   -- short circuit for help, version commands
-  when (args == []) $ do
-    putStrLn (help terminalColors False terminalColumns)
-    exitSuccess
-  when (args == ["help"] || args == ["--help"]) $ do
-    putStrLn (help terminalColors True terminalColumns)
-    exitSuccess
-  when (head' args == Just "help") $ do
-    putStrLn (subcommandHelp terminalColors terminalColumns $ fromMaybe "" . head' $ drop 1 args)
-    exitSuccess
-  when (args == ["version"] || args == ["--version"]) $ do
-    printVersion True
-    exitSuccess
-  when (args == ["version", "-s"] || args == ["version", "--short"]) $ do
-    printVersion False
-    exitSuccess
-  envPAT <- pure $ !(getEnv "GITHUB_PAT") <|> !(getEnv "GH_TOKEN")
-  handleArgs envPAT tty terminalColors terminalColumns editor args
+  case args of
+       []         => putStrLn (help terminalColors False terminalColumns)
+       ["--help"] => putStrLn (help terminalColors True terminalColumns)
+       ["help"]   => putStrLn (help terminalColors True terminalColumns)
+       ("help" :: args') => 
+         let command = fromMaybe "" $ head' args'
+         in  case (subcommandHelp terminalColors terminalColumns command) of
+                  (Just s) => putStrLn s
+                  Nothing  => exitError "Unknown subcommand: \{command}"
+       ["--version"] => printVersion True
+       ["version"]   => printVersion True
+       ["version", "-s"]      => printVersion False
+       ["version", "--short"] => printVersion False
+       _ => do
+         envPAT <- pure $ !(getEnv "GITHUB_PAT") <|> !(getEnv "GH_TOKEN")
+         handleArgs envPAT tty terminalColors terminalColumns editor args
+  -- Don't do anything after the case statement. A quirk of Promise is that
+  -- anything after the case will be run before promises from `handleArgs`
+  -- complete most likely.
 

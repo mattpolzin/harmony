@@ -32,7 +32,7 @@ allRootCmdsAndDescriptions : List (String, String)
 allRootCmdsAndDescriptions = map unpack allCommands
   where
     unpack : Command -> (String, String)
-    unpack (C name shortDescription) = (name, shortDescription)
+    unpack (C name shortDescription _ _) = (name, shortDescription)
 
 allRootCmds : (s : CompletionStyle) -> List CompletionResult
 allRootCmds s = completionResult <$> allRootCmdsAndDescriptions
