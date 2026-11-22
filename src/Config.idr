@@ -335,8 +335,9 @@ createConfig : (envGithubPAT : Maybe String)
             -> (terminalColors : Bool)
             -> (terminalColumns : Nat)
             -> (editor : Maybe String)
+            -> (echo : Bool)
             -> Promise' Config
-createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
+createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor echo = do
   putStrLn "Creating a new configuration (storing in \{Config.filename})..."
   putStrLn ""
 
@@ -469,9 +470,11 @@ createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
     , writeOnly
     }
   ignore $ writeConfig config
-  putStrLn "Your new configuration is:"
-  printLn config
-  either renderIO pure (checkConfigConsistency config)
+  when echo $ do
+    putStrLn "Your new configuration is:"
+    printLn config
+    either renderIO pure (checkConfigConsistency config)
+    putStrLn "-----"
   pure config
 
   where
@@ -633,10 +636,11 @@ loadOrCreateConfig : (envGithubPAT : Maybe String)
                   -> (terminalColors : Bool)
                   -> (terminalColumns : Nat)
                   -> (editor : Maybe String)
+                  -> (echoIfCreated : Bool)
                   -> Promise' Config
-loadOrCreateConfig envGithubPAT ttyStdout terminalColors terminalColumns editor = do
+loadOrCreateConfig envGithubPAT ttyStdout terminalColors terminalColumns editor echoIfCreated = do
   Right config <- loadConfig ttyStdout terminalColors terminalColumns editor
-    | Left (File FileNotFound) => createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor
+    | Left (File FileNotFound) => createConfig envGithubPAT ttyStdout terminalColors terminalColumns editor echoIfCreated
     | Left err => reject "Error loading \{Config.filename}: \{show err}."
   pure config
 

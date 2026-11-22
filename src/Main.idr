@@ -243,6 +243,14 @@ handleConfiguredArgs @{config} envPAT args = do
    -- then handle any arguments given
    handleAuthenticatedArgs @{config'} args
 
+skipConfigEchoForCommand : (args : List String) -> Bool
+skipConfigEchoForCommand ["config"] = True 
+                        -- ^ only if no additional args specified (those would
+                        -- result in the full config not being printed by the
+                        -- config command)
+skipConfigEchoForCommand ("sync" :: _) = True
+skipConfigEchoForCommand _ = False
+
 -- bash and zsh completion are special cases where we don't want to create the config
 -- if it doesn't exist yet so we handle it up front before loading config and then
 -- handling any other input.
@@ -261,7 +269,8 @@ handleArgs _      _ _ _ _ ["--zsh-completion-script"] = putStrLn Zsh.script
 handleArgs envPAT ttyStdout terminalColors terminalColumns editor args =
   resolve'' $
     do -- create the config file before continuing if it does not exist yet
-       config <- loadOrCreateConfig envPAT ttyStdout terminalColors terminalColumns editor
+       let echo = not (skipConfigEchoForCommand args)
+       config <- loadOrCreateConfig envPAT ttyStdout terminalColors terminalColumns editor echo
        handleConfiguredArgs envPAT args
 
 shouldUseColors : HasIO io => (ttyStdout : Bool) -> io Bool
